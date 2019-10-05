@@ -1,0 +1,37 @@
+<div class="form-container mat-elevation-z2">
+	<mat-toolbar>
+	<a mat-fab color="primary" routerLink="goal-entry"><mat-icon>add</mat-icon></a>
+
+	<button mat-fab color="primary" (click)="save()">
+		<mat-icon>undo</mat-icon>
+	</button>
+
+	</mat-toolbar>
+	<mat-table #table [dataSource]="dataSource"> <ng-container
+		matColumnDef="id"> <mat-header-cell *matHeaderCellDef
+		[ngClass]="'customWidthClass'"> Action </mat-header-cell> <mat-cell
+		*matCellDef="let element" [ngClass]="'customWidthClass'">
+	<button class="fas fa-edit btn btn-success" title="Edit Table"
+		data-toggle="tooltip" data-placement="top" (click)="edit(element.id)"
+		style="margin-left: 3px;"></button>
+	<button class="fas fa-book-open btn btn-success" title="List Fields"
+		data-toggle="tooltip" data-placement="top"
+		routerLink="fields/{{element.id}}" style="margin-left: 3px;"></button>
+	</mat-cell> </ng-container> <!-- Name Column --> <ng-container matColumnDef="name">
+	<mat-header-cell *matHeaderCellDef> Name </mat-header-cell> <mat-cell
+		*matCellDef="let element"> {{element.name}} </mat-cell> </ng-container> <!-- Description Column -->
+	<ng-container matColumnDef="description"> <mat-header-cell
+		*matHeaderCellDef> Description </mat-header-cell> <mat-cell
+		*matCellDef="let element"> <ng-container
+		*ngIf="element.description"> {{element.description}} </ng-container> <!--           <span *ngIf="!element.description"> -->
+	<!--             Add tag(s) --> <!--           </span> --> </mat-cell> </ng-container> <!-- tags Column -->
+	<ng-container matColumnDef="tags"> <mat-header-cell
+		*matHeaderCellDef> Tags </mat-header-cell> <mat-cell
+		*matCellDef="let element"> <ng-container
+		*ngIf="element.tags"> {{element.tags}} </ng-container> <span
+		*ngIf="!element.tags"> Add tag(s) </span></mat-cell> </ng-container> <mat-header-row
+		*matHeaderRowDef="displayedColumns"></mat-header-row> <mat-row
+		*matRowDef="let row; columns: displayedColumns;"></mat-row> </mat-table>
+
+</div>
+Add to your bucket list, Get organized. Meditate, Take up a new hobby, Read a book 

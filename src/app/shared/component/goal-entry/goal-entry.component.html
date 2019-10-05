@@ -1,0 +1,42 @@
+<p>I want to achieve ???? in 2-3 months</p>
+<div class="mat-elevation-z2">
+	<form [formGroup]="ownerForm" class="form-container">
+		Start Date: {{dataItem.enteredDate | date:'shortDate'}}
+		<mat-divider></mat-divider>
+		<mat-form-field
+			hintLabel="SMART: Specific, Measurable, Achievable, Relevant and Time-bound. Visualize what you want, define a purpose, be realistic; almost anything is possible, but you have to take steps towards it.">
+		<textarea matInput [formControl]="goalText" #input placeholder="Goal"></textarea>
+		</mat-form-field>
+
+		<mat-form-field
+			hintLabel="Next steps towards your goal for the next 1 or 2 weeks.  Prioritize on what makes the most gain towards a goal or what you have available - little steps towards a goal can make larger steps easier.">
+		<textarea matInput [formControl]="nextStepItems" #input
+			placeholder="Next Steps"></textarea> </mat-form-field>
+		<mat-form-field hintLabel="Next meeting date to review progress">
+		<input matInput [matDatepicker]="picker" placeholder="Choose a date">
+		<mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+		<mat-datepicker #picker startView="year" [startAt]="startDate"></mat-datepicker>
+		</mat-form-field>
+	</form>
+	<mat-spinner *ngIf="showScanSpinner" [diameter]="20"
+		ProgressSpinnerMode='indeterminate'> </mat-spinner>
+	<mat-toolbar>
+	<button mat-fab color="primary" (click)="save()">
+		<mat-icon>done</mat-icon>
+	</button>
+	&nbsp;
+	<button mat-fab color="primary" (click)="undo()">
+		<mat-icon>undo</mat-icon>
+	</button>
+
+	</mat-toolbar>
+	<!--     type: string; -->
+	<!--     notes: string; -->
+	<!--     locationText: string; -->
+	<!--     activity: string; -->
+	<!--     tags: string; -->
+	<!--     mood: string; -->
+
+	<!-- 	Changed Date: {{dataItem.updatedOn | date:'medium'}}<br /> -->
+
+</div>

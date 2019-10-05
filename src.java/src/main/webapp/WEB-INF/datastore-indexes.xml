@@ -1,0 +1,33 @@
+<datastore-indexes autoGenerate="true">
+	<datastore-index kind="UserAccountV2" ancestor="false"
+		source="manual">
+		<property name="nickname" direction="asc" />
+		<property name="isRealUser" direction="asc" />
+		<property name="lastLoggedOn" direction="asc" />
+		<property name="type" direction="asc" />
+		<property name="lastName" direction="asc" />
+		<property name="firstName" direction="asc" />
+	</datastore-index>
+	<datastore-index kind="JournalItem" ancestor="false"
+		source="manual">
+		<property name="accountFk" direction="asc" />
+		<property name="enteredDate" direction="asc" />
+	</datastore-index>
+
+	<datastore-index kind="GoalItem" ancestor="false"
+		source="manual">
+		<property name="accountFk" direction="asc" />
+		<property name="enteredDate" direction="asc" />
+	</datastore-index>
+	<datastore-index kind="GoalItemProgress" ancestor="false"
+		source="manual">
+		<property name="accountFk" direction="asc" />
+		<property name="enteredDate" direction="asc" />
+	</datastore-index>
+	<datastore-index kind="AuthHashList" ancestor="false"
+		source="manual">
+		<property name="userAccountFkId" direction="asc" />
+		<property name="createdOn" direction="asc" />
+	</datastore-index>
+	
+</datastore-indexes>

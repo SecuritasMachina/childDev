@@ -1,0 +1,35 @@
+<div class="mat-elevation-z2">
+	<form [formGroup]="ownerForm" class="form-container">
+		<mat-divider></mat-divider>
+		<mat-form-field
+			hintLabel="Your handle">
+		<input matInput [formControl]="nickName" #input placeholder="Your Handle">
+		</mat-form-field>
+
+		<mat-form-field
+			hintLabel="Hint">
+		<textarea matInput [formControl]="passwordHint" #input
+			placeholder="Hint"></textarea> </mat-form-field>
+	</form>
+	<mat-spinner *ngIf="showScanSpinner" [diameter]="20"
+		ProgressSpinnerMode='indeterminate'> </mat-spinner>
+	<mat-toolbar>
+	<button mat-fab color="primary" (click)="save()">
+		<mat-icon>done</mat-icon>
+	</button>
+	&nbsp;
+	<button mat-fab color="primary" (click)="save()">
+		<mat-icon>undo</mat-icon>
+	</button>
+
+	</mat-toolbar>
+	<!--     type: string; -->
+	<!--     notes: string; -->
+	<!--     locationText: string; -->
+	<!--     activity: string; -->
+	<!--     tags: string; -->
+	<!--     mood: string; -->
+
+	<!-- 	Changed Date: {{dataItem.updatedOn | date:'medium'}}<br /> -->
+
+</div>

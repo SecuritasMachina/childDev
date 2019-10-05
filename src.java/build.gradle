@@ -1,0 +1,105 @@
+buildscript {    // Configuration for building
+    ext {
+        springBootVersion = '2.1.4.RELEASE'
+    }
+
+  repositories {
+    jcenter()    // Bintray's repository - a fast Maven Central mirror & more
+    mavenCentral()
+  }
+  dependencies {
+    classpath 'com.google.cloud.tools:appengine-gradle-plugin:1.+'    // Latest 1.x.x release
+    classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+
+  }
+  
+}
+repositories {   // repositories for Jar's you access in your code
+  maven {
+    url 'https://oss.sonatype.org/content/repositories/snapshots' // SNAPSHOT repository (if needed)
+  }
+  mavenCentral()
+  jcenter()
+}
+
+apply plugin: 'eclipse'
+apply plugin: 'java'                              // standard Java tasks
+apply plugin: 'war'                               // standard Web Archive plugin
+apply plugin: 'com.google.cloud.tools.appengine'  // App Engine tasks
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    compile project(":GAE_JavaCommon")
+    implementation 'org.springframework.boot:spring-boot-dependencies:2.1.4.RELEASE'
+    implementation('org.springframework.boot:spring-boot-starter-data-rest:2.1.4.RELEASE')
+    implementation 'org.springframework.boot:spring-boot-starter-web:2.1.4.RELEASE'
+    
+	compile group: 'com.googlecode.objectify', name: 'objectify', version: '6.0.3'
+
+   // compile 'com.google.apis:google-api-services-storage:+'
+   // compile 'com.google.oauth-client:google-oauth-client-jetty:1.19+'
+    //compile 'commons-fileupload:commons-fileupload:1.3.1'
+    compile 'com.google.appengine:appengine-endpoints:1.9.+'
+    compile 'com.google.appengine:appengine-tools-sdk:1.9.+'
+    compile 'com.google.appengine:appengine-jsr107cache:1.9.+'
+    compile 'com.google.appengine:appengine-api-1.0-sdk:1.9.+'
+
+    compile 'net.sf.oval:oval:1.84'
+
+    compile 'com.google.apis:google-api-services-datastore-protobuf:v1beta2-rev1-2.1.2'
+    providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
+    
+    compile group: 'junit', name: 'junit', version: '4.12'
+
+ 	testCompile 'org.springframework.boot:spring-boot-starter-test'   
+    testCompile 'org.seleniumhq.selenium:selenium-server:2.45.+'
+    testCompile 'org.seleniumhq.selenium:selenium-java:2.45.+'
+    testCompile 'org.seleniumhq.selenium:selenium-firefox-driver:2.45.+'
+    testCompile group: 'org.mockito', name: 'mockito-all', version: '1.10.+'
+    testCompile group: 'junit', name: 'junit', version: '4.+'
+    testCompile 'joda-time:joda-time:2.8.+'
+    testCompile 'com.google.api.client:google-api-client-escape:1.2.3-alpha'
+    testCompile 'com.jayway.restassured:rest-assured:2.4.+'
+    testCompile 'com.google.apis:google-api-services-datastore-protobuf:v1beta2-rev1-2.1.2'
+    testCompile 'com.google.appengine:appengine-testing:+'
+    testCompile 'com.google.appengine:appengine-api-stubs:+'
+    testCompile 'com.google.appengine:appengine-tools-sdk:+'
+    
+}
+
+// Always run unit tests
+appengineDeploy.dependsOn test
+appengineStage.dependsOn test
+
+appengine {  // App Engine tasks configuration
+  run {
+    automaticRestart = true
+  }
+  deploy {   // deploy configuration
+
+  }
+  //jvmFlags = ["-Ddatastore.backing_store=\"/Users/jaxtrx/local_db.bin\""]
+}
+
+test {
+  useJUnit()
+  testLogging.showStandardStreams = true
+  beforeTest { descriptor ->
+     logger.lifecycle("test: " + descriptor + "  Running")
+  }
+
+  onOutput { descriptor, event ->
+     logger.lifecycle("test: " + descriptor + ": " + event.message )
+  }
+  afterTest { descriptor, result ->
+    logger.lifecycle("test: " + descriptor + ": " + result )
+  }
+}
+group   = "com.ackdev.childdev"        // Generated output GroupId
+version = "1.0-SNAPSHOT"       // Version in generated output
+
+sourceCompatibility = 1.8     // App Engine Flexible uses Java 8
+targetCompatibility = 1.8     // App Engine Flexible uses Java 8

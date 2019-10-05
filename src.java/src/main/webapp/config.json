@@ -1,0 +1,7 @@
+{
+  "config": {
+    "currentLoad": 0,
+    "updateFrequencyHours": 4,
+    "maxBatchSize": 10
+  }
+}

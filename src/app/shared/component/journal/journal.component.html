@@ -1,0 +1,81 @@
+<!--[style.display]="showPage ? 'block' : 'none'"-->
+<div class="mat-elevation-z2">
+	<form [formGroup]="ownerForm" class="form-container">
+		<mat-grid-list cols="5" rowHeight="3:1"> <mat-grid-tile>
+		<button mat-mini-fab color="accent">
+			<mat-icon>group</mat-icon>
+		</button>
+		<span class="aligned-with-icon">Family</span></mat-grid-tile> <mat-grid-tile>
+		<button mat-mini-fab color="accent">
+			<mat-icon>person_add</mat-icon>
+		</button>
+		<span class="aligned-with-icon">Friends</span></mat-grid-tile> <mat-grid-tile>
+		<button mat-mini-fab color="accent">
+			<mat-icon>school</mat-icon>
+		</button>
+		<span class="aligned-with-icon">School</span></mat-grid-tile> <mat-grid-tile>
+		<button mat-mini-fab color="accent">
+			<mat-icon>beach_access</mat-icon>
+		</button>
+		<span class="aligned-with-icon">Relax</span></mat-grid-tile> <mat-grid-tile>
+		<button mat-mini-fab color="accent">
+			<mat-icon>accessibility_new</mat-icon>
+		</button>
+		<span class="aligned-with-icon">Sports</span></mat-grid-tile> <mat-grid-tile>
+		<button mat-mini-fab color="accent">
+			<mat-icon>shopping_cart</mat-icon>
+		</button>
+		<span class="aligned-with-icon">Shopping</span></mat-grid-tile> <mat-grid-tile>
+		<button mat-mini-fab color="accent">
+			<mat-icon>pets</mat-icon>
+		</button>
+		<span class="aligned-with-icon">Pet</span></mat-grid-tile> <mat-grid-tile>
+		<button mat-mini-fab color="accent">
+			<mat-icon>build</mat-icon>
+		</button>
+		<span class="aligned-with-icon">Build</span></mat-grid-tile> <mat-grid-tile>
+		<button mat-mini-fab color="accent">
+			<mat-icon>book</mat-icon>
+		</button>
+		<span class="aligned-with-icon">Reading</span></mat-grid-tile> <mat-grid-tile>
+		<button mat-mini-fab color="accent">
+			<mat-icon>card_travel</mat-icon>
+		</button>
+		<span class="aligned-with-icon">Travel</span></mat-grid-tile> <mat-grid-tile>
+		<button mat-mini-fab color="accent">
+			<mat-icon>android</mat-icon>
+		</button>
+		<span class="aligned-with-icon">Gaming</span></mat-grid-tile> <mat-grid-tile>
+		<button mat-mini-fab color="accent">
+			<mat-icon>theaters</mat-icon>
+		</button>
+		<span class="aligned-with-icon">Movie</span></mat-grid-tile></mat-grid-list>
+
+		<mat-form-field
+			hintLabel="To make sense of things that happened. What you write should sound as if you are describing the details to someone who wasn't there. Be as descriptive as possible. Just the act of writing down the details of what happened may give you perspective that you may not have otherwise considered had you just continued to think about it.">
+		<textarea matInput [formControl]="notes" #input placeholder="Note"></textarea>
+		</mat-form-field>
+
+	</form>
+	<mat-spinner *ngIf="showScanSpinner" [diameter]="20"
+		ProgressSpinnerMode='indeterminate'> </mat-spinner>
+	<mat-toolbar>
+	<button mat-fab color="primary" (click)="save()">
+		<mat-icon>done</mat-icon>
+	</button>
+	&nbsp;
+	<button mat-fab color="primary" (click)="save()">
+		<mat-icon>undo</mat-icon>
+	</button>
+
+	</mat-toolbar>
+	<!--     type: string; -->
+	<!--     notes: string; -->
+	<!--     locationText: string; -->
+	<!--     activity: string; -->
+	<!--     tags: string; -->
+	<!--     mood: string; -->
+
+	<!-- 	Entered Date: {{dataItem.enteredDate | date:'medium'}}<br /> Last -->
+	<!-- 	Changed Date: {{dataItem.updatedOn | date:'medium'}}<br /> -->
+</div>

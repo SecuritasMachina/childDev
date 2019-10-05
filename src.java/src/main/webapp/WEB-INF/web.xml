@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE web-app
+    PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 3.1//EN"
+    "http://java.sun.com/dtd/web-app_3_1.dtd">
+
+<web-app>
+	<display-name>ChildDev</display-name>
+	<description>Child development</description>
+	<filter>
+		<filter-name>ObjectifyFilter</filter-name>
+		<filter-class>com.googlecode.objectify.ObjectifyFilter</filter-class>
+	</filter>
+	<!-- <filter> -->
+	<!-- <filter-name>AppSessionFilter</filter-name> -->
+	<!-- <filter-class> -->
+	<!-- com.ackdev.filter.security.AppSessionFilter -->
+	<!-- </filter-class> -->
+	<!-- <init-param> -->
+	<!-- <param-name>test-param</param-name> -->
+	<!-- <param-value>This parameter is for testing.</param-value> -->
+	<!-- </init-param> -->
+	<!-- </filter> -->
+
+	<filter-mapping>
+		<filter-name>ObjectifyFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+	<!-- <filter-mapping> -->
+	<!-- <filter-name>AppSessionFilter</filter-name> -->
+	<!-- <url-pattern>/*</url-pattern> -->
+	<!-- </filter-mapping> -->
+
+	<session-config>
+		<session-timeout>60</session-timeout>
+	</session-config>
+	<servlet>
+		<servlet-name>spring-dispatcher</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<load-on-startup>1</load-on-startup>
+		<init-param>
+			<param-name>contextClass</param-name>
+			<param-value>org.springframework.web.context.support.AnnotationConfigWebApplicationContext</param-value>
+		</init-param>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>com.ackdev.childDev.application.AppConfig</param-value>
+		</init-param>
+	</servlet>
+	<listener>
+		<listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
+	</listener>
+	<!-- <filter> -->
+	<!-- <filter-name>requestContextFilter</filter-name> -->
+	<!-- <filter-class>org.springframework.web.filter.RequestContextFilter</filter-class> -->
+	<!-- </filter> -->
+	<!-- <filter-mapping> -->
+	<!-- <filter-name>requestContextFilter</filter-name> -->
+	<!-- <url-pattern>/*</url-pattern> -->
+	<!-- </filter-mapping> -->
+	<filter>
+		<filter-name>customFilter</filter-name>
+		<filter-class>com.ackdev.filter.security.AppSessionFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>customFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+	<servlet-mapping>
+		<servlet-name>spring-dispatcher</servlet-name>
+		<url-pattern>/*</url-pattern>
+	</servlet-mapping>
+
+	<!-- Default page to serve -->
+	<welcome-file-list>
+		<welcome-file>index.html</welcome-file>
+	</welcome-file-list>
+
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>bounce</web-resource-name>
+			<url-pattern>/_ah/bounce</url-pattern>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>admin</role-name>
+		</auth-constraint>
+	</security-constraint>
+
+	<listener>
+		<listener-class>com.ackdev.childDev.application.Bootstrapper</listener-class>
+	</listener>
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+	<!-- <listener> -->
+	<!-- <listener-class>org.springframework.web.context.request.RequestContextListener</listener-class> -->
+	<!-- </listener> -->
+</web-app>
