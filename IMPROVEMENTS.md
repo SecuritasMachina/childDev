@@ -95,6 +95,17 @@
 
 ---
 
+## 2026-05-16 — TodoList sort: overdue first, nulls last
+
+**What changed:**
+- `TodoRepository.GetPendingAsync`: Changed LINQ `.OrderBy(t => t.DueDate)` (null-first in SQLite ASC) to raw SQL `ORDER BY (DueDate IS NULL), DueDate`. Boolean expression evaluates 0 (non-null) before 1 (null), so todos without a due date sort last; overdue items appear first among dated todos.
+
+**Why:** Previously, todos with no due date appeared at the top because SQLite sorts NULL first in ascending order. Overdue items were buried below undated ones — the opposite of urgency ordering.
+
+**Impact:** Most urgent todos (overdue, then soonest due, then undated) appear first. 30 API tests pass.
+
+---
+
 ## 2026-05-16 — Settings "Test Connection" + SyncService pre-flight health check
 
 **What changed:**
