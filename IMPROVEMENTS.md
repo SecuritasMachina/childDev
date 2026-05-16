@@ -27,6 +27,23 @@
 
 ---
 
+## 2026-05-16 — Dashboard refresh after sync + Settings JWT preservation + Cross-account isolation tests
+
+**What changed:**
+- `DashboardViewModel.cs`: Extracted `RefreshDataAsync` and call it after successful sync so displayed journals/counts update without re-navigation.
+- `AccountService.cs`: Added `SaveServerUrlAsync()` that only updates the URL column, leaving JWT intact.
+- `SettingsViewModel.cs`: Use `SaveServerUrlAsync` instead of `SaveServerCredentialsAsync(empty, url)` — the old call was blanking the JWT on every settings save.
+- `GoalSyncTests`, `TodoSyncTests`, `GoalProgressSyncTests`: Added `Sync_RecordWithWrongAccountFk_IsRejected` to each — mirrors the isolation test already present in `JournalSyncTests`.
+
+**Why:**
+- Dashboard was showing stale data after sync until user left and returned.
+- Settings URL save was silently breaking sync by zeroing the JWT.
+- Three sync endpoints had no test coverage for cross-account data leakage.
+
+**Impact:** 21 tests pass (was 18). Two silent data/security bugs eliminated.
+
+---
+
 ## Flagged but not implemented (requires backend coordination)
 
 **Password in URL:** `account.service.ts` `token()` method sends the password as a plain path segment in a GET request (`/token/{nickname}/{password}`). Passwords in URLs are logged by servers, proxies, and browser history. Fix requires a POST-based authentication endpoint on the backend.
