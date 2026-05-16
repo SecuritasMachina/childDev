@@ -9,7 +9,11 @@
         <ToolbarItem Text="+" Command="{Binding AddCommand}" />
     </ContentPage.ToolbarItems>
 
-    <CollectionView ItemsSource="{Binding Goals}">
+    <Grid RowDefinitions="Auto,*">
+        <Label Grid.Row="0" Text="{Binding StatusMessage}" TextColor="Red"
+               FontSize="13" Padding="16,8"
+               IsVisible="{Binding StatusMessage, Converter={x:StaticResource StringToBoolConverter}}" />
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Goals}">
         <CollectionView.EmptyView>
             <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8" Padding="32">
                 <Label Text="No goals yet" FontSize="18" HorizontalOptions="Center" />
@@ -46,4 +50,5 @@
             </DataTemplate>
         </CollectionView.ItemTemplate>
     </CollectionView>
+    </Grid>
 </ContentPage>

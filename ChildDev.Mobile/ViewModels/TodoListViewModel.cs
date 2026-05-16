@@ -17,13 +17,24 @@ public partial class TodoListViewModel(
     [ObservableProperty]
     private string newTodoTitle = string.Empty;
 
+    [ObservableProperty]
+    private string statusMessage = string.Empty;
+
     [RelayCommand]
     private async Task LoadAsync()
     {
-        var account = await accountService.GetAccountAsync();
-        if (account is null) return;
-        var items = await repo.GetPendingAsync(account.Guid);
-        Todos = new ObservableCollection<Todo>(items);
+        try
+        {
+            StatusMessage = string.Empty;
+            var account = await accountService.GetAccountAsync();
+            if (account is null) return;
+            var items = await repo.GetPendingAsync(account.Guid);
+            Todos = new ObservableCollection<Todo>(items);
+        }
+        catch
+        {
+            StatusMessage = "Could not load tasks. Please restart the app.";
+        }
     }
 
     [RelayCommand]
