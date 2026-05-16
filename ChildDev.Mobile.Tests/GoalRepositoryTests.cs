@@ -39,6 +39,24 @@ public class GoalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetAllActiveAsync_ActiveBeforeCompleted()
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var active = new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = "account2",
+            GoalText = "Active", EnteredDate = now - 1000, UpdatedOn = now };
+        var completed = new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = "account2",
+            GoalText = "Completed", EnteredDate = now, UpdatedOn = now, CompletionDate = now };
+
+        await _repo.SaveAsync(active);
+        await _repo.SaveAsync(completed);
+        var all = await _repo.GetAllActiveAsync("account2");
+
+        Assert.Equal(2, all.Count);
+        Assert.Equal("Active", all[0].GoalText);
+        Assert.Equal("Completed", all[1].GoalText);
+    }
+
+    [Fact]
     public async Task Delete_SoftDeletes_ExcludedFromActive()
     {
         var goal = new Goal
