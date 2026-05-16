@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "SxAqsIGOHI6Q52xZ67I24KWi5asvJJHDSvVV9JcSgZQ=",
+  "Source": "ChildDev.Api",
+  "BasePath": "_content/ChildDev.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
