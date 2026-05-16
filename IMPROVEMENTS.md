@@ -95,6 +95,34 @@
 
 ---
 
+## 2026-05-16 — Iteration 8 Brainstorm (fresh)
+
+| # | Description | Dim | Impact | Effort | Risk | Status |
+|---|-------------|-----|--------|--------|------|--------|
+| 1 | API: null Records guard → 400 | Stability | High | S | Low | **DONE** |
+| 2 | API: OrderBy(UpdatedOn) on delta response | Stability | Medium | S | Low | **DONE** |
+| 3 | Dashboard: overdue todo count with red badge | UI | Medium | M | Low | Backlog |
+| 4 | API: validate UpdatedOn not far in future | Stability | Low | M | Low | Backlog |
+| 5 | JournalEntryPage: show creation date | UI | Low | S | Low | Backlog |
+| 6 | SyncService: atomic LastSyncAt (all-or-nothing) | Stability | High | M | Medium | Backlog |
+| 7 | GoalEntryPage: show NextMeetingDate label if existing | UI | Low | S | Low | Backlog |
+| 8 | GoalListPage: separate completed goals visually | UI | Low | M | Low | Backlog |
+| 9 | TodoListPage: show "completed" bottom section | UI | Low | M | Low | Backlog |
+| 10 | API: ETag/conditional-get for sync | Perf | Low | L | Medium | Backlog |
+
+---
+
+## 2026-05-16 — API sync input validation + deterministic delta ordering
+
+**What changed:**
+- All 4 sync endpoints (`/api/sync/{journal,goal,goal-progress,todo}`): Added `if (req.Records is null) return Results.BadRequest(...)` guard before accessing Records. Prevents NullReferenceException (→ 500) when malformed client sends `"Records": null`.
+- All 4 sync endpoints: Added `.OrderBy(t => t.UpdatedOn)` to the delta response query. Delta records now arrive at the client in chronological order — predictable and easier to debug.
+- `SyncInputValidationTests.cs`: Theory test across all 4 endpoints verifying null Records → 400.
+
+**Impact:** 34 tests (was 30). Null input no longer causes 500. Delta ordering is deterministic.
+
+---
+
 ## 2026-05-16 — TodoList sort: overdue first, nulls last
 
 **What changed:**

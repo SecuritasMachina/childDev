@@ -16,6 +16,7 @@ public static class TodoEndpoints
         {
             var accountGuid = jwt.ExtractAccountGuid(user);
             if (accountGuid is null) return Results.Unauthorized();
+            if (req.Records is null) return Results.BadRequest("Records must not be null.");
             var incomingGuids = req.Records.Select(r => r.Guid).ToList();
             var existingMap = await db.Todos
                 .Where(t => incomingGuids.Contains(t.Guid))
@@ -30,6 +31,7 @@ public static class TodoEndpoints
             await db.SaveChangesAsync();
             var delta = await db.Todos
                 .Where(t => t.AccountFk == accountGuid && t.UpdatedOn > req.LastSyncAt)
+                .OrderBy(t => t.UpdatedOn)
                 .Select(t => EntityToDto(t)).ToListAsync();
             return Results.Ok(new SyncResponse<TodoDto>(delta));
         }).RequireAuthorization();
