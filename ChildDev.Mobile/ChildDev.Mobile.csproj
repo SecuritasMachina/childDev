@@ -69,6 +69,8 @@
 		<Compile Remove="ViewModels\JournalListViewModel.cs" />
 		<Compile Remove="ViewModels\GoalListViewModel.cs" />
 		<Compile Remove="ViewModels\GoalEntryViewModel.cs" />
+		<Compile Remove="ViewModels\TodoListViewModel.cs" />
+		<Compile Remove="ViewModels\DashboardViewModel.cs" />
 	</ItemGroup>
 
 </Project>

@@ -1,7 +1,48 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:ChildDev.Mobile.Models"
              x:Class="ChildDev.Mobile.Views.DashboardPage"
              Title="Dashboard">
-    <Label Text="Dashboard" HorizontalOptions="Center" VerticalOptions="Center" />
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="⚙" Command="{Binding GoToSettingsCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+
+            <Label Text="{Binding SyncStatus}" FontSize="12" TextColor="Gray"
+                   IsVisible="{Binding SyncStatus, Converter={StaticResource StringToBoolConverter}}" />
+
+            <!-- Summary row -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Border Grid.Column="0" Padding="16" StrokeShape="RoundRectangle 8">
+                    <VerticalStackLayout>
+                        <Label Text="{Binding ActiveGoalCount}" FontSize="32" HorizontalOptions="Center" />
+                        <Label Text="Active Goals" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1" Padding="16" StrokeShape="RoundRectangle 8">
+                    <VerticalStackLayout>
+                        <Label Text="{Binding PendingTodoCount}" FontSize="32" HorizontalOptions="Center" />
+                        <Label Text="Pending Todos" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <!-- Recent journal entries -->
+            <Label Text="Recent Journal" FontSize="18" FontAttributes="Bold" />
+            <CollectionView ItemsSource="{Binding RecentJournals}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Journal">
+                        <Border Padding="12" Margin="0,4" StrokeShape="RoundRectangle 8">
+                            <Label Text="{Binding Notes}" LineBreakMode="TailTruncation" MaxLines="2" />
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Button Text="+ New Journal Entry" Command="{Binding AddJournalCommand}" />
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>
