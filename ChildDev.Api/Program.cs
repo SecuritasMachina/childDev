@@ -16,16 +16,22 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddSingleton<JwtService>();
 
-var jwtSecret = builder.Configuration["CHILDDEV_JWT_SECRET"] ?? "dev-secret-min-32-chars-placeholder";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+    .AddJwtBearer();
+
+// Defer reading CHILDDEV_JWT_SECRET to options-resolution time so tests can inject it
+// via WebApplicationFactory.ConfigureAppConfiguration before it is read.
+builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+    .Configure<IConfiguration>((options, config) =>
     {
+        var secret = config["CHILDDEV_JWT_SECRET"]
+            ?? throw new InvalidOperationException("CHILDDEV_JWT_SECRET is not configured");
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = false,
             ValidateAudience = false,
             ValidateLifetime = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret))
         };
     });
 
