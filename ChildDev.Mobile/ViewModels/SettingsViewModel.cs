@@ -27,7 +27,7 @@ public partial class SettingsViewModel(AccountService accountService) : Observab
     private async Task SaveServerUrlAsync()
     {
         var url = ServerUrl.Trim().TrimEnd('/');
-        await accountService.SaveServerCredentialsAsync(string.Empty, url);
+        await accountService.SaveServerUrlAsync(url);
         StatusMessage = "Server URL saved.";
     }
 }

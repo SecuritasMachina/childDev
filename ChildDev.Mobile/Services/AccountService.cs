@@ -44,4 +44,12 @@ public class AccountService(SQLiteAsyncConnection db)
         account.ServerUrl = serverUrl;
         await db.UpdateAsync(account);
     }
+
+    public async Task SaveServerUrlAsync(string serverUrl)
+    {
+        var account = await GetAccountAsync();
+        if (account is null) return;
+        account.ServerUrl = serverUrl;
+        await db.UpdateAsync(account);
+    }
 }
