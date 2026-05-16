@@ -1,7 +1,33 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ChildDev.Mobile.ViewModels"
+             xmlns:models="clr-namespace:ChildDev.Mobile.Models"
              x:Class="ChildDev.Mobile.Views.JournalListPage"
              Title="Journal">
-    <Label Text="Journal" HorizontalOptions="Center" VerticalOptions="Center" />
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="+" Command="{Binding AddCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <CollectionView ItemsSource="{Binding Journals}">
+        <CollectionView.ItemTemplate>
+            <DataTemplate x:DataType="models:Journal">
+                <SwipeView>
+                    <SwipeView.RightItems>
+                        <SwipeItems>
+                            <SwipeItem Text="Delete" BackgroundColor="Red"
+                                       Command="{Binding Source={RelativeSource AncestorType={x:Type vm:JournalListViewModel}}, Path=DeleteCommand}"
+                                       CommandParameter="{Binding .}" />
+                        </SwipeItems>
+                    </SwipeView.RightItems>
+                    <Grid Padding="16,12" ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="{Binding Notes}" LineBreakMode="TailTruncation" MaxLines="2" />
+                            <Label Text="{Binding Mood}" FontSize="12" TextColor="Gray" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </SwipeView>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+    </CollectionView>
 </ContentPage>

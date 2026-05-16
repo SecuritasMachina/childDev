@@ -65,6 +65,8 @@
 		<Compile Remove="Services\ConnectivityService.cs" />
 		<Compile Remove="Services\SyncService.cs" />
 		<Compile Remove="ViewModels\SetupViewModel.cs" />
+		<Compile Remove="ViewModels\JournalEntryViewModel.cs" />
+		<Compile Remove="ViewModels\JournalListViewModel.cs" />
 	</ItemGroup>
 
 </Project>
