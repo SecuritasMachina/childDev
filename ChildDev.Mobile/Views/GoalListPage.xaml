@@ -10,6 +10,12 @@
     </ContentPage.ToolbarItems>
 
     <CollectionView ItemsSource="{Binding Goals}">
+        <CollectionView.EmptyView>
+            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8" Padding="32">
+                <Label Text="No goals yet" FontSize="18" HorizontalOptions="Center" />
+                <Label Text="Tap + to set your first goal." TextColor="Gray" HorizontalOptions="Center" />
+            </VerticalStackLayout>
+        </CollectionView.EmptyView>
         <CollectionView.ItemTemplate>
             <DataTemplate x:DataType="models:Goal">
                 <SwipeView>

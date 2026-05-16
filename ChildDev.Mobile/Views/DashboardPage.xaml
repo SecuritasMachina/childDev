@@ -33,6 +33,9 @@
             <!-- Recent journal entries -->
             <Label Text="Recent Journal" FontSize="18" FontAttributes="Bold" />
             <CollectionView ItemsSource="{Binding RecentJournals}">
+                <CollectionView.EmptyView>
+                    <Label Text="No journal entries yet." TextColor="Gray" Padding="0,4" />
+                </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Journal">
                         <Border Padding="12" Margin="0,4" StrokeShape="RoundRectangle 8">
