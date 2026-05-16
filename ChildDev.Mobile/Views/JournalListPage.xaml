@@ -9,7 +9,11 @@
         <ToolbarItem Text="+" Command="{Binding AddCommand}" />
     </ContentPage.ToolbarItems>
 
-    <CollectionView ItemsSource="{Binding Journals}">
+    <Grid RowDefinitions="Auto,*">
+        <Label Grid.Row="0" Text="{Binding StatusMessage}" TextColor="Red"
+               FontSize="13" Padding="16,8"
+               IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}" />
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Journals}">
         <CollectionView.EmptyView>
             <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8" Padding="32">
                 <Label Text="No journal entries yet" FontSize="18" HorizontalOptions="Center" />
@@ -45,4 +49,5 @@
             </DataTemplate>
         </CollectionView.ItemTemplate>
     </CollectionView>
+    </Grid>
 </ContentPage>

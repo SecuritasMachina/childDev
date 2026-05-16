@@ -14,13 +14,24 @@ public partial class JournalListViewModel(
     [ObservableProperty]
     private ObservableCollection<Journal> journals = [];
 
+    [ObservableProperty]
+    private string statusMessage = string.Empty;
+
     [RelayCommand]
     private async Task LoadAsync()
     {
-        var account = await accountService.GetAccountAsync();
-        if (account is null) return;
-        var items = await repo.GetAllActiveAsync(account.Guid);
-        Journals = new ObservableCollection<Journal>(items);
+        try
+        {
+            StatusMessage = string.Empty;
+            var account = await accountService.GetAccountAsync();
+            if (account is null) return;
+            var items = await repo.GetAllActiveAsync(account.Guid);
+            Journals = new ObservableCollection<Journal>(items);
+        }
+        catch
+        {
+            StatusMessage = "Could not load entries. Please restart the app.";
+        }
     }
 
     [RelayCommand]

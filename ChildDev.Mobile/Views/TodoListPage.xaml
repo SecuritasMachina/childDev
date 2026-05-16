@@ -5,14 +5,17 @@
              xmlns:models="clr-namespace:ChildDev.Mobile.Models"
              x:Class="ChildDev.Mobile.Views.TodoListPage"
              Title="Todos">
-    <Grid RowDefinitions="Auto,*">
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Padding="16,8">
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Label Grid.Row="0" Text="{Binding StatusMessage}" TextColor="Red"
+               FontSize="13" Padding="16,8"
+               IsVisible="{Binding StatusMessage, Converter={x:StaticResource StringToBoolConverter}}" />
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Padding="16,8">
             <Entry Grid.Column="0" Placeholder="Add a task..." Text="{Binding NewTodoTitle}"
                    ReturnCommand="{Binding AddCommand}" />
             <Button Grid.Column="1" Text="Add" Command="{Binding AddCommand}" Margin="8,0,0,0" />
         </Grid>
 
-        <CollectionView Grid.Row="1" ItemsSource="{Binding Todos}">
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Todos}">
             <CollectionView.EmptyView>
                 <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8" Padding="32">
                     <Label Text="All done!" FontSize="18" HorizontalOptions="Center" />

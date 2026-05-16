@@ -14,13 +14,24 @@ public partial class GoalListViewModel(
     [ObservableProperty]
     private ObservableCollection<Goal> goals = [];
 
+    [ObservableProperty]
+    private string statusMessage = string.Empty;
+
     [RelayCommand]
     private async Task LoadAsync()
     {
-        var account = await accountService.GetAccountAsync();
-        if (account is null) return;
-        var items = await repo.GetAllActiveAsync(account.Guid);
-        Goals = new ObservableCollection<Goal>(items);
+        try
+        {
+            StatusMessage = string.Empty;
+            var account = await accountService.GetAccountAsync();
+            if (account is null) return;
+            var items = await repo.GetAllActiveAsync(account.Guid);
+            Goals = new ObservableCollection<Goal>(items);
+        }
+        catch
+        {
+            StatusMessage = "Could not load goals. Please restart the app.";
+        }
     }
 
     [RelayCommand]
