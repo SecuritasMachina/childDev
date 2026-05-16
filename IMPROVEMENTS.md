@@ -95,6 +95,22 @@
 
 ---
 
+## 2026-05-16 — Journal entry date display + Dashboard overdue todo count
+
+**What changed:**
+- `JournalEntryViewModel`: Added `EnteredDateDisplay` property — populated on load with `"ddd, MMM d yyyy"` format. Empty string for new entries.
+- `JournalEntryPage.xaml`: Shows `EnteredDateDisplay` as a gray label at the top, visible only for existing entries (StringToBoolConverter on empty string).
+- `DashboardViewModel`: Added `OverdueTodoCount` and `HasOverdueTodos` — computed from pending todos with `DueDate < now`.
+- `DashboardPage.xaml`: Red "N overdue" subtitle in the Pending Todos tile, visible only when `HasOverdueTodos` is true.
+
+**Why:**
+- Journal entries had no visible date — users editing past entries had no context for when they were written.
+- Dashboard showed total pending but not urgency; "3 overdue" in red draws attention to items that need action.
+
+**Impact:** Journal entry context visible. Dashboard urgency signal added. 34 tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 8 Brainstorm (fresh)
 
 | # | Description | Dim | Impact | Effort | Risk | Status |
