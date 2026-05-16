@@ -78,6 +78,22 @@
 
 ---
 
+## 2026-05-16 — Dashboard navigation tiles + TodoEntryPage "Mark Done"
+
+**What changed:**
+- `DashboardViewModel`: Added `GoToGoalsCommand` (navigates `//goals`) and `GoToTodosCommand` (navigates `//todos`).
+- `DashboardPage.xaml`: Added `TapGestureRecognizer` to "Active Goals" and "Pending Todos" Border tiles.
+- `TodoEntryViewModel`: Added `IsExisting` flag (set to true after loading an existing todo), and `MarkDoneCommand` that calls `CompleteAsync` and navigates back.
+- `TodoEntryPage.xaml`: Added green "Mark as Done" button, visible only for existing todos (`IsVisible="{Binding IsExisting}"`).
+
+**Why:**
+- Count tiles on the dashboard were prominent but non-interactive — natural affordance was broken.
+- Users had to navigate back to the list and swipe-left to complete a todo after editing it.
+
+**Impact:** Dashboard tiles are now navigation shortcuts. Todos can be completed directly from the edit page. All 29 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 3 Brainstorm (fresh)
 
 | # | Description | Dim | Impact | Effort | Risk | Status |

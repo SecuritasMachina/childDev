@@ -16,6 +16,7 @@ public partial class TodoEntryViewModel(
     [ObservableProperty] private string notes = string.Empty;
     [ObservableProperty] private bool hasDueDate;
     [ObservableProperty] private DateTime dueDate = DateTime.Today.AddDays(1);
+    [ObservableProperty] private bool isExisting;
 
     partial void OnGuidChanged(string value)
     {
@@ -34,6 +35,7 @@ public partial class TodoEntryViewModel(
             DueDate = DateTimeOffset.FromUnixTimeMilliseconds(item.DueDate.Value).LocalDateTime;
             HasDueDate = true;
         }
+        IsExisting = true;
     }
 
     [RelayCommand]
@@ -55,6 +57,14 @@ public partial class TodoEntryViewModel(
             : null;
 
         await repo.SaveAsync(todo);
+        await Shell.Current.GoToAsync("..");
+    }
+
+    [RelayCommand]
+    private async Task MarkDoneAsync()
+    {
+        if (string.IsNullOrEmpty(Guid)) return;
+        await repo.CompleteAsync(Guid);
         await Shell.Current.GoToAsync("..");
     }
 }

@@ -18,6 +18,9 @@
                 <Label Text="Due Date" VerticalOptions="Center" />
             </HorizontalStackLayout>
             <DatePicker Date="{Binding DueDate}" IsVisible="{Binding HasDueDate}" />
+            <Button Text="Mark as Done" Command="{Binding MarkDoneCommand}"
+                    BackgroundColor="Green" TextColor="White"
+                    IsVisible="{Binding IsExisting}" Margin="0,8,0,0" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
