@@ -25,6 +25,12 @@ public partial class DashboardViewModel(
         var account = await accountService.GetAccountAsync();
         if (account is null) return;
 
+        await RefreshDataAsync(account);
+        _ = RunSyncAsync(account);
+    }
+
+    private async Task RefreshDataAsync(Account account)
+    {
         var journals = await journalRepo.GetAllActiveAsync(account.Guid);
         RecentJournals = new ObservableCollection<Journal>(journals.Take(3));
 
@@ -33,8 +39,6 @@ public partial class DashboardViewModel(
 
         var todos = await todoRepo.GetPendingAsync(account.Guid);
         PendingTodoCount = todos.Count;
-
-        _ = RunSyncAsync(account);
     }
 
     private async Task RunSyncAsync(Account account)
@@ -48,6 +52,8 @@ public partial class DashboardViewModel(
             SyncResult.Failed => "Sync failed — will retry next open",
             _ => string.Empty
         };
+        if (result == SyncResult.Success)
+            await RefreshDataAsync(account);
     }
 
     [RelayCommand]

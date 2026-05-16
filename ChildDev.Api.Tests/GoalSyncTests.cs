@@ -39,4 +39,20 @@ public class GoalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var response = await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([], 0));
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Sync_RecordWithWrongAccountFk_IsRejected()
+    {
+        var (jwt1, _) = await RegisterAsync("gsync_guard1");
+        var (jwt2, accountGuid2) = await RegisterAsync("gsync_guard2");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt1);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var intruderGuid = Guid.NewGuid().ToString();
+        var record = new GoalDto(intruderGuid, accountGuid2, "Intruder goal", null, null, ts, null, null, ts, null);
+        await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([record], 0));
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt2);
+        var syncResponse = await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([], 0));
+        var body = await syncResponse.Content.ReadFromJsonAsync<SyncResponse<GoalDto>>();
+        Assert.DoesNotContain(body!.Records, r => r.Guid == intruderGuid);
+    }
 }

@@ -53,4 +53,20 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], 0));
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Sync_RecordWithWrongAccountFk_IsRejected()
+    {
+        var (jwt1, _) = await RegisterAsync("tsync_guard1");
+        var (jwt2, accountGuid2) = await RegisterAsync("tsync_guard2");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt1);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var intruderGuid = Guid.NewGuid().ToString();
+        var record = new TodoDto(intruderGuid, accountGuid2, "Intruder todo", null, null, null, ts, null);
+        await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([record], 0));
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt2);
+        var syncResponse = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], 0));
+        var body = await syncResponse.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+        Assert.DoesNotContain(body!.Records, r => r.Guid == intruderGuid);
+    }
 }
