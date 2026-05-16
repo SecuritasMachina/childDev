@@ -42,6 +42,45 @@ public class GoalProgressSyncTests(ApiFactory factory) : IClassFixture<ApiFactor
     }
 
     [Fact]
+    public async Task Sync_ClientWinsWhenNewerUpdatedOn()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_lww1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var goalGuid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(guid, accountGuid, goalGuid, "old step", null, ts, null)], 0));
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(guid, accountGuid, goalGuid, "new step", null, ts + 1000, null)], 0));
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalProgressDto>>();
+        Assert.Equal("new step", body!.Records[0].NextStepItems);
+    }
+
+    [Fact]
+    public async Task Sync_DeltaFiltering_OnlyReturnsRecordsNewerThanLastSyncAt()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_delta1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var oldTs = 1000L;
+        var newTs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var oldGuid = Guid.NewGuid().ToString();
+        var newGuid = Guid.NewGuid().ToString();
+        var goalGuid = Guid.NewGuid().ToString();
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([
+                new GoalProgressDto(oldGuid, accountGuid, goalGuid, "old", null, oldTs, null),
+                new GoalProgressDto(newGuid, accountGuid, goalGuid, "new", null, newTs, null)
+            ], 0));
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([], oldTs));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalProgressDto>>();
+        Assert.DoesNotContain(body!.Records, r => r.Guid == oldGuid);
+        Assert.Contains(body.Records, r => r.Guid == newGuid);
+    }
+
+    [Fact]
     public async Task Sync_RecordWithWrongAccountFk_IsRejected()
     {
         var (jwt1, _) = await RegisterAsync("gpsync_guard1");

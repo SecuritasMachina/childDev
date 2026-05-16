@@ -83,4 +83,43 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Sync_DeltaFiltering_OnlyReturnsRecordsNewerThanLastSyncAt()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("jsync_delta1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var oldTs = 1000L;
+        var newTs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var oldGuid = Guid.NewGuid().ToString();
+        var newGuid = Guid.NewGuid().ToString();
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([
+                new JournalDto(oldGuid, accountGuid, "old note", null, null, null, oldTs, oldTs, null),
+                new JournalDto(newGuid, accountGuid, "new note", null, null, null, newTs, newTs, null)
+            ], 0));
+        var response = await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([], oldTs));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
+        Assert.DoesNotContain(body!.Records, r => r.Guid == oldGuid);
+        Assert.Contains(body.Records, r => r.Guid == newGuid);
+    }
+
+    [Fact]
+    public async Task Sync_RecordWithWrongAccountFk_IsRejected()
+    {
+        var (jwt1, _) = await RegisterAsync("jsync_guard1");
+        var (jwt2, accountGuid2) = await RegisterAsync("jsync_guard2");
+
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt1);
+        var intruderGuid = Guid.NewGuid().ToString();
+        var record = new JournalDto(intruderGuid, accountGuid2, "intruder note", null, null, null, 1000, 1000, null);
+        var uploadResponse = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([record], 0));
+        Assert.Equal(HttpStatusCode.OK, uploadResponse.StatusCode);
+
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt2);
+        var syncResponse = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
+        var body = await syncResponse.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
+        Assert.DoesNotContain(body!.Records, r => r.Guid == intruderGuid);
+    }
 }
