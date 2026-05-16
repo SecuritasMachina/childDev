@@ -19,6 +19,7 @@ public static class JournalEndpoints
         {
             var accountGuid = jwt.ExtractAccountGuid(user);
             if (accountGuid is null) return Results.Unauthorized();
+            if (req.Records is null) return Results.BadRequest("Records must not be null.");
 
             var incomingGuids = req.Records.Select(r => r.Guid).ToList();
             var existingMap = await db.Journals
@@ -36,6 +37,7 @@ public static class JournalEndpoints
 
             var delta = await db.Journals
                 .Where(j => j.AccountFk == accountGuid && j.UpdatedOn > req.LastSyncAt)
+                .OrderBy(j => j.UpdatedOn)
                 .Select(j => EntityToDto(j))
                 .ToListAsync();
 

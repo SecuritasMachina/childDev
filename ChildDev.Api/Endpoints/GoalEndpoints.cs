@@ -16,6 +16,7 @@ public static class GoalEndpoints
         {
             var accountGuid = jwt.ExtractAccountGuid(user);
             if (accountGuid is null) return Results.Unauthorized();
+            if (req.Records is null) return Results.BadRequest("Records must not be null.");
             var incomingGuids = req.Records.Select(r => r.Guid).ToList();
             var existingMap = await db.Goals
                 .Where(g => incomingGuids.Contains(g.Guid))
@@ -30,6 +31,7 @@ public static class GoalEndpoints
             await db.SaveChangesAsync();
             var delta = await db.Goals
                 .Where(g => g.AccountFk == accountGuid && g.UpdatedOn > req.LastSyncAt)
+                .OrderBy(g => g.UpdatedOn)
                 .Select(g => EntityToDto(g)).ToListAsync();
             return Results.Ok(new SyncResponse<GoalDto>(delta));
         }).RequireAuthorization();
