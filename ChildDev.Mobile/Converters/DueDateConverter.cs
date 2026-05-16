@@ -1,0 +1,54 @@
+using System.Globalization;
+
+namespace ChildDev.Mobile.Converters;
+
+public class NotNullConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is not null;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotImplementedException();
+}
+
+
+public class DueDateLabelConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is not long ms) return null;
+        var due = DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime.Date;
+        var today = DateTime.Today;
+        var diff = (due - today).Days;
+        return diff switch
+        {
+            < 0 => $"Overdue {-diff}d",
+            0 => "Due today",
+            1 => "Due tomorrow",
+            <= 6 => $"Due {due:ddd}",
+            _ => $"Due {due:MMM d}"
+        };
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotImplementedException();
+}
+
+public class DueDateColorConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is not long ms) return Colors.Gray;
+        var due = DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime.Date;
+        var diff = (due - DateTime.Today).Days;
+        return diff switch
+        {
+            < 0 => Colors.Red,
+            0 => Colors.Orange,
+            _ => Colors.Gray
+        };
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotImplementedException();
+}

@@ -58,6 +58,26 @@
 
 ---
 
+## 2026-05-16 — Due-date badge on todo list + sync endpoint N→1 DB query optimization
+
+**What changed:**
+- `DueDateConverter.cs`: New `DueDateLabelConverter` (formats `long?` timestamp as "Due today", "Overdue 2d", "Due Fri", etc.) and `DueDateColorConverter` (red=overdue, orange=today, gray=future). Also added `NotNullConverter` (shows element only when value is non-null).
+- `App.xaml`: Registered all three new converters as app-level resources.
+- `TodoListPage.xaml`: Added right-aligned due-date label with color coding. Visible only when `DueDate` is set.
+- All 4 sync endpoints (`GoalEndpoints`, `JournalEndpoints`, `TodoEndpoints`, `GoalProgressEndpoints`): Replaced per-record `FindAsync` call with a single batch `WHERE Guid IN (...)` query + dictionary lookup. Reduces N DB round-trips to 1 per sync call.
+
+**Why:**
+- Due dates were set in the entry form but invisible in the list — no urgency signal at a glance.
+- Sync endpoint was doing a DB lookup per synced record; a batch of 50 records caused 50 round-trips.
+
+**Impact:** Due-date urgency visible inline. Sync DB load: O(N) queries → O(1) per sync call. All 29 API tests pass.
+
+**Skipped from backlog:**
+- #5 (reload on return) — already implemented via `OnAppearing` in all list pages.
+- #6 (overdue count on dashboard) — more complex; deferred to later iteration.
+
+---
+
 ## 2026-05-16 — Brainstorm Backlog (Iteration 1)
 
 | # | Description | Dim | Impact | Effort | Risk | Status |

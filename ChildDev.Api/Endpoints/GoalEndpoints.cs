@@ -16,12 +16,16 @@ public static class GoalEndpoints
         {
             var accountGuid = jwt.ExtractAccountGuid(user);
             if (accountGuid is null) return Results.Unauthorized();
+            var incomingGuids = req.Records.Select(r => r.Guid).ToList();
+            var existingMap = await db.Goals
+                .Where(g => incomingGuids.Contains(g.Guid))
+                .ToDictionaryAsync(g => g.Guid);
             foreach (var dto in req.Records)
             {
                 if (dto.AccountFk != accountGuid) continue;
-                var existing = await db.Goals.FindAsync(dto.Guid);
-                if (existing is null) db.Goals.Add(DtoToEntity(dto));
-                else if (dto.UpdatedOn > existing.UpdatedOn) ApplyDto(existing, dto);
+                if (!existingMap.TryGetValue(dto.Guid, out var entity))
+                    db.Goals.Add(DtoToEntity(dto));
+                else if (dto.UpdatedOn > entity.UpdatedOn) ApplyDto(entity, dto);
             }
             await db.SaveChangesAsync();
             var delta = await db.Goals
