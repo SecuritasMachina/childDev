@@ -3,5 +3,20 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="ChildDev.Mobile.Views.GoalEntryPage"
              Title="Goal">
-    <Label Text="Goal Entry" HorizontalOptions="Center" VerticalOptions="Center" />
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Save" Command="{Binding SaveCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+            <Label Text="Goal" />
+            <Editor Text="{Binding GoalText}" HeightRequest="100" AutoSize="TextChanges" />
+            <Label Text="Measurable Outcome" />
+            <Entry Text="{Binding MeasurableOutcome}" Placeholder="How will you know it's achieved?" />
+            <Label Text="Next Steps" />
+            <Editor Text="{Binding NextStepItems}" HeightRequest="80" AutoSize="TextChanges" />
+            <Label Text="Next Meeting Date" />
+            <DatePicker Date="{Binding NextMeetingDate}" />
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

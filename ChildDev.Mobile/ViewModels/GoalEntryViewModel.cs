@@ -1,5 +1,69 @@
+using ChildDev.Mobile.Data;
+using ChildDev.Mobile.Models;
+using ChildDev.Mobile.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace ChildDev.Mobile.ViewModels;
 
-public partial class GoalEntryViewModel : ObservableObject { }
+[QueryProperty(nameof(Guid), "guid")]
+public partial class GoalEntryViewModel(
+    GoalRepository repo,
+    GoalProgressRepository progressRepo,
+    AccountService accountService) : ObservableObject
+{
+    [ObservableProperty] private string guid = string.Empty;
+    [ObservableProperty] private string goalText = string.Empty;
+    [ObservableProperty] private string measurableOutcome = string.Empty;
+    [ObservableProperty] private string nextStepItems = string.Empty;
+    [ObservableProperty] private DateTime nextMeetingDate = DateTime.Today.AddDays(7);
+
+    partial void OnGuidChanged(string value)
+    {
+        if (!string.IsNullOrEmpty(value))
+            LoadAsync(value).FireAndForget();
+    }
+
+    private async Task LoadAsync(string guid)
+    {
+        var item = await repo.GetAsync(guid);
+        if (item is null) return;
+        GoalText = item.GoalText ?? string.Empty;
+        MeasurableOutcome = item.MeasurableOutcome ?? string.Empty;
+        if (item.NextMeetingDate.HasValue)
+            NextMeetingDate = DateTimeOffset.FromUnixTimeMilliseconds(item.NextMeetingDate.Value).LocalDateTime;
+    }
+
+    [RelayCommand]
+    private async Task SaveAsync()
+    {
+        var account = await accountService.GetAccountAsync();
+        if (account is null) return;
+
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = string.IsNullOrEmpty(Guid)
+            ? new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid, EnteredDate = ts }
+            : await repo.GetAsync(Guid) ?? new Goal { Guid = Guid, AccountFk = account.Guid, EnteredDate = ts };
+
+        goal.GoalText = GoalText;
+        goal.MeasurableOutcome = MeasurableOutcome;
+        goal.NextMeetingDate = new DateTimeOffset(NextMeetingDate, TimeSpan.Zero).ToUnixTimeMilliseconds();
+        await repo.SaveAsync(goal);
+
+        if (!string.IsNullOrWhiteSpace(NextStepItems))
+        {
+            var progress = new GoalProgress
+            {
+                Guid = System.Guid.NewGuid().ToString(),
+                AccountFk = account.Guid,
+                GoalFk = goal.Guid,
+                NextStepItems = NextStepItems,
+                NextMeetingDate = goal.NextMeetingDate,
+                UpdatedOn = ts
+            };
+            await progressRepo.SaveAsync(progress);
+        }
+
+        await Shell.Current.GoToAsync("..");
+    }
+}

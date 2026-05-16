@@ -1,7 +1,30 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ChildDev.Mobile.ViewModels"
+             xmlns:models="clr-namespace:ChildDev.Mobile.Models"
              x:Class="ChildDev.Mobile.Views.GoalListPage"
              Title="Goals">
-    <Label Text="Goals" HorizontalOptions="Center" VerticalOptions="Center" />
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="+" Command="{Binding AddCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <CollectionView ItemsSource="{Binding Goals}">
+        <CollectionView.ItemTemplate>
+            <DataTemplate x:DataType="models:Goal">
+                <SwipeView>
+                    <SwipeView.RightItems>
+                        <SwipeItems>
+                            <SwipeItem Text="Delete" BackgroundColor="Red"
+                                       Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GoalListViewModel}}, Path=DeleteCommand}"
+                                       CommandParameter="{Binding .}" />
+                        </SwipeItems>
+                    </SwipeView.RightItems>
+                    <Grid Padding="16,12">
+                        <Label Text="{Binding GoalText}" LineBreakMode="TailTruncation" MaxLines="2" />
+                    </Grid>
+                </SwipeView>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+    </CollectionView>
 </ContentPage>
