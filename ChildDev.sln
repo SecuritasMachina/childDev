@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChildDev.Api", "ChildDev.Ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChildDev.Api.Tests", "ChildDev.Api.Tests\ChildDev.Api.Tests.csproj", "{6E61569F-75E7-4E06-8666-1280C6B032B4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChildDev.Mobile", "ChildDev.Mobile\ChildDev.Mobile.csproj", "{275C01A4-D87A-4F74-AB41-84BD13E543A2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChildDev.Mobile.Tests", "ChildDev.Mobile.Tests\ChildDev.Mobile.Tests.csproj", "{08256E51-29C8-4B3C-8909-82C1BBE692F6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +28,13 @@ Global
 		{6E61569F-75E7-4E06-8666-1280C6B032B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E61569F-75E7-4E06-8666-1280C6B032B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6E61569F-75E7-4E06-8666-1280C6B032B4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{275C01A4-D87A-4F74-AB41-84BD13E543A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{275C01A4-D87A-4F74-AB41-84BD13E543A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{275C01A4-D87A-4F74-AB41-84BD13E543A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{275C01A4-D87A-4F74-AB41-84BD13E543A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08256E51-29C8-4B3C-8909-82C1BBE692F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08256E51-29C8-4B3C-8909-82C1BBE692F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08256E51-29C8-4B3C-8909-82C1BBE692F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08256E51-29C8-4B3C-8909-82C1BBE692F6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
