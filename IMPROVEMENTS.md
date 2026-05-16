@@ -95,6 +95,19 @@
 
 ---
 
+## 2026-05-16 — Goal entry: date display + Mark as Complete button
+
+**What changed:**
+- `GoalRepository`: Added `CompleteAsync(guid)` — sets `CompletionDate = now`, updates `UpdatedOn`.
+- `GoalEntryViewModel`: Added `IsExisting`, `EnteredDateDisplay` (populated on load), and `MarkCompleteCommand`.
+- `GoalEntryPage.xaml`: Shows goal creation date at top for existing goals; "Mark as Complete" green button visible only for existing goals.
+
+**Why:** Users had no way to mark a goal complete from the edit page. Also mirrored the Journal pattern of showing the creation date, so users can see when they set the goal.
+
+**Impact:** Goals can be completed from the entry form. Entry date visible for context. 34 tests pass.
+
+---
+
 ## 2026-05-16 — Journal entry date display + Dashboard overdue todo count
 
 **What changed:**

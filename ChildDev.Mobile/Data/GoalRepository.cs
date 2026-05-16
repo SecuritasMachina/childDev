@@ -20,6 +20,15 @@ public class GoalRepository(SQLiteAsyncConnection db)
         await db.UpdateAsync(item);
     }
 
+    public async Task CompleteAsync(string guid)
+    {
+        var item = await db.FindAsync<Goal>(guid);
+        if (item is null) return;
+        item.CompletionDate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        item.UpdatedOn = item.CompletionDate.Value;
+        await db.UpdateAsync(item);
+    }
+
     public Task<List<Goal>> GetAllActiveAsync(string accountFk) =>
         db.Table<Goal>()
           .Where(g => g.AccountFk == accountFk && g.DeletedAt == null)
