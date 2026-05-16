@@ -22,6 +22,8 @@ artifacts/
 appsettings.*.json
 !appsettings.json
 !appsettings.Development.json
+*.env
+!*.env.example
 
 # OS
 .DS_Store
