@@ -16,12 +16,16 @@ public static class TodoEndpoints
         {
             var accountGuid = jwt.ExtractAccountGuid(user);
             if (accountGuid is null) return Results.Unauthorized();
+            var incomingGuids = req.Records.Select(r => r.Guid).ToList();
+            var existingMap = await db.Todos
+                .Where(t => incomingGuids.Contains(t.Guid))
+                .ToDictionaryAsync(t => t.Guid);
             foreach (var dto in req.Records)
             {
                 if (dto.AccountFk != accountGuid) continue;
-                var existing = await db.Todos.FindAsync(dto.Guid);
-                if (existing is null) db.Todos.Add(DtoToEntity(dto));
-                else if (dto.UpdatedOn > existing.UpdatedOn) ApplyDto(existing, dto);
+                if (!existingMap.TryGetValue(dto.Guid, out var entity))
+                    db.Todos.Add(DtoToEntity(dto));
+                else if (dto.UpdatedOn > entity.UpdatedOn) ApplyDto(entity, dto);
             }
             await db.SaveChangesAsync();
             var delta = await db.Todos

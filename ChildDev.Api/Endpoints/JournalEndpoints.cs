@@ -20,14 +20,17 @@ public static class JournalEndpoints
             var accountGuid = jwt.ExtractAccountGuid(user);
             if (accountGuid is null) return Results.Unauthorized();
 
+            var incomingGuids = req.Records.Select(r => r.Guid).ToList();
+            var existingMap = await db.Journals
+                .Where(j => incomingGuids.Contains(j.Guid))
+                .ToDictionaryAsync(j => j.Guid);
             foreach (var dto in req.Records)
             {
                 if (dto.AccountFk != accountGuid) continue;
-                var existing = await db.Journals.FindAsync(dto.Guid);
-                if (existing is null)
+                if (!existingMap.TryGetValue(dto.Guid, out var entity))
                     db.Journals.Add(DtoToEntity(dto));
-                else if (dto.UpdatedOn > existing.UpdatedOn)
-                    ApplyDto(existing, dto);
+                else if (dto.UpdatedOn > entity.UpdatedOn)
+                    ApplyDto(entity, dto);
             }
             await db.SaveChangesAsync();
 
