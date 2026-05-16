@@ -16,6 +16,7 @@ public partial class JournalEntryViewModel(
     [ObservableProperty] private string activity = string.Empty;
     [ObservableProperty] private string mood = string.Empty;
     [ObservableProperty] private string tags = string.Empty;
+    [ObservableProperty] private string enteredDateDisplay = string.Empty;
 
     partial void OnGuidChanged(string value)
     {
@@ -31,6 +32,7 @@ public partial class JournalEntryViewModel(
         Activity = item.Activity ?? string.Empty;
         Mood = item.Mood ?? string.Empty;
         Tags = item.Tags ?? string.Empty;
+        EnteredDateDisplay = DateTimeOffset.FromUnixTimeMilliseconds(item.EnteredDate).LocalDateTime.ToString("ddd, MMM d yyyy");
     }
 
     [RelayCommand]

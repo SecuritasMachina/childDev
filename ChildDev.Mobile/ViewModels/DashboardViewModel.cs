@@ -17,6 +17,8 @@ public partial class DashboardViewModel(
     [ObservableProperty] private ObservableCollection<Journal> recentJournals = [];
     [ObservableProperty] private int activeGoalCount;
     [ObservableProperty] private int pendingTodoCount;
+    [ObservableProperty] private int overdueTodoCount;
+    [ObservableProperty] private bool hasOverdueTodos;
     [ObservableProperty] private string syncStatus = string.Empty;
 
     [RelayCommand]
@@ -39,6 +41,9 @@ public partial class DashboardViewModel(
 
         var todos = await todoRepo.GetPendingAsync(account.Guid);
         PendingTodoCount = todos.Count;
+        var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        OverdueTodoCount = todos.Count(t => t.DueDate.HasValue && t.DueDate.Value < nowMs);
+        HasOverdueTodos = OverdueTodoCount > 0;
     }
 
     private async Task RunSyncAsync(Account account)
