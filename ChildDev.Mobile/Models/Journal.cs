@@ -1,0 +1,10 @@
+namespace ChildDev.Mobile.Models;
+
+public class Journal : SyncBase
+{
+    public string? Notes { get; set; }
+    public string? Activity { get; set; }
+    public string? Mood { get; set; }
+    public string? Tags { get; set; }
+    public long EnteredDate { get; set; }
+}
