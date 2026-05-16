@@ -17,6 +17,8 @@ public partial class GoalEntryViewModel(
     [ObservableProperty] private string measurableOutcome = string.Empty;
     [ObservableProperty] private string nextStepItems = string.Empty;
     [ObservableProperty] private DateTime nextMeetingDate = DateTime.Today.AddDays(7);
+    [ObservableProperty] private bool isExisting;
+    [ObservableProperty] private string enteredDateDisplay = string.Empty;
 
     partial void OnGuidChanged(string value)
     {
@@ -34,6 +36,8 @@ public partial class GoalEntryViewModel(
             NextMeetingDate = DateTimeOffset.FromUnixTimeMilliseconds(item.NextMeetingDate.Value).LocalDateTime;
         var progress = await progressRepo.GetForGoalAsync(guid);
         NextStepItems = progress.FirstOrDefault()?.NextStepItems ?? string.Empty;
+        EnteredDateDisplay = DateTimeOffset.FromUnixTimeMilliseconds(item.EnteredDate).LocalDateTime.ToString("ddd, MMM d yyyy");
+        IsExisting = true;
     }
 
     [RelayCommand]
@@ -66,6 +70,14 @@ public partial class GoalEntryViewModel(
             await progressRepo.SaveAsync(progress);
         }
 
+        await Shell.Current.GoToAsync("..");
+    }
+
+    [RelayCommand]
+    private async Task MarkCompleteAsync()
+    {
+        if (string.IsNullOrEmpty(Guid)) return;
+        await repo.CompleteAsync(Guid);
         await Shell.Current.GoToAsync("..");
     }
 }
