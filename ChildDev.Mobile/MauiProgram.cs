@@ -44,6 +44,7 @@ public static class MauiProgram
         builder.Services.AddTransient<GoalListViewModel>();
         builder.Services.AddTransient<GoalEntryViewModel>();
         builder.Services.AddTransient<TodoListViewModel>();
+        builder.Services.AddTransient<TodoEntryViewModel>();
         builder.Services.AddTransient<SettingsViewModel>();
 
         // Pages
@@ -54,6 +55,7 @@ public static class MauiProgram
         builder.Services.AddTransient<GoalListPage>();
         builder.Services.AddTransient<GoalEntryPage>();
         builder.Services.AddTransient<TodoListPage>();
+        builder.Services.AddTransient<TodoEntryPage>();
         builder.Services.AddTransient<SettingsPage>();
 
         return builder.Build();

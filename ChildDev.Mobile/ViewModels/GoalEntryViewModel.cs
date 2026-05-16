@@ -32,6 +32,8 @@ public partial class GoalEntryViewModel(
         MeasurableOutcome = item.MeasurableOutcome ?? string.Empty;
         if (item.NextMeetingDate.HasValue)
             NextMeetingDate = DateTimeOffset.FromUnixTimeMilliseconds(item.NextMeetingDate.Value).LocalDateTime;
+        var progress = await progressRepo.GetForGoalAsync(guid);
+        NextStepItems = progress.FirstOrDefault()?.NextStepItems ?? string.Empty;
     }
 
     [RelayCommand]

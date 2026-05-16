@@ -30,7 +30,19 @@
                                            CommandParameter="{Binding .}" />
                             </SwipeItems>
                         </SwipeView.RightItems>
-                        <Label Text="{Binding Title}" Padding="16,14" />
+                        <Grid Padding="16,12">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:TodoListViewModel}}, Path=OpenCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+                            <VerticalStackLayout>
+                                <Label Text="{Binding Title}" />
+                                <Label Text="{Binding Notes}" FontSize="12" TextColor="Gray"
+                                       LineBreakMode="TailTruncation" MaxLines="1"
+                                       IsVisible="{Binding Notes, Converter={x:StaticResource StringToBoolConverter}}" />
+                            </VerticalStackLayout>
+                        </Grid>
                     </SwipeView>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
