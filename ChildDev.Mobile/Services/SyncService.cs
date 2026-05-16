@@ -29,6 +29,10 @@ public class SyncService(
             client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", account.ServerJwt);
 
+            // Pre-flight: verify the server is reachable before attempting all 4 sync calls
+            var ping = await client.GetAsync("health");
+            if (!ping.IsSuccessStatusCode) return SyncResult.NoServer;
+
             var since = account.LastSyncAt;
 
             await SyncEntityAsync<Journal, JournalSyncDto>(

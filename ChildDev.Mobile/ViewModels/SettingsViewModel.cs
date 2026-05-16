@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace ChildDev.Mobile.ViewModels;
 
-public partial class SettingsViewModel(AccountService accountService) : ObservableObject
+public partial class SettingsViewModel(AccountService accountService, IHttpClientFactory httpFactory) : ObservableObject
 {
     [ObservableProperty] private string serverUrl = string.Empty;
     [ObservableProperty] private string nickName = string.Empty;
@@ -29,5 +29,24 @@ public partial class SettingsViewModel(AccountService accountService) : Observab
         var url = ServerUrl.Trim().TrimEnd('/');
         await accountService.SaveServerUrlAsync(url);
         StatusMessage = "Server URL saved.";
+    }
+
+    [RelayCommand]
+    private async Task TestConnectionAsync()
+    {
+        var url = ServerUrl.Trim().TrimEnd('/');
+        if (string.IsNullOrEmpty(url)) { StatusMessage = "Enter a server URL first."; return; }
+        StatusMessage = "Testing...";
+        try
+        {
+            var client = httpFactory.CreateClient("childdev");
+            client.Timeout = TimeSpan.FromSeconds(5);
+            var response = await client.GetAsync($"{url}/health");
+            StatusMessage = response.IsSuccessStatusCode ? "Connected!" : $"Server error: {(int)response.StatusCode}";
+        }
+        catch
+        {
+            StatusMessage = "Cannot reach server.";
+        }
     }
 }
