@@ -62,7 +62,8 @@
 		<Compile Remove="App.xaml.cs" />
 		<Compile Remove="AppShell.xaml.cs" />
 		<Compile Remove="MainPage.xaml.cs" />
-<Compile Remove="ViewModels\SetupViewModel.cs" />
+		<Compile Remove="Converters\**\*.cs" />
+		<Compile Remove="ViewModels\SetupViewModel.cs" />
 		<Compile Remove="ViewModels\JournalEntryViewModel.cs" />
 		<Compile Remove="ViewModels\JournalListViewModel.cs" />
 		<Compile Remove="ViewModels\GoalListViewModel.cs" />
