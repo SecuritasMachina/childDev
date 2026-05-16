@@ -21,6 +21,11 @@
                         </SwipeItems>
                     </SwipeView.RightItems>
                     <Grid Padding="16,12">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GoalListViewModel}}, Path=OpenCommand}"
+                                CommandParameter="{Binding .}" />
+                        </Grid.GestureRecognizers>
                         <Label Text="{Binding GoalText}" LineBreakMode="TailTruncation" MaxLines="2" />
                     </Grid>
                 </SwipeView>

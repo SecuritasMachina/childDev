@@ -58,4 +58,8 @@ public partial class TodoListViewModel(
         await repo.DeleteAsync(todo.Guid);
         Todos.Remove(todo);
     }
+
+    [RelayCommand]
+    private async Task OpenAsync(Todo todo) =>
+        await Shell.Current.GoToAsync($"todos/entry?guid={todo.Guid}");
 }

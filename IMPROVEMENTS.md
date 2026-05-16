@@ -58,6 +58,45 @@
 
 ---
 
+## 2026-05-16 — Brainstorm Backlog (Iteration 1)
+
+| # | Description | Dim | Impact | Effort | Risk | Status |
+|---|-------------|-----|--------|--------|------|--------|
+| 1 | Tap-to-edit todo list items (TodoEntryPage) | UI/Func | High | S | Low | **DONE** |
+| 2 | Show notes preview on todo list items | UI | Medium | S | Low | **DONE** (bundled with #1) |
+| 3 | GoalListPage/JournalListPage TapGestureRecognizer move to correct nesting | UI | Medium | S | Low | **DONE** (pre-existing, bundled with #1) |
+| 4 | GoalEntryViewModel: load NextStepItems from progress repo | Func | Medium | S | Low | **DONE** (pre-existing, bundled with #1) |
+| 5 | TodoListPage: reload list after returning from entry (OnAppearing) | UI | Medium | S | Low | Next iteration |
+| 6 | DashboardPage: show overdue todo count | UI/Func | Medium | M | Low | Backlog |
+| 7 | Add due-date display badge on todo list items | UI | Medium | S | Low | Backlog |
+| 8 | API: add pagination to list endpoints (large data sets) | Perf | Medium | M | Medium | Backlog |
+| 9 | Add empty-state messages to CollectionViews | UI | Low | S | Low | Backlog |
+| 10 | GoalListPage: show measurable outcome as subtitle | UI | Low | S | Low | Backlog |
+
+---
+
+## 2026-05-16 — Tap-to-edit for Todo list items + Notes preview
+
+**What changed:**
+- Created `TodoEntryPage.xaml` + `TodoEntryPage.xaml.cs` — entry/edit page for todo items mirroring GoalEntry/JournalEntry pattern.
+- Created `TodoEntryViewModel.cs` — `[QueryProperty]`-based VM with Title, Notes, DueDate (optional), and SaveCommand.
+- Added `TodoRepository.GetAsync(guid)` — public accessor so the VM can load an existing todo for editing.
+- Added `OpenCommand` to `TodoListViewModel` — navigates to `todos/entry?guid=...`.
+- Updated `TodoListPage.xaml` — wraps content in a tappable Grid with TapGestureRecognizer; shows Notes as a subtitle when present (via `StringToBoolConverter`).
+- Registered `todos/entry` route in `AppShell.xaml.cs`.
+- Registered `TodoEntryViewModel` and `TodoEntryPage` in `MauiProgram.cs`.
+- Also included pre-existing uncommitted changes: GoalListPage/JournalListPage TapGestureRecognizer correctly nested, GoalEntryViewModel loads NextStepItems.
+
+**Why:** Todos were the only list without tap-to-edit. Users had no way to correct a misspelled title or add notes after creation — only swipe-to-delete existed.
+
+**Impact:** Full CRUD for todos. Notes preview visible inline on the list.
+
+**Skipped from brainstorm:**
+- #5 (reload after entry) — low effort but separate iteration to keep diff focused.
+- #6–#10 — lower impact-to-effort ratio than #1.
+
+---
+
 ## Flagged but not implemented (requires backend coordination)
 
 **Password in URL:** `account.service.ts` `token()` method sends the password as a plain path segment in a GET request (`/token/{nickname}/{password}`). Passwords in URLs are logged by servers, proxies, and browser history. Fix requires a POST-based authentication endpoint on the backend.

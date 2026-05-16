@@ -29,6 +29,9 @@ public class TodoRepository(SQLiteAsyncConnection db)
         await db.UpdateAsync(item);
     }
 
+    public Task<Todo?> GetAsync(string guid) =>
+        db.FindAsync<Todo>(guid);
+
     public Task<List<Todo>> GetPendingAsync(string accountFk) =>
         db.Table<Todo>()
           .Where(t => t.AccountFk == accountFk && t.DeletedAt == null && t.CompletedAt == null)
