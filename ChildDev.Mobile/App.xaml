@@ -14,6 +14,7 @@
             <converters:NotNullConverter x:Key="NotNullConverter" />
             <converters:DueDateLabelConverter x:Key="DueDateLabelConverter" />
             <converters:DueDateColorConverter x:Key="DueDateColorConverter" />
+            <converters:EntryDateConverter x:Key="EntryDateConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -34,8 +34,12 @@
                         </Grid.GestureRecognizers>
                         <VerticalStackLayout>
                             <Label Text="{Binding Notes}" LineBreakMode="TailTruncation" MaxLines="2" />
-                            <Label Text="{Binding Mood}" FontSize="12" TextColor="Gray" />
+                            <Label Text="{Binding Mood}" FontSize="12" TextColor="Gray"
+                                   IsVisible="{Binding Mood, Converter={StaticResource StringToBoolConverter}}" />
                         </VerticalStackLayout>
+                        <Label Grid.Column="1"
+                               Text="{Binding EnteredDate, Converter={StaticResource EntryDateConverter}}"
+                               FontSize="11" TextColor="Gray" VerticalOptions="Start" Margin="8,2,0,0" />
                     </Grid>
                 </SwipeView>
             </DataTemplate>

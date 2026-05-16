@@ -2,6 +2,19 @@ using System.Globalization;
 
 namespace ChildDev.Mobile.Converters;
 
+public class EntryDateConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is not long ms) return null;
+        var dt = DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime;
+        return dt.Year == DateTime.Today.Year ? dt.ToString("ddd, MMM d") : dt.ToString("ddd, MMM d yyyy");
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotImplementedException();
+}
+
 public class NotNullConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>

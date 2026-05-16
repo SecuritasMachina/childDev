@@ -48,7 +48,12 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Journal">
                         <Border Padding="12" Margin="0,4" StrokeShape="RoundRectangle 8">
-                            <Label Text="{Binding Notes}" LineBreakMode="TailTruncation" MaxLines="2" />
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Text="{Binding Notes}" LineBreakMode="TailTruncation" MaxLines="2" />
+                                <Label Grid.Column="1"
+                                       Text="{Binding EnteredDate, Converter={StaticResource EntryDateConverter}}"
+                                       FontSize="11" TextColor="Gray" VerticalOptions="Start" Margin="8,0,0,0" />
+                            </Grid>
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

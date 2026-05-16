@@ -1,5 +1,40 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 9 Brainstorm (fresh)
+
+| # | Description | Dim | Impact | Effort | Risk | Status |
+|---|-------------|-----|--------|--------|------|--------|
+| 1 | JournalListPage: show formatted entry date per item | UI | High | S | Low | **DONE** |
+| 2 | GoalListPage: completion badge for completed goals | UI | Medium | S | Low | Backlog |
+| 3 | SyncService: atomic LastSyncAt (all-or-nothing) | Stability | High | M | Medium | Backlog |
+| 4 | GoalEntryPage: ExpirationDate field | Func | Low | S | Low | Backlog |
+| 5 | Error boundaries in LoadCommands (catch + status msg) | Stability | Medium | M | Low | Backlog |
+| 6 | Dashboard: recent journal entries show entry date | UI | Medium | S | Low | **DONE** |
+| 7 | API: validate UpdatedOn not far in future | Stability | Low | M | Low | Backlog |
+| 8 | GoalListPage: completed goals separate section | UI | Medium | M | Low | Backlog |
+| 9 | JournalListPage: date + mood visible at a glance | UI | High | S | Low | **DONE** |
+| 10 | SyncService: retry on transient failure | Stability | Low | M | Medium | Backlog |
+
+---
+
+## 2026-05-16 — Journal list entry date display
+
+**What changed:**
+- `DueDateConverter.cs`: Added `EntryDateConverter` — formats a unix-ms `long` as "ddd, MMM d" (current year) or "ddd, MMM d yyyy" (past year).
+- `App.xaml`: Registered `EntryDateConverter` as `{StaticResource EntryDateConverter}`.
+- `JournalListPage.xaml`: Added right-aligned gray date label per row using `EntryDateConverter` on `EnteredDate`. Also gated Mood label with `StringToBoolConverter` (was always visible, now hidden when empty).
+- `DashboardPage.xaml`: Added right-aligned date label inside each recent-journal card using the same converter.
+
+**Why:** Journal entries were ordered newest-first but showed no date — users browsing 10+ entries had no way to tell which was written on which day without opening each one. Date as a compact right-aligned label (11sp gray) adds full scannability at near-zero visual cost.
+
+**Impact:** Journal list and dashboard recent entries are now fully scannable by date. 34 API tests pass.
+
+**Skipped from brainstorm:**
+- #3 (atomic LastSyncAt) — highest-impact stability item but M effort and medium risk; next iteration.
+- #2 (goal completion badge) — deferred; less user-facing than date scannability.
+
+---
+
 ## 2026-05-16 — Remove auth token/data leakage via console.log
 
 **What changed:**
