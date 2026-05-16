@@ -17,12 +17,18 @@
             <!-- Summary row -->
             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                 <Border Grid.Column="0" Padding="16" StrokeShape="RoundRectangle 8">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoToGoalsCommand}" />
+                    </Border.GestureRecognizers>
                     <VerticalStackLayout>
                         <Label Text="{Binding ActiveGoalCount}" FontSize="32" HorizontalOptions="Center" />
                         <Label Text="Active Goals" HorizontalOptions="Center" />
                     </VerticalStackLayout>
                 </Border>
                 <Border Grid.Column="1" Padding="16" StrokeShape="RoundRectangle 8">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoToTodosCommand}" />
+                    </Border.GestureRecognizers>
                     <VerticalStackLayout>
                         <Label Text="{Binding PendingTodoCount}" FontSize="32" HorizontalOptions="Center" />
                         <Label Text="Pending Todos" HorizontalOptions="Center" />

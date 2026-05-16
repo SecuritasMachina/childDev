@@ -63,4 +63,12 @@ public partial class DashboardViewModel(
     [RelayCommand]
     private async Task GoToSettingsAsync() =>
         await Shell.Current.GoToAsync("settings");
+
+    [RelayCommand]
+    private async Task GoToGoalsAsync() =>
+        await Shell.Current.GoToAsync("//goals");
+
+    [RelayCommand]
+    private async Task GoToTodosAsync() =>
+        await Shell.Current.GoToAsync("//todos");
 }
