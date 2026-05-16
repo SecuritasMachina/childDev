@@ -78,6 +78,21 @@
 
 ---
 
+## 2026-05-16 — API health endpoint + GoalListPage MeasurableOutcome subtitle
+
+**What changed:**
+- `Program.cs`: Added `GET /health` endpoint returning `{"status":"ok","utc":"..."}` — no auth required. Useful for deployment health probes and mobile app connectivity checks.
+- `HealthEndpointTests.cs`: Verified the endpoint returns 200. (30 tests now pass, was 29.)
+- `GoalListPage.xaml`: Added MeasurableOutcome as a gray subtitle below each goal, visible only when set (mirrors JournalListPage Mood display pattern).
+
+**Why:**
+- No way to check if the API was reachable without triggering a full sync. Health check is the standard solution.
+- Goals showed only text; the measurable outcome is the key success criterion for each goal — it should be visible at a glance.
+
+**Impact:** 30 tests (was 29). Deployment monitoring now possible. Goals list shows success criteria inline.
+
+---
+
 ## 2026-05-16 — Dashboard navigation tiles + TodoEntryPage "Mark Done"
 
 **What changed:**
