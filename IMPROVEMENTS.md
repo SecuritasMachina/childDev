@@ -78,6 +78,39 @@
 
 ---
 
+## 2026-05-16 — Iteration 3 Brainstorm (fresh)
+
+| # | Description | Dim | Impact | Effort | Risk | Status |
+|---|-------------|-----|--------|--------|------|--------|
+| A | Empty-state messages for all list views | UI | High | S | Low | **DONE** |
+| B | Dashboard: parallel data load (Task.WhenAll) | Perf | Low | S | Low | Skipped (SQLite serializes anyway) |
+| C | Dashboard count tiles tap to navigate to list | UI | Medium | S | Low | Backlog |
+| D | GoalListPage: show MeasurableOutcome subtitle | UI | Low | S | Low | Backlog |
+| E | TodoEntryPage: "Mark Done" button | Func | Medium | S | Low | Backlog |
+| F | DashboardPage: overdue todo count with red badge | UI | Medium | M | Low | Backlog |
+| G | Error boundary in LoadCommand (catch + user-visible message) | Stability | Medium | M | Low | Backlog |
+| H | API: health-check endpoint `/health` | Stability | Low | S | Low | Backlog |
+| I | JournalEntryPage: show entry date for existing journals | UI | Low | S | Low | Backlog |
+| J | GoalListPage: show completion badge for completed goals | UI | Low | S | Low | Backlog |
+
+---
+
+## 2026-05-16 — Empty-state messages for all list views
+
+**What changed:**
+- `JournalListPage.xaml`: Added `CollectionView.EmptyView` — "No journal entries yet. Tap + to write your first entry."
+- `GoalListPage.xaml`: Added `CollectionView.EmptyView` — "No goals yet. Tap + to set your first goal."
+- `TodoListPage.xaml`: Added `CollectionView.EmptyView` — "All done! Type a task above and tap Add."
+- `DashboardPage.xaml`: Added `CollectionView.EmptyView` for recent journals section.
+
+**Why:** Empty lists showed no content and no guidance. New users had no affordance indicating what to do or that the list was genuinely empty (not still loading).
+
+**Impact:** First-run UX improved. All 29 API tests pass.
+
+**Skipped:** Dashboard parallel load — SQLite-net-pcl serializes all operations through a single connection thread; `Task.WhenAll` provides no actual parallelism. Marked skipped with reasoning.
+
+---
+
 ## 2026-05-16 — Brainstorm Backlog (Iteration 1)
 
 | # | Description | Dim | Impact | Effort | Risk | Status |
