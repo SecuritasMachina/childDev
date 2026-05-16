@@ -3,5 +3,17 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="ChildDev.Mobile.Views.SettingsPage"
              Title="Settings">
-    <Label Text="Settings" HorizontalOptions="Center" VerticalOptions="Center" />
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+            <Label Text="{Binding NickName, StringFormat='Account: {0}'}" />
+
+            <Label Text="Sync Server URL" />
+            <Entry Text="{Binding ServerUrl}" Placeholder="https://your-server/api" Keyboard="Url" />
+            <Button Text="Save Server URL" Command="{Binding SaveServerUrlCommand}" />
+
+            <Label Text="{Binding LastSyncDisplay, StringFormat='Last synced: {0}'}" TextColor="Gray" />
+            <Label Text="{Binding StatusMessage}" TextColor="Green"
+                   IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}" />
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>
