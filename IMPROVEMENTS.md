@@ -44,6 +44,20 @@
 
 ---
 
+## 2026-05-16 — Sync protocol correctness tests (LWW + delta filtering)
+
+**What changed:**
+- Added `Sync_ClientWinsWhenNewerUpdatedOn` and `Sync_ServerWinsWhenNewerUpdatedOn` to Goal and Todo test files (mirroring the Journal tests that already existed).
+- Added `Sync_DeltaFiltering_OnlyReturnsRecordsNewerThanLastSyncAt` to Journal, Goal, Todo, and GoalProgress — this test was completely absent for all endpoints.
+- Removed empty `UnitTest1.cs` placeholder.
+- Added `Sync_ClientWinsWhenNewerUpdatedOn` to GoalProgress.
+
+**Why:** The LWW (last-write-wins) conflict resolution is the core correctness guarantee of the sync protocol. Goal/Todo/GoalProgress endpoints had no coverage for this. The delta filter (`LastSyncAt`) determines which records are returned on each sync — if broken, clients would either miss updates or receive the full history every time.
+
+**Impact:** 29 tests pass (was 21). All 4 sync endpoints now have LWW and delta-filter coverage.
+
+---
+
 ## Flagged but not implemented (requires backend coordination)
 
 **Password in URL:** `account.service.ts` `token()` method sends the password as a plain path segment in a GET request (`/token/{nickname}/{password}`). Passwords in URLs are logged by servers, proxies, and browser history. Fix requires a POST-based authentication endpoint on the backend.
