@@ -33,6 +33,9 @@ public class SyncService(
             var ping = await client.GetAsync("health");
             if (!ping.IsSuccessStatusCode) return SyncResult.NoServer;
 
+            // Capture start time before any entity syncs so records modified during
+            // the sync window (T_start..T_end) are picked up on the next sync.
+            var syncStartedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             var since = account.LastSyncAt;
 
             await SyncEntityAsync<Journal, JournalSyncDto>(
@@ -84,7 +87,7 @@ public class SyncService(
                     UpdatedOn = dto.UpdatedOn, DeletedAt = dto.DeletedAt
                 }));
 
-            await accountService.UpdateLastSyncAsync(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+            await accountService.UpdateLastSyncAsync(syncStartedAt);
             return SyncResult.Success;
         }
         catch
