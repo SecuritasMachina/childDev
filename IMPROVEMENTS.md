@@ -1,12 +1,48 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 10 Brainstorm
+
+| # | Description | Dim | Impact | Effort | Risk | Status |
+|---|-------------|-----|--------|--------|------|--------|
+| 1 | SyncService: atomic LastSyncAt (syncStartedAt, not T_end) | Stability | High | S | Low | **DONE** |
+| 2 | GoalListPage: completion badge for completed goals | UI | Medium | S | Low | Backlog |
+| 3 | Error boundaries in LoadCommands (catch + status msg) | Stability | Medium | M | Low | Backlog |
+| 4 | GoalEntryPage: ExpirationDate display for existing | Func | Low | S | Low | Backlog |
+| 5 | API: validate UpdatedOn not far in future | Stability | Low | M | Low | Backlog |
+| 6 | GoalListPage: completed goals separate section | UI | Medium | M | Low | Backlog |
+| 7 | SyncService: retry on transient failure | Stability | Low | M | Medium | Backlog |
+| 8 | TodoListPage: show completed count / "X done" at bottom | UI | Low | S | Low | Backlog |
+| 9 | JournalRepository: index on AccountFk+DeletedAt (query perf) | Perf | Medium | S | Low | Backlog |
+| 10 | API: return 422 if UpdatedOn is 0 or negative | Stability | Low | S | Low | Backlog |
+
+---
+
+## 2026-05-16 — Atomic LastSyncAt + mobile test build fix
+
+**What changed:**
+- `SyncService.cs`: Added `syncStartedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()` captured BEFORE any entity syncs. Pass `syncStartedAt` to `UpdateLastSyncAsync` instead of `DateTimeOffset.UtcNow` (which was captured AFTER all syncs complete).
+- `ChildDev.Mobile.csproj`: Added `TodoEntryViewModel.cs` to the net8.0 compile-exclusion block (uses `QueryPropertyAttribute` which is MAUI-only; missing exclusion broke net8.0 test builds after the todo tap-to-edit iteration). Added `SkipMauiTargets` conditional to `TargetFrameworks` so CI/test builds can skip the android target without installing MAUI workloads.
+- `SyncServiceTests.cs`: Added `RunAsync_Success_UpdatesLastSyncAtToSyncStartTime`, `RunAsync_PartialFailure_DoesNotUpdateLastSyncAt`, `RunAsync_EntitySyncFails_ReturnsFailed`. Fixed pre-existing test `RunAsync_ServerError_ReturnsFailed` → renamed to `RunAsync_HealthFails_ReturnsNoServer` (health 500 correctly returns `NoServer`, not `Failed`) + added `EntitySyncErrorHandler` + separate `RunAsync_EntitySyncFails_ReturnsFailed` test.
+
+**Why:**
+- Old code set `LastSyncAt = T_end` (after all syncs complete). Records created/modified during the sync window (T_start ≤ UpdatedOn < T_end) had `UpdatedOn < LastSyncAt`, so they were silently excluded from all future syncs — permanent data loss.
+- Fix: `LastSyncAt = T_start`. Records modified during the sync window have `UpdatedOn ≥ T_start`, so they're included in the next sync. Server LWW handles any re-sent overlap records correctly (same UpdatedOn = no change).
+
+**Impact:** Silent data loss window eliminated. Mobile test suite now buildable without MAUI workloads. 20 mobile tests pass, 34 API tests pass (was 17 mobile / 34 API).
+
+**Skipped from brainstorm:**
+- #2 (goal completion badge) — UI polish; lower stability ROI than this fix.
+- #3 (error boundaries) — Medium effort, next iteration.
+
+---
+
 ## 2026-05-16 — Iteration 9 Brainstorm (fresh)
 
 | # | Description | Dim | Impact | Effort | Risk | Status |
 |---|-------------|-----|--------|--------|------|--------|
 | 1 | JournalListPage: show formatted entry date per item | UI | High | S | Low | **DONE** |
 | 2 | GoalListPage: completion badge for completed goals | UI | Medium | S | Low | Backlog |
-| 3 | SyncService: atomic LastSyncAt (all-or-nothing) | Stability | High | M | Medium | Backlog |
+| 3 | SyncService: atomic LastSyncAt (all-or-nothing) | Stability | High | M | Medium | **DONE (iter 10)** |
 | 4 | GoalEntryPage: ExpirationDate field | Func | Low | S | Low | Backlog |
 | 5 | Error boundaries in LoadCommands (catch + status msg) | Stability | Medium | M | Low | Backlog |
 | 6 | Dashboard: recent journal entries show entry date | UI | Medium | S | Low | **DONE** |
