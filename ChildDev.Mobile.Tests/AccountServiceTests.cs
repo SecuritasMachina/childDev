@@ -11,7 +11,7 @@ public class AccountServiceTests : IDisposable
 
     public AccountServiceTests()
     {
-        SQLitePCL.Batteries_V2.Init();
+        SqliteFixture.EnsureInit();
         _db = new SQLiteAsyncConnection(":memory:");
         _db.CreateTableAsync<Account>().GetAwaiter().GetResult();
         _service = new AccountService(_db);

@@ -11,7 +11,7 @@ public class TodoRepositoryTests : IDisposable
 
     public TodoRepositoryTests()
     {
-        SQLitePCL.Batteries_V2.Init();
+        SqliteFixture.EnsureInit();
         _db = new SQLiteAsyncConnection(":memory:");
         _db.CreateTableAsync<Todo>().GetAwaiter().GetResult();
         _repo = new TodoRepository(_db);

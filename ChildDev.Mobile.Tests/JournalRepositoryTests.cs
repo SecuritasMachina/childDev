@@ -11,7 +11,7 @@ public class JournalRepositoryTests : IDisposable
 
     public JournalRepositoryTests()
     {
-        SQLitePCL.Batteries_V2.Init();
+        SqliteFixture.EnsureInit();
         _db = new SQLiteAsyncConnection(":memory:");
         _db.CreateTableAsync<Journal>().GetAwaiter().GetResult();
         _repo = new JournalRepository(_db);

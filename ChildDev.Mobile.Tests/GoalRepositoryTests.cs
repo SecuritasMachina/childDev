@@ -11,7 +11,7 @@ public class GoalRepositoryTests : IDisposable
 
     public GoalRepositoryTests()
     {
-        SQLitePCL.Batteries_V2.Init();
+        SqliteFixture.EnsureInit();
         _db = new SQLiteAsyncConnection(":memory:");
         _db.CreateTableAsync<Goal>().GetAwaiter().GetResult();
         _repo = new GoalRepository(_db);
