@@ -1,12 +1,56 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 13 Brainstorm (fresh — every 3rd)
+
+| # | Description | Dim | Impact | Effort | Risk | Status |
+|---|-------------|-----|--------|--------|------|--------|
+| 1 | JournalRepository/GoalRepository/TodoRepository: index on AccountFk+DeletedAt | Perf | Medium | S | Low | Backlog |
+| 2 | API: validate UpdatedOn not in future (> now + 60s) → 422 | Stability | Low | S | Low | Backlog |
+| 3 | GoalListPage: sort active before completed (CompletionDate IS NULL first) | UI | Medium | S | Low | Backlog |
+| 4 | DashboardViewModel: error boundary for RefreshDataAsync | Stability | Medium | S | Low | Backlog |
+| 5 | GoalEntryPage: show ExpirationDate as a read-only label | Func | Low | S | Low | Backlog |
+| 6 | SyncService: retry once on transient failure | Stability | Low | M | Medium | Backlog |
+| 7 | API: add X-Request-ID header echo for traceability | Perf | Low | S | Low | Backlog |
+| 8 | TodoListPage: show count of completed todos at bottom | UI | Low | S | Low | Backlog |
+| 9 | GoalListPage: separate section for completed goals | UI | Low | M | Low | Backlog |
+| 10 | JournalListPage: pull-to-refresh trigger sync | Func | Medium | M | Medium | Backlog |
+
+---
+
+## 2026-05-16 — Error boundaries in list LoadAsync
+
+**What changed:**
+- `JournalListViewModel`, `GoalListViewModel`, `TodoListViewModel`: Added `StatusMessage` observable property. Wrapped `LoadAsync` in try/catch; on exception, sets a user-visible "Could not load..." message. StatusMessage cleared on each successful load.
+- `JournalListPage.xaml`, `GoalListPage.xaml`: Wrapped `CollectionView` in `Grid RowDefinitions="Auto,*"`; added red error label as Row 0.
+- `TodoListPage.xaml`: Extended existing Grid to `RowDefinitions="Auto,Auto,*"`; added error label as new Row 0, bumped existing rows.
+
+**Why:** On SQLite errors or unexpected nulls, LoadAsync threw silently and the list stayed empty. Users had no signal whether the list was empty (expected) or broken (unexpected).
+
+**Impact:** Silent crash → user-visible status message. 20 mobile tests pass, 34 API tests pass.
+
+**Skipped from brainstorm:**
+- #6 (completed goals separate section) — more layout complexity, lower impact than error handling.
+
+---
+
+## 2026-05-16 — Goal completion badge
+
+**What changed:**
+- `GoalListPage.xaml`: Added `ColumnDefinitions="*,Auto"` to the row Grid; added right-aligned green "✓ Done" label visible only when `CompletionDate` is non-null.
+
+**Why:** Completed goals remained in the list (correctly — they're soft-deleted only when explicitly deleted) but looked identical to active ones. The badge makes completion visible at a glance.
+
+**Impact:** Completed goals are visually distinct without a separate section.
+
+---
+
 ## 2026-05-16 — Iteration 10 Brainstorm
 
 | # | Description | Dim | Impact | Effort | Risk | Status |
 |---|-------------|-----|--------|--------|------|--------|
 | 1 | SyncService: atomic LastSyncAt (syncStartedAt, not T_end) | Stability | High | S | Low | **DONE** |
-| 2 | GoalListPage: completion badge for completed goals | UI | Medium | S | Low | Backlog |
-| 3 | Error boundaries in LoadCommands (catch + status msg) | Stability | Medium | M | Low | Backlog |
+| 2 | GoalListPage: completion badge for completed goals | UI | Medium | S | Low | **DONE** |
+| 3 | Error boundaries in LoadCommands (catch + status msg) | Stability | Medium | M | Low | **DONE** |
 | 4 | GoalEntryPage: ExpirationDate display for existing | Func | Low | S | Low | Backlog |
 | 5 | API: validate UpdatedOn not far in future | Stability | Low | M | Low | Backlog |
 | 6 | GoalListPage: completed goals separate section | UI | Medium | M | Low | Backlog |
