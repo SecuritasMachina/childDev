@@ -78,6 +78,36 @@
 
 ---
 
+## 2026-05-16 — Iteration 6 Brainstorm (fresh)
+
+| # | Description | Dim | Impact | Effort | Risk | Status |
+|---|-------------|-----|--------|--------|------|--------|
+| 1 | Sync: pre-flight /health check before 4 sync calls | Stability | High | S | Low | **DONE** |
+| 2 | Settings: "Test" button for server URL connectivity | Func | High | S | Low | **DONE** |
+| 3 | TodoList: sort overdue first, then by DueDate | UI | Medium | S | Low | Backlog |
+| 4 | API: validate UpdatedOn not far in future | Stability | Medium | M | Low | Backlog |
+| 5 | JournalEntryPage: show created date for existing | UI | Low | S | Low | Backlog |
+| 6 | Dashboard: overdue todo count with red badge | UI | Medium | M | Low | Backlog |
+| 7 | GoalEntryPage: NextMeetingDate label for existing | UI | Low | S | Low | Backlog |
+| 8 | API: return 400 if Records list is null/missing | Stability | Low | S | Low | Backlog |
+| 9 | SyncService: update LastSyncAt only if all 4 succeed | Stability | High | M | Medium | Backlog |
+| 10 | ConnectivityService: use NetworkAccess properly on all platforms | Stability | Low | S | Low | Done (already conditional) |
+
+---
+
+## 2026-05-16 — Settings "Test Connection" + SyncService pre-flight health check
+
+**What changed:**
+- `SettingsViewModel`: Injected `IHttpClientFactory`; added `TestConnectionCommand` — GETs `{serverUrl}/health` with 5s timeout; sets StatusMessage to "Connected!", "Server error: {code}", or "Cannot reach server."
+- `SettingsPage.xaml`: Split save row into a 2-button Grid — "Save Server URL" + "Test" side by side.
+- `SyncService`: Added pre-flight `GET health` before the 4 sync entity calls. Non-200 response returns `SyncResult.NoServer` immediately — avoids 4 failing HTTP calls on an unreachable server and distinguishes "server down" from "sync logic error".
+
+**Why:** Users had no way to verify their server URL was correct without triggering a full sync and waiting for the timeout. The pre-flight check also makes sync error classification more accurate.
+
+**Impact:** Settings page confirms connectivity in <5s. Sync skips 4 wasted requests when server is unreachable. 30 API tests pass.
+
+---
+
 ## 2026-05-16 — API health endpoint + GoalListPage MeasurableOutcome subtitle
 
 **What changed:**
