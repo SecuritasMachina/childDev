@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0-android;net8.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(SkipMauiTargets)' != 'true'">net8.0-android;net8.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(SkipMauiTargets)' == 'true'">net8.0</TargetFrameworks>
 		<OutputType Condition="'$(TargetFramework)' != 'net8.0'">Exe</OutputType>
 		<RootNamespace>ChildDev.Mobile</RootNamespace>
 		<UseMaui Condition="'$(TargetFramework)' != 'net8.0'">true</UseMaui>
@@ -69,6 +70,7 @@
 		<Compile Remove="ViewModels\GoalListViewModel.cs" />
 		<Compile Remove="ViewModels\GoalEntryViewModel.cs" />
 		<Compile Remove="ViewModels\TodoListViewModel.cs" />
+		<Compile Remove="ViewModels\TodoEntryViewModel.cs" />
 		<Compile Remove="ViewModels\DashboardViewModel.cs" />
 	</ItemGroup>
 

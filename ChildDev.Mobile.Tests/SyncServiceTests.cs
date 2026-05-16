@@ -92,17 +92,76 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task RunAsync_ServerError_ReturnsFailed()
+    public async Task RunAsync_HealthFails_ReturnsNoServer()
     {
         await _accountService.CreateAccountAsync("user4", "1234");
         var account = await _accountService.GetAccountAsync();
         account!.ServerUrl = "http://fake-server";
         account.ServerJwt = "fake-jwt";
 
+        // Health returns 500 → server unreachable → NoServer (not Failed)
         var service = BuildSyncService(new ErrorHandler());
         var result = await service.RunAsync(account);
 
+        Assert.Equal(SyncResult.NoServer, result);
+    }
+
+    [Fact]
+    public async Task RunAsync_EntitySyncFails_ReturnsFailed()
+    {
+        await _accountService.CreateAccountAsync("user4b", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        // Health passes but entity syncs fail → Failed
+        var service = BuildSyncService(new EntitySyncErrorHandler());
+        var result = await service.RunAsync(account);
+
         Assert.Equal(SyncResult.Failed, result);
+    }
+
+    [Fact]
+    public async Task RunAsync_Success_UpdatesLastSyncAtToSyncStartTime()
+    {
+        await _accountService.CreateAccountAsync("user5", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var serverJournal = new JournalSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, "Sync test",
+            null, null, null, 1000, 1000, null);
+
+        var beforeSync = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var handler = new FakeSyncHandler(serverJournal);
+        var service = BuildSyncService(handler);
+        var result = await service.RunAsync(account);
+        var afterSync = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        Assert.Equal(SyncResult.Success, result);
+        var refreshed = await _accountService.GetAccountAsync();
+        // LastSyncAt must be the timestamp captured at sync START, within the call window
+        Assert.True(refreshed!.LastSyncAt >= beforeSync, "LastSyncAt should be >= time before sync started");
+        Assert.True(refreshed.LastSyncAt <= afterSync, "LastSyncAt should be <= time after sync completed (captured at start, not end)");
+    }
+
+    [Fact]
+    public async Task RunAsync_PartialFailure_DoesNotUpdateLastSyncAt()
+    {
+        await _accountService.CreateAccountAsync("user6", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+        var originalLastSync = account.LastSyncAt; // 0 (never synced)
+
+        // Handler: health + journal succeed, goal returns 500 → exception → no LastSyncAt update
+        var service = BuildSyncService(new GoalFailureHandler());
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Failed, result);
+        var refreshed = await _accountService.GetAccountAsync();
+        Assert.Equal(originalLastSync, refreshed!.LastSyncAt);
     }
 }
 
@@ -124,11 +183,48 @@ public class NotCalledHandler : HttpMessageHandler
         throw new InvalidOperationException("Should not have been called");
 }
 
+// Returns 500 for everything including health — simulates completely unreachable server → NoServer
 public class ErrorHandler : HttpMessageHandler
 {
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
         CancellationToken cancellationToken) =>
         Task.FromResult(new HttpResponseMessage(HttpStatusCode.InternalServerError));
+}
+
+// Health passes, all entity syncs fail → SyncResult.Failed
+public class EntitySyncErrorHandler : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        if (request.RequestUri!.PathAndQuery.Contains("health"))
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new { status = "ok" })
+            });
+        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.InternalServerError));
+    }
+}
+
+// Succeeds for health + journal, fails (500) for goal — simulates partial sync failure
+public class GoalFailureHandler : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        if (request.RequestUri!.PathAndQuery.Contains("goal"))
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.InternalServerError));
+        if (request.RequestUri.PathAndQuery.Contains("journal"))
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new SyncResponseDto<JournalSyncDto>([]))
+            });
+        // health + other entities → 200 empty
+        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new { Records = Array.Empty<object>() })
+        });
+    }
 }
 
 public class FakeSyncHandler(JournalSyncDto journal) : HttpMessageHandler
