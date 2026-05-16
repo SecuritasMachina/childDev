@@ -3,13 +3,17 @@
     x:Class="ChildDev.Mobile.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:ChildDev.Mobile"
-    Shell.FlyoutBehavior="Disabled"
-    Title="ChildDev.Mobile">
+    xmlns:views="clr-namespace:ChildDev.Mobile.Views"
+    Shell.FlyoutBehavior="Disabled">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
-
+    <TabBar>
+        <ShellContent Title="Dashboard" Icon="dashboard.png"
+                      ContentTemplate="{DataTemplate views:DashboardPage}" Route="dashboard" />
+        <ShellContent Title="Journal" Icon="journal.png"
+                      ContentTemplate="{DataTemplate views:JournalListPage}" Route="journal" />
+        <ShellContent Title="Goals" Icon="goals.png"
+                      ContentTemplate="{DataTemplate views:GoalListPage}" Route="goals" />
+        <ShellContent Title="Todos" Icon="todos.png"
+                      ContentTemplate="{DataTemplate views:TodoListPage}" Route="todos" />
+    </TabBar>
 </Shell>
