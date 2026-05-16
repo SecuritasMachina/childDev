@@ -33,10 +33,10 @@ public class TodoRepository(SQLiteAsyncConnection db)
         db.FindAsync<Todo>(guid);
 
     public Task<List<Todo>> GetPendingAsync(string accountFk) =>
-        db.Table<Todo>()
-          .Where(t => t.AccountFk == accountFk && t.DeletedAt == null && t.CompletedAt == null)
-          .OrderBy(t => t.DueDate)
-          .ToListAsync();
+        db.QueryAsync<Todo>(
+            "SELECT * FROM Todo WHERE AccountFk = ? AND DeletedAt IS NULL AND CompletedAt IS NULL " +
+            "ORDER BY (DueDate IS NULL), DueDate",
+            accountFk);
 
     public Task<List<Todo>> GetAllActiveAsync(string accountFk) =>
         db.Table<Todo>()
