@@ -3,7 +3,6 @@
 /mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/ChildDev.Api.runtimeconfig.json
 /mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/appsettings.Development.json
 /mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/appsettings.json
-/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/ChildDev.Api
 /mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/MvcTestingAppManifest.json
 /mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/xunit.runner.visualstudio.dotnetcore.testadapter.dll
 /mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/xunit.runner.reporters.netcoreapp10.dll

@@ -55,6 +55,59 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Sync_ClientWinsWhenNewerUpdatedOn()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_lww1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, "old todo", null, null, null, ts, null)], 0));
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, "new todo", null, null, null, ts + 1000, null)], 0));
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+        Assert.Equal("new todo", body!.Records[0].Title);
+    }
+
+    [Fact]
+    public async Task Sync_ServerWinsWhenNewerUpdatedOn()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_lww2");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, "server-wins", null, null, null, ts + 2000, null)], 0));
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, "client-stale", null, null, null, ts + 1000, null)], 0));
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+        Assert.Equal("server-wins", body!.Records[0].Title);
+    }
+
+    [Fact]
+    public async Task Sync_DeltaFiltering_OnlyReturnsRecordsNewerThanLastSyncAt()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_delta1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var oldTs = 1000L;
+        var newTs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var oldGuid = Guid.NewGuid().ToString();
+        var newGuid = Guid.NewGuid().ToString();
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([
+                new TodoDto(oldGuid, accountGuid, "old todo", null, null, null, oldTs, null),
+                new TodoDto(newGuid, accountGuid, "new todo", null, null, null, newTs, null)
+            ], 0));
+        var response = await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([], oldTs));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+        Assert.DoesNotContain(body!.Records, r => r.Guid == oldGuid);
+        Assert.Contains(body.Records, r => r.Guid == newGuid);
+    }
+
+    [Fact]
     public async Task Sync_RecordWithWrongAccountFk_IsRejected()
     {
         var (jwt1, _) = await RegisterAsync("tsync_guard1");

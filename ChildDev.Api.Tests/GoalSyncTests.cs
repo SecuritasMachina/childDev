@@ -41,6 +41,59 @@ public class GoalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Sync_ClientWinsWhenNewerUpdatedOn()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gsync_lww1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(guid, accountGuid, "old goal", null, null, ts, null, null, ts, null)], 0));
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(guid, accountGuid, "new goal", null, null, ts + 1000, null, null, ts + 1000, null)], 0));
+        var response = await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalDto>>();
+        Assert.Equal("new goal", body!.Records[0].GoalText);
+    }
+
+    [Fact]
+    public async Task Sync_ServerWinsWhenNewerUpdatedOn()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gsync_lww2");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(guid, accountGuid, "server-wins", null, null, ts, null, null, ts + 2000, null)], 0));
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(guid, accountGuid, "client-stale", null, null, ts, null, null, ts + 1000, null)], 0));
+        var response = await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalDto>>();
+        Assert.Equal("server-wins", body!.Records[0].GoalText);
+    }
+
+    [Fact]
+    public async Task Sync_DeltaFiltering_OnlyReturnsRecordsNewerThanLastSyncAt()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gsync_delta1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var oldTs = 1000L;
+        var newTs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var oldGuid = Guid.NewGuid().ToString();
+        var newGuid = Guid.NewGuid().ToString();
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([
+                new GoalDto(oldGuid, accountGuid, "old record", null, null, oldTs, null, null, oldTs, null),
+                new GoalDto(newGuid, accountGuid, "new record", null, null, newTs, null, null, newTs, null)
+            ], 0));
+        var response = await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([], oldTs));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalDto>>();
+        Assert.DoesNotContain(body!.Records, r => r.Guid == oldGuid);
+        Assert.Contains(body.Records, r => r.Guid == newGuid);
+    }
+
+    [Fact]
     public async Task Sync_RecordWithWrongAccountFk_IsRejected()
     {
         var (jwt1, _) = await RegisterAsync("gsync_guard1");
