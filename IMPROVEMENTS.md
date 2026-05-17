@@ -1,5 +1,18 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 69 — Mobile: Entry count footer in GoalList and TodoList
+
+**What changed:**
+- `GoalListViewModel.cs`: Added `EntryCountDisplay` observable (e.g., "3 goals"), set in `LoadAsync` and `RefreshAsync`.
+- `TodoListViewModel.cs`: Added `EntryCountDisplay` (e.g., "5 tasks pending"), set in `LoadAsync` and `RefreshAsync`.
+- `GoalListPage.xaml` / `TodoListPage.xaml`: Added `CollectionView.Footer` with centered gray label, consistent with the JournalList footer added in iter 66.
+
+**Why:** Consistency across all three list screens; users can see at a glance how many active goals / pending tasks they have after a sync.
+
+**Impact:** 25 mobile tests pass (0 warnings). 55 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 68 Brainstorm (fresh — every 3rd)
 
 | # | Description | Dim | Impact | Effort | Risk |
