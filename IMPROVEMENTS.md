@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 147 — Mobile Tests: GetModifiedSinceAsync includes soft-deleted records (Journal + Todo)
+
+**What changed:**
+- `JournalRepositoryTests.cs`: Added `GetModifiedSinceAsync_IncludesSoftDeletedRecords` — inserts a journal with `DeletedAt` set, asserts it appears in `GetModifiedSinceAsync` results.
+- `TodoRepositoryTests.cs`: Added `GetModifiedSinceAsync_IncludesSoftDeletedRecords` — same for Todo.
+
+**Why:** `GetModifiedSinceAsync` is used by `SyncService` to gather local records for upload. The filter is `WHERE AccountFk = ? AND UpdatedOn > ?` — no `DeletedAt IS NULL`. If that condition were accidentally added, soft-deleted records would never be uploaded to the server, and deletions would never propagate to other devices. These tests are the repository-level counterpart to the `RunAsync_LocalSoftDeletedJournal_IncludedInUploadRequest` SyncService test added in iteration 146.
+
+**Impact:** 97 mobile tests pass (was 95). 111 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 146 — Mobile Tests: AccountService null-guards + soft-deleted journal upload
 
 **What changed:**
