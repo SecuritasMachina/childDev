@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 143 — Mobile Tests: GoalProgressRepo empty DeleteForGoal + SyncService lock release
+
+**What changed:**
+- `GoalProgressRepositoryTests.cs`: Added `DeleteForGoalAsync_WhenNoActiveProgress_DoesNothing` — calls `DeleteForGoalAsync` on a goalFk with no active progress records and asserts it completes without error or side effects.
+- `SyncServiceTests.cs`: Added `RunAsync_FailedSync_ReleasesLockSoSubsequentSyncCanRun` — runs a sync that fails (entity sync returns 500), then runs a second sync. If the `finally` block had not released `_syncing`, the second call would short-circuit and return `Success` (the concurrent-skip path). Returning `Failed` on the second call proves the lock was reset.
+
+**Why:** `DeleteForGoalAsync` loops over active items; the empty-list path (no items for that goalFk) was untested — a regression that changed the query filter could silently skip deletes with no observable failure. The sync lock test guards the `finally { Interlocked.Exchange(ref _syncing, 0) }` invariant: if that block were removed, one failed sync would permanently block all subsequent syncs until the app restarts.
+
+**Impact:** 87 mobile tests pass (was 85). 111 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 142 — Mobile Tests: null-guard path tests for DeleteAsync/CompleteAsync
 
 **What changed:**
