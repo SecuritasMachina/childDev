@@ -35,6 +35,8 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
         };
     });
 
+builder.Services.AddResponseCompression(options => options.EnableForHttps = true);
+
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
     policy.WithOrigins(
             builder.Configuration["CHILDDEV_CORS_ORIGIN"] ?? "http://localhost:4200",
@@ -52,6 +54,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 var app = builder.Build();
 
+app.UseResponseCompression();
 app.UseCors();
 
 app.Use(async (ctx, next) =>
