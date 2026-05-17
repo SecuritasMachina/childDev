@@ -48,7 +48,7 @@ public partial class GoalEntryViewModel(
             HasExpirationDate = true;
         }
         var progress = await progressRepo.GetForGoalAsync(guid);
-        NextStepItems = progress.FirstOrDefault()?.NextStepItems ?? string.Empty;
+        NextStepItems = (progress.FirstOrDefault()?.NextStepItems ?? string.Empty).Trim();
         _loadedNextStepItems = NextStepItems;
         EnteredDateDisplay = DateTimeOffset.FromUnixTimeMilliseconds(item.EnteredDate).LocalDateTime.ToString("ddd, MMM d yyyy");
         IsExisting = true;
@@ -73,14 +73,15 @@ public partial class GoalEntryViewModel(
             : null;
         await repo.SaveAsync(goal);
 
-        if (!string.IsNullOrWhiteSpace(NextStepItems) && NextStepItems != _loadedNextStepItems)
+        var trimmedNextStep = NextStepItems.Trim();
+        if (!string.IsNullOrWhiteSpace(trimmedNextStep) && trimmedNextStep != _loadedNextStepItems)
         {
             var progress = new GoalProgress
             {
                 Guid = System.Guid.NewGuid().ToString(),
                 AccountFk = account.Guid,
                 GoalFk = goal.Guid,
-                NextStepItems = NextStepItems,
+                NextStepItems = trimmedNextStep,
                 NextMeetingDate = goal.NextMeetingDate,
                 UpdatedOn = ts
             };
