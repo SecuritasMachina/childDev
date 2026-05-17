@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 163 — Mobile: SyncService HttpRequestException retry + Journal 3-item ordering
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_EntitySyncNetworkError_RetriesAndSucceeds` — throws `HttpRequestException` on the first entity sync call, asserts the service recovers on retry. Guards the `catch(HttpRequestException)` retry branch in `SyncEntityAsync` (previously only 5xx retry was tested with `TransientFailThenSucceedHandler`).
+- `JournalRepositoryTests.cs`: Added `GetAllActiveAsync_MultipleJournals_OrderedByEnteredDateDescending` — inserts 3 journals in shuffled order (middle, older, newer), asserts newest-first. Mirrors the 3-item goal ordering test added in iter 153.
+
+**Why:** The `catch (HttpRequestException)` path retries the POST — the existing `TransientFailThenSucceedHandler` only tests 5xx, not the exception path. The Journal 3-item test covers the case where sorting is correct across multiple entries (the 2-item test can pass with an unstable sort).
+
+**Impact:** 112 mobile tests pass (was 110). 130 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 162 — API fix: Goal endpoint NextMeetingDate validation + completed-goal blank text
 
 **What changed:**
