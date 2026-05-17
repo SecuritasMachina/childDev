@@ -43,6 +43,11 @@ public class GoalRepository(SQLiteAsyncConnection db)
           .Where(g => g.AccountFk == accountFk && g.UpdatedOn > since)
           .ToListAsync();
 
-    public Task UpsertFromSyncAsync(Goal goal) =>
-        db.InsertOrReplaceAsync(goal);
+    public async Task UpsertFromSyncAsync(Goal goal)
+    {
+        var existing = await db.FindAsync<Goal>(goal.Guid);
+        if (existing is not null)
+            goal.EnteredDate = existing.EnteredDate;
+        await db.InsertOrReplaceAsync(goal);
+    }
 }

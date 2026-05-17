@@ -167,6 +167,25 @@ public class GoalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task UpsertFromSyncAsync_PreservesOriginalEnteredDate_WhenServerSendsDifferentValue()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var originalEnteredDate = now - 86_400_000L; // 1 day ago
+
+        await _repo.SaveAsync(new Goal { Guid = guid, AccountFk = "account1", GoalText = "original",
+            EnteredDate = originalEnteredDate, UpdatedOn = now });
+
+        // Server sends same Guid with newer UpdatedOn but a different EnteredDate
+        await _repo.UpsertFromSyncAsync(new Goal { Guid = guid, AccountFk = "account1", GoalText = "synced",
+            EnteredDate = now, UpdatedOn = now + 1000 });
+
+        var retrieved = await _repo.GetAsync(guid);
+        Assert.NotNull(retrieved);
+        Assert.Equal(originalEnteredDate, retrieved!.EnteredDate);
+    }
+
+    [Fact]
     public async Task SaveAsync_Edit_BumpsUpdatedOn()
     {
         var guid = System.Guid.NewGuid().ToString();
