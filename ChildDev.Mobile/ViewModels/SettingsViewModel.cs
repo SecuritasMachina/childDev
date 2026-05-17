@@ -16,15 +16,22 @@ public partial class SettingsViewModel(AccountService accountService, IHttpClien
     [RelayCommand]
     private async Task LoadAsync()
     {
-        var account = await accountService.GetAccountAsync();
-        if (account is null) return;
-        NickName = account.NickName;
-        AccountGuid = account.Guid;
-        ServerUrl = account.ServerUrl ?? string.Empty;
-        AccountCreatedDisplay = DateTimeOffset.FromUnixTimeMilliseconds(account.CreatedOn).LocalDateTime.ToString("ddd, MMM d yyyy");
-        LastSyncDisplay = account.LastSyncAt == 0
-            ? "Never"
-            : DateTimeOffset.FromUnixTimeMilliseconds(account.LastSyncAt).LocalDateTime.ToString("g");
+        try
+        {
+            var account = await accountService.GetAccountAsync();
+            if (account is null) return;
+            NickName = account.NickName;
+            AccountGuid = account.Guid;
+            ServerUrl = account.ServerUrl ?? string.Empty;
+            AccountCreatedDisplay = DateTimeOffset.FromUnixTimeMilliseconds(account.CreatedOn).LocalDateTime.ToString("ddd, MMM d yyyy");
+            LastSyncDisplay = account.LastSyncAt == 0
+                ? "Never"
+                : DateTimeOffset.FromUnixTimeMilliseconds(account.LastSyncAt).LocalDateTime.ToString("g");
+        }
+        catch
+        {
+            StatusMessage = "Could not load settings.";
+        }
     }
 
     [RelayCommand]
