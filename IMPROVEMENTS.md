@@ -1,5 +1,18 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 239 — API: Journal/Goal/Todo delta responses include AccountFk
+
+**What changed:**
+- `JournalSyncTests.cs`: Added `Sync_Delta_AccountFkIncludedInResponse`.
+- `GoalSyncTests.cs`: Added `Sync_Delta_AccountFkIncludedInResponse`.
+- `TodoSyncTests.cs`: Added `Sync_Delta_AccountFkIncludedInResponse`.
+
+**Why:** Completes the AccountFk-in-delta coverage for all four entities (GoalProgress was added in iter 238). The mobile stores `AccountFk` from the server's response to filter future `GetModifiedSinceAsync` queries.
+
+**Impact:** 194 mobile tests pass. 168 API tests pass (was 165).
+
+---
+
 ## 2026-05-17 — Iteration 238 — API: GoalProgress delta response includes AccountFk
 
 **What changed:**
