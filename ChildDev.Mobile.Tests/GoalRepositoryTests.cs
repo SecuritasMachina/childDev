@@ -165,4 +165,45 @@ public class GoalRepositoryTests : IDisposable
         Assert.NotNull(retrieved);
         Assert.Equal("synced", retrieved.GoalText);
     }
+
+    [Fact]
+    public async Task SaveAsync_Edit_BumpsUpdatedOn()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var goal = new Goal
+        {
+            Guid = guid, AccountFk = "account1", GoalText = "original",
+            EnteredDate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            UpdatedOn = 1000L
+        };
+        await _db.InsertOrReplaceAsync(goal);
+
+        goal.GoalText = "edited";
+        await _repo.SaveAsync(goal);
+
+        var saved = await _repo.GetAsync(guid);
+        Assert.NotNull(saved);
+        Assert.Equal("edited", saved!.GoalText);
+        Assert.True(saved.UpdatedOn > 1000L);
+    }
+
+    [Fact]
+    public async Task SaveAsync_Edit_AppearsInGetModifiedSince()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var oldTs = DateTimeOffset.UtcNow.AddSeconds(-10).ToUnixTimeMilliseconds();
+        var goal = new Goal
+        {
+            Guid = guid, AccountFk = "account4", GoalText = "original",
+            EnteredDate = oldTs, UpdatedOn = oldTs
+        };
+        await _db.InsertOrReplaceAsync(goal);
+
+        goal.GoalText = "edited";
+        await _repo.SaveAsync(goal);
+
+        var modified = await _repo.GetModifiedSinceAsync("account4", oldTs);
+        Assert.Single(modified);
+        Assert.Equal("edited", modified[0].GoalText);
+    }
 }
