@@ -330,6 +330,29 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Sync_SoftDeleted_CanBeRestoredByClient_ViaNewerUpdate()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_restore");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Store a soft-deleted todo
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, "Task", null, null, null, ts, ts)], 0));
+
+        // Client sends same Guid with DeletedAt = null and newer UpdatedOn — LWW restores the record
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, "Task", null, null, null, ts + 1000, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+
+        var stored = body!.Records.Single(r => r.Guid == guid);
+        Assert.Null(stored.DeletedAt);
+    }
+
+    [Fact]
     public async Task Sync_DueDate_CanBeClearedByClient_ViaNewerUpdate()
     {
         var (jwt, accountGuid) = await RegisterAsync("tsync_due_clear");

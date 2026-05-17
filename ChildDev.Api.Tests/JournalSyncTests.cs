@@ -299,6 +299,29 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Sync_SoftDeleted_CanBeRestoredByClient_ViaNewerUpdate()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("jsync_restore");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Store a soft-deleted journal
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, ts, ts, ts)], 0));
+
+        // Client sends same Guid with DeletedAt = null and newer UpdatedOn — LWW restores the record
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, ts, ts + 1000, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
+
+        var stored = body!.Records.Single(r => r.Guid == guid);
+        Assert.Null(stored.DeletedAt);
+    }
+
+    [Fact]
     public async Task Sync_EnteredDate_UpdatedByClient_OnLWWOverwrite()
     {
         var (jwt, accountGuid) = await RegisterAsync("jsync_entered_date");
