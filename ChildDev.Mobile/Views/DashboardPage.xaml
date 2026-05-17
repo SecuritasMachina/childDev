@@ -16,6 +16,8 @@
                    IsVisible="{Binding SyncStatus, Converter={StaticResource StringToBoolConverter}}" />
             <Label Text="{Binding LastSyncDisplay}" FontSize="11" TextColor="Gray"
                    IsVisible="{Binding LastSyncDisplay, Converter={StaticResource StringToBoolConverter}}" />
+            <Label Text="{Binding NextGoalMeeting}" FontSize="13" TextColor="CornflowerBlue"
+                   IsVisible="{Binding HasNextGoalMeeting}" />
 
             <!-- Summary row -->
             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
