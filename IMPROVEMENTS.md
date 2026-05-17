@@ -1,5 +1,47 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 26 Brainstorm (fresh — every 3rd)
+
+| # | Description | Dim | Impact | Effort | Risk | Status |
+|---|-------------|-----|--------|--------|------|--------|
+| 1 | DashboardPage: recent journal cards tap to open entry | UI | High | S | Low | **DONE** |
+
+| 2 | JournalEntryPage: Delete button (currently list-only) | Func | Medium | S | Low | Backlog |
+| 3 | GoalListPage: show ExpirationDate per goal | UI | Medium | S | Low | Backlog |
+| 4 | API: response compression (gzip) | Perf | Low | S | Low | Backlog |
+| 5 | TodoList: pinch-to-expand completed todos (toggle) | UI | Low | M | Medium | Backlog |
+| 6 | JournalEntryPage: entered date picker (allow backdating) | Func | Medium | M | Low | Backlog |
+| 7 | SettingsPage: show account info (nick, created date) | UI | Low | S | Low | Backlog |
+| 8 | GoalEntry: validate GoalText is non-empty before save | Stability | Medium | S | Low | Backlog |
+| 9 | API: request timeout middleware (cancel slow DB queries) | Stability | Low | S | Low | Backlog |
+| 10 | TodoEntry: validate Title non-empty before save | Stability | Medium | S | Low | Backlog |
+
+---
+
+## 2026-05-16 — API structured logging + CORS + X-Request-ID + Sync retry + Dashboard sync time
+
+**Iterations 20-25 summary:**
+
+**Iter 20 — Dashboard last-synced timestamp:**
+`DashboardViewModel`: Added `LastSyncDisplay` populated from `account.LastSyncAt` in `LoadAsync`, updated after successful sync. `DashboardPage.xaml`: secondary gray label below SyncStatus.
+
+**Iter 21 — GoalListPage: NextMeetingDate per row:**
+Added `MeetingDateConverter` ("Meet: Mon, May 18"). Registered in `App.xaml`. Added label to GoalListPage row.
+
+**Iter 22 — API: X-Request-ID echo header:**
+Program.cs middleware echoes client-provided `X-Request-ID` or generates a 12-char hex ID. 2 new tests. 44 API tests.
+
+**Iter 23 — SyncService: retry on 5xx/HttpRequestException:**
+`SyncEntityAsync` retries immediately once on first 5xx or network exception. LWW-safe (server ignores duplicate records with same UpdatedOn). Added `TransientFailThenSucceedHandler` test. 22 mobile tests.
+
+**Iter 24 — API: CORS policy:**
+`AddCors` with configurable `CHILDDEV_CORS_ORIGIN` env var (default: localhost:4200). `app.UseCors()` before auth middleware.
+
+**Iter 25 — API: structured debug logging:**
+All 4 sync endpoints log `account[:8]`, incoming count, delta count at `Debug` level via a named logger created at registration time.
+
+---
+
 ## 2026-05-16 — Iteration 19 Brainstorm (fresh — every 3rd)
 
 | # | Description | Dim | Impact | Effort | Risk | Status |

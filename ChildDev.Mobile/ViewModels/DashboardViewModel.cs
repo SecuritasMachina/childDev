@@ -82,6 +82,10 @@ public partial class DashboardViewModel(
         await Shell.Current.GoToAsync("journal/entry");
 
     [RelayCommand]
+    private async Task OpenJournalAsync(Journal journal) =>
+        await Shell.Current.GoToAsync($"journal/entry?guid={journal.Guid}");
+
+    [RelayCommand]
     private async Task GoToSettingsAsync() =>
         await Shell.Current.GoToAsync("settings");
 
