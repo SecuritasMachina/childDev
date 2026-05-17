@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 216 — Mobile: SyncService includes GoalProgress GoalFk in upload request
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_LocalGoalProgress_GoalFkIncludedInUploadRequest` — inserts a GoalProgress with a specific GoalFk GUID, runs sync, asserts the captured sync/goal-progress body contains that GoalFk.
+
+**Why:** GoalFk is the most critical field in GoalProgress — it links progress to a goal. All upload tests only checked GUID or NextStepItems/NextMeetingDate. An accidental field swap in the toDto lambda (e.g., `p.Guid` instead of `p.GoalFk`) would silently orphan all GoalProgress records on sync.
+
+**Impact:** 167 mobile tests pass (was 166). 160 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 215 — Mobile: SyncService includes Todo Title in upload request
 
 **What changed:**
