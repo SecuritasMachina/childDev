@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 138 — Mobile Tests: GetLatestNextStepsAsync isolation + AccountService null-account + CreatedOn tests
+
+**What changed:**
+- `GoalProgressRepositoryTests.cs`: Added `GetLatestNextStepsAsync_ExcludesOtherAccounts` — verifies that `GetLatestNextStepsAsync` doesn't leak next-step data across accounts (the GoalFk key appears in result only for the queried account).
+- `AccountServiceTests.cs`: Added `VerifyPin_WhenNoAccount_ReturnsFalse` (null guard path), `UpdateLastSync_WhenNoAccount_DoesNotThrow` (null guard path), and `CreateAccount_SetsCreatedOn` (verifies `CreatedOn` timestamp is set within the creation window).
+
+**Why:** `GetLatestNextStepsAsync` filtered by `AccountFk` but had no test inserting competing records from another account for the same `GoalFk`. AccountService's null-guard branches (`if (account is null) return/return false`) were untested — a future refactor removing them would have no test coverage. `CreatedOn` is a timestamp set during account creation that's never been tested.
+
+**Impact:** 76 mobile tests pass (was 72). 107 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 137 — Mobile Tests: GetModifiedSinceAsync account isolation + GoalProgress edit invariants
 
 **What changed:**
