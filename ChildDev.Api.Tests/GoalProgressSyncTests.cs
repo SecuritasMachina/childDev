@@ -188,6 +188,31 @@ public class GoalProgressSyncTests(ApiFactory factory) : IClassFixture<ApiFactor
     }
 
     [Fact]
+    public async Task Sync_Delta_OrderedByUpdatedOnAscending()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_order1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var goalFk = Guid.NewGuid().ToString();
+        var t1 = 1_000_000L;
+        var t2 = 2_000_000L;
+        var t3 = 3_000_000L;
+
+        await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([
+            new GoalProgressDto(Guid.NewGuid().ToString(), accountGuid, goalFk, "at t3", null, t3, null),
+            new GoalProgressDto(Guid.NewGuid().ToString(), accountGuid, goalFk, "at t1", null, t1, null),
+            new GoalProgressDto(Guid.NewGuid().ToString(), accountGuid, goalFk, "at t2", null, t2, null)
+        ], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalProgressDto>>();
+
+        Assert.Equal(3, body!.Records.Count);
+        Assert.Equal(t1, body.Records[0].UpdatedOn);
+        Assert.Equal(t2, body.Records[1].UpdatedOn);
+        Assert.Equal(t3, body.Records[2].UpdatedOn);
+    }
+
+    [Fact]
     public async Task Sync_BatchMixedLWW_PerRecordWinnerApplied()
     {
         var (jwt, accountGuid) = await RegisterAsync("gpsync_mixed_lww");
