@@ -201,4 +201,13 @@ public class JournalRepositoryTests : IDisposable
         Assert.Single(results);
         Assert.Equal("mine", results[0].Notes);
     }
+
+    [Fact]
+    public async Task DeleteAsync_WhenGuidNotFound_DoesNotThrow()
+    {
+        var nonExistentGuid = System.Guid.NewGuid().ToString();
+        await _repo.DeleteAsync(nonExistentGuid);
+        var retrieved = await _repo.GetAsync(nonExistentGuid);
+        Assert.Null(retrieved);
+    }
 }
