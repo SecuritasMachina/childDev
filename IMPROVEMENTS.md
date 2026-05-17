@@ -106,6 +106,17 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 267 — Web: Goal detail + progress notes page
+
+**What changed:**
+- `GoalDetail.razor`: New `/goals/{guid}` page — MudTimeline of progress entries (next steps text, next meeting date, timestamp), Add Progress Note dialog (text + date picker), back button. Tracks `page_view` and `progress_add` analytics events. Auth-gates to login. Returns "Goal not found" for invalid GUIDs.
+
+**Why:** The Home page linked to `/goals/{guid}` with no target page. This completes full web coverage for all 4 core entities (Goal, Todos, Journal planned, GoalProgress now ✓).
+
+**Impact:** 200 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Iteration 266 — Web: Dashboard stats summary panel
 
 **What changed:**
