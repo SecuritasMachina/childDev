@@ -139,4 +139,23 @@ public class GoalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalDto>>();
         Assert.Empty(body!.Records);
     }
+
+    [Fact]
+    public async Task Sync_DeltaIsolation_OtherUsersRecordsNotReturned()
+    {
+        var (jwt1, accountGuid1) = await RegisterAsync("gsync_iso1");
+        var (jwt2, _) = await RegisterAsync("gsync_iso2");
+
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt1);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(guid, accountGuid1, "user1 private goal", null, null, ts, null, null, ts, null)], 0));
+
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt2);
+        var response = await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalDto>>();
+
+        Assert.DoesNotContain(body!.Records, r => r.Guid == guid);
+    }
 }

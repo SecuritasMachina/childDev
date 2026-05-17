@@ -153,4 +153,23 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
         Assert.Empty(body!.Records);
     }
+
+    [Fact]
+    public async Task Sync_DeltaIsolation_OtherUsersRecordsNotReturned()
+    {
+        var (jwt1, accountGuid1) = await RegisterAsync("tsync_iso1");
+        var (jwt2, _) = await RegisterAsync("tsync_iso2");
+
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt1);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid1, "user1 private todo", null, null, null, ts, null)], 0));
+
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt2);
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+
+        Assert.DoesNotContain(body!.Records, r => r.Guid == guid);
+    }
 }
