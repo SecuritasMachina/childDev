@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 186 — API: Goal NextMeetingDate can be cleared by client via LWW
+
+**What changed:**
+- `GoalSyncTests.cs`: Added `Sync_NextMeetingDate_CanBeClearedByClient_ViaNewerUpdate` — stores a goal with NextMeetingDate set, then syncs same Guid with NextMeetingDate=null and newer UpdatedOn, asserts server stores null NextMeetingDate.
+
+**Why:** Goal has 3 nullable date fields: ExpirationDate (clearing tested iter 180), CompletionDate (uncomplete tested iter 178), and NextMeetingDate — not tested for LWW null-clearing. GoalProgress had `Sync_NextMeetingDate_CanBeClearedByClient_ViaNewerUpdate` added in iter 180, but Goal's version was missing. Completing symmetry.
+
+**Impact:** 154 API tests pass (was 153). 141 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 185 — Mobile: Comprehensive 4-record mixed active/completed goal ordering
 
 **What changed:**
