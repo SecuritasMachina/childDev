@@ -1,5 +1,18 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 142 — Mobile Tests: null-guard path tests for DeleteAsync/CompleteAsync
+
+**What changed:**
+- `JournalRepositoryTests.cs`: Added `DeleteAsync_WhenGuidNotFound_DoesNotThrow`.
+- `GoalRepositoryTests.cs`: Added `DeleteAsync_WhenGuidNotFound_DoesNotThrow` and `CompleteAsync_WhenGuidNotFound_DoesNotThrow`.
+- `TodoRepositoryTests.cs`: Added `DeleteAsync_WhenGuidNotFound_DoesNotThrow` and `CompleteAsync_WhenGuidNotFound_DoesNotThrow`.
+
+**Why:** All three repositories guard against null with `if (item is null) return;` in their `DeleteAsync` and `CompleteAsync` methods. None of these null-guard branches were tested. If the null check were accidentally removed, calling Delete/Complete on a non-existent GUID would throw a `NullReferenceException`. These tests exercise the defensive path and verify it silently completes without side effects.
+
+**Impact:** 85 mobile tests pass (was 80). 111 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 141 — Mobile Tests: TodoRepository ordering + zero count; AccountService GUID assignment
 
 **What changed:**
