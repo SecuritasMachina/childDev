@@ -4195,3 +4195,13 @@ Both match mobile filter behavior (TodoListViewModel.FilterText, JournalListView
 **Impact:** 230 mobile tests (up from 228). Build clean.
 
 ---
+
+## 2026-05-17 — Mobile goal "Reopen Goal" feature (iter 328)
+
+**What:** Added `ReopenAsync` to `GoalRepository` (clears `CompletionDate`, bumps `UpdatedOn`). Added `IsCompleted` observable property and `ReopenCommand` to `GoalEntryViewModel`. `GoalEntryPage` shows "Reopen Goal" button when `IsCompleted = true`, hiding "Mark as Complete" via DataTrigger. Two new repository tests: `ReopenAsync_ClearsCompletionDate` and `ReopenAsync_WhenGuidNotFound_DoesNotThrow`.
+
+**Why:** Web GoalDetail has a "Reopen Goal" button. Mobile only had "Mark as Complete" with no way to undo it. A caregiver who accidentally marks a goal complete had no recourse on mobile.
+
+**Impact:** 232 mobile tests (up from 230). Build clean.
+
+---

@@ -20,6 +20,7 @@ public partial class GoalEntryViewModel(
     [ObservableProperty] private DateTime expirationDate = DateTime.Today.AddMonths(3);
     [ObservableProperty] private bool hasExpirationDate;
     [ObservableProperty] private bool isExisting;
+    [ObservableProperty] private bool isCompleted;
     [ObservableProperty] private string enteredDateDisplay = string.Empty;
 
     [ObservableProperty] private int goalTextLength;
@@ -66,6 +67,7 @@ public partial class GoalEntryViewModel(
         _loadedNextStepItems = NextStepItems;
         EnteredDateDisplay = DateTimeOffset.FromUnixTimeMilliseconds(item.EnteredDate).LocalDateTime.ToString("ddd, MMM d yyyy");
         IsExisting = true;
+        IsCompleted = item.CompletionDate.HasValue;
     }
 
     [RelayCommand(CanExecute = nameof(CanSave))]
@@ -111,6 +113,14 @@ public partial class GoalEntryViewModel(
         if (string.IsNullOrEmpty(Guid)) return;
         await repo.CompleteAsync(Guid);
         await Shell.Current.GoToAsync("..");
+    }
+
+    [RelayCommand]
+    private async Task ReopenAsync()
+    {
+        if (string.IsNullOrEmpty(Guid)) return;
+        await repo.ReopenAsync(Guid);
+        IsCompleted = false;
     }
 
     [RelayCommand]

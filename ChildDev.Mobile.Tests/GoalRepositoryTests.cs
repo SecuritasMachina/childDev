@@ -573,4 +573,28 @@ public class GoalRepositoryTests : IDisposable
         Assert.NotNull(retrieved);
         Assert.NotNull(retrieved!.DeletedAt);
     }
+
+    [Fact]
+    public async Task ReopenAsync_ClearsCompletionDate_AndBumpsUpdatedOn()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _repo.SaveAsync(new Goal
+        {
+            Guid = guid, AccountFk = "account1", GoalText = "Goal",
+            EnteredDate = now, CompletionDate = now - 1000
+        });
+
+        await _repo.ReopenAsync(guid);
+
+        var goal = await _repo.GetAsync(guid);
+        Assert.Null(goal!.CompletionDate);
+        Assert.True(goal.UpdatedOn >= now);
+    }
+
+    [Fact]
+    public async Task ReopenAsync_WhenGuidNotFound_DoesNotThrow()
+    {
+        await _repo.ReopenAsync(System.Guid.NewGuid().ToString());
+    }
 }
