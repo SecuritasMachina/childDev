@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 243 — API: SoftDelete delta verifies UpdatedOn == DeletedAt for all 4 entities
+
+**What changed:**
+- `JournalSyncTests.cs`, `GoalSyncTests.cs`, `GoalProgressSyncTests.cs`, `TodoSyncTests.cs`: Added `Sync_SoftDelete_UpdatedOnEqualsDeletedAtInDelta` — uploads a record, then soft-deletes it (sending `UpdatedOn == DeletedAt`), then asserts the delta response has `DeletedAt == UpdatedOn`.
+
+**Why:** The existing `Sync_SoftDelete_DeletedAtPropagatedInDelta` tests only asserted `DeletedAt` had a value — they did not assert `UpdatedOn == DeletedAt`, which is the core LWW soft-delete invariant. If the server ever stored them with different values, the mobile `UpsertFromSyncAsync` caller can't rely on the record being recognized as deleted by `DeletedAt IS NULL` filters or the `UpdatedOn == DeletedAt` invariant checks.
+
+**Impact:** 201 mobile tests pass. 172 API tests pass (was 168).
+
+---
+
 ## 2026-05-17 — Iteration 242 — Mobile: SyncService verifies DeletedAt serialized in upload body for all 4 entities
 
 **What changed:**
