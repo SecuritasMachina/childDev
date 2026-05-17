@@ -4220,6 +4220,16 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — Web login: Enter key submits form (iter 333)
+
+**What:** Added `@onkeyup` handler on the PIN `MudTextField` in `Login.razor`. When the user presses Enter, `DoLogin()` is called directly — no need to reach for the mouse after typing the PIN.
+
+**Why:** Standard form UX expectation. Typing NickName → Tab → PIN → Enter is the natural keyboard flow; previously it was broken and forced a mouse click.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Fix MUD0002 build warnings (iter 332)
 
 **What:** Replaced `FullWidth="true"` direct attribute on `MudDialog` in `Home.razor` and `GoalDetail.razor` with `Options="@(new DialogOptions { MaxWidth = ..., FullWidth = true })"`. MudBlazor 7 removed `FullWidth` as a first-class parameter on `MudDialog` — it must be passed through `DialogOptions`.

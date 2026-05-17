@@ -25,7 +25,8 @@
                 <MudTextField @bind-Value="NickName" Label="Nickname" Variant="Variant.Outlined"
                               Class="mb-4" Immediate="true" />
                 <MudTextField @bind-Value="Pin" Label="PIN" Variant="Variant.Outlined"
-                              InputType="InputType.Password" Class="mb-4" />
+                              InputType="InputType.Password" Class="mb-4"
+                              @onkeyup="@(async (e) => { if (e.Key == "Enter") await DoLogin(); })" />
             </MudCardContent>
             <MudCardActions Class="px-4 pb-4 flex-column">
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
