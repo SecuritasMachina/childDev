@@ -575,6 +575,52 @@ public class SyncServiceTests : IDisposable
         Assert.Single(items);
         Assert.Equal("From server step", items[0].NextStepItems);
     }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsDeletedJournal_DeletedAtPropagatedLocally()
+    {
+        await _accountService.CreateAccountAsync("user22", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var deletedAt = 5_000_000L;
+        var serverJournal = new JournalSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, null,
+            null, null, null, deletedAt, deletedAt, deletedAt);
+
+        var handler = new FakeSyncHandler(serverJournal);
+        var service = BuildSyncService(handler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var stored = await _db.FindAsync<Journal>(serverJournal.Guid);
+        Assert.NotNull(stored);
+        Assert.Equal(deletedAt, stored!.DeletedAt);
+    }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsDeletedGoal_DeletedAtPropagatedLocally()
+    {
+        await _accountService.CreateAccountAsync("user23", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var deletedAt = 5_000_000L;
+        var serverGoal = new GoalSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, null,
+            null, null, deletedAt, null, null, deletedAt, deletedAt);
+
+        var handler = new FakeGoalSyncHandler(serverGoal);
+        var service = BuildSyncService(handler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var stored = await _db.FindAsync<Goal>(serverGoal.Guid);
+        Assert.NotNull(stored);
+        Assert.Equal(deletedAt, stored!.DeletedAt);
+    }
 }
 
 // Test helpers
