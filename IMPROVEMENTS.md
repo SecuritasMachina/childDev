@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 206 — API: Goal MeasurableOutcome can be cleared via LWW update
+
+**What changed:**
+- `GoalSyncTests.cs`: Added `Sync_MeasurableOutcome_CanBeClearedByClient_ViaNewerUpdate` — stores a goal with MeasurableOutcome="Run 5km", then sends a newer-UpdatedOn update with MeasurableOutcome=null, asserts stored value is null.
+
+**Why:** All four nullable date fields (CompletionDate, ExpirationDate, NextMeetingDate, DeletedAt) have "can be cleared via LWW" tests. MeasurableOutcome is a nullable string field also written by ApplyDto unconditionally. If `e.MeasurableOutcome = dto.MeasurableOutcome` were accidentally removed from ApplyDto, no existing test would catch it. The optionals round-trip test only sets MeasurableOutcome; it never clears it.
+
+**Impact:** 158 API tests pass (was 157). 159 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 205 — Mobile: SyncService stores Goal EnteredDate received from server
 
 **What changed:**
