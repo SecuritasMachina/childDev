@@ -1,5 +1,18 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 180 — API: Nullable date fields can be cleared via newer LWW update
+
+**What changed:**
+- `TodoSyncTests.cs`: Added `Sync_DueDate_CanBeClearedByClient_ViaNewerUpdate` — stores a todo with DueDate set, then sends null DueDate + newer UpdatedOn, asserts DueDate is null.
+- `GoalSyncTests.cs`: Added `Sync_ExpirationDate_CanBeClearedByClient_ViaNewerUpdate` — same pattern for ExpirationDate.
+- `GoalProgressSyncTests.cs`: Added `Sync_NextMeetingDate_CanBeClearedByClient_ViaNewerUpdate` — same pattern for NextMeetingDate.
+
+**Why:** Iter 178/179 documented that completion fields (CompletionDate, CompletedAt) can be nulled via LWW. This iteration extends that pattern to all remaining nullable date fields. `ApplyDto` for each endpoint includes these fields unconditionally, so null values overwrite stored non-null values. Without tests, a "fix" that added `if (dto.X.HasValue)` guards would silently break the LWW contract for these fields.
+
+**Impact:** 148 API tests pass (was 145). 136 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 179 — API: Completed Todo can be un-completed via newer LWW update
 
 **What changed:**
