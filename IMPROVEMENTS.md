@@ -7,7 +7,7 @@
 | 1 | DashboardPage: recent journal cards tap to open entry | UI | High | S | Low | **DONE** |
 
 | 2 | JournalEntryPage: Delete button (currently list-only) | Func | Medium | S | Low | **DONE** |
-| 3 | GoalListPage: show ExpirationDate per goal | UI | Medium | S | Low | Backlog |
+| 3 | GoalListPage: show ExpirationDate per goal | UI | Medium | S | Low | **DONE** |
 | 4 | API: response compression (gzip) | Perf | Low | S | Low | Backlog |
 | 5 | TodoList: pinch-to-expand completed todos (toggle) | UI | Low | M | Medium | Backlog |
 | 6 | JournalEntryPage: entered date picker (allow backdating) | Func | Medium | M | Low | Backlog |
