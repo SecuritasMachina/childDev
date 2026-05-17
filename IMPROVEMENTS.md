@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 106 — Mobile Tests: GoalRepository CompleteAsync + GetModifiedSince
+
+**What changed:**
+- `GoalRepositoryTests.cs`: Added `CompleteAsync_SetsCompletionDate` and `GetModifiedSince_ReturnsOnlyNewerRecords`.
+
+**Why:** Matches the coverage pattern now established in JournalRepositoryTests and TodoRepositoryTests.
+
+**Impact:** 29 mobile tests pass. 86 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 105 — Mobile Tests: Todo soft-delete + GetModifiedSince coverage
 
 **What changed:**
