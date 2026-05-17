@@ -1,5 +1,30 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 77 Brainstorm (fresh — every 3rd)
+
+| # | Description | Dim | Impact | Effort | Risk |
+|---|-------------|-----|--------|--------|------|
+| 1 | Mobile: GoalEntry — show GoalText word count | UI | Small | XS | Low | |
+| 2 | API: GoalProgress — validate NextStepItems not blank | Quality | Small | XS | Low | **SELECTED** |
+| 3 | Mobile: Todo trim Title/Notes on save | Quality | Small | XS | Low | (already done) |
+| 4 | Mobile: JournalList — show year in date for old entries | UI | Small | S | Low | |
+| 5 | API: Enforce maximum content field length | Quality | Small | XS | Low | |
+| 6 | Mobile: SyncService — per-entity debug logging | Observ. | Small | XS | Low | |
+| 7 | Mobile: Settings — Reset last sync button | UX | Small | S | Low | |
+| 8 | API: EnteredDate reasonable range validation | Quality | Small | XS | Low | |
+
+## 2026-05-16 — Iteration 77 — API: Reject GoalProgress sync records with blank NextStepItems
+
+**What changed:**
+- `GoalProgressEndpoints.cs`: Added validation — any non-deleted record with blank/whitespace `NextStepItems` returns HTTP 422. Completes the full suite of required-field validation across all 4 entity types.
+- `SyncInputValidationTests.cs`: Added `Sync_GoalProgress_BlankNextStepItems_Returns422` fact test.
+
+**Why:** GoalProgress records exist solely to capture next steps. A blank `NextStepItems` on a non-deleted record is a client bug and should be rejected rather than stored.
+
+**Impact:** 25 mobile tests pass (0 warnings). 57 API tests pass (was 56).
+
+---
+
 ## 2026-05-16 — Iteration 76 — Mobile: Use 5s deadline for SyncService health check pre-flight
 
 **What changed:**
