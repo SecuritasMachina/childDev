@@ -1,5 +1,18 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 133 — Mobile Tests: Account isolation in repository queries
+
+**What changed:**
+- `JournalRepositoryTests.cs`: Added `GetAllActiveAsync_ExcludesOtherAccounts`.
+- `GoalRepositoryTests.cs`: Added `GetAllActiveAsync_ExcludesOtherAccounts`.
+- `TodoRepositoryTests.cs`: Added `GetPendingAsync_ExcludesOtherAccounts`.
+
+**Why:** The `GetAllActiveAsync` and `GetPendingAsync` methods filter by `AccountFk`. No existing test inserted records for two different accounts and verified that only the correct account's records were returned. A regression removing or breaking the WHERE clause would silently expose other users' data. This is a security invariant worth explicit coverage.
+
+**Impact:** 56 mobile tests pass. 106 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 132 — Mobile Tests: JournalRepository GetAllActiveAsync ordering
 
 **What changed:**
