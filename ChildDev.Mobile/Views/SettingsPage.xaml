@@ -6,6 +6,7 @@
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="16">
             <Label Text="{Binding NickName, StringFormat='Account: {0}'}" />
+            <Label Text="{Binding AccountCreatedDisplay, StringFormat='Created: {0}'}" TextColor="Gray" FontSize="12" />
 
             <Label Text="Sync Server URL" />
             <Entry Text="{Binding ServerUrl}" Placeholder="https://your-server/api" Keyboard="Url" />

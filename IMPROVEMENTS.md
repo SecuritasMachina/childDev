@@ -11,7 +11,7 @@
 | 4 | API: response compression (gzip) | Perf | Low | S | Low | **DONE** |
 | 5 | TodoList: pinch-to-expand completed todos (toggle) | UI | Low | M | Medium | Backlog |
 | 6 | JournalEntryPage: entered date picker (allow backdating) | Func | Medium | M | Low | Backlog |
-| 7 | SettingsPage: show account info (nick, created date) | UI | Low | S | Low | Backlog |
+| 7 | SettingsPage: show account info (nick, created date) | UI | Low | S | Low | **DONE** |
 | 8 | GoalEntry: validate GoalText is non-empty before save | Stability | Medium | S | Low | **DONE** |
 | 9 | API: request timeout middleware (cancel slow DB queries) | Stability | Low | S | Low | Backlog |
 | 10 | TodoEntry: validate Title non-empty before save | Stability | Medium | S | Low | Backlog |
