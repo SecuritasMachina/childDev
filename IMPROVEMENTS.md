@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 172 — Mobile: Journal optional fields persistence + SyncService empty batch
+
+**What changed:**
+- `JournalRepositoryTests.cs`: Added `SaveAsync_PersistsAllOptionalFields` — verifies Activity, Mood, Tags are stored and retrievable via `GetAsync` after a `SaveAsync` call.
+- `SyncServiceTests.cs`: Added `RunAsync_NoLocalChanges_SendsEmptyBatchToAllEndpoints` — verifies the outgoing journal sync request body contains `"records":[]` when the local database has no modified journal records.
+
+**Why:** `JournalRepository.SaveAsync` writes the full entity, but no test verified that optional fields survive the round-trip through SQLite. The empty-batch test confirms `SyncService` calls all 4 endpoints even with zero local records (the LWW delta response from the server is still needed).
+
+**Impact:** 129 mobile tests pass (was 127). 138 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 171 — API: Auth token AccountGuid contract + Journal delta empty for future LastSyncAt
 
 **What changed:**
