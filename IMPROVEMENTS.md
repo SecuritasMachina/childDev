@@ -1,5 +1,18 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 89 — API: Validate Journal auxiliary fields and Todo Title/Notes lengths
+
+**What changed:**
+- `JournalEndpoints.cs`: Added explicit length checks for Activity (>255), Mood (>50), Tags (>500) — matching `[MaxLength]` DB attributes. Prevents DB-level 500 errors when oversized values arrive.
+- `TodoEndpoints.cs`: Added Title > 500 check (matching `[MaxLength(500)]`) and Notes > 2000 check (establishes a cap where none existed).
+- `SyncInputValidationTests.cs`: Added `Sync_Journal_AuxFieldTooLong_Returns422` (Theory: Activity/Mood/Tags) and `Sync_Todo_FieldTooLong_Returns422` (Theory: Title/Notes).
+
+**Why:** DB-level constraints silently throw exceptions that surface as 500 responses. Explicit API-layer checks give clients clean 422 error messages.
+
+**Impact:** 25 mobile tests pass. 71 API tests pass (up from 66).
+
+---
+
 ## 2026-05-16 — Iteration 88 — Mobile: Show Notes character count in TodoEntry
 
 **What changed:**
