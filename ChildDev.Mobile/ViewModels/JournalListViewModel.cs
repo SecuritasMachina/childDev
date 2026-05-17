@@ -27,9 +27,13 @@ public partial class JournalListViewModel(
     [ObservableProperty]
     private string entryCountDisplay = string.Empty;
 
+    [ObservableProperty]
+    private string emptyMessage = "No journal entries yet";
+
     private List<Journal> _allJournals = [];
 
-    partial void OnFilterTextChanged(string value) =>
+    partial void OnFilterTextChanged(string value)
+    {
         Journals = new ObservableCollection<Journal>(
             string.IsNullOrWhiteSpace(value)
                 ? _allJournals
@@ -38,6 +42,10 @@ public partial class JournalListViewModel(
                     (j.Activity != null && j.Activity.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
                     (j.Mood != null && j.Mood.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
                     (j.Tags != null && j.Tags.Contains(value, StringComparison.OrdinalIgnoreCase))));
+        EmptyMessage = string.IsNullOrWhiteSpace(value)
+            ? "No journal entries yet"
+            : $"No matches for \"{value}\"";
+    }
 
     [RelayCommand]
     private async Task LoadAsync()

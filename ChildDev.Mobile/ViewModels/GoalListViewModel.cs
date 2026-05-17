@@ -29,9 +29,13 @@ public partial class GoalListViewModel(
     [ObservableProperty]
     private string entryCountDisplay = string.Empty;
 
+    [ObservableProperty]
+    private string emptyMessage = "No goals yet";
+
     private List<Goal> _allGoals = [];
 
-    partial void OnFilterTextChanged(string value) =>
+    partial void OnFilterTextChanged(string value)
+    {
         Goals = new ObservableCollection<Goal>(
             string.IsNullOrWhiteSpace(value)
                 ? _allGoals
@@ -39,6 +43,10 @@ public partial class GoalListViewModel(
                     (g.GoalText != null && g.GoalText.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
                     (g.MeasurableOutcome != null && g.MeasurableOutcome.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
                     (g.LatestNextStepItems != null && g.LatestNextStepItems.Contains(value, StringComparison.OrdinalIgnoreCase))));
+        EmptyMessage = string.IsNullOrWhiteSpace(value)
+            ? "No goals yet"
+            : $"No matches for \"{value}\"";
+    }
 
     [RelayCommand]
     private async Task LoadAsync()
