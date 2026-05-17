@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 107 — Mobile Tests: GoalProgressRepository full coverage
+
+**What changed:**
+- `GoalProgressRepositoryTests.cs`: New file with 7 tests covering `SaveAsync`, `GetForGoalAsync` (active-only, goal-scoped), `GetLatestNextStepsAsync` (latest per goal, excludes soft-deleted), `GetModifiedSinceAsync`, and `UpsertFromSyncAsync`.
+
+**Why:** `GoalProgressRepository` had zero unit tests despite having 5 methods including non-trivial SQL (`GetLatestNextStepsAsync` uses GROUP BY/HAVING). Brings mobile test coverage in line with all other repositories.
+
+**Impact:** 36 mobile tests pass. 86 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 106 — Mobile Tests: GoalRepository CompleteAsync + GetModifiedSince
 
 **What changed:**
