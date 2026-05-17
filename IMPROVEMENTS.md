@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 146 — Mobile Tests: AccountService null-guards + soft-deleted journal upload
+
+**What changed:**
+- `AccountServiceTests.cs`: Added `SaveServerCredentials_WhenNoAccount_DoesNotThrow` and `SaveServerUrl_WhenNoAccount_DoesNotThrow` — both call the method on an empty DB and assert no exception and account remains null. Mirrors the pattern of `UpdateLastSync_WhenNoAccount_DoesNotThrow` already in place.
+- `SyncServiceTests.cs`: Added `RunAsync_LocalSoftDeletedJournal_IncludedInUploadRequest` — inserts a journal with `DeletedAt` set, runs sync, verifies the GUID appears in the upload request body. `GetModifiedSinceAsync` returns all records with `UpdatedOn > since` regardless of `DeletedAt`; if `GetAllActiveAsync` were accidentally used instead, soft-deleted records would never be uploaded to the server.
+
+**Why:** Both `SaveServerCredentialsAsync` and `SaveServerUrlAsync` have a `if (account is null) return` guard but those branches were untested. The soft-delete upload test is the mobile-side counterpart to the API-side `Sync_SoftDelete_DeletedAtPropagatedInDelta` — it verifies the full upload path, not just the download path.
+
+**Impact:** 95 mobile tests pass (was 92). 111 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 145 — Mobile Tests: GoalProgressRepo skip already-deleted + SyncService partial-creds guard
 
 **What changed:**
