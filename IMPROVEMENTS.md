@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 258 — API: Todo sync idempotent upsert — same GUID twice yields one record
+
+**What changed:**
+- `TodoSyncTests.cs`: Added `Sync_SameGuidUploadedTwice_DeltaContainsExactlyOneRecord` (tsync_idempotent1) — uploads a todo GUID twice (second with newer UpdatedOn and different Title), fetches delta with LastSyncAt=0, and asserts exactly one record with the second Title.
+
+**Why:** Iteration 251 added this idempotency test for Journal. Todo has different required fields (Title vs Notes) and a separate EF Core upsert handler. If the Todo upsert accidentally inserted rather than updated on second upload, the delta would contain two rows. No idempotency test existed for Todo.
+
+**Impact:** 195 API tests pass (was 194). 210 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 257 — API: Goal delta strict-greater-than LastSyncAt boundary test
 
 **What changed:**
