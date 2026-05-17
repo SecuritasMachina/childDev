@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 164 — Mobile: SyncService inbound CompletionDate + CompletedAt propagation
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsCompletedGoal_CompletionDateStoredLocally` — server sends a goal with `CompletionDate` set, verifies it's stored in the local DB.
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsCompletedTodo_CompletedAtStoredLocally` — same for Todo.
+
+**Why:** The existing `RunAsync_ServerReturnsGoal_UpsertsLocally` only checks `GoalText`. The `DtoToEntity` mapper has 9 fields for Goal — if `CompletionDate` was accidentally dropped from the mapping, completions from other devices would silently fail to propagate. These tests guard that specific optional-field mapping path.
+
+**Impact:** 114 mobile tests pass (was 112). 130 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 163 — Mobile: SyncService HttpRequestException retry + Journal 3-item ordering
 
 **What changed:**
