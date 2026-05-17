@@ -25,7 +25,13 @@
     </MudAlert>
 }
 
-@if (PendingTodos.Any())
+@if (!PendingTodos.Any() && !CompletedTodos.Any())
+{
+    <MudAlert Severity="Severity.Info" Class="mb-4" Icon="@Icons.Material.Filled.CheckCircle">
+        No todos yet — add one below to get started!
+    </MudAlert>
+}
+else if (PendingTodos.Any())
 {
     <MudText Typo="Typo.subtitle1" Class="mb-2" Color="Color.Secondary">
         @PendingTodos.Count pending

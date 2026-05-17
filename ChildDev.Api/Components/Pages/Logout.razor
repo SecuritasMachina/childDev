@@ -1,0 +1,14 @@
+@page "/logout"
+@inject NavigationManager Nav
+@inject IHttpContextAccessor HttpContextAccessor
+@inject WebAnalyticsService Analytics
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var accountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
+        await Analytics.TrackAsync("logout", accountGuid, "logout");
+        HttpContextAccessor.HttpContext?.Session.Clear();
+        Nav.NavigateTo("/login");
+    }
+}
