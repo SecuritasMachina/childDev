@@ -4,11 +4,13 @@ using ChildDev.Mobile.Models;
 using ChildDev.Mobile.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Linq;
 
 namespace ChildDev.Mobile.ViewModels;
 
 public partial class GoalListViewModel(
     GoalRepository repo,
+    GoalProgressRepository progressRepo,
     AccountService accountService,
     SyncService syncService) : ObservableObject
 {
@@ -29,8 +31,7 @@ public partial class GoalListViewModel(
             StatusMessage = string.Empty;
             var account = await accountService.GetAccountAsync();
             if (account is null) return;
-            var items = await repo.GetAllActiveAsync(account.Guid);
-            Goals = new ObservableCollection<Goal>(items);
+            Goals = new ObservableCollection<Goal>(await LoadGoalsWithStepsAsync(account.Guid));
         }
         catch
         {
@@ -46,8 +47,7 @@ public partial class GoalListViewModel(
             var account = await accountService.GetAccountAsync();
             if (account is null) { IsRefreshing = false; return; }
             await syncService.RunAsync(account);
-            var items = await repo.GetAllActiveAsync(account.Guid);
-            Goals = new ObservableCollection<Goal>(items);
+            Goals = new ObservableCollection<Goal>(await LoadGoalsWithStepsAsync(account.Guid));
             StatusMessage = string.Empty;
         }
         catch
@@ -58,6 +58,15 @@ public partial class GoalListViewModel(
         {
             IsRefreshing = false;
         }
+    }
+
+    private async Task<List<Goal>> LoadGoalsWithStepsAsync(string accountGuid)
+    {
+        var goals = await repo.GetAllActiveAsync(accountGuid);
+        var steps = await progressRepo.GetLatestNextStepsAsync(accountGuid);
+        foreach (var g in goals)
+            g.LatestNextStepItems = steps.GetValueOrDefault(g.Guid);
+        return goals;
     }
 
     [RelayCommand]

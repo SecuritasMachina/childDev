@@ -49,6 +49,9 @@
                                    TextColor="{Binding ExpirationDate, Converter={x:StaticResource ExpirationColorConverter}}"
                                    FontSize="11"
                                    IsVisible="{Binding ExpirationDate, Converter={x:StaticResource NotNullConverter}}" />
+                            <Label Text="{Binding LatestNextStepItems}" FontSize="11" TextColor="Gray"
+                                   LineBreakMode="TailTruncation" MaxLines="2"
+                                   IsVisible="{Binding LatestNextStepItems, Converter={x:StaticResource StringToBoolConverter}}" />
                         </VerticalStackLayout>
                         <Label Grid.Column="1" Text="✓ Done" FontSize="11" TextColor="Green"
                                VerticalOptions="Start" Margin="8,2,0,0"
