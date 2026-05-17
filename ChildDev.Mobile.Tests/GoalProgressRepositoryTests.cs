@@ -191,6 +191,27 @@ public class GoalProgressRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetForGoalAsync_ThreeItems_OrderedByUpdatedOnDescending()
+    {
+        var goalFk = System.Guid.NewGuid().ToString();
+        var oldest = DateTimeOffset.UtcNow.AddDays(-5).ToUnixTimeMilliseconds();
+        var middle = DateTimeOffset.UtcNow.AddDays(-2).ToUnixTimeMilliseconds();
+        var newest = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Insert in shuffled order to confirm ORDER BY handles it
+        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = "account1", GoalFk = goalFk, NextStepItems = "middle", UpdatedOn = middle });
+        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = "account1", GoalFk = goalFk, NextStepItems = "oldest", UpdatedOn = oldest });
+        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = "account1", GoalFk = goalFk, NextStepItems = "newest", UpdatedOn = newest });
+
+        var items = await _repo.GetForGoalAsync(goalFk);
+
+        Assert.Equal(3, items.Count);
+        Assert.Equal("newest", items[0].NextStepItems);
+        Assert.Equal("middle", items[1].NextStepItems);
+        Assert.Equal("oldest", items[2].NextStepItems);
+    }
+
+    [Fact]
     public async Task GetModifiedSinceAsync_ExcludesOtherAccounts()
     {
         var account1 = System.Guid.NewGuid().ToString();
