@@ -50,11 +50,7 @@ public partial class GoalListViewModel(
             if (account is null) return;
             _allGoals = await LoadGoalsWithStepsAsync(account.Guid);
             Goals = new ObservableCollection<Goal>(_allGoals);
-            var active = _allGoals.Count(g => g.CompletionDate is null);
-            var completed = _allGoals.Count - active;
-            EntryCountDisplay = completed > 0
-                ? $"{active} active, {completed} completed"
-                : $"{active} {(active == 1 ? "goal" : "goals")}";
+            UpdateEntryCountDisplay();
         }
         catch
         {
@@ -72,11 +68,7 @@ public partial class GoalListViewModel(
             await syncService.RunAsync(account);
             _allGoals = await LoadGoalsWithStepsAsync(account.Guid);
             Goals = new ObservableCollection<Goal>(_allGoals);
-            var active = _allGoals.Count(g => g.CompletionDate is null);
-            var completed = _allGoals.Count - active;
-            EntryCountDisplay = completed > 0
-                ? $"{active} active, {completed} completed"
-                : $"{active} {(active == 1 ? "goal" : "goals")}";
+            UpdateEntryCountDisplay();
             StatusMessage = string.Empty;
         }
         catch
@@ -87,6 +79,15 @@ public partial class GoalListViewModel(
         {
             IsRefreshing = false;
         }
+    }
+
+    private void UpdateEntryCountDisplay()
+    {
+        var active = _allGoals.Count(g => g.CompletionDate is null);
+        var completed = _allGoals.Count - active;
+        EntryCountDisplay = completed > 0
+            ? $"{active} active, {completed} completed"
+            : $"{active} {(active == 1 ? "goal" : "goals")}";
     }
 
     private async Task<List<Goal>> LoadGoalsWithStepsAsync(string accountGuid)
