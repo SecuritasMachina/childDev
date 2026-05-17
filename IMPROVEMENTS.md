@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 219 — Mobile: GoalRepository DeleteAsync makes goal visible in GetModifiedSince
+
+**What changed:**
+- `GoalRepositoryTests.cs`: Added `DeleteAsync_GoalAppearsInGetModifiedSince` — inserts a goal with oldTs, soft-deletes it, asserts it appears in GetModifiedSinceAsync(oldTs) with DeletedAt set.
+
+**Why:** This is the sync-upload path for deleted goals. `GetModifiedSinceAsync_IncludesSoftDeletedRecords` uses direct DB insertion; it never verifies that `DeleteAsync` itself bumps UpdatedOn correctly so the change is caught by the since-filter. `CompleteAsync_SetsUpdatedOnToCompletionDate` and `Delete_SoftDeletes_ExcludedFromActive` exist but neither tests the GetModifiedSince integration.
+
+**Impact:** 170 mobile tests pass (was 169). 160 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 218 — Mobile: AccountService UpdateLastSync preserves ServerCredentials
 
 **What changed:**

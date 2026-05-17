@@ -438,6 +438,25 @@ public class GoalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task DeleteAsync_GoalAppearsInGetModifiedSince()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var oldTs = DateTimeOffset.UtcNow.AddSeconds(-10).ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new Goal
+        {
+            Guid = guid, AccountFk = "account1", GoalText = "to delete",
+            EnteredDate = oldTs, UpdatedOn = oldTs
+        });
+
+        await _repo.DeleteAsync(guid);
+
+        var modified = await _repo.GetModifiedSinceAsync("account1", oldTs);
+        Assert.Single(modified);
+        Assert.Equal(guid, modified[0].Guid);
+        Assert.NotNull(modified[0].DeletedAt);
+    }
+
+    [Fact]
     public async Task SaveAsync_PersistsAllOptionalFields()
     {
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
