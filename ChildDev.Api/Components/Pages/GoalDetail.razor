@@ -129,6 +129,25 @@ else
     }
 </MudStack>
 
+<MudDialog @bind-Visible="ShowCelebration" MaxWidth="MaxWidth.Small" FullWidth="true">
+    <DialogContent>
+        <MudStack AlignItems="AlignItems.Center" Spacing="3" Class="pa-4">
+            <MudText Typo="Typo.h2">🎉</MudText>
+            <MudText Typo="Typo.h5" Align="Align.Center" Color="Color.Success">Goal Achieved!</MudText>
+            <MudText Typo="Typo.body1" Align="Align.Center" Color="Color.Secondary">
+                @Goal?.GoalText
+            </MudText>
+            <MudText Typo="Typo.body2" Align="Align.Center">
+                Amazing work! Every big achievement starts with a single step. 🌟
+            </MudText>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true"
+                   OnClick="() => ShowCelebration = false">Awesome! 🙌</MudButton>
+    </DialogActions>
+</MudDialog>
+
 <MudDialog @bind-Visible="ShowAddDialog">
     <TitleContent>
         <MudText Typo="Typo.h6">
@@ -197,6 +216,7 @@ else
     private bool ShowAddDialog;
     private string NewNextSteps = string.Empty;
     private DateTime? NewMeetingDate;
+    private bool ShowCelebration;
     private bool ShowEditProgressDialog;
     private string? EditingProgressGuid;
     private string EditProgressNextSteps = string.Empty;
@@ -317,7 +337,7 @@ else
         Goal.UpdatedOn = now;
         await Db.SaveChangesAsync();
         await Analytics.TrackAsync("goal_complete", AccountGuid, "goal_detail", GoalGuid);
-        Snackbar.Add("Goal completed!", Severity.Success);
+        ShowCelebration = true;
     }
 
     private async Task ReopenGoal()
