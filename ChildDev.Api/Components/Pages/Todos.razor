@@ -41,7 +41,7 @@
                 <MudIconButton Icon="@Icons.Material.Filled.RadioButtonUnchecked"
                                Color="Color.Primary" Size="Size.Small"
                                OnClick="() => CompleteTodo(t.Guid)" />
-                <MudStack Spacing="0">
+                <MudStack Spacing="0" Style="flex:1">
                     <MudText Typo="Typo.body1" Color="@(isOverdue ? Color.Error : Color.Default)">@t.Title</MudText>
                     @if (t.DueDate.HasValue)
                     {
@@ -55,6 +55,8 @@
                         <MudText Typo="Typo.caption" Color="Color.Secondary">@t.Notes</MudText>
                     }
                 </MudStack>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                               OnClick="() => OpenEditTodo(t)" />
             </MudStack>
         </MudListItem>
     }
@@ -100,6 +102,26 @@
     </DialogActions>
 </MudDialog>
 
+<MudDialog @bind-Visible="ShowEditDialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-2" />
+            Edit Todo
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="EditTitle" Label="Task" Variant="Variant.Outlined"
+                      Class="mb-4" AutoFocus="true" />
+        <MudTextField @bind-Value="EditNotes" Label="Notes (optional)" Variant="Variant.Outlined"
+                      Lines="2" Class="mb-4" />
+        <MudDatePicker @bind-Date="EditDueDate" Label="Due date (optional)" Variant="Variant.Outlined" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => ShowEditDialog = false">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveTodoEdit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     private string? AccountGuid;
     private List<Todo> PendingTodos = [];
@@ -110,6 +132,11 @@
     private string NewTitle = string.Empty;
     private string? NewNotes;
     private DateTime? NewDueDate;
+    private bool ShowEditDialog;
+    private string? EditingGuid;
+    private string EditTitle = string.Empty;
+    private string? EditNotes;
+    private DateTime? EditDueDate;
 
     protected override async Task OnInitializedAsync()
     {
@@ -172,6 +199,37 @@
         await Db.SaveChangesAsync();
         await Analytics.TrackAsync("todo_complete", AccountGuid, "todos");
         Snackbar.Add("Todo completed!", Severity.Success);
+        await LoadTodos();
+    }
+
+    private void OpenEditTodo(Todo todo)
+    {
+        EditingGuid = todo.Guid;
+        EditTitle = todo.Title ?? string.Empty;
+        EditNotes = todo.Notes;
+        EditDueDate = todo.DueDate.HasValue
+            ? DateTimeOffset.FromUnixTimeMilliseconds(todo.DueDate.Value).LocalDateTime
+            : null;
+        ShowEditDialog = true;
+    }
+
+    private async Task SaveTodoEdit()
+    {
+        var title = EditTitle.Trim();
+        if (string.IsNullOrWhiteSpace(title) || EditingGuid is null) return;
+        var todo = await Db.Todos.FirstOrDefaultAsync(t => t.Guid == EditingGuid && t.AccountFk == AccountGuid);
+        if (todo is null) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        todo.Title = title;
+        todo.Notes = string.IsNullOrWhiteSpace(EditNotes) ? null : EditNotes.Trim();
+        todo.DueDate = EditDueDate.HasValue
+            ? new DateTimeOffset(EditDueDate.Value, TimeSpan.Zero).ToUnixTimeMilliseconds()
+            : null;
+        todo.UpdatedOn = now;
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("todo_edit", AccountGuid, "todos");
+        ShowEditDialog = false;
+        Snackbar.Add("Todo updated!", Severity.Success);
         await LoadTodos();
     }
 }
