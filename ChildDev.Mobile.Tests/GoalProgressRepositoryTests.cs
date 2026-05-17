@@ -445,4 +445,29 @@ public class GoalProgressRepositoryTests : IDisposable
         Assert.Equal("Step 1: plan, Step 2: execute", retrieved!.NextStepItems);
         Assert.Equal(meetingDate, retrieved.NextMeetingDate);
     }
+
+    [Fact]
+    public async Task DeleteForGoalAsync_RecordsAppearInGetModifiedSince()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var goalFk = System.Guid.NewGuid().ToString();
+        var oldTs = DateTimeOffset.UtcNow.AddSeconds(-10).ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalFk = goalFk,
+            NextStepItems = "Step A", UpdatedOn = oldTs
+        });
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalFk = goalFk,
+            NextStepItems = "Step B", UpdatedOn = oldTs
+        });
+
+        await _repo.DeleteForGoalAsync(goalFk);
+
+        var modified = await _repo.GetModifiedSinceAsync(accountId, oldTs);
+        Assert.Equal(2, modified.Count);
+        Assert.All(modified, p => Assert.NotNull(p.DeletedAt));
+    }
 }
