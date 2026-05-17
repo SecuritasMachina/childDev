@@ -1,5 +1,30 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 56 Brainstorm (fresh — every 3rd)
+
+| # | Description | Dim | Impact | Effort | Risk |
+|---|-------------|-----|--------|--------|------|
+| 1 | Mobile: GoalList — live search filter (goalText/measurableOutcome/nextStepItems) | UI | High | S | Low | **SELECTED** |
+| 2 | Mobile: JournalEntry — disable Save when Notes empty | UI | Medium | XS | Low | |
+| 3 | Mobile: Settings — show app version number | UI | Small | XS | Low | |
+| 4 | Mobile: Dashboard — show total journal entry count | UI | Small | XS | Low | |
+| 5 | API: skip SaveChanges when no records pass accountGuid filter | Perf | Small | XS | Low | |
+| 6 | Mobile: GoalList — show "in X days" countdown for next meeting | UI | Medium | S | Low | |
+| 7 | Mobile: SyncService — update LastSyncAt only on first successful sync | Stability | Medium | S | Medium | |
+| 8 | Mobile: DashboardViewModel — refresh after shell navigation returns | UI | Medium | S | Low | |
+
+## 2026-05-16 — Iteration 56 — Mobile: GoalList live search filter
+
+**What changed:**
+- `GoalListViewModel.cs`: Added `FilterText` observable and `_allGoals` backing list; `OnFilterTextChanged` filters across GoalText, MeasurableOutcome, and LatestNextStepItems; Delete keeps `_allGoals` consistent; LoadAsync/RefreshAsync populate `_allGoals`
+- `GoalListPage.xaml`: Added `SearchBar` (row 1); bumped RowDefinitions from 2 to 3 rows
+
+**Why:** Completes live-search coverage across all three list pages (Journal: iter 53, Todo: iter 50). Users with many goals now have a way to find a specific goal quickly.
+
+**Impact:** 25 mobile tests pass. 52 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 55 — Mobile: Trim NextStepItems on load and save
 
 **What changed:**
