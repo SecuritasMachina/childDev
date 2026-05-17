@@ -1,13 +1,48 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 16 Brainstorm (fresh — every 3rd)
+
+| # | Description | Dim | Impact | Effort | Risk | Status |
+|---|-------------|-----|--------|--------|------|--------|
+| 1 | JournalListPage: pull-to-refresh trigger sync | Func | Medium | M | Medium | Backlog |
+| 2 | API: X-Request-ID header echo for traceability | Perf | Low | S | Low | Backlog |
+| 3 | SyncService: retry once on transient failure | Stability | Low | M | Medium | Backlog |
+| 4 | GoalEntryPage: show ExpirationDate label for existing | Func | Low | S | Low | Backlog |
+| 5 | TodoRepository: count completed todos (for "X done" footer) | UI | Low | S | Low | Backlog |
+| 6 | API: CORS policy — allow only expected mobile origins | Stability | Low | S | Low | Backlog |
+| 7 | JournalListPage: word count in preview (character/word count) | UI | Low | S | Low | Backlog |
+| 8 | API: limit Records list size to avoid unbounded POST body | Stability | Medium | S | Low | Backlog |
+| 9 | SyncService: structured logging (last sync time, record counts) | Perf | Low | S | Low | Backlog |
+| 10 | TodoEntryViewModel: ExpirationDate / reminder date support | Func | Low | M | Low | Backlog |
+
+---
+
+## 2026-05-16 — API: reject future UpdatedOn (422) + goal sort + error boundaries
+
+**Iterations 14-17 summary:**
+
+**Iter 14 — Goal sort (active before completed):**
+`GoalRepository.GetAllActiveAsync` → raw SQL `ORDER BY (CompletionDate IS NOT NULL), EnteredDate DESC`. Active goals appear first; completed goals scroll to bottom. Test: `GetAllActiveAsync_ActiveBeforeCompleted`. 21 mobile tests.
+
+**Iter 15 — Dashboard error boundary:**
+`DashboardViewModel.LoadAsync` wrapped in try/catch → SyncStatus shows error. Post-sync `RefreshDataAsync` also wrapped separately. 21 mobile tests.
+
+**Iter 16 — SQLite indexes on SyncBase:**
+`[Indexed]` on `AccountFk`, `UpdatedOn`, `DeletedAt` in `SyncBase.cs`. sqlite-net-pcl generates unique per-table index names (`<Table>_<Column>`). Indexes created at `CreateTableAsync` time, so new installs and in-memory tests benefit immediately.
+
+**Iter 17 — API: reject future UpdatedOn → 422:**
+All 4 sync endpoints: if any record has `UpdatedOn > now + 300_000ms` (5 min), return 422. Prevents clock-skewed clients from poisoning LWW ordering. 4 new Theory tests. 38 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 13 Brainstorm (fresh — every 3rd)
 
 | # | Description | Dim | Impact | Effort | Risk | Status |
 |---|-------------|-----|--------|--------|------|--------|
-| 1 | JournalRepository/GoalRepository/TodoRepository: index on AccountFk+DeletedAt | Perf | Medium | S | Low | Backlog |
-| 2 | API: validate UpdatedOn not in future (> now + 60s) → 422 | Stability | Low | S | Low | Backlog |
-| 3 | GoalListPage: sort active before completed (CompletionDate IS NULL first) | UI | Medium | S | Low | Backlog |
-| 4 | DashboardViewModel: error boundary for RefreshDataAsync | Stability | Medium | S | Low | Backlog |
+| 1 | JournalRepository/GoalRepository/TodoRepository: index on AccountFk+DeletedAt | Perf | Medium | S | Low | **DONE (SyncBase)** |
+| 2 | API: validate UpdatedOn not in future (> now + 60s) → 422 | Stability | Low | S | Low | **DONE** |
+| 3 | GoalListPage: sort active before completed (CompletionDate IS NULL first) | UI | Medium | S | Low | **DONE** |
+| 4 | DashboardViewModel: error boundary for RefreshDataAsync | Stability | Medium | S | Low | **DONE** |
 | 5 | GoalEntryPage: show ExpirationDate as a read-only label | Func | Low | S | Low | Backlog |
 | 6 | SyncService: retry once on transient failure | Stability | Low | M | Medium | Backlog |
 | 7 | API: add X-Request-ID header echo for traceability | Perf | Low | S | Low | Backlog |
