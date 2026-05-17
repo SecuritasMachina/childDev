@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 226 — Mobile: AccountFk in upload body for Goal, Todo, GoalProgress
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_LocalGoal_AccountFkIncludedInUploadRequest` (user62), `RunAsync_LocalTodo_AccountFkIncludedInUploadRequest` (user63), `RunAsync_LocalGoalProgress_AccountFkIncludedInUploadRequest` (user64).
+
+**Why:** Completes the AccountFk-in-upload coverage across all 4 entities. If the toDto lambda for any entity accidentally drops AccountFk, the server silently rejects all records from that entity — and without these tests, no test would catch the regression.
+
+**Impact:** 184 mobile tests pass (was 181). 160 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 225 — Mobile: Goal UpdatedOn from server + AccountFk in upload body
 
 **What changed:**
