@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 70 — Mobile: Word count in JournalEntry (was character count)
+
+**What changed:**
+- `JournalEntryViewModel.cs`: Renamed `NotesLength` to `NotesWordCount`. `OnNotesChanged` now splits on whitespace with `RemoveEmptyEntries` to count words instead of characters.
+- `JournalEntryPage.xaml`: Updated `StringFormat` from `'{0} characters'` to `'{0} words'`.
+
+**Why:** Word count is more meaningful for journal reflection than character count — a 200-word entry is a different writing scale than 200 characters. The split uses `null` char array to split on any whitespace (space, newline, tab).
+
+**Impact:** 25 mobile tests pass (0 warnings). 55 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 69 — Mobile: Entry count footer in GoalList and TodoList
 
 **What changed:**
