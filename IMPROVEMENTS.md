@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 75 — Mobile: TodoList footer includes overdue count when nonzero
+
+**What changed:**
+- `TodoListViewModel.cs`: `UpdateOverdueCount` now also sets `EntryCountDisplay`. When overdue > 0, shows "N pending, M overdue"; otherwise "N tasks pending". Removed the two redundant inline `EntryCountDisplay` assignments in `LoadAsync`/`RefreshAsync`.
+
+**Why:** The TodoList footer count now parallels the Dashboard overdue badge logic — users see the overdue breakdown in context without switching screens.
+
+**Impact:** 25 mobile tests pass (0 warnings). 56 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 74 Brainstorm (fresh — every 3rd)
 
 | # | Description | Dim | Impact | Effort | Risk |
