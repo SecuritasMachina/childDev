@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 225 — Mobile: Goal UpdatedOn from server + AccountFk in upload body
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsGoal_UpdatedOnStoredLocally` (user60) — completes the 4-entity UpdatedOn-from-server coverage started in iter 224.
+- `SyncServiceTests.cs`: Added `RunAsync_LocalJournal_AccountFkIncludedInUploadRequest` (user61) — asserts `account.Guid` (AccountFk) appears in the journal upload body. If the toDto lambda accidentally dropped AccountFk, the server would silently reject all records and no other test would detect the regression.
+
+**Why:** GoalRepository.UpsertFromSyncAsync preserves UpdatedOn but this was untested for Goal (the other 3 entities gained tests in iter 224). AccountFk in upload body was never explicitly asserted for any entity.
+
+**Impact:** 181 mobile tests pass (was 179). 160 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 224 — Mobile: Verify UpdatedOn from server is stored locally
 
 **What changed:**
