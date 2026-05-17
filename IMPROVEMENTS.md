@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-17 — Perf: eliminate redundant SELECT in UpdateLastSyncAsync (iter 390)
+
+**File:** `ChildDev.Mobile/Services/AccountService.cs`
+
+**Change:** Replaced `GetAccountAsync()` + `ExecuteAsync(...WHERE Guid = ?)` pattern with a single `ExecuteAsync("UPDATE Account SET LastSyncAt = ?", timestamp)`. The Account table is single-row (single-user app), so filtering by Guid is unnecessary, and the extra SELECT was a wasted round-trip before every sync.
+
+**Why:** Iter 376 already replaced `db.UpdateAsync(account)` with a targeted SQL UPDATE to prevent credential overwrites. This iter removes the remaining unnecessary SELECT that was only needed to obtain the Guid (already statically unnecessary for a single-account table).
+
+**Impact:** 242 mobile tests — all passing.
+
+---
+
 ## 2026-05-17 — Fix: mobile Add Todo button disabled when title is blank (iter 389)
 
 **File:** `ChildDev.Mobile/ViewModels/TodoListViewModel.cs`
