@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 116 — API: Trim NickName in token endpoint to match register behavior
+
+**What changed:**
+- `AuthEndpoints.cs`: Token endpoint now calls `.Trim()` on `req.NickName` before DB lookup.
+- `AuthEndpointTests.cs`: Added `Token_NickNameWithSurroundingSpaces_StillAuthenticates`.
+
+**Why:** The register endpoint trims NickName before storing (`NickName = req.NickName.Trim()`), but the token endpoint did an exact match (`a.NickName == req.NickName`). A user typing `" alice "` at login would get 401 even though `"alice"` is stored.
+
+**Impact:** 43 mobile tests pass. 93 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 115 — Mobile: Fix GoalListViewModel swipe-delete missing cascade
 
 **What changed:**
