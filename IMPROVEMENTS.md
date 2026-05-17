@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 152 — API: Goal CompletionDate propagation + GoalProgress batch mixed LWW
+
+**What changed:**
+- `GoalSyncTests.cs`: Added `Sync_CompletedGoal_CompletionDatePropagatedInDelta` — uploads a goal with `CompletionDate` set, downloads delta, verifies `CompletionDate` is included in the response. Mirrors `Sync_CompletedTodo_CompletedAtSet_ReturnedInDelta`.
+- `GoalProgressSyncTests.cs`: Added `Sync_BatchMixedLWW_PerRecordWinnerApplied` — completes batch LWW coverage for all 4 entity types.
+
+**Why:** The Goal `CompletionDate` field had no test verifying it round-trips through the API delta — if the `EntityToDto` mapper missed the field, completions would silently disappear on the downloading client. The GoalProgress batch LWW test completes symmetry.
+
+**Impact:** 100 mobile tests pass. 118 API tests pass (was 116).
+
+---
+
 ## 2026-05-17 — Iteration 151 — API: delta ordering by UpdatedOn + Goal batch mixed LWW
 
 **What changed:**
