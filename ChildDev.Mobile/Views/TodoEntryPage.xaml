@@ -21,6 +21,9 @@
             <Button Text="Mark as Done" Command="{Binding MarkDoneCommand}"
                     BackgroundColor="Green" TextColor="White"
                     IsVisible="{Binding IsExisting}" Margin="0,8,0,0" />
+            <Button Text="Delete Task" Command="{Binding DeleteCommand}"
+                    BackgroundColor="Red" TextColor="White"
+                    IsVisible="{Binding IsExisting}" Margin="0,4,0,0" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
