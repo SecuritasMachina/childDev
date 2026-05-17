@@ -4220,6 +4220,16 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — Web register: Enter key submits from Confirm PIN field (iter 334)
+
+**What:** Added `@onkeyup` handler on the Confirm PIN field in `Register.razor`, mirroring the login page fix (iter 333).
+
+**Why:** Same keyboard UX expectation as login — completing the last field and pressing Enter should submit the form.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Web login: Enter key submits form (iter 333)
 
 **What:** Added `@onkeyup` handler on the PIN `MudTextField` in `Login.razor`. When the user presses Enter, `DoLogin()` is called directly — no need to reach for the mouse after typing the PIN.

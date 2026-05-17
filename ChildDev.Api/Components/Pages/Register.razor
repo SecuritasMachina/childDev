@@ -29,7 +29,8 @@
                               HelperText="Remember this PIN to log back in" />
                 <MudTextField @bind-Value="ConfirmPin" Label="Confirm PIN" Variant="Variant.Outlined"
                               InputType="InputType.Password" Class="mb-4"
-                              Error="@PinMismatch" ErrorText="PINs do not match" />
+                              Error="@PinMismatch" ErrorText="PINs do not match"
+                              @onkeyup="@(async (e) => { if (e.Key == "Enter") await DoRegister(); })" />
             </MudCardContent>
             <MudCardActions Class="px-4 pb-4 flex-column">
                 <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true"
