@@ -612,4 +612,18 @@ public class SyncInputValidationTests(ApiFactory factory) : IClassFixture<ApiFac
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Sync_ExactlyMaxBatchSize_Returns200()
+    {
+        var jwt = await RegisterJwtAsync("batch_500");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - 1000;
+        var records = string.Join(",", Enumerable.Range(0, 500)
+            .Select(_ => $"{{\"Guid\":\"{Guid.NewGuid()}\",\"AccountFk\":\"ignore\",\"Notes\":\"note\",\"EnteredDate\":{ts},\"UpdatedOn\":{ts},\"DeletedAt\":null}}"));
+        var body = new StringContent($"{{\"Records\":[{records}],\"LastSyncAt\":0}}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync("/api/sync/journal", body);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
 }

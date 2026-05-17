@@ -261,4 +261,27 @@ public class GoalProgressSyncTests(ApiFactory factory) : IClassFixture<ApiFactor
 
         Assert.Contains(body!.Records, r => r.Guid == guid);
     }
+
+    [Fact]
+    public async Task Sync_TieOnUpdatedOn_ServerVersionWins()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_tie");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var goalFk = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(guid, accountGuid, goalFk, "Server version", null, ts, null)], 0));
+
+        // Same UpdatedOn, different content — strict > means server keeps its version
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(guid, accountGuid, goalFk, "Client version", null, ts, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalProgressDto>>();
+
+        var stored = body!.Records.Single(r => r.Guid == guid);
+        Assert.Equal("Server version", stored.NextStepItems);
+    }
 }
