@@ -119,6 +119,16 @@ public class AuthEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Token_NickNameWithSurroundingSpaces_StillAuthenticates()
+    {
+        var nick = "trimtestuser";
+        await _client.PostAsJsonAsync("/api/auth/register", new { NickName = nick, PinHash = "correcthash" });
+        var response = await _client.PostAsJsonAsync("/api/auth/token",
+            new { NickName = $"  {nick}  ", PinHash = "correcthash" });
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Token_UnknownUser_Returns401()
     {
         var response = await _client.PostAsJsonAsync("/api/auth/token",
