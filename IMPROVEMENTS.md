@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 121 — Mobile: Error handling in SettingsViewModel.LoadAsync
+
+**What changed:**
+- `SettingsViewModel.cs`: `LoadAsync` wrapped in try-catch that sets `StatusMessage = "Could not load settings."` on failure.
+
+**Why:** `SettingsViewModel.LoadAsync` was the only ViewModel `LoadAsync` without a try-catch. All list ViewModels (Journal, Goal, Todo) and DashboardViewModel already had this pattern.
+
+**Impact:** 44 mobile tests pass. 93 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 120 — Mobile: Null-safe Records check in SyncEntityAsync
 
 **What changed:**
