@@ -221,4 +221,49 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.Contains(body!.Records, r => r.Guid == guid);
     }
+
+    [Fact]
+    public async Task Sync_OptionalFieldsRoundTrip()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_optional1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid = Guid.NewGuid().ToString();
+        var dueDate = ts + 86_400_000L;
+
+        await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([
+            new TodoDto(guid, accountGuid, "Buy groceries", "Pick up milk and eggs", dueDate, null, ts, null)
+        ], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+        var record = body!.Records.First(r => r.Guid == guid);
+
+        Assert.Equal("Pick up milk and eggs", record.Notes);
+        Assert.Equal(dueDate, record.DueDate);
+    }
+
+    [Fact]
+    public async Task Sync_Delta_OrderedByUpdatedOnAscending()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_order1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var t1 = 1_000_000L;
+        var t2 = 2_000_000L;
+        var t3 = 3_000_000L;
+
+        await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([
+            new TodoDto(Guid.NewGuid().ToString(), accountGuid, "at t3", null, null, null, t3, null),
+            new TodoDto(Guid.NewGuid().ToString(), accountGuid, "at t1", null, null, null, t1, null),
+            new TodoDto(Guid.NewGuid().ToString(), accountGuid, "at t2", null, null, null, t2, null)
+        ], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+
+        Assert.Equal(3, body!.Records.Count);
+        Assert.Equal(t1, body.Records[0].UpdatedOn);
+        Assert.Equal(t2, body.Records[1].UpdatedOn);
+        Assert.Equal(t3, body.Records[2].UpdatedOn);
+    }
 }
