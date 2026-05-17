@@ -106,6 +106,18 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 268 — Web: Journal page (/journal)
+
+**What changed:**
+- `JournalPage.razor`: New `/journal` page — MudCard grid showing entries (date, activity, mood chip, notes preview, comma-split tags as chips), New Entry dialog (notes, activity, mood, tags). Tracks `page_view` and `journal_add` analytics. Fixed RZ9996 build error (conditional block inside `<CardHeaderActions>` slot).
+- `MainLayout.razor`: Added Journal nav link.
+
+**Why:** Journal is the last of the 4 core entities without web coverage. All 4 entities (Goals, Todos, GoalProgress, Journal) now have full web UI.
+
+**Impact:** 200 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Iteration 267 — Web: Goal detail + progress notes page
 
 **What changed:**
