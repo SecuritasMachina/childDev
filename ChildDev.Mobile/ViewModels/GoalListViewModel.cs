@@ -36,16 +36,23 @@ public partial class GoalListViewModel(
 
     partial void OnFilterTextChanged(string value)
     {
-        Goals = new ObservableCollection<Goal>(
-            string.IsNullOrWhiteSpace(value)
-                ? _allGoals
-                : _allGoals.Where(g =>
-                    (g.GoalText != null && g.GoalText.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
-                    (g.MeasurableOutcome != null && g.MeasurableOutcome.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
-                    (g.LatestNextStepItems != null && g.LatestNextStepItems.Contains(value, StringComparison.OrdinalIgnoreCase))));
-        EmptyMessage = string.IsNullOrWhiteSpace(value)
-            ? "No goals yet"
-            : $"No matches for \"{value}\"";
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            Goals = new ObservableCollection<Goal>(_allGoals);
+            EmptyMessage = "No goals yet";
+            UpdateEntryCountDisplay();
+        }
+        else
+        {
+            var filtered = _allGoals.Where(g =>
+                (g.GoalText != null && g.GoalText.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
+                (g.MeasurableOutcome != null && g.MeasurableOutcome.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
+                (g.LatestNextStepItems != null && g.LatestNextStepItems.Contains(value, StringComparison.OrdinalIgnoreCase))).ToList();
+            Goals = new ObservableCollection<Goal>(filtered);
+            EmptyMessage = $"No matches for \"{value}\"";
+            var n = filtered.Count;
+            EntryCountDisplay = $"{n} {(n == 1 ? "goal" : "goals")} matching";
+        }
     }
 
     [RelayCommand]
