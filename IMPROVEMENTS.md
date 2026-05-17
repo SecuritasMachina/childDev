@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 241 — Mobile: GoalRepository + TodoRepository.GetAsync returns soft-deleted records
+
+**What changed:**
+- `GoalRepositoryTests.cs`: Added `GetAsync_WhenDeleted_StillReturnsRecord` — saves a goal, soft-deletes it, asserts `GetAsync` returns the record with `DeletedAt` set.
+- `TodoRepositoryTests.cs`: Added `GetAsync_WhenDeleted_StillReturnsRecord` — same pattern for Todo.
+
+**Why:** Completes the 3-entity set started in iter 240 (Journal). Ensures `GetAsync` never silently gains a `DeletedAt IS NULL` filter that would break sync logic retrieving any record by GUID.
+
+**Impact:** 197 mobile tests pass (was 195). 168 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 240 — Mobile: JournalRepository.GetAsync returns soft-deleted records
 
 **What changed:**
