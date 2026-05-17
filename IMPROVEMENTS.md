@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 255 — Mobile: SyncService upserts all todos when server returns multiple
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsTwoTodos_BothUpsertedLocally` (user84) and `MultiTodoSyncHandler` helper — server returns 2 todos, asserts both appear in `GetPendingAsync` after sync.
+
+**Why:** Iterations 250 and 254 covered multi-record responses for Journal and Goal. Todo uses a different DTO and mapper (`UpsertFromSyncAsync` on `TodoRepository`). The 4-entity coverage set is now Journal ✓, Goal ✓, Todo ✓ (GoalProgress still remaining).
+
+**Impact:** 209 mobile tests pass (was 208). 193 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 254 — Mobile: SyncService upserts all goals when server returns multiple
 
 **What changed:**
