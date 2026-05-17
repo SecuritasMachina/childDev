@@ -41,7 +41,7 @@ public static class GoalEndpoints
                     db.Goals.Add(DtoToEntity(dto));
                 else if (dto.UpdatedOn > entity.UpdatedOn) ApplyDto(entity, dto);
             }
-            await db.SaveChangesAsync();
+            if (db.ChangeTracker.HasChanges()) await db.SaveChangesAsync();
             var delta = await db.Goals
                 .Where(g => g.AccountFk == accountGuid && g.UpdatedOn > req.LastSyncAt)
                 .OrderBy(g => g.UpdatedOn)
