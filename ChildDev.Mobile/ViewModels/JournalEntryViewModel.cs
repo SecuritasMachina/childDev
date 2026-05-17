@@ -19,11 +19,13 @@ public partial class JournalEntryViewModel(
     [ObservableProperty] private string enteredDateDisplay = string.Empty;
     [ObservableProperty] private DateTime enteredDate = DateTime.Today;
     [ObservableProperty] private bool isExisting;
-    [ObservableProperty] private int notesLength;
+    [ObservableProperty] private int notesWordCount;
 
     partial void OnNotesChanged(string value)
     {
-        NotesLength = value?.Length ?? 0;
+        NotesWordCount = string.IsNullOrWhiteSpace(value)
+            ? 0
+            : value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
         SaveCommand.NotifyCanExecuteChanged();
     }
 
