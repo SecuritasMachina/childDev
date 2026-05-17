@@ -237,6 +237,26 @@ public class JournalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetAllActiveAsync_MultipleJournals_OrderedByEnteredDateDescending()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var older = DateTimeOffset.UtcNow.AddDays(-5).ToUnixTimeMilliseconds();
+        var middle = DateTimeOffset.UtcNow.AddDays(-2).ToUnixTimeMilliseconds();
+        var newer = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "middle", EnteredDate = middle, UpdatedOn = middle });
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "older", EnteredDate = older, UpdatedOn = older });
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "newer", EnteredDate = newer, UpdatedOn = newer });
+
+        var results = await _repo.GetAllActiveAsync(accountId);
+
+        Assert.Equal(3, results.Count);
+        Assert.Equal("newer", results[0].Notes);
+        Assert.Equal("middle", results[1].Notes);
+        Assert.Equal("older", results[2].Notes);
+    }
+
+    [Fact]
     public async Task DeleteAsync_WhenGuidNotFound_DoesNotThrow()
     {
         var nonExistentGuid = System.Guid.NewGuid().ToString();
