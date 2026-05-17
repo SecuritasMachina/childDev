@@ -78,7 +78,7 @@ app.Use(async (ctx, next) =>
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapGet("/health", async (AppDbContext db) =>
+app.MapGet("/api/health", async (AppDbContext db) =>
 {
     try
     {
