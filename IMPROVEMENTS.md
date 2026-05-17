@@ -4219,3 +4219,13 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 **Impact:** 217 API tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — Journal date-range filter chips (iter 330)
+
+**What:** Added "All / This Week / This Month" filter chips to the web Journal page toolbar. The `DateFilter` field and `OnDateFilterChanged()` method were added to the `@code` block; `ApplyFilter()` was updated to apply the date range before the text search, making both filters composable.
+
+**Why:** The Journal page accumulated entries over time with no way to narrow the view. The Todos page had status filter chips (iter 318); Journal needed equivalent date-range filtering. "This Week" and "This Month" match the natural review cadences caregivers use.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---

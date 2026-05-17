@@ -18,12 +18,20 @@
     Journal
 </MudText>
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4" Spacing="3">
+<MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-4" Spacing="2">
     <MudButton Variant="Variant.Outlined" Color="Color.Primary"
                StartIcon="@Icons.Material.Filled.Add"
                OnClick="() => ShowAddDialog = true">New Entry</MudButton>
     @if (AllEntries.Any())
     {
+        <MudChipSet T="string" SelectionMode="SelectionMode.SingleSelection"
+                    SelectedValue="@DateFilter"
+                    SelectedValueChanged="@((string v) => OnDateFilterChanged(v))">
+            <MudChip T="string" Value="@("All")" Variant="Variant.Filled" Color="Color.Default">All</MudChip>
+            <MudChip T="string" Value="@("Week")" Variant="Variant.Filled" Color="Color.Info">This Week</MudChip>
+            <MudChip T="string" Value="@("Month")" Variant="Variant.Filled" Color="Color.Info">This Month</MudChip>
+        </MudChipSet>
+        <MudSpacer />
         <MudTextField Value="@FilterText" ValueChanged="@((string v) => OnFilterChanged(v))"
                       Placeholder="Search entries…" Variant="Variant.Outlined" Margin="Margin.Dense"
                       Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
@@ -136,6 +144,7 @@ else
     private List<Journal> AllEntries = [];
     private List<Journal> Entries = [];
     private string FilterText = string.Empty;
+    private string DateFilter = "All";
     private bool ShowAddDialog;
     private string NewNotes = string.Empty;
     private string NewActivity = string.Empty;
@@ -173,19 +182,35 @@ else
         ApplyFilter();
     }
 
+    private void OnDateFilterChanged(string value)
+    {
+        DateFilter = value ?? "All";
+        ApplyFilter();
+    }
+
     private void ApplyFilter()
     {
-        if (string.IsNullOrWhiteSpace(FilterText))
+        var weekStartMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
+        var monthStartMs = DateTimeOffset.UtcNow.AddDays(-30).ToUnixTimeMilliseconds();
+
+        IEnumerable<Journal> filtered = DateFilter switch
         {
-            Entries = AllEntries;
-            return;
+            "Week" => AllEntries.Where(j => j.EnteredDate >= weekStartMs),
+            "Month" => AllEntries.Where(j => j.EnteredDate >= monthStartMs),
+            _ => AllEntries
+        };
+
+        if (!string.IsNullOrWhiteSpace(FilterText))
+        {
+            var q = FilterText.Trim();
+            filtered = filtered.Where(j =>
+                (j.Notes?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (j.Activity?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (j.Mood?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (j.Tags?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false));
         }
-        var q = FilterText.Trim();
-        Entries = AllEntries.Where(j =>
-            (j.Notes?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
-            (j.Activity?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
-            (j.Mood?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
-            (j.Tags?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false)).ToList();
+
+        Entries = filtered.ToList();
     }
 
     private async Task AddEntry()
