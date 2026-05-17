@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 211 — Mobile: SyncService includes Goal GoalText in upload request
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_LocalGoal_GoalTextIncludedInUploadRequest` — inserts a goal with GoalText="Master the piano", runs sync, asserts the captured sync/goal body contains that text.
+
+**Why:** `RunAsync_LocalGoal_OptionalFieldsIncludedInUploadRequest` only asserts MeasurableOutcome and NextMeetingDate. The primary content field `g.GoalText` in the toDto lambda is never explicitly checked in the upload body. If accidentally removed, goals would upload with null GoalText silently.
+
+**Impact:** 162 mobile tests pass (was 161). 160 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 210 — Mobile: SyncService includes GoalProgress NextStepItems in upload request
 
 **What changed:**

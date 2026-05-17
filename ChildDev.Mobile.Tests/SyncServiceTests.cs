@@ -1153,6 +1153,30 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_LocalGoal_GoalTextIncludedInUploadRequest()
+    {
+        await _accountService.CreateAccountAsync("user50", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var updatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new Goal
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalText = "Master the piano", EnteredDate = updatedOn, UpdatedOn = updatedOn
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        await service.RunAsync(account);
+
+        var body = capturingHandler.GetBodyFor("sync/goal");
+        Assert.NotNull(body);
+        Assert.Contains("Master the piano", body);
+    }
+
+    [Fact]
     public async Task RunAsync_LocalGoalProgress_NextStepItemsIncludedInUploadRequest()
     {
         await _accountService.CreateAccountAsync("user49", "1234");
