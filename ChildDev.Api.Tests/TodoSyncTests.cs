@@ -485,4 +485,74 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.NotNull(deleted.DeletedAt);
         Assert.Equal(deleted.DeletedAt!.Value, deleted.UpdatedOn);
     }
+
+    [Fact]
+    public async Task Sync_DuplicateGuidsInBatch_Returns422()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_dupguid1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var dup = new TodoDto(guid, accountGuid, "task", null, null, null, ts, null);
+
+        var response = await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([dup, dup], 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_FutureUpdatedOn_Returns422()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_future1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var futureTs = DateTimeOffset.UtcNow.AddHours(2).ToUnixTimeMilliseconds();
+
+        var response = await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(Guid.NewGuid().ToString(), accountGuid, "task", null, null, null, futureTs, null)], 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_TooManyRecords_Returns400()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_toomany1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var records = Enumerable.Range(0, 501)
+            .Select(_ => new TodoDto(Guid.NewGuid().ToString(), accountGuid, "task", null, null, null, ts, null))
+            .ToList();
+
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>(records, 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_BlankTitle_Returns422()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_blanktitle1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var response = await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(Guid.NewGuid().ToString(), accountGuid, "   ", null, null, null, ts, null)], 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_FutureDueDate_Returns422()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_futuredue1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var farFutureDate = DateTimeOffset.UtcNow.AddYears(15).ToUnixTimeMilliseconds();
+
+        var response = await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(Guid.NewGuid().ToString(), accountGuid, "task", null, farFutureDate, null, ts, null)], 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
 }
