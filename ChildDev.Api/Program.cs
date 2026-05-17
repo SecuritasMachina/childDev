@@ -36,6 +36,11 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
     });
 
 builder.Services.AddResponseCompression(options => options.EnableForHttps = true);
+builder.Services.AddRequestTimeouts(options =>
+    options.DefaultPolicy = new Microsoft.AspNetCore.Http.Timeouts.RequestTimeoutPolicy
+    {
+        Timeout = TimeSpan.FromSeconds(10)
+    });
 
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
     policy.WithOrigins(
@@ -55,6 +60,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 var app = builder.Build();
 
 app.UseResponseCompression();
+app.UseRequestTimeouts();
 app.UseCors();
 
 app.Use(async (ctx, next) =>
