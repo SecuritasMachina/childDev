@@ -144,6 +144,27 @@ public class TodoRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetPendingAsync_MultipleWithDueDate_OrderedByDueDateAscending()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var day1 = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeMilliseconds();
+        var day3 = DateTimeOffset.UtcNow.AddDays(3).ToUnixTimeMilliseconds();
+        var day2 = DateTimeOffset.UtcNow.AddDays(2).ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "due day3", UpdatedOn = now, DueDate = day3 });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "due day1", UpdatedOn = now, DueDate = day1 });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "due day2", UpdatedOn = now, DueDate = day2 });
+
+        var pending = await _repo.GetPendingAsync(accountId);
+
+        Assert.Equal(3, pending.Count);
+        Assert.Equal("due day1", pending[0].Title);
+        Assert.Equal("due day2", pending[1].Title);
+        Assert.Equal("due day3", pending[2].Title);
+    }
+
+    [Fact]
     public async Task GetModifiedSinceAsync_IncludesSoftDeletedRecords()
     {
         var accountId = System.Guid.NewGuid().ToString();
