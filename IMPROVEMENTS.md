@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 49 — Mobile: Dashboard shows next upcoming goal meeting date
+
+**What changed:**
+- `DashboardViewModel.cs`: Added `NextGoalMeeting` / `HasNextGoalMeeting` observables; `RefreshDataAsync` finds the nearest future `NextMeetingDate` among active (non-completed) goals and formats it as "today", "tomorrow", or "MMM d"
+- `DashboardPage.xaml`: New CornflowerBlue label below sync status, hidden when no upcoming meeting
+
+**Why:** Users had no way to see goal meeting dates without navigating to the goal list. The dashboard now surfaces the single most relevant meeting date at a glance.
+
+**Impact:** 25 mobile tests pass. 51 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 48 — Mobile: Skip GoalProgress insert when NextStepItems unchanged
 
 **What changed:**
