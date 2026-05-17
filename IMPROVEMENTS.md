@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 237 — Mobile: Synced soft-deleted GoalProgress excluded from GetForGoalAsync
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_ServerSendsDeletedGoalProgress_ExcludedFromGetForGoalAsync` (user72) — completes the 4-entity view-exclusion coverage set started in iteration 234.
+
+**Why:** `GetForGoalAsync` filters `DeletedAt IS NULL`. After syncing a soft-deleted GoalProgress, it must not appear in the goal's progress list. Without this test, a regression in `GetForGoalAsync` query logic would allow deleted progress items to show in the UI.
+
+**Impact:** 194 mobile tests pass (was 193). 164 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 236 — Mobile: Synced soft-deleted goal excluded from GetAllActiveAsync
 
 **What changed:**
