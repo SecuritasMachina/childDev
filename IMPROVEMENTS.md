@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 244 — API: Journal sync endpoint validation tests
+
+**What changed:**
+- `JournalSyncTests.cs`: Added 5 validation tests — `Sync_DuplicateGuidsInBatch_Returns422`, `Sync_FutureUpdatedOn_Returns422`, `Sync_TooManyRecords_Returns400`, `Sync_InvalidGuidFormat_Returns422`, `Sync_BlankNotes_Returns422`.
+
+**Why:** The Journal sync endpoint has 10+ validation rules (duplicate GUIDs, future timestamps, max batch size, invalid GUID format, blank content fields, field length limits) but none were tested. These guard against accidental removal or regression of input validation that protects data integrity and server stability.
+
+**Impact:** 201 mobile tests pass. 177 API tests pass (was 172).
+
+---
+
 ## 2026-05-17 — Iteration 243 — API: SoftDelete delta verifies UpdatedOn == DeletedAt for all 4 entities
 
 **What changed:**
