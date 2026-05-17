@@ -4220,6 +4220,26 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — Fix timezone bug in JournalPage date saving (iter 348)
+
+**What:** Replaced `new DateTimeOffset(date, TimeSpan.Zero)` with `DateTime.SpecifyKind(date, DateTimeKind.Local)` in `JournalPage.razor` for both the new-entry and edit-entry `EnteredDate` save paths.
+
+**Why:** Companion fix to iter 347. Same `TimeSpan.Zero` bug — the `MudDatePicker` returns a local `DateTime`, but wrapping with `TimeSpan.Zero` treats it as UTC. Journal dates saved on a UTC+2 server would round-trip to the wrong day on non-UTC clients.
+
+**Impact:** 217 API tests pass. No remaining `TimeSpan.Zero` date conversions in any web page.
+
+---
+
+## 2026-05-17 — Fix timezone bug in GoalDetail and Todos date saving (iter 347)
+
+**What:** Replaced `new DateTimeOffset(date, TimeSpan.Zero)` with `DateTime.SpecifyKind(date, DateTimeKind.Local)` in `GoalDetail.razor` (AddProgress, EditProgress, EditGoal — meeting date and expiration date) and `Todos.razor` (ApplyFilter Today boundary, AddTodo due date, EditTodo due date).
+
+**Why:** Same root cause as iter 335 — `MudDatePicker`/`MudTextField` returns a local `DateTime`, but `TimeSpan.Zero` treats it as UTC. On a UTC+2 server, the "Today" filter bucket would start 2 hours late; saved dates would be off by the UTC offset in cross-timezone scenarios.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Fix: mobile goal entry always sets NextMeetingDate (iter 346)
 
 **What:** Added `HasNextMeetingDate` toggle switch to `GoalEntryPage.xaml` (same pattern as the `HasExpirationDate` toggle). New goals default to no meeting date. Existing goals restore the toggle if the stored value is non-null. `GoalEntryViewModel.SaveAsync` now writes `null` when the toggle is off instead of always writing a date 7 days from today.
