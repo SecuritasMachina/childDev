@@ -4489,3 +4489,23 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 **Impact:** 217 API tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — UX: Todos filter empty-state message (iter 357)
+
+**What:** Added a "No todos matching the current filter." message to `Todos.razor` when the active filter (Overdue / Today / NoDate) or search yields zero results but pending todos exist. Previously the list was silently empty.
+
+**Why:** Without an empty-state message, the blank list looks like a loading failure. The Todos page already had filter chips; it needed the corresponding empty-state feedback.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
+## 2026-05-17 — UX: Fix journal date-filter empty-state message (iter 358)
+
+**What:** Fixed the empty-state message on `JournalPage.razor` when a date filter is active but yields no results. Previously it showed `No entries matching "".` (with a blank placeholder) when no text search was active. Now shows "No entries in this date range." (date-filter only), "No entries matching '{text}'." (text only), or "No entries matching '{text}' in this date range." (both).
+
+**Why:** The `No entries matching "".` string was confusing — it implied a failed text search when there was none. Users selecting "This Week" with no entries that week would have seen it.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
