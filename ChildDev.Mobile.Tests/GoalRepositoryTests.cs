@@ -72,6 +72,9 @@ public class GoalRepositoryTests : IDisposable
         await _repo.DeleteAsync(goal.Guid);
         var all = await _repo.GetAllActiveAsync("account1");
         Assert.Empty(all);
+        var retrieved = await _repo.GetAsync(goal.Guid);
+        Assert.NotNull(retrieved);
+        Assert.NotNull(retrieved!.DeletedAt);
     }
 
     [Fact]
