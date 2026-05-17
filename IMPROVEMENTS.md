@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 91 — Mobile: Empty view differentiates filter-active vs truly empty
+
+**What changed:**
+- `JournalListViewModel.cs`, `GoalListViewModel.cs`, `TodoListViewModel.cs`: Added `EmptyMessage` observable; `OnFilterTextChanged` now also sets it — "No matches for \"X\"" when filtering, original default ("No journal entries yet" / "No goals yet" / "All done!") when not.
+- `JournalListPage.xaml`, `GoalListPage.xaml`, `TodoListPage.xaml`: Replaced static multi-label EmptyView blocks with a single `<Label Text="{Binding EmptyMessage}" .../>`.
+
+**Why:** Users typing in the filter saw "No journal entries yet" even when entries existed but didn't match. Now the empty state message is accurate for both true-empty and no-match cases.
+
+**Impact:** 25 mobile tests pass. 72 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 90 — API: Validate Goal.ExpirationDate not in far future
 
 **What changed:**
