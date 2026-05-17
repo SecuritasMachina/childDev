@@ -365,6 +365,13 @@ public class GoalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetAsync_WhenGuidNotFound_ReturnsNull()
+    {
+        var result = await _repo.GetAsync(System.Guid.NewGuid().ToString());
+        Assert.Null(result);
+    }
+
+    [Fact]
     public async Task GetAllActiveAsync_CompletedThenDeletedGoal_IsExcluded()
     {
         var accountId = System.Guid.NewGuid().ToString();

@@ -257,6 +257,13 @@ public class JournalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetAsync_WhenGuidNotFound_ReturnsNull()
+    {
+        var result = await _repo.GetAsync(System.Guid.NewGuid().ToString());
+        Assert.Null(result);
+    }
+
+    [Fact]
     public async Task GetAllActiveAsync_UpsertedSoftDeletedRecord_IsExcluded()
     {
         var accountId = System.Guid.NewGuid().ToString();
