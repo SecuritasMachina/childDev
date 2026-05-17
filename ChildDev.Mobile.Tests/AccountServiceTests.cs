@@ -168,4 +168,21 @@ public class AccountServiceTests : IDisposable
         var account = await _service.GetAccountAsync();
         Assert.Equal(t2, account!.LastSyncAt);
     }
+
+    [Fact]
+    public async Task SaveServerCredentials_PreservesNickNameAndCreatedOn()
+    {
+        await _service.CreateAccountAsync("kate", "5678");
+        var before = await _service.GetAccountAsync();
+        var originalNickName = before!.NickName;
+        var originalCreatedOn = before.CreatedOn;
+
+        await _service.SaveServerCredentialsAsync("new-jwt", "https://server.example.com");
+
+        var after = await _service.GetAccountAsync();
+        Assert.Equal(originalNickName, after!.NickName);
+        Assert.Equal(originalCreatedOn, after.CreatedOn);
+        Assert.Equal("new-jwt", after.ServerJwt);
+        Assert.Equal("https://server.example.com", after.ServerUrl);
+    }
 }

@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 217 — Mobile: AccountService SaveServerCredentials preserves NickName and CreatedOn
+
+**What changed:**
+- `AccountServiceTests.cs`: Added `SaveServerCredentials_PreservesNickNameAndCreatedOn` — creates an account, calls `SaveServerCredentialsAsync`, then asserts NickName and CreatedOn still match the original values in addition to the new JWT and URL.
+
+**Why:** `SaveServerCredentials_PersistsJwtAndUrl` only verifies the new fields. If `SaveServerCredentialsAsync` were refactored to call `db.UpdateAsync` on a partial Account object (not fully loaded from DB first), NickName, PinHash, and CreatedOn would be silently wiped. This test pins the "full-row update" contract.
+
+**Impact:** 168 mobile tests pass (was 167). 160 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 216 — Mobile: SyncService includes GoalProgress GoalFk in upload request
 
 **What changed:**
