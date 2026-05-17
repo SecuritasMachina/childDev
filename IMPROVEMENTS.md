@@ -106,6 +106,17 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 287 — Mobile: Zero-UpdatedOn exclusion test for Journal, Todo, GoalProgress
+
+**What changed:**
+- `JournalRepositoryTests.cs`, `TodoRepositoryTests.cs`, `GoalProgressRepositoryTests.cs`: Added `GetModifiedSinceAsync_ExcludesRecordsWithZeroUpdatedOn` to each.
+
+**Why:** Extends the Goal-only test from iteration 281 to all 4 entity repositories so the strict `>` comparison in `GetModifiedSinceAsync` is consistently verified across the codebase.
+
+**Impact:** 213 API tests pass. 221 mobile tests pass (was 218).
+
+---
+
 ## 2026-05-17 — Iteration 286 — Mobile: New-record UpsertFromSyncAsync uses server EnteredDate
 
 **What changed:**
