@@ -1153,6 +1153,28 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_ServerReturnsGoal_EnteredDateStoredLocally()
+    {
+        await _accountService.CreateAccountAsync("user47", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var enteredDate = 3_000_000L;
+        var serverGoal = new GoalSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, "My goal",
+            null, null, enteredDate, null, null, enteredDate, null);
+
+        var handler = new FakeGoalSyncHandler(serverGoal);
+        var service = BuildSyncService(handler);
+        await service.RunAsync(account);
+
+        var stored = await _db.FindAsync<Goal>(serverGoal.Guid);
+        Assert.NotNull(stored);
+        Assert.Equal(enteredDate, stored!.EnteredDate);
+    }
+
+    [Fact]
     public async Task RunAsync_ServerReturnsJournal_EnteredDateStoredLocally()
     {
         await _accountService.CreateAccountAsync("user46", "1234");
