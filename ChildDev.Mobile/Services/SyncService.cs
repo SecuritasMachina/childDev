@@ -31,10 +31,10 @@ public class SyncService(
             client.BaseAddress = new Uri(account.ServerUrl.TrimEnd('/') + "/");
             client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", account.ServerJwt);
-            client.Timeout = TimeSpan.FromSeconds(15);
 
-            // Pre-flight: verify the server is reachable before attempting all 4 sync calls
-            var ping = await client.GetAsync("health");
+            // Pre-flight with a short deadline — if the server doesn't respond in 5s it's unreachable
+            using var healthCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var ping = await client.GetAsync("health", healthCts.Token);
             if (!ping.IsSuccessStatusCode) return SyncResult.NoServer;
 
             // Capture start time before any entity syncs so records modified during
