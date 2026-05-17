@@ -564,4 +564,20 @@ public class SyncInputValidationTests(ApiFactory factory) : IClassFixture<ApiFac
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Sync_Todo_CompletedWithBlankTitle_IsAccepted()
+    {
+        var jwt = await RegisterJwtAsync("todocompletedtitle");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var guid = Guid.NewGuid();
+        var completedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var body = new StringContent(
+            $"{{\"Records\":[{{\"Guid\":\"{guid}\",\"AccountFk\":\"a1\",\"Title\":null,\"UpdatedOn\":{completedAt},\"CompletedAt\":{completedAt},\"DeletedAt\":null}}],\"LastSyncAt\":0}}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync("/api/sync/todo", body);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
 }

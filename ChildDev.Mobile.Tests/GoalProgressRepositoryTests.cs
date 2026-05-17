@@ -174,6 +174,23 @@ public class GoalProgressRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetForGoalAsync_OrdersByUpdatedOnDescending()
+    {
+        var goalFk = System.Guid.NewGuid().ToString();
+        var tOlder = DateTimeOffset.UtcNow.AddSeconds(-5).ToUnixTimeMilliseconds();
+        var tNewer = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = "account1", GoalFk = goalFk, NextStepItems = "older", UpdatedOn = tOlder });
+        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = "account1", GoalFk = goalFk, NextStepItems = "newer", UpdatedOn = tNewer });
+
+        var items = await _repo.GetForGoalAsync(goalFk);
+
+        Assert.Equal(2, items.Count);
+        Assert.Equal("newer", items[0].NextStepItems);
+        Assert.Equal("older", items[1].NextStepItems);
+    }
+
+    [Fact]
     public async Task GetModifiedSinceAsync_ExcludesOtherAccounts()
     {
         var account1 = System.Guid.NewGuid().ToString();
