@@ -4220,6 +4220,16 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — Mobile: show past meeting dates in orange on goal list (iter 352)
+
+**What:** Added `MeetingDateColorConverter` (orange for past, gray for future) to `DueDateConverter.cs`. Updated `MeetingDateConverter` to prefix with "Missed:" for past dates instead of "Meet:". `GoalListPage.xaml` now uses the color converter on the meeting date label. Registered `MeetingDateColorConverter` in `App.xaml`.
+
+**Why:** Companion improvement to iter 351 (web past meeting indicator). Mobile goal list previously showed all meeting dates in gray, making it impossible to spot missed meetings at a glance. Orange label + "Missed:" prefix provides the same visual cue as the web's amber warning.
+
+**Impact:** 238 mobile tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — UI: show 'Missed meeting' in warning color for past meeting dates (iter 351)
 
 **What:** Goal cards on the Home page and the GoalDetail header now show "Missed meeting" in amber/warning color when the `NextMeetingDate` has already passed, instead of always showing "Next meeting" in the same style regardless of whether the date is past or future.
