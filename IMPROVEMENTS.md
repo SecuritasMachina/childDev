@@ -4490,6 +4490,36 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — UX: Restore button on mobile TodoEntryPage (iter 359)
+
+**What:** Added `IsCompleted` property to `TodoEntryViewModel` (populated from `CompletedAt`). Added a "Restore Task" button (blue, visible when `IsCompleted=True`) and fixed "Mark as Done" to be invisible for already-completed todos (previously it was always visible when editing an existing todo).
+
+**Why:** Tapping a completed todo in the mobile list opened its entry page, but there was no way to un-complete it from there. The "Mark as Done" button was always visible, even for completed tasks. On mobile the swipe-left "Undo" is less discoverable than a button.
+
+**Impact:** 238 mobile tests pass. Build clean.
+
+---
+
+## 2026-05-17 — UX: 'No notes yet' label for goals with no progress (iter 360)
+
+**What:** Added `NullConverter` (inverse of `NotNullConverter`) to the mobile converter set. Added "No notes yet" label (gray, FontSize 10) to `GoalListPage.xaml` for goals where `LatestProgressAt` is null.
+
+**Why:** Goals with no progress are sorted to the top of the list (needs-attention ordering), but previously had no visual indicator explaining why they appear first. "No notes yet" makes the priority signal explicit.
+
+**Impact:** 238 mobile tests pass. Build clean.
+
+---
+
+## 2026-05-17 — UX: Show goal name in quick progress note dialog (iter 361)
+
+**What:** Added `QuickNoteGoalText` field in `Home.razor`. `OpenQuickNote` now looks up the goal text from `AllActiveGoals`. The dialog title area shows the goal text as a caption below "Add Progress Note".
+
+**Why:** The quick note button appears on every goal card. When clicked, the dialog showed only "Add Progress Note" with no indication of which goal the note applies to. With many goals, this was confusing.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — UX: Todos filter empty-state message (iter 357)
 
 **What:** Added a "No todos matching the current filter." message to `Todos.razor` when the active filter (Overdue / Today / NoDate) or search yields zero results but pending todos exist. Previously the list was silently empty.
