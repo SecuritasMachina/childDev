@@ -148,4 +148,18 @@ public class AuthEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>
             new { NickName = "trimmeduser", PinHash = "testhash123" });
         Assert.Equal(HttpStatusCode.OK, tokenResponse.StatusCode);
     }
+
+    [Fact]
+    public async Task Register_SpacePaddedNickName_DetectsConflictWithExistingTrimmedName()
+    {
+        // Register exact name first
+        await _client.PostAsJsonAsync("/api/auth/register",
+            new { NickName = "conflictuser", PinHash = "hash1" });
+
+        // Attempt to register space-padded version — should detect duplicate (both resolve to "conflictuser")
+        var response = await _client.PostAsJsonAsync("/api/auth/register",
+            new { NickName = "  conflictuser  ", PinHash = "hash2" });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
 }
