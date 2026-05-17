@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 93 — API: Log warning when sync records have mismatched AccountFk
+
+**What changed:**
+- All four sync endpoints (`JournalEndpoints`, `GoalEndpoints`, `GoalProgressEndpoints`, `TodoEndpoints`): Added a `LogWarning` before the DB loop when any records have `AccountFk != accountGuid`, reporting the count of skipped records.
+
+**Why:** Previously these records were silently dropped with no visibility. A client sending wrong AccountFk values (due to bug or attack) now produces an observable warning entry in logs.
+
+**Impact:** 25 mobile tests pass. 72 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 92 — Mobile: MeasurableOutcome character count in GoalEntry
 
 **What changed:**
