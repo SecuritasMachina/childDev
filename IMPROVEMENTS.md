@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 246 — API: Todo sync endpoint validation tests
+
+**What changed:**
+- `TodoSyncTests.cs`: Added 5 validation tests — `Sync_DuplicateGuidsInBatch_Returns422`, `Sync_FutureUpdatedOn_Returns422`, `Sync_TooManyRecords_Returns400`, `Sync_BlankTitle_Returns422`, `Sync_FutureDueDate_Returns422`.
+
+**Why:** Completes the validation coverage pattern for 3 of 4 entities. `FutureDueDate` is unique to Todo — testing the entity-specific optional timestamp validation. 201 mobile / 187 API (was 182).
+
+**Impact:** 201 mobile tests pass. 187 API tests pass (was 182).
+
+---
+
 ## 2026-05-17 — Iteration 245 — API: GoalProgress sync endpoint validation tests
 
 **What changed:**
