@@ -4220,6 +4220,16 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — Fix timezone bug in analytics and progress charts (iter 335)
+
+**What:** Replaced `new DateTimeOffset(d, TimeSpan.Zero)` with `new DateTimeOffset(DateTime.SpecifyKind(d, DateTimeKind.Local))` in `BuildDailyChart` (Insights.razor) and `BuildProgressChart` (GoalDetail.razor).
+
+**Why:** `d` is derived from `LocalDateTime.Date` — it is a local midnight. Wrapping it with `TimeSpan.Zero` treats it as UTC midnight, which is wrong for any server not running in UTC. The bucket boundaries would be off by the server's UTC offset (e.g., 2 hours for UTC+2), causing events in the early morning to land in the wrong day's bar. Using `DateTimeKind.Local` correctly aligns bucket boundaries with local midnight.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Web register: Enter key submits from Confirm PIN field (iter 334)
 
 **What:** Added `@onkeyup` handler on the Confirm PIN field in `Register.razor`, mirroring the login page fix (iter 333).

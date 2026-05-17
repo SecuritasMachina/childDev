@@ -271,7 +271,7 @@ else
         {
             var weekStart = now.AddDays(-(weeks - 1 - i) * 7).Date;
             weekStart = weekStart.AddDays(-(int)weekStart.DayOfWeek); // Sunday of that week
-            var weekStartMs = new DateTimeOffset(weekStart, TimeSpan.Zero).ToUnixTimeMilliseconds();
+            var weekStartMs = new DateTimeOffset(DateTime.SpecifyKind(weekStart, DateTimeKind.Local)).ToUnixTimeMilliseconds();
             var weekEndMs = weekStartMs + 7L * 24 * 60 * 60 * 1000;
             counts[i] = ProgressEntries.Count(p => p.UpdatedOn >= weekStartMs && p.UpdatedOn < weekEndMs);
             labels[i] = weekStart.ToString("MMM d");

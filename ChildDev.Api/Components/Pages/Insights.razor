@@ -181,7 +181,7 @@
         {
             var d = today.AddDays(-(13 - i));
             labels[i] = d.ToString("M/d");
-            var startMs = new DateTimeOffset(d, TimeSpan.Zero).ToUnixTimeMilliseconds();
+            var startMs = new DateTimeOffset(DateTime.SpecifyKind(d, DateTimeKind.Local)).ToUnixTimeMilliseconds();
             var endMs = startMs + 86_400_000L;
             counts[i] = events.Count(e => e.Timestamp >= startMs && e.Timestamp < endMs);
         }
