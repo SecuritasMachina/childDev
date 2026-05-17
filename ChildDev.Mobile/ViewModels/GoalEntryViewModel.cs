@@ -17,6 +17,7 @@ public partial class GoalEntryViewModel(
     [ObservableProperty] private string measurableOutcome = string.Empty;
     [ObservableProperty] private string nextStepItems = string.Empty;
     [ObservableProperty] private DateTime nextMeetingDate = DateTime.Today.AddDays(7);
+    [ObservableProperty] private bool hasNextMeetingDate;
     [ObservableProperty] private DateTime expirationDate = DateTime.Today.AddMonths(3);
     [ObservableProperty] private bool hasExpirationDate;
     [ObservableProperty] private bool isExisting;
@@ -56,7 +57,10 @@ public partial class GoalEntryViewModel(
         GoalText = item.GoalText ?? string.Empty;
         MeasurableOutcome = item.MeasurableOutcome ?? string.Empty;
         if (item.NextMeetingDate.HasValue)
+        {
             NextMeetingDate = DateTimeOffset.FromUnixTimeMilliseconds(item.NextMeetingDate.Value).LocalDateTime;
+            HasNextMeetingDate = true;
+        }
         if (item.ExpirationDate.HasValue)
         {
             ExpirationDate = DateTimeOffset.FromUnixTimeMilliseconds(item.ExpirationDate.Value).LocalDateTime;
@@ -83,7 +87,9 @@ public partial class GoalEntryViewModel(
 
         goal.GoalText = GoalText.Trim();
         goal.MeasurableOutcome = string.IsNullOrWhiteSpace(MeasurableOutcome) ? null : MeasurableOutcome.Trim();
-        goal.NextMeetingDate = new DateTimeOffset(DateTime.SpecifyKind(NextMeetingDate, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+        goal.NextMeetingDate = HasNextMeetingDate
+            ? new DateTimeOffset(DateTime.SpecifyKind(NextMeetingDate, DateTimeKind.Local)).ToUnixTimeMilliseconds()
+            : null;
         goal.ExpirationDate = HasExpirationDate
             ? new DateTimeOffset(DateTime.SpecifyKind(ExpirationDate, DateTimeKind.Local)).ToUnixTimeMilliseconds()
             : null;

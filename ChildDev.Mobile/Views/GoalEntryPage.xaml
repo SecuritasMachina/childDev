@@ -23,8 +23,12 @@
             <Editor Text="{Binding NextStepItems}" HeightRequest="80" AutoSize="TextChanges" />
             <Label Text="{Binding NextStepItemsLength, StringFormat='{0} characters'}"
                    FontSize="11" TextColor="Gray" HorizontalOptions="End" />
-            <Label Text="Next Meeting Date" />
-            <DatePicker Date="{Binding NextMeetingDate}" />
+            <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                <Label Grid.Column="0" Text="Next Meeting Date" VerticalOptions="Center" />
+                <Switch Grid.Column="1" IsToggled="{Binding HasNextMeetingDate}" />
+            </Grid>
+            <DatePicker Date="{Binding NextMeetingDate}"
+                        IsVisible="{Binding HasNextMeetingDate}" />
             <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
                 <Label Grid.Column="0" Text="Target Completion Date" VerticalOptions="Center" />
                 <Switch Grid.Column="1" IsToggled="{Binding HasExpirationDate}" />
