@@ -41,6 +41,16 @@ public static class TodoEndpoints
                 logger.LogWarning("sync/todo account={Account} rejected: CompletedAt too far in future", accountGuid[..8]);
                 return Results.Problem("Record CompletedAt is too far in the future.", statusCode: 422);
             }
+            if (req.Records.Any(r => r.Title?.Length > 500))
+            {
+                logger.LogWarning("sync/todo account={Account} rejected: Title too long", accountGuid[..8]);
+                return Results.Problem("Record Title must not exceed 500 characters.", statusCode: 422);
+            }
+            if (req.Records.Any(r => r.Notes?.Length > 2_000))
+            {
+                logger.LogWarning("sync/todo account={Account} rejected: Notes too long", accountGuid[..8]);
+                return Results.Problem("Record Notes must not exceed 2000 characters.", statusCode: 422);
+            }
             if (req.Records.Any(r => r.DeletedAt is null && r.CompletedAt is null && string.IsNullOrWhiteSpace(r.Title)))
             {
                 logger.LogWarning("sync/todo account={Account} rejected: blank Title", accountGuid[..8]);

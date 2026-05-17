@@ -49,6 +49,21 @@ public static class JournalEndpoints
                 logger.LogWarning("sync/journal account={Account} rejected: Notes too long", accountGuid[..8]);
                 return Results.Problem("Record Notes must not exceed 10000 characters.", statusCode: 422);
             }
+            if (req.Records.Any(r => r.Activity?.Length > 255))
+            {
+                logger.LogWarning("sync/journal account={Account} rejected: Activity too long", accountGuid[..8]);
+                return Results.Problem("Record Activity must not exceed 255 characters.", statusCode: 422);
+            }
+            if (req.Records.Any(r => r.Mood?.Length > 50))
+            {
+                logger.LogWarning("sync/journal account={Account} rejected: Mood too long", accountGuid[..8]);
+                return Results.Problem("Record Mood must not exceed 50 characters.", statusCode: 422);
+            }
+            if (req.Records.Any(r => r.Tags?.Length > 500))
+            {
+                logger.LogWarning("sync/journal account={Account} rejected: Tags too long", accountGuid[..8]);
+                return Results.Problem("Record Tags must not exceed 500 characters.", statusCode: 422);
+            }
 
             var incomingGuids = req.Records.Select(r => r.Guid).ToList();
             var existingMap = await db.Journals
