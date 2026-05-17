@@ -21,7 +21,7 @@
 <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-4" Spacing="2">
     <MudButton Variant="Variant.Outlined" Color="Color.Primary"
                StartIcon="@Icons.Material.Filled.Add"
-               OnClick="() => ShowAddDialog = true">New Entry</MudButton>
+               OnClick="OpenAddDialog">New Entry</MudButton>
     @if (AllEntries.Any())
     {
         <MudChipSet T="string" SelectionMode="SelectionMode.SingleSelection"
@@ -224,6 +224,16 @@ else
         }
 
         Entries = filtered.ToList();
+    }
+
+    private void OpenAddDialog()
+    {
+        NewNotes = string.Empty;
+        NewActivity = string.Empty;
+        NewMood = string.Empty;
+        NewTags = string.Empty;
+        NewEnteredDate = DateTime.Today;
+        ShowAddDialog = true;
     }
 
     private async Task AddEntry()

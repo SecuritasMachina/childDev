@@ -4664,3 +4664,15 @@ Updated `SettingsPage.xaml` with a conditional section:
 
 **Impact:** 218 API tests — all passing.
 
+---
+
+## 2026-05-17 — Fix: stale dialog state when reopening Add dialogs (iter 371)
+
+**Files:** `ChildDev.Api/Components/Pages/JournalPage.razor`, `ChildDev.Api/Components/Pages/Todos.razor`
+
+**Change:** Replaced `OnClick="() => ShowAddDialog = true"` with calls to `OpenAddDialog()` methods that clear all input fields before showing the dialog. Journal clears: Notes, Activity, Mood, Tags, EnteredDate (reset to today). Todos clears: Title, Notes, DueDate.
+
+**Why:** Clicking Cancel on a partially-filled New Entry or Add Todo dialog left the typed text in component state. Reopening the dialog would show the previous unfinished text, which is surprising and error-prone — the user might accidentally submit an entry they had decided not to create.
+
+**Impact:** 218 API tests — all passing.
+

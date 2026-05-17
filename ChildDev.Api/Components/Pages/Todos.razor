@@ -99,7 +99,7 @@ else
 
 <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-2"
            StartIcon="@Icons.Material.Filled.Add"
-           OnClick="() => ShowAddDialog = true">Add Todo</MudButton>
+           OnClick="OpenAddDialog">Add Todo</MudButton>
 
 @if (CompletedTodos.Any())
 {
@@ -248,6 +248,14 @@ else
         }
 
         PendingTodos = filtered.ToList();
+    }
+
+    private void OpenAddDialog()
+    {
+        NewTitle = string.Empty;
+        NewNotes = null;
+        NewDueDate = null;
+        ShowAddDialog = true;
     }
 
     private async Task AddTodo()
