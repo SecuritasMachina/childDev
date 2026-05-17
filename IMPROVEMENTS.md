@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 95 — API: Move health endpoint to /api/health
+
+**What changed:**
+- `Program.cs`: Changed `app.MapGet("/health", ...)` to `app.MapGet("/api/health", ...)`.
+- `HealthEndpointTests.cs`: Updated all three health tests to hit `/api/health`.
+
+**Why:** `SyncService` constructs the health URL as `{ServerUrl}/health` where `ServerUrl` is expected to include `/api` (the settings placeholder shows `https://your-server/api`). With the endpoint at root `/health`, the constructed URL `https://server/api/health` returned 404, causing `ping.IsSuccessStatusCode` to be false and all syncs to return `SyncResult.NoServer`.
+
+**Impact:** 25 mobile tests pass. 72 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 94 — Mobile: Show Activity/Mood/Tags character counts in JournalEntry
 
 **What changed:**
