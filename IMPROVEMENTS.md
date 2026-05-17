@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 170 — API: GoalProgress GoalFk immutable on LWW + Mobile: CompletedCount account isolation
+
+**What changed:**
+- `GoalProgressSyncTests.cs`: Added `Sync_GoalFkNotChangedOnLWWUpdate` — stores progress with GoalFk=A, then sends same Guid with GoalFk=B and newer UpdatedOn; asserts delta still shows GoalFk=A. Documents that `ApplyDto` deliberately excludes `GoalFk` from LWW updates (once set at creation, it never changes).
+- `TodoRepositoryTests.cs`: Added `GetCompletedCountAsync_ExcludesOtherAccounts` — inserts one completed todo per account, asserts `GetCompletedCountAsync(account1)` returns 1, not 2. The WHERE clause filters by `AccountFk` but no test previously verified the cross-account isolation for this specific method.
+
+**Why:** GoalFk immutability is an intentional invariant enforced by omitting it from `ApplyDto`. Without a test, a maintenance change adding `e.GoalFk = dto.GoalFk` to `ApplyDto` would silently allow goal reassignment. The CompletedCount test closes an isolation gap — the method is used in the Dashboard summary and wrong counts would appear if account isolation failed.
+
+**Impact:** 127 mobile tests pass (was 126). 136 API tests pass (was 135).
+
+---
+
 ## 2026-05-17 — Iteration 169 — Mobile: Todo pending 3-item ordering + SyncService multi-entity upload
 
 **What changed:**
