@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 210 — Mobile: SyncService includes GoalProgress NextStepItems in upload request
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_LocalGoalProgress_NextStepItemsIncludedInUploadRequest` — inserts a GoalProgress with NextStepItems="Write unit tests daily", runs sync, asserts the captured sync/goal-progress body contains that text.
+
+**Why:** `RunAsync_LocalGoalProgressModifiedSinceLastSync_IncludedInRequest` only asserts the Guid is in the body. `RunAsync_LocalGoalProgress_NextMeetingDateIncludedInUploadRequest` only verifies the date field. The `toDto` lambda's `p.NextStepItems` serialization — the primary content field — was untested for the upload direction.
+
+**Impact:** 161 mobile tests pass (was 160). 160 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 209 — Mobile: SyncService includes Todo Notes in upload request
 
 **What changed:**
