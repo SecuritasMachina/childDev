@@ -79,6 +79,11 @@
                         {
                             <MudText Typo="Typo.caption" Color="Color.Secondary">📏 @g.MeasurableOutcome</MudText>
                         }
+                        @if (g.NextMeetingDate.HasValue)
+                        {
+                            var mtg = DateTimeOffset.FromUnixTimeMilliseconds(g.NextMeetingDate.Value).LocalDateTime;
+                            <MudText Typo="Typo.caption" Color="Color.Info">📅 Next meeting: @mtg.ToString("MMM d")</MudText>
+                        }
                     </CardHeaderContent>
                 </MudCardHeader>
                 @{
