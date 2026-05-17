@@ -228,6 +228,22 @@ public class GoalProgressRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetModifiedSinceAsync_ExcludesRecordsWithZeroUpdatedOn()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var goalFk = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalFk = goalFk, NextStepItems = "zero", UpdatedOn = 0 });
+        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalFk = goalFk, NextStepItems = "normal", UpdatedOn = now });
+
+        var results = await _repo.GetModifiedSinceAsync(accountId, 0);
+
+        Assert.Single(results);
+        Assert.Equal("normal", results[0].NextStepItems);
+    }
+
+    [Fact]
     public async Task GetModifiedSinceAsync_IncludesSoftDeletedRecords()
     {
         var accountId = System.Guid.NewGuid().ToString();

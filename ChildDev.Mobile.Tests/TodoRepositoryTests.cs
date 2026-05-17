@@ -302,6 +302,21 @@ public class TodoRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetModifiedSinceAsync_ExcludesRecordsWithZeroUpdatedOn()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "zero updatedOn", UpdatedOn = 0 });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "normal", UpdatedOn = now });
+
+        var results = await _repo.GetModifiedSinceAsync(accountId, 0);
+
+        Assert.Single(results);
+        Assert.Equal("normal", results[0].Title);
+    }
+
+    [Fact]
     public async Task GetAllActiveAsync_OrdersByUpdatedOnDescending()
     {
         var accountId = System.Guid.NewGuid().ToString();
