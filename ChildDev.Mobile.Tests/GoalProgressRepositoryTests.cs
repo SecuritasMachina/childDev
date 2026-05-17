@@ -205,4 +205,47 @@ public class GoalProgressRepositoryTests : IDisposable
         Assert.Single(results);
         Assert.Equal("mine", results[0].NextStepItems);
     }
+
+    [Fact]
+    public async Task SaveAsync_Edit_BumpsUpdatedOn()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var goalFk = System.Guid.NewGuid().ToString();
+        var progress = new GoalProgress
+        {
+            Guid = guid, AccountFk = "account1", GoalFk = goalFk,
+            NextStepItems = "original", UpdatedOn = 1000L
+        };
+        await _db.InsertOrReplaceAsync(progress);
+
+        progress.NextStepItems = "edited";
+        await _repo.SaveAsync(progress);
+
+        var items = await _repo.GetForGoalAsync(goalFk);
+        Assert.Single(items);
+        Assert.Equal("edited", items[0].NextStepItems);
+        Assert.True(items[0].UpdatedOn > 1000L);
+    }
+
+    [Fact]
+    public async Task SaveAsync_Edit_AppearsInGetModifiedSince()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var goalFk = System.Guid.NewGuid().ToString();
+        var accountId = System.Guid.NewGuid().ToString();
+        var oldTs = DateTimeOffset.UtcNow.AddSeconds(-10).ToUnixTimeMilliseconds();
+        var progress = new GoalProgress
+        {
+            Guid = guid, AccountFk = accountId, GoalFk = goalFk,
+            NextStepItems = "original", UpdatedOn = oldTs
+        };
+        await _db.InsertOrReplaceAsync(progress);
+
+        progress.NextStepItems = "edited";
+        await _repo.SaveAsync(progress);
+
+        var modified = await _repo.GetModifiedSinceAsync(accountId, oldTs);
+        Assert.Single(modified);
+        Assert.Equal("edited", modified[0].NextStepItems);
+    }
 }
