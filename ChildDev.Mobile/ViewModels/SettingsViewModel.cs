@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using ChildDev.Mobile.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -12,6 +13,12 @@ public partial class SettingsViewModel(AccountService accountService, IHttpClien
     [ObservableProperty] private string lastSyncDisplay = "Never";
     [ObservableProperty] private string statusMessage = string.Empty;
     [ObservableProperty] private string accountGuid = string.Empty;
+    [ObservableProperty] private bool isLinkedToServer;
+
+    // Server link fields
+    [ObservableProperty] private string serverNickName = string.Empty;
+    [ObservableProperty] private string serverPin = string.Empty;
+    [ObservableProperty] private bool isLinking;
 
     [RelayCommand]
     private async Task LoadAsync()
@@ -23,6 +30,7 @@ public partial class SettingsViewModel(AccountService accountService, IHttpClien
             NickName = account.NickName;
             AccountGuid = account.Guid;
             ServerUrl = account.ServerUrl ?? string.Empty;
+            IsLinkedToServer = !string.IsNullOrEmpty(account.ServerJwt);
             AccountCreatedDisplay = DateTimeOffset.FromUnixTimeMilliseconds(account.CreatedOn).LocalDateTime.ToString("ddd, MMM d yyyy");
             LastSyncDisplay = account.LastSyncAt == 0
                 ? "Never"
@@ -60,4 +68,58 @@ public partial class SettingsViewModel(AccountService accountService, IHttpClien
             StatusMessage = "Cannot reach server.";
         }
     }
+
+    [RelayCommand]
+    private async Task LinkToServerAsync()
+    {
+        var url = ServerUrl.Trim().TrimEnd('/');
+        if (string.IsNullOrEmpty(url)) { StatusMessage = "Save a server URL first."; return; }
+        if (string.IsNullOrWhiteSpace(ServerNickName)) { StatusMessage = "Enter your server account nickname."; return; }
+        if (string.IsNullOrWhiteSpace(ServerPin)) { StatusMessage = "Enter your server account PIN."; return; }
+
+        IsLinking = true;
+        StatusMessage = "Linking...";
+        try
+        {
+            var client = httpFactory.CreateClient("childdev");
+            client.Timeout = TimeSpan.FromSeconds(10);
+            var response = await client.PostAsJsonAsync($"{url}/api/auth/token",
+                new { NickName = ServerNickName.Trim(), PinHash = ServerPin });
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                StatusMessage = "Incorrect nickname or PIN.";
+                return;
+            }
+            response.EnsureSuccessStatusCode();
+
+            var auth = await response.Content.ReadFromJsonAsync<AuthResponse>();
+            if (auth is null) { StatusMessage = "Invalid server response."; return; }
+
+            await accountService.LinkToServerAsync(auth.Jwt, url, auth.AccountGuid);
+            IsLinkedToServer = true;
+            ServerNickName = string.Empty;
+            ServerPin = string.Empty;
+            StatusMessage = "Linked to server!";
+            await LoadAsync();
+        }
+        catch
+        {
+            StatusMessage = "Could not connect to server.";
+        }
+        finally
+        {
+            IsLinking = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task UnlinkFromServerAsync()
+    {
+        await accountService.ClearServerJwtAsync();
+        IsLinkedToServer = false;
+        StatusMessage = "Unlinked from server.";
+    }
+
+    private record AuthResponse(string Jwt, string AccountGuid);
 }

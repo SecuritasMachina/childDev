@@ -52,4 +52,36 @@ public class AccountService(SQLiteAsyncConnection db)
         account.ServerUrl = serverUrl;
         await db.UpdateAsync(account);
     }
+
+    public async Task ClearServerJwtAsync()
+    {
+        var account = await GetAccountAsync();
+        if (account is null) return;
+        await db.ExecuteAsync("UPDATE Account SET ServerJwt = NULL WHERE Guid = ?", account.Guid);
+    }
+
+    // Links the mobile account to a server account by migrating the local GUID to the server's
+    // GUID so that all synced records carry the correct AccountFk.
+    public async Task LinkToServerAsync(string jwt, string serverUrl, string serverAccountGuid)
+    {
+        var account = await GetAccountAsync();
+        if (account is null) return;
+        var oldGuid = account.Guid;
+        if (oldGuid != serverAccountGuid)
+        {
+            await db.ExecuteAsync("UPDATE Journal SET AccountFk = ? WHERE AccountFk = ?", serverAccountGuid, oldGuid);
+            await db.ExecuteAsync("UPDATE Goal SET AccountFk = ? WHERE AccountFk = ?", serverAccountGuid, oldGuid);
+            await db.ExecuteAsync("UPDATE GoalProgress SET AccountFk = ? WHERE AccountFk = ?", serverAccountGuid, oldGuid);
+            await db.ExecuteAsync("UPDATE Todo SET AccountFk = ? WHERE AccountFk = ?", serverAccountGuid, oldGuid);
+            await db.ExecuteAsync(
+                "UPDATE Account SET Guid = ?, ServerJwt = ?, ServerUrl = ? WHERE Guid = ?",
+                serverAccountGuid, jwt, serverUrl, oldGuid);
+        }
+        else
+        {
+            await db.ExecuteAsync(
+                "UPDATE Account SET ServerJwt = ?, ServerUrl = ? WHERE Guid = ?",
+                jwt, serverUrl, oldGuid);
+        }
+    }
 }

@@ -5,18 +5,45 @@
              Title="Settings">
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="16">
-            <Label Text="{Binding NickName, StringFormat='Account: {0}'}" />
+            <Label Text="{Binding NickName, StringFormat='Account: {0}'}" FontSize="16" FontAttributes="Bold" />
             <Label Text="{Binding AccountCreatedDisplay, StringFormat='Created: {0}'}" TextColor="Gray" FontSize="12" />
             <Label Text="{Binding AccountGuid, StringFormat='ID: {0}'}" TextColor="Gray" FontSize="11" />
 
-            <Label Text="Sync Server URL" />
-            <Entry Text="{Binding ServerUrl}" Placeholder="https://your-server/api" Keyboard="Url" />
+            <BoxView HeightRequest="1" Color="LightGray" />
+
+            <Label Text="Sync Server" FontAttributes="Bold" />
+            <Entry Text="{Binding ServerUrl}" Placeholder="https://your-server" Keyboard="Url" />
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                <Button Grid.Column="0" Text="Save Server URL" Command="{Binding SaveServerUrlCommand}" />
+                <Button Grid.Column="0" Text="Save URL" Command="{Binding SaveServerUrlCommand}" />
                 <Button Grid.Column="1" Text="Test" Command="{Binding TestConnectionCommand}" />
             </Grid>
 
-            <Label Text="{Binding LastSyncDisplay, StringFormat='Last synced: {0}'}" TextColor="Gray" />
+            <!-- Linked state -->
+            <StackLayout IsVisible="{Binding IsLinkedToServer}" Spacing="8">
+                <Label Text="✓ Linked to server account" TextColor="Green" FontSize="13" />
+                <Button Text="Unlink from Server" Command="{Binding UnlinkFromServerCommand}"
+                        BackgroundColor="Transparent" TextColor="Red" BorderColor="Red" BorderWidth="1" />
+            </StackLayout>
+
+            <!-- Unlinked state — show login form -->
+            <StackLayout Spacing="8">
+                <StackLayout.Triggers>
+                    <DataTrigger TargetType="StackLayout" Binding="{Binding IsLinkedToServer}" Value="True">
+                        <Setter Property="IsVisible" Value="False" />
+                    </DataTrigger>
+                </StackLayout.Triggers>
+                <Label Text="Link to Server Account" FontAttributes="Bold" FontSize="13" />
+                <Label Text="Enter your server account credentials to enable sync." TextColor="Gray" FontSize="12" />
+                <Entry Text="{Binding ServerNickName}" Placeholder="Server nickname" />
+                <Entry Text="{Binding ServerPin}" Placeholder="Server PIN" IsPassword="True" Keyboard="Numeric" />
+                <Button Text="Link to Server" Command="{Binding LinkToServerCommand}"
+                        BackgroundColor="CornflowerBlue" TextColor="White"
+                        IsEnabled="{Binding IsLinking, Converter={StaticResource InverseBoolConverter}}" />
+            </StackLayout>
+
+            <BoxView HeightRequest="1" Color="LightGray" />
+
+            <Label Text="{Binding LastSyncDisplay, StringFormat='Last synced: {0}'}" TextColor="Gray" FontSize="12" />
             <Label Text="{Binding StatusMessage}" TextColor="Green"
                    IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}" />
         </VerticalStackLayout>
