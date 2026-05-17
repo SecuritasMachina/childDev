@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 195 — Mobile: JournalRepository excludes synced soft-deleted record from GetAllActive
+
+**What changed:**
+- `JournalRepositoryTests.cs`: Added `GetAllActiveAsync_UpsertedSoftDeletedRecord_IsExcluded` — mirrors iter 194's Goal test for Journal.
+
+**Why:** Completing the "synced soft-delete excluded" coverage for all entities. Journal and Todo remain (GoalProgress uses `GetForGoalAsync`, not `GetAllActive`).
+
+**Impact:** 147 mobile tests pass (was 146). 157 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 194 — Mobile: GoalRepository excludes synced soft-deleted record from GetAllActive
 
 **What changed:**
