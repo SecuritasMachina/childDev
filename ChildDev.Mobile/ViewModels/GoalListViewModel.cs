@@ -23,6 +23,20 @@ public partial class GoalListViewModel(
     [ObservableProperty]
     private bool isRefreshing;
 
+    [ObservableProperty]
+    private string filterText = string.Empty;
+
+    private List<Goal> _allGoals = [];
+
+    partial void OnFilterTextChanged(string value) =>
+        Goals = new ObservableCollection<Goal>(
+            string.IsNullOrWhiteSpace(value)
+                ? _allGoals
+                : _allGoals.Where(g =>
+                    (g.GoalText != null && g.GoalText.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
+                    (g.MeasurableOutcome != null && g.MeasurableOutcome.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
+                    (g.LatestNextStepItems != null && g.LatestNextStepItems.Contains(value, StringComparison.OrdinalIgnoreCase))));
+
     [RelayCommand]
     private async Task LoadAsync()
     {
@@ -31,7 +45,8 @@ public partial class GoalListViewModel(
             StatusMessage = string.Empty;
             var account = await accountService.GetAccountAsync();
             if (account is null) return;
-            Goals = new ObservableCollection<Goal>(await LoadGoalsWithStepsAsync(account.Guid));
+            _allGoals = await LoadGoalsWithStepsAsync(account.Guid);
+            Goals = new ObservableCollection<Goal>(_allGoals);
         }
         catch
         {
@@ -47,7 +62,8 @@ public partial class GoalListViewModel(
             var account = await accountService.GetAccountAsync();
             if (account is null) { IsRefreshing = false; return; }
             await syncService.RunAsync(account);
-            Goals = new ObservableCollection<Goal>(await LoadGoalsWithStepsAsync(account.Guid));
+            _allGoals = await LoadGoalsWithStepsAsync(account.Guid);
+            Goals = new ObservableCollection<Goal>(_allGoals);
             StatusMessage = string.Empty;
         }
         catch
@@ -81,6 +97,7 @@ public partial class GoalListViewModel(
     private async Task DeleteAsync(Goal goal)
     {
         await repo.DeleteAsync(goal.Guid);
+        _allGoals.Remove(goal);
         Goals.Remove(goal);
     }
 }
