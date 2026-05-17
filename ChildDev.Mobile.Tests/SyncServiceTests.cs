@@ -252,6 +252,63 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_LocalGoalModifiedSinceLastSync_IncludedInRequest()
+    {
+        await _accountService.CreateAccountAsync("user10", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var goalGuid = System.Guid.NewGuid().ToString();
+        var updatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new Goal
+        {
+            Guid = goalGuid,
+            AccountFk = account.Guid,
+            GoalText = "local goal",
+            EnteredDate = updatedOn,
+            UpdatedOn = updatedOn
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var goalBody = capturingHandler.GetBodyFor("sync/goal");
+        Assert.NotNull(goalBody);
+        Assert.Contains(goalGuid, goalBody);
+    }
+
+    [Fact]
+    public async Task RunAsync_LocalTodoModifiedSinceLastSync_IncludedInRequest()
+    {
+        await _accountService.CreateAccountAsync("user11", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var todoGuid = System.Guid.NewGuid().ToString();
+        var updatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new Todo
+        {
+            Guid = todoGuid,
+            AccountFk = account.Guid,
+            Title = "local todo",
+            UpdatedOn = updatedOn
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var todoBody = capturingHandler.GetBodyFor("sync/todo");
+        Assert.NotNull(todoBody);
+        Assert.Contains(todoGuid, todoBody);
+    }
+
+    [Fact]
     public async Task RunAsync_LocalGoalProgressModifiedSinceLastSync_IncludedInRequest()
     {
         await _accountService.CreateAccountAsync("user9", "1234");
