@@ -728,6 +728,104 @@ public class SyncServiceTests : IDisposable
 
         Assert.Equal(SyncResult.Success, result);
     }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsJournal_AuxFieldsStoredLocally()
+    {
+        await _accountService.CreateAccountAsync("user29", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var serverJournal = new JournalSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, "A note",
+            "Coding", "Happy", "work,dev", 1000, 1000, null);
+
+        var handler = new FakeSyncHandler(serverJournal);
+        var service = BuildSyncService(handler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var stored = await _db.FindAsync<Journal>(serverJournal.Guid);
+        Assert.NotNull(stored);
+        Assert.Equal("Coding", stored!.Activity);
+        Assert.Equal("Happy", stored.Mood);
+        Assert.Equal("work,dev", stored.Tags);
+    }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsGoalProgress_NextMeetingDateStoredLocally()
+    {
+        await _accountService.CreateAccountAsync("user30", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var goalFk = System.Guid.NewGuid().ToString();
+        var nextMeeting = 9_000_000L;
+        var serverProgress = new GoalProgressSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, goalFk,
+            "Next steps", nextMeeting, 1000, null);
+
+        var handler = new FakeGoalProgressSyncHandler(serverProgress);
+        var service = BuildSyncService(handler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var stored = await _db.FindAsync<GoalProgress>(serverProgress.Guid);
+        Assert.NotNull(stored);
+        Assert.Equal(nextMeeting, stored!.NextMeetingDate);
+    }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsTodo_DueDateAndNotesStoredLocally()
+    {
+        await _accountService.CreateAccountAsync("user31", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var dueDate = 8_000_000L;
+        var serverTodo = new TodoSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, "Buy groceries",
+            "Milk and eggs", dueDate, null, 1000, null);
+
+        var handler = new FakeTodoSyncHandler(serverTodo);
+        var service = BuildSyncService(handler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var stored = await _db.FindAsync<Todo>(serverTodo.Guid);
+        Assert.NotNull(stored);
+        Assert.Equal("Milk and eggs", stored!.Notes);
+        Assert.Equal(dueDate, stored.DueDate);
+    }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsGoal_OptionalFieldsStoredLocally()
+    {
+        await _accountService.CreateAccountAsync("user32", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var nextMeeting = 7_000_000L;
+        var expiration = 8_000_000L;
+        var serverGoal = new GoalSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, "Learn piano",
+            nextMeeting, expiration, 1000, "Play one song fluently", null, 1000, null);
+
+        var handler = new FakeGoalSyncHandler(serverGoal);
+        var service = BuildSyncService(handler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var stored = await _db.FindAsync<Goal>(serverGoal.Guid);
+        Assert.NotNull(stored);
+        Assert.Equal(nextMeeting, stored!.NextMeetingDate);
+        Assert.Equal(expiration, stored.ExpirationDate);
+        Assert.Equal("Play one song fluently", stored.MeasurableOutcome);
+    }
 }
 
 // Test helpers
