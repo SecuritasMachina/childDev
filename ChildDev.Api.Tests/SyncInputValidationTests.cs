@@ -148,6 +148,24 @@ public class SyncInputValidationTests(ApiFactory factory) : IClassFixture<ApiFac
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
 
+    [Theory]
+    [InlineData("/api/sync/journal", "Notes", 10001)]
+    [InlineData("/api/sync/goal", "GoalText", 2001)]
+    public async Task Sync_FieldTooLong_Returns422(string endpoint, string field, int length)
+    {
+        var jwt = await RegisterJwtAsync($"toolong_{endpoint.Replace("/", "_")}_{field}");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var longValue = new string('x', length);
+        var guid = Guid.NewGuid();
+        var body = new StringContent(
+            $"{{\"Records\":[{{\"Guid\":\"{guid}\",\"AccountFk\":\"a1\",\"{field}\":\"{longValue}\",\"EnteredDate\":0,\"UpdatedOn\":0,\"DeletedAt\":null}}],\"LastSyncAt\":0}}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync(endpoint, body);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
     [Fact]
     public async Task Sync_Todo_BlankTitle_Returns422()
     {
