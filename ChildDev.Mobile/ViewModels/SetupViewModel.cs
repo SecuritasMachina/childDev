@@ -21,7 +21,9 @@ public partial class SetupViewModel(AccountService accountService) : ObservableO
     [ObservableProperty]
     private string errorMessage = string.Empty;
 
-    private bool CanCreate => !string.IsNullOrWhiteSpace(NickName) && Pin.Length == 4 && ConfirmPin.Length == 4;
+    private bool CanCreate => !string.IsNullOrWhiteSpace(NickName)
+        && Pin.Length == 4 && Pin.All(char.IsDigit)
+        && ConfirmPin == Pin;
 
     [RelayCommand(CanExecute = nameof(CanCreate))]
     private async Task CreateAccountAsync()

@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-17 — UX: SetupViewModel CanCreate now validates digits and PIN match (iter 403)
+
+**File:** `ChildDev.Mobile/ViewModels/SetupViewModel.cs`
+
+**Change:** `CanCreate` previously enabled the Create button when both PINs were 4 characters long — even if the PIN had non-digit characters or the two PINs didn't match. Added `Pin.All(char.IsDigit)` and `ConfirmPin == Pin` to the guard. The button now stays grayed out until all three conditions are fully met.
+
+**Why:** The `CreateAccountAsync` body had post-click guards that ran after the button was tapped, showing an error snackbar. Moving those checks into `CanCreate` provides immediate visual feedback (button stays disabled) instead of an error after the tap. Consistent with the CanExecute pattern used in other ViewModels (e.g. TodoListViewModel's `CanAdd`).
+
+**Impact:** Build: 0 warnings, 0 errors.
+
+---
+
 ## 2026-05-17 — Perf: index GoalFk on API GoalProgress for GoalDetail queries (iter 402)
 
 **File:** `ChildDev.Api/Data/AppDbContext.cs`
