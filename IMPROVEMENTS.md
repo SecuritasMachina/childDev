@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 252 — Mobile: Overdue todos remain in pending list
+
+**What changed:**
+- `TodoRepositoryTests.cs`: Added `GetPendingAsync_OverdueTodo_StillReturnedAsPending` — inserts a todo with a due date 7 days in the past, calls `GetPendingAsync`, and asserts the item is still returned.
+
+**Why:** The overdue count badge (added in recent UI commits) depends on `GetPendingAsync` including past-due items. The query filters on `DeletedAt IS NULL AND CompletedAt IS NULL` — no date filter — but no test verified this. If someone added a `DueDate < now` filter to optimize the list, overdue items would silently vanish from the badge count.
+
+**Impact:** 206 mobile tests pass (was 205). 193 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 251 — API: Journal sync idempotent upsert — same GUID twice yields one record
 
 **What changed:**
