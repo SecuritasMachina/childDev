@@ -2,6 +2,42 @@
 
 ---
 
+## 2026-05-17 — Fix: todos due today incorrectly shown as overdue (iter 378)
+
+**Files:** `ChildDev.Api/Components/Pages/Home.razor`, `ChildDev.Api/Components/Pages/Todos.razor`, `ChildDev.Mobile/ViewModels/DashboardViewModel.cs`, `ChildDev.Mobile/ViewModels/TodoListViewModel.cs`
+
+**Change:** Changed all four overdue detection points from `DueDate < nowMs` (current UTC time) to `DueDate < todayStartMs` (local midnight). `NowMs` field removed from web Todos overdue check (still retained for other use); `TodayStartMs` field added.
+
+**Why:** `DueDate` is stored as local midnight in Unix ms (matching how the date picker works). Comparing against the current UTC moment means any todo with today as a due date is immediately flagged overdue from midnight. "Overdue" should mean "due before today", not "due before now".
+
+**Impact:** 220 API + 244 mobile tests — all passing.
+
+---
+
+## 2026-05-17 — Fix: activity-only journal entries blank in JournalListPage (iter 377)
+
+**File:** `ChildDev.Mobile/Views/JournalListPage.xaml`
+
+**Change:** Switched the main label binding from `Notes` to `DisplayText` (same fix applied to `DashboardPage` in iter 375).
+
+**Why:** The `DisplayText` computed property (`Notes ?? Activity ?? string.Empty`) was added in iter 375 to handle activity-only entries, but only applied to the Dashboard at the time. The Journal list page still bound to `Notes` directly, showing blank rows for entries created with only an Activity field.
+
+**Impact:** 244 mobile tests — all passing.
+
+---
+
+## 2026-05-17 — Fix: make UpdateLastSyncAsync atomic with targeted SQL UPDATE (iter 376)
+
+**File:** `ChildDev.Mobile/Services/AccountService.cs`
+
+**Change:** Replaced read-modify-write pattern (load account → set field → UpdateAsync) with `db.ExecuteAsync("UPDATE Account SET LastSyncAt = ? WHERE Guid = ?", ...)` targeting only the `LastSyncAt` column.
+
+**Why:** The old pattern loaded the full Account row, modified one field, then saved all columns. If `SaveServerCredentialsAsync` ran concurrently (e.g., user saving settings while a sync completes), the credential update could be silently overwritten by the sync's `UpdateAsync` call. The `_syncing` lock only prevents concurrent syncs — it doesn't guard credential saves. The targeted SQL UPDATE eliminates the race by only touching the one column.
+
+**Impact:** 244 mobile tests — all passing.
+
+---
+
 ## 2026-05-17 — Loop 2 Bootstrap
 
 ### Deploy & Playwright Status
