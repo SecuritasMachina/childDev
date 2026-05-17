@@ -106,6 +106,18 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 285 — Web: Goal progress recency chip on home cards
+
+**What changed:**
+- `Home.razor`: `LoadGoals()` now also loads `LastProgressAt` (max `UpdatedOn`) per active goal alongside the count.
+- Goal cards show "Updated today / yesterday / Nd ago" instead of a generic progress count. The chip turns orange when 14+ days have passed since the last update.
+
+**Why:** The old chip only showed how many progress notes existed, not when they were added. Kids and parents need to see which goals have gone stale (no recent activity) vs. which are actively being worked on.
+
+**Impact:** 213 API tests pass. 216 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 284 — Web: Show NextMeetingDate on goal cards
 
 **What changed:**
