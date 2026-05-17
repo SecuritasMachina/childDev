@@ -248,4 +248,21 @@ public class GoalProgressRepositoryTests : IDisposable
         Assert.Single(modified);
         Assert.Equal("edited", modified[0].NextStepItems);
     }
+
+    [Fact]
+    public async Task GetLatestNextStepsAsync_ExcludesOtherAccounts()
+    {
+        var account1 = System.Guid.NewGuid().ToString();
+        var account2 = System.Guid.NewGuid().ToString();
+        var goalFk = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = account1, GoalFk = goalFk, NextStepItems = "mine", UpdatedOn = now });
+        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = account2, GoalFk = goalFk, NextStepItems = "theirs", UpdatedOn = now + 1 });
+
+        var result = await _repo.GetLatestNextStepsAsync(account1);
+
+        Assert.True(result.ContainsKey(goalFk));
+        Assert.Equal("mine", result[goalFk]);
+    }
 }
