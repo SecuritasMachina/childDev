@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 160 — Mobile: SyncService inbound soft-delete propagation for Journal + Goal
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsDeletedJournal_DeletedAtPropagatedLocally` — sends a `JournalSyncDto` with `DeletedAt` set, asserts the stored local `Journal` has `DeletedAt` set.
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsDeletedGoal_DeletedAtPropagatedLocally` — same for Goal.
+
+**Why:** The existing `RunAsync_ServerReturnsData_UpsertsLocally` tests all pass `DeletedAt = null`. If the `DtoToEntity` mapper accidentally dropped the `DeletedAt` field, soft-deletes from other devices (via the server) would silently fail to propagate — deleted records would reappear on sync. These tests guard that inbound path.
+
+**Impact:** 108 mobile tests pass (was 106). 128 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 159 — API: negative LastSyncAt returns all records for Journal, Goal, GoalProgress
 
 **What changed:**
