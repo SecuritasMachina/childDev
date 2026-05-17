@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 259 — API: GoalProgress sync idempotent upsert — same GUID twice yields one record
+
+**What changed:**
+- `GoalProgressSyncTests.cs`: Added `Sync_SameGuidUploadedTwice_DeltaContainsExactlyOneRecord` (gpsync_idempotent1) — uploads a goal-progress GUID twice (second with newer UpdatedOn and different NextStepItems), fetches delta, asserts exactly one record with second NextStepItems.
+
+**Why:** Iteration 251 (Journal) and 258 (Todo) added idempotency tests. GoalProgress uses its own EF Core entity and endpoint; if its upsert handler accidentally inserted instead of updated, the delta would contain two rows. Completing the 3-of-4 idempotency set (Goal remains).
+
+**Impact:** 196 API tests pass (was 195). 210 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 258 — API: Todo sync idempotent upsert — same GUID twice yields one record
 
 **What changed:**
