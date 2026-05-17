@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 129 — Mobile Tests: GoalProgress DeleteForGoalAsync UpdatedOn sync invariant
+
+**What changed:**
+- `GoalProgressRepositoryTests.cs`: Added `DeleteForGoal_SetsUpdatedOnToDeletedAt` — inserts two GoalProgress records with known UpdatedOn (1000L), calls `DeleteForGoalAsync`, then reads both directly from the DB and asserts `DeletedAt is not null`, `UpdatedOn == DeletedAt`, and `UpdatedOn > 1000L`.
+
+**Why (test modification justification):** The existing `DeleteForGoal_SoftDeletesAllProgressForThatGoal` test only verifies behavioral exclusion from `GetForGoalAsync`. It does not verify the sync invariant: `UpdatedOn == DeletedAt`. If `DeleteForGoalAsync` forgot to set `UpdatedOn`, goal-progress deletions would never appear in `GetModifiedSinceAsync` and would fail to sync to the server. Same pattern as iterations 124 (CompleteAsync) and 125 (DeleteAsync single-record).
+
+**Impact:** 49 mobile tests pass. 106 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 128 — API Fix: Register duplicate check used untrimmed NickName
 
 **What changed:**
