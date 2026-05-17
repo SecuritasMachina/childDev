@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 125 — Mobile Tests: DeleteAsync UpdatedOn sync invariant
+
+**What changed:**
+- `JournalRepositoryTests.cs`, `GoalRepositoryTests.cs`, `TodoRepositoryTests.cs`: Strengthened `Delete_SoftDeletes_*` tests with `Assert.Equal(retrieved.DeletedAt!.Value, retrieved.UpdatedOn)`.
+
+**Why (test modification justification):** The existing assertions verified `DeletedAt is not null` and behavioral exclusion from active/pending lists. They did not verify that `UpdatedOn == DeletedAt`, which is required for sync: `GetModifiedSinceAsync` filters by `UpdatedOn > lastSyncAt`. If `UpdatedOn` is not bumped to match `DeletedAt`, the deletion would not be uploaded to the server on the next sync cycle. This follows the same invariant strengthening pattern as iterations 118 (soft delete field presence) and 124 (CompleteAsync invariant).
+
+**Impact:** 48 mobile tests pass. 100 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 124 — Mobile Tests: CompleteAsync UpdatedOn sync invariant
 
 **What changed:**
