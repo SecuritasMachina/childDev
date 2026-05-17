@@ -1,0 +1,67 @@
+@page "/login"
+@inject AppDbContext Db
+@inject NavigationManager Nav
+@inject IHttpContextAccessor HttpContextAccessor
+@inject WebAnalyticsService Analytics
+
+<PageTitle>Login – ChildDev</PageTitle>
+
+<MudGrid Justify="Justify.Center" Class="mt-8">
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h5" Align="Align.Center">
+                        <MudIcon Icon="@Icons.Material.Filled.Star" Class="mr-2" />
+                        Welcome Back
+                    </MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (Error is not null)
+                {
+                    <MudAlert Severity="Severity.Error" Class="mb-4">@Error</MudAlert>
+                }
+                <MudTextField @bind-Value="NickName" Label="Nickname" Variant="Variant.Outlined"
+                              Class="mb-4" Immediate="true" />
+                <MudTextField @bind-Value="Pin" Label="PIN" Variant="Variant.Outlined"
+                              InputType="InputType.Password" Class="mb-4" />
+            </MudCardContent>
+            <MudCardActions Class="px-4 pb-4 flex-column">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                           OnClick="DoLogin">Login</MudButton>
+                <MudText Typo="Typo.body2" Class="mt-3" Align="Align.Center">
+                    No account? <MudLink Href="/register">Register</MudLink>
+                </MudText>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private string NickName = string.Empty;
+    private string Pin = string.Empty;
+    private string? Error;
+
+    protected override void OnInitialized()
+    {
+        if (HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid") is not null)
+            Nav.NavigateTo("/");
+    }
+
+    private async Task DoLogin()
+    {
+        var nick = NickName.Trim();
+        var account = await Db.Accounts.FirstOrDefaultAsync(a => a.NickName == nick);
+        var pinHash = BCrypt.Net.BCrypt.HashPassword(Pin);
+        if (account is null || !BCrypt.Net.BCrypt.Verify(pinHash, account.PinHash))
+        {
+            Error = "Invalid nickname or PIN.";
+            return;
+        }
+        HttpContextAccessor.HttpContext!.Session.SetString("AccountGuid", account.Guid);
+        HttpContextAccessor.HttpContext!.Session.SetString("NickName", account.NickName);
+        await Analytics.TrackAsync("login", account.Guid, "login");
+        Nav.NavigateTo("/");
+    }
+}
