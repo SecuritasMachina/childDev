@@ -65,6 +65,11 @@ public static class JournalEndpoints
                 return Results.Problem("Record Tags must not exceed 500 characters.", statusCode: 422);
             }
 
+            var mismatchCount = req.Records.Count(r => r.AccountFk != accountGuid);
+            if (mismatchCount > 0)
+                logger.LogWarning("sync/journal account={Account} skipped {Skipped} records with mismatched AccountFk",
+                    accountGuid[..8], mismatchCount);
+
             var incomingGuids = req.Records.Select(r => r.Guid).ToList();
             var existingMap = await db.Journals
                 .Where(j => incomingGuids.Contains(j.Guid))

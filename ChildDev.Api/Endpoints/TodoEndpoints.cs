@@ -56,6 +56,11 @@ public static class TodoEndpoints
                 logger.LogWarning("sync/todo account={Account} rejected: blank Title", accountGuid[..8]);
                 return Results.Problem("Record Title must not be blank.", statusCode: 422);
             }
+            var mismatchCount = req.Records.Count(r => r.AccountFk != accountGuid);
+            if (mismatchCount > 0)
+                logger.LogWarning("sync/todo account={Account} skipped {Skipped} records with mismatched AccountFk",
+                    accountGuid[..8], mismatchCount);
+
             var incomingGuids = req.Records.Select(r => r.Guid).ToList();
             var existingMap = await db.Todos
                 .Where(t => incomingGuids.Contains(t.Guid))
