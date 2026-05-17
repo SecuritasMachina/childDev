@@ -1868,6 +1868,26 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_PartialFailure_ReleasesLockSoSubsequentSyncCanRun()
+    {
+        await _accountService.CreateAccountAsync("user79", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        // GoalFailureHandler: journal succeeds, goal always returns 500 → Failed
+        var service = BuildSyncService(new GoalFailureHandler());
+        var firstResult = await service.RunAsync(account);
+        Assert.Equal(SyncResult.Failed, firstResult);
+
+        // If finally block didn't release the lock after partial failure,
+        // the second call would return Success immediately (the lock guard path).
+        // Returning Failed here proves it actually ran the sync logic (lock was freed).
+        var secondResult = await service.RunAsync(account);
+        Assert.Equal(SyncResult.Failed, secondResult);
+    }
+
+    [Fact]
     public async Task RunAsync_Server403OnEntitySync_ReturnsFailed()
     {
         await _accountService.CreateAccountAsync("user78", "1234");
