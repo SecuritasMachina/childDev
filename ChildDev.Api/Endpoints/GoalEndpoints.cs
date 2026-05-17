@@ -17,6 +17,7 @@ public static class GoalEndpoints
             var accountGuid = jwt.ExtractAccountGuid(user);
             if (accountGuid is null) return Results.Unauthorized();
             if (req.Records is null) return Results.BadRequest("Records must not be null.");
+            if (req.Records.Count > 500) return Results.BadRequest("Records must not exceed 500 per sync.");
             var maxFutureMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + 300_000;
             if (req.Records.Any(r => r.UpdatedOn > maxFutureMs))
                 return Results.UnprocessableEntity("Record UpdatedOn is too far in the future.");
