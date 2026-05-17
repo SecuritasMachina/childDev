@@ -1,0 +1,174 @@
+@page "/settings"
+@inject AppDbContext Db
+@inject NavigationManager Nav
+@inject IHttpContextAccessor HttpContextAccessor
+@inject ISnackbar Snackbar
+@inject WebAnalyticsService Analytics
+
+<PageTitle>Settings – ChildDev</PageTitle>
+
+@if (AccountGuid is null)
+{
+    Nav.NavigateTo("/login");
+    return;
+}
+
+<MudText Typo="Typo.h5" Class="mb-4">
+    <MudIcon Icon="@Icons.Material.Filled.Settings" Class="mr-2" />
+    Account Settings
+</MudText>
+
+<MudGrid>
+    <MudItem xs="12" sm="6">
+        <MudCard Elevation="2" Class="mb-4">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Account Info</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Nickname</MudText>
+                <MudText Typo="Typo.body1" Class="mb-3">@CurrentNickName</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Account ID</MudText>
+                <MudText Typo="Typo.caption" Class="mb-3" Style="font-family:monospace;">@AccountGuid</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Member Since</MudText>
+                <MudText Typo="Typo.body1">@CreatedOnDisplay</MudText>
+            </MudCardContent>
+        </MudCard>
+
+        <MudCard Elevation="2" Class="mb-4">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Change Nickname</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudTextField @bind-Value="NewNickName" Label="New Nickname" Variant="Variant.Outlined"
+                              HelperText="1–50 characters" Class="mb-3" />
+                @if (NickNameError is not null)
+                {
+                    <MudAlert Severity="Severity.Error" Class="mb-3">@NickNameError</MudAlert>
+                }
+            </MudCardContent>
+            <MudCardActions Class="px-4 pb-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ChangeNickName">Save Nickname</MudButton>
+            </MudCardActions>
+        </MudCard>
+
+        <MudCard Elevation="2">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Change PIN</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudTextField @bind-Value="CurrentPin" Label="Current PIN" InputType="InputType.Password"
+                              Variant="Variant.Outlined" Class="mb-3" />
+                <MudTextField @bind-Value="NewPin" Label="New PIN" InputType="InputType.Password"
+                              Variant="Variant.Outlined" HelperText="At least 4 characters" Class="mb-3" />
+                <MudTextField @bind-Value="ConfirmNewPin" Label="Confirm New PIN" InputType="InputType.Password"
+                              Variant="Variant.Outlined" Class="mb-3"
+                              Error="@PinMismatch" ErrorText="PINs do not match" />
+                @if (PinError is not null)
+                {
+                    <MudAlert Severity="Severity.Error" Class="mb-3">@PinError</MudAlert>
+                }
+            </MudCardContent>
+            <MudCardActions Class="px-4 pb-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ChangePin">Change PIN</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private string? AccountGuid;
+    private string CurrentNickName = string.Empty;
+    private string CreatedOnDisplay = string.Empty;
+
+    private string NewNickName = string.Empty;
+    private string? NickNameError;
+
+    private string CurrentPin = string.Empty;
+    private string NewPin = string.Empty;
+    private string ConfirmNewPin = string.Empty;
+    private bool PinMismatch;
+    private string? PinError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
+        if (AccountGuid is null) return;
+
+        var account = await Db.Accounts.FirstOrDefaultAsync(a => a.Guid == AccountGuid);
+        if (account is null) { Nav.NavigateTo("/login"); return; }
+
+        CurrentNickName = account.NickName;
+        NewNickName = account.NickName;
+        CreatedOnDisplay = DateTimeOffset.FromUnixTimeMilliseconds(account.CreatedOn).LocalDateTime.ToString("MMMM d, yyyy");
+        await Analytics.TrackAsync("page_view", AccountGuid, "settings");
+    }
+
+    private async Task ChangeNickName()
+    {
+        NickNameError = null;
+        var nick = NewNickName.Trim();
+        if (string.IsNullOrWhiteSpace(nick) || nick.Length > 50)
+        {
+            NickNameError = "Nickname must be 1–50 characters.";
+            return;
+        }
+        if (nick == CurrentNickName)
+        {
+            NickNameError = "That's already your nickname.";
+            return;
+        }
+        if (await Db.Accounts.AnyAsync(a => a.NickName == nick && a.Guid != AccountGuid))
+        {
+            NickNameError = "Nickname already taken.";
+            return;
+        }
+
+        var account = await Db.Accounts.FirstOrDefaultAsync(a => a.Guid == AccountGuid);
+        if (account is null) return;
+        account.NickName = nick;
+        await Db.SaveChangesAsync();
+        HttpContextAccessor.HttpContext!.Session.SetString("NickName", nick);
+        CurrentNickName = nick;
+        await Analytics.TrackAsync("settings_change_nickname", AccountGuid, "settings");
+        Snackbar.Add("Nickname updated!", Severity.Success);
+    }
+
+    private async Task ChangePin()
+    {
+        PinError = null;
+        PinMismatch = NewPin != ConfirmNewPin;
+        if (PinMismatch) return;
+        if (string.IsNullOrWhiteSpace(CurrentPin))
+        {
+            PinError = "Enter your current PIN.";
+            return;
+        }
+        if (NewPin.Length < 4)
+        {
+            PinError = "New PIN must be at least 4 characters.";
+            return;
+        }
+
+        var account = await Db.Accounts.FirstOrDefaultAsync(a => a.Guid == AccountGuid);
+        if (account is null) return;
+        if (!BCrypt.Net.BCrypt.Verify(CurrentPin, account.PinHash))
+        {
+            PinError = "Current PIN is incorrect.";
+            return;
+        }
+
+        account.PinHash = BCrypt.Net.BCrypt.HashPassword(NewPin);
+        await Db.SaveChangesAsync();
+        CurrentPin = string.Empty;
+        NewPin = string.Empty;
+        ConfirmNewPin = string.Empty;
+        await Analytics.TrackAsync("settings_change_pin", AccountGuid, "settings");
+        Snackbar.Add("PIN changed!", Severity.Success);
+    }
+}
