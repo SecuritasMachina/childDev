@@ -286,8 +286,8 @@ else
     private void OpenAddProgressDialog()
     {
         NewNextSteps = string.Empty;
-        var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        NewMeetingDate = Goal?.NextMeetingDate.HasValue == true && Goal.NextMeetingDate.Value > nowMs
+        var todayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+        NewMeetingDate = Goal?.NextMeetingDate.HasValue == true && Goal.NextMeetingDate.Value >= todayStartMs
             ? DateTimeOffset.FromUnixTimeMilliseconds(Goal.NextMeetingDate.Value).LocalDateTime
             : null;
         ShowAddDialog = true;
