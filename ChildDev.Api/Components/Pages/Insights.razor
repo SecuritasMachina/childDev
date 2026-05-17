@@ -193,18 +193,27 @@
     private static string FormatEventName(string name) => name switch
     {
         "goal_add" => "Add goal",
+        "goal_edit" => "Edit goal",
         "goal_complete" => "Complete goal",
+        "goal_reopen" => "Reopen goal",
         "goal_delete" => "Delete goal",
         "goal_filter" => "Filter goals",
         "progress_add" => "Add progress note",
+        "progress_edit" => "Edit progress note",
+        "progress_delete" => "Delete progress note",
         "progress_quickadd" => "Quick progress note",
-        "journal_quickadd" => "Quick journal entry",
         "journal_add" => "Add journal entry",
+        "journal_edit" => "Edit journal entry",
+        "journal_delete" => "Delete journal entry",
+        "journal_quickadd" => "Quick journal entry",
+        "journal_filter" => "Filter journal",
         "todo_add" => "Add todo",
         "todo_complete" => "Complete todo",
+        "todo_uncomplete" => "Restore todo",
         "todo_delete" => "Delete todo",
         "todo_filter" => "Filter todos",
-        "journal_filter" => "Filter journal",
+        "login" => "Login",
+        "register" => "Register",
         _ => name.Replace("_", " ")
     };
 

@@ -4220,6 +4220,16 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — Insights: complete event name mapping (iter 339)
+
+**What:** Added missing event name mappings to `FormatEventName` in Insights.razor: `goal_edit`, `goal_reopen`, `progress_edit`, `progress_delete`, `journal_edit`, `journal_delete`, `todo_uncomplete`, `login`, `register`. Events without a mapping fell through to `name.Replace("_", " ")` which produced strings like "goal reopen" instead of "Reopen goal".
+
+**Why:** Several events were added in iterations 291–334 but `FormatEventName` was not updated. The Insights page would display raw underscore-names, making the "Top Features Used" section hard to read.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Mobile: GetRecentAsync on JournalRepository + dashboard optimization (iter 338)
 
 **What:** Added `GetRecentAsync(accountFk, count)` to `JournalRepository` — fetches only N most recent entries at the DB layer. `DashboardViewModel` now uses `GetRecentAsync(account.Guid, 3)` instead of `GetAllActiveAsync(...).Take(3)`. Added 3 tests: count limit, sort by EnteredDate descending, excludes soft-deleted entries.
