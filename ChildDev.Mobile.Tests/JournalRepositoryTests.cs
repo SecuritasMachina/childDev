@@ -255,6 +255,24 @@ public class JournalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task UpsertFromSyncAsync_NewRecord_UsesServerEnteredDate()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var serverEnteredDate = DateTimeOffset.UtcNow.AddDays(-3).ToUnixTimeMilliseconds();
+        var serverUpdatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _repo.UpsertFromSyncAsync(new Journal
+        {
+            Guid = guid, AccountFk = "account1", Notes = "new from server",
+            EnteredDate = serverEnteredDate, UpdatedOn = serverUpdatedOn
+        });
+
+        var retrieved = await _repo.GetAsync(guid);
+        Assert.NotNull(retrieved);
+        Assert.Equal(serverEnteredDate, retrieved!.EnteredDate);
+    }
+
+    [Fact]
     public async Task GetAllActiveAsync_MultipleJournals_OrderedByEnteredDateDescending()
     {
         var accountId = System.Guid.NewGuid().ToString();
