@@ -212,4 +212,38 @@ public class TodoRepositoryTests : IDisposable
         Assert.Single(modified);
         Assert.Equal("edited", modified[0].Title);
     }
+
+    [Fact]
+    public async Task GetAllActiveAsync_IncludesCompletedExcludesDeleted()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "pending", UpdatedOn = now });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "completed", UpdatedOn = now, CompletedAt = now });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "deleted", UpdatedOn = now, DeletedAt = now });
+
+        var all = await _repo.GetAllActiveAsync(accountId);
+
+        Assert.Equal(2, all.Count);
+        Assert.Contains(all, t => t.Title == "pending");
+        Assert.Contains(all, t => t.Title == "completed");
+        Assert.DoesNotContain(all, t => t.Title == "deleted");
+    }
+
+    [Fact]
+    public async Task GetAllActiveAsync_ExcludesOtherAccounts()
+    {
+        var account1 = System.Guid.NewGuid().ToString();
+        var account2 = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = account1, Title = "mine", UpdatedOn = now });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = account2, Title = "theirs", UpdatedOn = now });
+
+        var all = await _repo.GetAllActiveAsync(account1);
+
+        Assert.Single(all);
+        Assert.Equal("mine", all[0].Title);
+    }
 }

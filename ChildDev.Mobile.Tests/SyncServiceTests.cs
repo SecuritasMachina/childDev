@@ -359,6 +359,51 @@ public class SyncServiceTests : IDisposable
         Assert.Single(goals);
         Assert.Equal("From server goal", goals[0].GoalText);
     }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsTodo_UpsertsLocally()
+    {
+        await _accountService.CreateAccountAsync("user13", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var serverTodo = new TodoSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, "From server todo",
+            null, null, null, 1000, null);
+
+        var handler = new FakeTodoSyncHandler(serverTodo);
+        var service = BuildSyncService(handler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var todos = await _todoRepo.GetPendingAsync(account.Guid);
+        Assert.Single(todos);
+        Assert.Equal("From server todo", todos[0].Title);
+    }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsGoalProgress_UpsertsLocally()
+    {
+        await _accountService.CreateAccountAsync("user14", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var goalFk = System.Guid.NewGuid().ToString();
+        var serverProgress = new GoalProgressSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, goalFk,
+            "From server step", null, 1000, null);
+
+        var handler = new FakeGoalProgressSyncHandler(serverProgress);
+        var service = BuildSyncService(handler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var items = await _goalProgressRepo.GetForGoalAsync(goalFk);
+        Assert.Single(items);
+        Assert.Equal("From server step", items[0].NextStepItems);
+    }
 }
 
 // Test helpers
@@ -480,6 +525,44 @@ public class FakeGoalSyncHandler(GoalSyncDto goal) : HttpMessageHandler
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = JsonContent.Create(response)
+            });
+        }
+        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new { Records = Array.Empty<object>() })
+        });
+    }
+}
+
+public class FakeTodoSyncHandler(TodoSyncDto todo) : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        if (request.RequestUri!.PathAndQuery.Contains("sync/todo"))
+        {
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new SyncResponseDto<TodoSyncDto>([todo]))
+            });
+        }
+        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new { Records = Array.Empty<object>() })
+        });
+    }
+}
+
+public class FakeGoalProgressSyncHandler(GoalProgressSyncDto progress) : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        if (request.RequestUri!.PathAndQuery.Contains("sync/goal-progress"))
+        {
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new SyncResponseDto<GoalProgressSyncDto>([progress]))
             });
         }
         return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
