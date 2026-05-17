@@ -106,6 +106,18 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 277 — API: Reject DeletedAt > UpdatedOn on all 4 sync endpoints
+
+**What changed:**
+- `GoalEndpoints.cs`, `JournalEndpoints.cs`, `TodoEndpoints.cs`, `GoalProgressEndpoints.cs`: Added validation rejecting uploads where `DeletedAt.HasValue && DeletedAt > UpdatedOn`. Returns 422.
+- Corresponding tests added to all 4 sync test files (`Sync_DeletedAtGreaterThanUpdatedOn_Returns422`).
+
+**Why:** The LWW soft-delete invariant is `DeletedAt == UpdatedOn`. If `DeletedAt > UpdatedOn`, the record is in an impossible state (deleted "after" its last write) — client bug or corruption. All 4 tests passed after validation was added, confirming the invariant was previously unguarded.
+
+**Impact:** 208 API tests pass (was 204). 213 mobile tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Iteration 276 — Web: Journal entry edit + soft-delete
 
 **What changed:**
