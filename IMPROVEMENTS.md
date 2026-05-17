@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 227 — API: Soft-delete clears text fields in delta (Journal + GoalProgress)
+
+**What changed:**
+- `JournalSyncTests.cs`: Added `Sync_SoftDelete_NotesNullInDelta` — asserts deleted journal's Notes is null in the delta response.
+- `GoalProgressSyncTests.cs`: Added `Sync_SoftDelete_NextStepItemsNullInDelta` — asserts deleted GoalProgress's NextStepItems is null in the delta response.
+
+**Why:** The existing `Sync_SoftDelete_DeletedAtPropagatedInDelta` tests for all entities only assert `DeletedAt == deletedAt`. They don't verify that text fields (Notes, NextStepItems) are cleared to null after a soft-delete LWW update. If `ApplyDto` ever gained a null-coalescing guard (`e.Notes = dto.Notes ?? e.Notes`), stale text would persist in the delta and mobile clients would show content for deleted records.
+
+**Impact:** 184 mobile tests pass. 162 API tests pass (was 160).
+
+---
+
 ## 2026-05-17 — Iteration 226 — Mobile: AccountFk in upload body for Goal, Todo, GoalProgress
 
 **What changed:**
