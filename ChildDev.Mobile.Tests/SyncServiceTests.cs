@@ -2072,6 +2072,29 @@ public class SyncServiceTests : IDisposable
         Assert.Contains(goals, g => g.GoalText == "first goal");
         Assert.Contains(goals, g => g.GoalText == "second goal");
     }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsTwoTodos_BothUpsertedLocally()
+    {
+        await _accountService.CreateAccountAsync("user84", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var todo1 = new TodoSyncDto(System.Guid.NewGuid().ToString(), account.Guid, "first task",
+            null, null, null, 1000, null);
+        var todo2 = new TodoSyncDto(System.Guid.NewGuid().ToString(), account.Guid, "second task",
+            null, null, null, 2000, null);
+
+        var service = BuildSyncService(new MultiTodoSyncHandler(todo1, todo2));
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var todos = await _todoRepo.GetPendingAsync(account.Guid);
+        Assert.Equal(2, todos.Count);
+        Assert.Contains(todos, t => t.Title == "first task");
+        Assert.Contains(todos, t => t.Title == "second task");
+    }
 }
 
 // Test helpers
@@ -2396,6 +2419,28 @@ public class MultiGoalSyncHandler(GoalSyncDto goal1, GoalSyncDto goal2) : HttpMe
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = JsonContent.Create(new SyncResponseDto<GoalSyncDto>([goal1, goal2]))
+            });
+        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new { Records = Array.Empty<object>() })
+        });
+    }
+}
+
+public class MultiTodoSyncHandler(TodoSyncDto todo1, TodoSyncDto todo2) : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        if (request.RequestUri!.PathAndQuery.Contains("health"))
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new { status = "ok" })
+            });
+        if (request.RequestUri.PathAndQuery.Contains("sync/todo"))
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new SyncResponseDto<TodoSyncDto>([todo1, todo2]))
             });
         return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
         {
