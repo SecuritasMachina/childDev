@@ -1,0 +1,150 @@
+@page "/goals/{GoalGuid}"
+@inject AppDbContext Db
+@inject NavigationManager Nav
+@inject IHttpContextAccessor HttpContextAccessor
+@inject ISnackbar Snackbar
+@inject WebAnalyticsService Analytics
+
+<PageTitle>Goal Progress – ChildDev</PageTitle>
+
+@if (AccountGuid is null)
+{
+    Nav.NavigateTo("/login");
+    return;
+}
+
+@if (Goal is null)
+{
+    <MudText Color="Color.Error">Goal not found.</MudText>
+    return;
+}
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Href="/" />
+    <MudText Typo="Typo.h5">@Goal.GoalText</MudText>
+</MudStack>
+
+@if (Goal.MeasurableOutcome is not null)
+{
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">📏 @Goal.MeasurableOutcome</MudText>
+}
+
+<MudText Typo="Typo.subtitle1" Class="mb-2">
+    Progress Notes
+    @if (ProgressEntries.Any())
+    {
+        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Class="ml-2">@ProgressEntries.Count</MudChip>
+    }
+</MudText>
+
+@if (!ProgressEntries.Any())
+{
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">No progress notes yet. Add the first one!</MudText>
+}
+else
+{
+    <MudTimeline TimelinePosition="TimelinePosition.Start" Class="mb-4">
+        @foreach (var p in ProgressEntries)
+        {
+            var enteredDate = DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime;
+            <MudTimelineItem Color="Color.Primary" Size="Size.Small">
+                <ItemContent>
+                    <MudPaper Elevation="1" Class="pa-3 mb-2">
+                        @if (!string.IsNullOrWhiteSpace(p.NextStepItems))
+                        {
+                            <MudText Typo="Typo.body2">@p.NextStepItems</MudText>
+                        }
+                        @if (p.NextMeetingDate.HasValue)
+                        {
+                            var meetingDate = DateTimeOffset.FromUnixTimeMilliseconds(p.NextMeetingDate.Value).LocalDateTime;
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                                <MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Small" /> Next meeting: @meetingDate.ToString("MMM d, yyyy")
+                            </MudText>
+                        }
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@enteredDate.ToString("MMM d, yyyy h:mm tt")</MudText>
+                    </MudPaper>
+                </ItemContent>
+            </MudTimelineItem>
+        }
+    </MudTimeline>
+}
+
+<MudButton Variant="Variant.Outlined" Color="Color.Primary"
+           StartIcon="@Icons.Material.Filled.Add"
+           OnClick="() => ShowAddDialog = true">Add Progress Note</MudButton>
+
+<MudDialog @bind-Visible="ShowAddDialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Class="mr-2" />
+            New Progress Note
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="NewNextSteps" Label="Progress / next steps" Variant="Variant.Outlined"
+                      Lines="3" Class="mb-4" AutoFocus="true" />
+        <MudDatePicker @bind-Date="NewMeetingDate" Label="Next meeting date (optional)" Variant="Variant.Outlined" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => ShowAddDialog = false">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddProgress">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public string GoalGuid { get; set; } = string.Empty;
+
+    private string? AccountGuid;
+    private Goal? Goal;
+    private List<GoalProgress> ProgressEntries = [];
+    private bool ShowAddDialog;
+    private string NewNextSteps = string.Empty;
+    private DateTime? NewMeetingDate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
+        if (AccountGuid is null) return;
+
+        Goal = await Db.Goals.FirstOrDefaultAsync(g => g.Guid == GoalGuid && g.AccountFk == AccountGuid && g.DeletedAt == null);
+        if (Goal is null) return;
+
+        await LoadProgress();
+        await Analytics.TrackAsync("page_view", AccountGuid, "goal_detail", GoalGuid);
+    }
+
+    private async Task LoadProgress()
+    {
+        ProgressEntries = await Db.GoalProgresses
+            .Where(p => p.GoalFk == GoalGuid && p.AccountFk == AccountGuid && p.DeletedAt == null)
+            .OrderByDescending(p => p.UpdatedOn)
+            .ToListAsync();
+    }
+
+    private async Task AddProgress()
+    {
+        var steps = NewNextSteps.Trim();
+        if (string.IsNullOrWhiteSpace(steps) && !NewMeetingDate.HasValue) return;
+
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        Db.GoalProgresses.Add(new GoalProgress
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = AccountGuid!,
+            GoalFk = GoalGuid,
+            NextStepItems = string.IsNullOrWhiteSpace(steps) ? null : steps,
+            NextMeetingDate = NewMeetingDate.HasValue
+                ? new DateTimeOffset(NewMeetingDate.Value, TimeSpan.Zero).ToUnixTimeMilliseconds()
+                : null,
+            UpdatedOn = now
+        });
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("progress_add", AccountGuid, "goal_detail", GoalGuid);
+
+        NewNextSteps = string.Empty;
+        NewMeetingDate = null;
+        ShowAddDialog = false;
+        Snackbar.Add("Progress note saved!", Severity.Success);
+        await LoadProgress();
+    }
+}
