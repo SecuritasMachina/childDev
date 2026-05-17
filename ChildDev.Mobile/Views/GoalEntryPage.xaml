@@ -28,6 +28,9 @@
             <Button Text="Mark as Complete" Command="{Binding MarkCompleteCommand}"
                     BackgroundColor="Green" TextColor="White"
                     IsVisible="{Binding IsExisting}" Margin="0,8,0,0" />
+            <Button Text="Delete Goal" Command="{Binding DeleteCommand}"
+                    BackgroundColor="Red" TextColor="White"
+                    IsVisible="{Binding IsExisting}" Margin="0,4,0,0" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
