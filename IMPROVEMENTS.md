@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 236 — Mobile: Synced soft-deleted goal excluded from GetAllActiveAsync
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_ServerSendsDeletedGoal_ExcludedFromGetAllActiveAsync` (user71) — mirrors the journal and todo pattern for goals.
+
+**Why:** Completes the 3-entity view-exclusion coverage chain (journal iter235, todo iter234, goal iter236). After syncing a soft-deleted goal, it must disappear from the active goal list used by the UI.
+
+**Impact:** 193 mobile tests pass (was 192). 164 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 235 — Mobile: Synced soft-deleted journal excluded from GetAllActiveAsync
 
 **What changed:**
