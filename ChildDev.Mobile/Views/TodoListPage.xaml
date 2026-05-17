@@ -15,7 +15,8 @@
             <Button Grid.Column="1" Text="Add" Command="{Binding AddCommand}" Margin="8,0,0,0" />
         </Grid>
 
-        <CollectionView Grid.Row="2" ItemsSource="{Binding Todos}">
+        <RefreshView Grid.Row="2" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
+        <CollectionView ItemsSource="{Binding Todos}">
             <CollectionView.EmptyView>
                 <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8" Padding="32">
                     <Label Text="All done!" FontSize="18" HorizontalOptions="Center" />
@@ -63,6 +64,7 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
+        </RefreshView>
 
         <Label Grid.Row="3"
                Text="{Binding CompletedTodoCount, StringFormat='{0} task(s) completed'}"

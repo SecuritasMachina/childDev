@@ -4,16 +4,29 @@
 
 | # | Description | Dim | Impact | Effort | Risk | Status |
 |---|-------------|-----|--------|--------|------|--------|
-| 1 | JournalListPage: pull-to-refresh trigger sync | Func | Medium | M | Medium | Backlog |
+| 1 | JournalListPage: pull-to-refresh trigger sync | Func | Medium | M | Medium | **DONE** |
 | 2 | API: X-Request-ID header echo for traceability | Perf | Low | S | Low | Backlog |
 | 3 | SyncService: retry once on transient failure | Stability | Low | M | Medium | Backlog |
 | 4 | GoalEntryPage: show ExpirationDate label for existing | Func | Low | S | Low | Backlog |
-| 5 | TodoRepository: count completed todos (for "X done" footer) | UI | Low | S | Low | Backlog |
+| 5 | TodoRepository: count completed todos (for "X done" footer) | UI | Low | S | Low | **DONE** |
 | 6 | API: CORS policy — allow only expected mobile origins | Stability | Low | S | Low | Backlog |
 | 7 | JournalListPage: word count in preview (character/word count) | UI | Low | S | Low | Backlog |
-| 8 | API: limit Records list size to avoid unbounded POST body | Stability | Medium | S | Low | Backlog |
+| 8 | API: limit Records list size to avoid unbounded POST body | Stability | Medium | S | Low | **DONE** |
 | 9 | SyncService: structured logging (last sync time, record counts) | Perf | Low | S | Low | Backlog |
 | 10 | TodoEntryViewModel: ExpirationDate / reminder date support | Func | Low | M | Low | Backlog |
+
+---
+
+## 2026-05-16 — Completed todo count footer on TodoListPage
+
+**What changed:**
+- `TodoRepository`: Added `GetCompletedCountAsync(accountFk)` — counts todos with non-null `CompletedAt` and null `DeletedAt`.
+- `TodoListViewModel`: Added `CompletedTodoCount` and `HasCompletedTodos` observables. `LoadAsync` fetches the count; `CompleteAsync` increments it live. Added `StatusMessage` + try/catch error boundary.
+- `TodoListPage.xaml`: Extended Grid to `RowDefinitions="Auto,Auto,*,Auto"`. Row 0 = error label; Row 3 = footer showing "N task(s) completed" (hidden when count = 0).
+
+**Why:** Users completing tasks had no feedback that tasks were being archived rather than disappearing. The footer shows accumulating completions without cluttering the pending list.
+
+**Impact:** Completion progress visible at a glance. 21 mobile tests, 42 API tests pass.
 
 ---
 

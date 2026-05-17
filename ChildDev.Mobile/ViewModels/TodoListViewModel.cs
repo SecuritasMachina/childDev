@@ -9,7 +9,8 @@ namespace ChildDev.Mobile.ViewModels;
 
 public partial class TodoListViewModel(
     TodoRepository repo,
-    AccountService accountService) : ObservableObject
+    AccountService accountService,
+    SyncService syncService) : ObservableObject
 {
     [ObservableProperty]
     private ObservableCollection<Todo> todos = [];
@@ -19,6 +20,15 @@ public partial class TodoListViewModel(
 
     [ObservableProperty]
     private string statusMessage = string.Empty;
+
+    [ObservableProperty]
+    private int completedTodoCount;
+
+    [ObservableProperty]
+    private bool hasCompletedTodos;
+
+    [ObservableProperty]
+    private bool isRefreshing;
 
     [RelayCommand]
     private async Task LoadAsync()
@@ -30,10 +40,36 @@ public partial class TodoListViewModel(
             if (account is null) return;
             var items = await repo.GetPendingAsync(account.Guid);
             Todos = new ObservableCollection<Todo>(items);
+            CompletedTodoCount = await repo.GetCompletedCountAsync(account.Guid);
+            HasCompletedTodos = CompletedTodoCount > 0;
         }
         catch
         {
             StatusMessage = "Could not load tasks. Please restart the app.";
+        }
+    }
+
+    [RelayCommand]
+    private async Task RefreshAsync()
+    {
+        try
+        {
+            var account = await accountService.GetAccountAsync();
+            if (account is null) { IsRefreshing = false; return; }
+            await syncService.RunAsync(account);
+            var items = await repo.GetPendingAsync(account.Guid);
+            Todos = new ObservableCollection<Todo>(items);
+            CompletedTodoCount = await repo.GetCompletedCountAsync(account.Guid);
+            HasCompletedTodos = CompletedTodoCount > 0;
+            StatusMessage = string.Empty;
+        }
+        catch
+        {
+            StatusMessage = "Could not refresh tasks.";
+        }
+        finally
+        {
+            IsRefreshing = false;
         }
     }
 
@@ -61,6 +97,8 @@ public partial class TodoListViewModel(
     {
         await repo.CompleteAsync(todo.Guid);
         Todos.Remove(todo);
+        CompletedTodoCount++;
+        HasCompletedTodos = true;
     }
 
     [RelayCommand]
