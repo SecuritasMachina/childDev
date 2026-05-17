@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 109 — Mobile Tests: SyncService uplink verification
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_LocalJournalModifiedSinceLastSync_IncludedInRequest` using a new `CapturingHandler` that records request bodies and asserts the local journal GUID appears in the outgoing POST body.
+
+**Why:** All 9 existing SyncService tests covered result codes or downlink (server→local upsert), but none verified that locally-modified records are actually sent to the server. The uplink path was untested.
+
+**Impact:** 37 mobile tests pass. 88 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 108 — API: Validate PinHash non-empty on register
 
 **What changed:**
