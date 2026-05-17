@@ -35,6 +35,7 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
         };
     });
 
+builder.Services.AddProblemDetails();
 builder.Services.AddResponseCompression(options => options.EnableForHttps = true);
 builder.Services.AddRequestTimeouts(options =>
     options.DefaultPolicy = new Microsoft.AspNetCore.Http.Timeouts.RequestTimeoutPolicy
