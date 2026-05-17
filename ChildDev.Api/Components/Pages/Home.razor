@@ -160,8 +160,17 @@
             <MudList T="Goal" Dense="true">
                 @foreach (var g in CompletedGoals)
                 {
-                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
-                        <MudText Typo="Typo.body2" Class="text-decoration-line-through">@g.GoalText</MudText>
+                    var completedOn = DateTimeOffset.FromUnixTimeMilliseconds(g.CompletionDate!.Value).LocalDateTime;
+                    <MudListItem>
+                        <MudStack Row="true" AlignItems="AlignItems.Center">
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                            <MudStack Spacing="0" Style="flex:1">
+                                <MudText Typo="Typo.body2" Class="text-decoration-line-through">@g.GoalText</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Completed @completedOn.ToString("MMM d, yyyy")</MudText>
+                            </MudStack>
+                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
+                                       Href="@($"/goals/{g.Guid}")">View</MudButton>
+                        </MudStack>
                     </MudListItem>
                 }
             </MudList>
