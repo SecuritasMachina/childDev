@@ -53,7 +53,8 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
           .AllowAnyMethod()));
 
 builder.Services.AddAuthorization();
-builder.Services.AddRazorPages();
+builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -100,7 +101,7 @@ app.MapGet("/api/health", async (AppDbContext db) =>
     }
 });
 
-app.MapRazorPages();
+app.MapRazorComponents<ChildDev.Api.Components.App>().AddInteractiveServerRenderMode();
 app.MapAuthEndpoints();
 app.MapJournalEndpoints();
 app.MapGoalEndpoints();

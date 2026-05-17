@@ -1,0 +1,200 @@
+@page "/"
+@inject AppDbContext Db
+@inject NavigationManager Nav
+@inject IHttpContextAccessor HttpContextAccessor
+@inject ISnackbar Snackbar
+
+<PageTitle>My Goals – ChildDev</PageTitle>
+
+@if (AccountGuid is null)
+{
+    <MudGrid Justify="Justify.Center" Class="mt-12">
+        <MudItem xs="12" sm="8" md="6" Class="text-center">
+            <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Style="font-size:5rem;" Color="Color.Primary" />
+            <MudText Typo="Typo.h4" Class="mt-4 mb-2">Set Goals. Achieve Them.</MudText>
+            <MudText Typo="Typo.body1" Class="mb-6" Color="Color.Secondary">
+                ChildDev helps you set goals and track your progress — one step at a time.
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/login" Size="Size.Large" Class="mr-3">
+                Login
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/register" Size="Size.Large">
+                Get Started
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+    return;
+}
+
+<MudText Typo="Typo.h5" Class="mb-4">
+    <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="mr-2" />
+    My Goals
+</MudText>
+
+@if (ActiveGoals.Any())
+{
+    <MudText Typo="Typo.subtitle1" Class="mb-2" Color="Color.Secondary">
+        @ActiveGoals.Count active goal@(ActiveGoals.Count == 1 ? "" : "s")
+    </MudText>
+}
+
+<MudGrid>
+    @foreach (var g in ActiveGoals)
+    {
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard Elevation="2" Class="h-100">
+                <MudCardHeader>
+                    <CardHeaderAvatar>
+                        <MudAvatar Color="Color.Primary" Size="Size.Medium">
+                            <MudIcon Icon="@Icons.Material.Filled.Flag" />
+                        </MudAvatar>
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.body1">@g.GoalText</MudText>
+                        @if (g.MeasurableOutcome is not null)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">📏 @g.MeasurableOutcome</MudText>
+                        }
+                    </CardHeaderContent>
+                </MudCardHeader>
+                @{
+                    var pCount = ProgressCounts.GetValueOrDefault(g.Guid);
+                }
+                @if (pCount > 0)
+                {
+                    <MudCardContent Class="pt-0">
+                        <MudChip T="string" Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small">
+                            @pCount progress update@(pCount == 1 ? "" : "s")
+                        </MudChip>
+                    </MudCardContent>
+                }
+                <MudCardActions>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary"
+                               Href="@($"/goals/{g.Guid}")">View Progress</MudButton>
+                    <MudSpacer />
+                    <MudIconButton Icon="@Icons.Material.Filled.CheckCircle"
+                                   Color="Color.Success"
+                                   OnClick="() => CompleteGoal(g.Guid)" />
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    }
+
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard Elevation="1" Style="border: 2px dashed var(--mud-palette-primary); cursor:pointer;"
+                 Class="h-100 d-flex align-items-center justify-content-center"
+                 @onclick="() => ShowAddDialog = true">
+            <MudCardContent Class="text-center">
+                <MudIcon Icon="@Icons.Material.Filled.AddCircleOutline" Color="Color.Primary" Style="font-size:3rem;" />
+                <MudText Typo="Typo.body1" Color="Color.Primary" Class="mt-2">Add New Goal</MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@if (CompletedGoals.Any())
+{
+    <MudExpansionPanels Class="mt-6">
+        <MudExpansionPanel Text="@($"Completed Goals ({CompletedGoals.Count})")">
+            <MudList T="Goal" Dense="true">
+                @foreach (var g in CompletedGoals)
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                        <MudText Typo="Typo.body2" Class="text-decoration-line-through">@g.GoalText</MudText>
+                    </MudListItem>
+                }
+            </MudList>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+}
+
+@* Add Goal Dialog *@
+<MudDialog @bind-Visible="ShowAddDialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Flag" Class="mr-2" />
+            New Goal
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="NewGoalText" Label="What's the goal?" Variant="Variant.Outlined"
+                      Lines="2" Class="mb-4" AutoFocus="true" />
+        <MudTextField @bind-Value="NewMeasurableOutcome" Label="How will you measure success? (optional)"
+                      Variant="Variant.Outlined" HelperText="e.g. Read 10 books, Tie shoes independently" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => ShowAddDialog = false">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddGoal">Add Goal</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private string? AccountGuid;
+    private List<Goal> ActiveGoals = [];
+    private List<Goal> CompletedGoals = [];
+    private Dictionary<string, int> ProgressCounts = new();
+    private bool ShowAddDialog;
+    private string NewGoalText = string.Empty;
+    private string? NewMeasurableOutcome;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
+        if (AccountGuid is null) return;
+        await LoadGoals();
+    }
+
+    private async Task LoadGoals()
+    {
+        var goals = await Db.Goals
+            .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null)
+            .OrderByDescending(g => g.EnteredDate)
+            .ToListAsync();
+
+        ActiveGoals = goals.Where(g => g.CompletionDate == null).ToList();
+        CompletedGoals = goals.Where(g => g.CompletionDate != null).ToList();
+
+        var guids = ActiveGoals.Select(g => g.Guid).ToList();
+        ProgressCounts = await Db.GoalProgresses
+            .Where(p => guids.Contains(p.GoalFk) && p.DeletedAt == null)
+            .GroupBy(p => p.GoalFk)
+            .Select(grp => new { GoalFk = grp.Key, Count = grp.Count() })
+            .ToDictionaryAsync(x => x.GoalFk, x => x.Count);
+    }
+
+    private async Task AddGoal()
+    {
+        var text = NewGoalText.Trim();
+        if (string.IsNullOrWhiteSpace(text)) return;
+
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        Db.Goals.Add(new Goal
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = AccountGuid!,
+            GoalText = text,
+            MeasurableOutcome = string.IsNullOrWhiteSpace(NewMeasurableOutcome) ? null : NewMeasurableOutcome.Trim(),
+            EnteredDate = now,
+            UpdatedOn = now
+        });
+        await Db.SaveChangesAsync();
+
+        NewGoalText = string.Empty;
+        NewMeasurableOutcome = null;
+        ShowAddDialog = false;
+        Snackbar.Add("Goal added!", Severity.Success);
+        await LoadGoals();
+    }
+
+    private async Task CompleteGoal(string guid)
+    {
+        var goal = await Db.Goals.FirstOrDefaultAsync(g => g.Guid == guid && g.AccountFk == AccountGuid);
+        if (goal is null) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        goal.CompletionDate = now;
+        goal.UpdatedOn = now;
+        await Db.SaveChangesAsync();
+        Snackbar.Add("🎉 Goal completed!", Severity.Success);
+        await LoadGoals();
+    }
+}
