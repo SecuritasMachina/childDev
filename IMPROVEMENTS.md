@@ -3768,6 +3768,21 @@ All 4 sync endpoints: if any record has `UpdatedOn > now + 300_000ms` (5 min), r
 
 ---
 
+## 2026-05-17 — Soft-delete tombstone validation tests: Journal, Goal, Todo (iter 293)
+
+**Branch:** `improve/softdel-blank-field-tests-293`
+
+**What:** Added three API sync tests confirming that soft-deleted records with null required fields are accepted:
+- `JournalSyncTests.Sync_SoftDeletedRecord_BlankNotes_Accepted` — Journal tombstone with null Notes
+- `GoalSyncTests.Sync_SoftDeletedRecord_BlankGoalText_Accepted` — Goal tombstone with null GoalText
+- `TodoSyncTests.Sync_SoftDeletedRecord_BlankTitle_Accepted` — Todo tombstone with null Title
+
+**Why:** Mirrors `GoalProgressSyncTests.Sync_SoftDeletedRecord_BlankNextStepItems_Accepted` (iter 292). The sync endpoints correctly gate required-field validation on `DeletedAt is null`, but this contract was untested for Journal, Goal, and Todo. Mobile clients delete records by sending tombstones with cleared fields.
+
+**Impact:** 217 API tests pass (up from 214). Validation contract explicitly documented for all 4 sync entities.
+
+---
+
 ## Flagged but not implemented (requires backend coordination)
 
 **Password in URL:** `account.service.ts` `token()` method sends the password as a plain path segment in a GET request (`/token/{nickname}/{password}`). Passwords in URLs are logged by servers, proxies, and browser history. Fix requires a POST-based authentication endpoint on the backend.
