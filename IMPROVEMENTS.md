@@ -4220,6 +4220,26 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — Fix: web login always failing due to double-hashed PIN (iter 350)
+
+**What:** `Register.razor` was hashing the PIN twice: `BCrypt(BCrypt(Pin))`. `Login.razor` hashed once and called `BCrypt.Verify(BCrypt(Pin), stored)`. Because BCrypt uses random salts, `BCrypt(Pin)` at login ≠ `BCrypt(Pin)` at register — so the verification always failed. Fixed Register to store `BCrypt.HashPassword(Pin)` (single hash) and Login to verify `Pin` directly against the stored hash. Matches the mobile `AccountService` pattern.
+
+**Why:** Every web-registered account was permanently unloggable. Since login was always broken, no actual web user data is at risk from changing the hash format.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
+## 2026-05-17 — Fix: Insights page redirects to /login when not authenticated (iter 349)
+
+**What:** Replaced the `"Please log in"` text placeholder in `Insights.razor` with `Nav.NavigateTo("/login")`. Added `@inject NavigationManager Nav`.
+
+**Why:** All other authenticated pages (GoalDetail, Journal, Todos) redirect on null session; Insights was inconsistent and showed a text link instead.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Fix timezone bug in JournalPage date saving (iter 348)
 
 **What:** Replaced `new DateTimeOffset(date, TimeSpan.Zero)` with `DateTime.SpecifyKind(date, DateTimeKind.Local)` in `JournalPage.razor` for both the new-entry and edit-entry `EnteredDate` save paths.
