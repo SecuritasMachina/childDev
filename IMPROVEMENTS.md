@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 245 — API: GoalProgress sync endpoint validation tests
+
+**What changed:**
+- `GoalProgressSyncTests.cs`: Added 5 validation tests — `Sync_DuplicateGuidsInBatch_Returns422`, `Sync_FutureUpdatedOn_Returns422`, `Sync_TooManyRecords_Returns400`, `Sync_InvalidGoalFkFormat_Returns422`, `Sync_BlankNextStepItems_Returns422`.
+
+**Why:** Mirrors the Journal validation coverage added in iter 244. `InvalidGoalFkFormat` is unique to GoalProgress — the only entity that validates a foreign key GUID.
+
+**Impact:** 201 mobile tests pass. 182 API tests pass (was 177).
+
+---
+
 ## 2026-05-17 — Iteration 244 — API: Journal sync endpoint validation tests
 
 **What changed:**
