@@ -55,6 +55,28 @@ public class TodoRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task CompleteAsync_SetsUpdatedOnToCompletedAt()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var todo = new Todo
+        {
+            Guid = guid,
+            AccountFk = "account1",
+            Title = "Sync after complete",
+            UpdatedOn = 1000L
+        };
+        await _db.InsertOrReplaceAsync(todo);
+
+        await _repo.CompleteAsync(guid);
+
+        var retrieved = await _repo.GetAsync(guid);
+        Assert.NotNull(retrieved);
+        Assert.NotNull(retrieved!.CompletedAt);
+        Assert.Equal(retrieved.CompletedAt!.Value, retrieved.UpdatedOn);
+        Assert.True(retrieved.UpdatedOn > 1000L);
+    }
+
+    [Fact]
     public async Task Delete_SoftDeletes_ExcludedFromPending()
     {
         var todo = new Todo

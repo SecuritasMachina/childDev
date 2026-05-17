@@ -98,6 +98,29 @@ public class GoalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task CompleteAsync_SetsUpdatedOnToCompletionDate()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var goal = new Goal
+        {
+            Guid = guid,
+            AccountFk = "account1",
+            GoalText = "Sync after complete",
+            EnteredDate = 1000L,
+            UpdatedOn = 1000L
+        };
+        await _db.InsertOrReplaceAsync(goal);
+
+        await _repo.CompleteAsync(guid);
+
+        var retrieved = await _repo.GetAsync(guid);
+        Assert.NotNull(retrieved);
+        Assert.NotNull(retrieved!.CompletionDate);
+        Assert.Equal(retrieved.CompletionDate!.Value, retrieved.UpdatedOn);
+        Assert.True(retrieved.UpdatedOn > 1000L);
+    }
+
+    [Fact]
     public async Task GetModifiedSince_ReturnsOnlyNewerRecords()
     {
         var accountId = System.Guid.NewGuid().ToString();
