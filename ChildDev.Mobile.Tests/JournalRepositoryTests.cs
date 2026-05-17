@@ -425,4 +425,54 @@ public class JournalRepositoryTests : IDisposable
         Assert.NotNull(retrieved);
         Assert.NotNull(retrieved!.DeletedAt);
     }
+
+    [Fact]
+    public async Task GetRecentAsync_ReturnsOnlyRequestedCount()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        for (int i = 0; i < 5; i++)
+            await _db.InsertOrReplaceAsync(new Journal
+            {
+                Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId,
+                Notes = $"entry {i}", EnteredDate = now + i, UpdatedOn = now + i
+            });
+
+        var recent = await _repo.GetRecentAsync(accountId, 3);
+
+        Assert.Equal(3, recent.Count);
+    }
+
+    [Fact]
+    public async Task GetRecentAsync_ReturnsMostRecentByEnteredDate()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "oldest", EnteredDate = now, UpdatedOn = now });
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "newest", EnteredDate = now + 2000, UpdatedOn = now + 2000 });
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "middle", EnteredDate = now + 1000, UpdatedOn = now + 1000 });
+
+        var recent = await _repo.GetRecentAsync(accountId, 2);
+
+        Assert.Equal(2, recent.Count);
+        Assert.Equal("newest", recent[0].Notes);
+        Assert.Equal("middle", recent[1].Notes);
+    }
+
+    [Fact]
+    public async Task GetRecentAsync_ExcludesSoftDeletedEntries()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "visible", EnteredDate = now, UpdatedOn = now });
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "deleted", EnteredDate = now + 1000, UpdatedOn = now + 1000, DeletedAt = now + 1000 });
+
+        var recent = await _repo.GetRecentAsync(accountId, 5);
+
+        Assert.Single(recent);
+        Assert.Equal("visible", recent[0].Notes);
+    }
 }

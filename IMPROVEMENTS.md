@@ -4220,6 +4220,16 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — Mobile: GetRecentAsync on JournalRepository + dashboard optimization (iter 338)
+
+**What:** Added `GetRecentAsync(accountFk, count)` to `JournalRepository` — fetches only N most recent entries at the DB layer. `DashboardViewModel` now uses `GetRecentAsync(account.Guid, 3)` instead of `GetAllActiveAsync(...).Take(3)`. Added 3 tests: count limit, sort by EnteredDate descending, excludes soft-deleted entries.
+
+**Why:** `GetAllActiveAsync` loads all journal entries into memory then discards everything after the third. For a caregiver who has used the app for 2+ years, this could be hundreds of rows fetched for no reason. Pushing the LIMIT to the DB layer eliminates the wasteful load.
+
+**Impact:** 235 mobile tests (up from 232). Build clean.
+
+---
+
 ## 2026-05-17 — Web home: onboarding alert for users with no goals (iter 337)
 
 **What:** When a logged-in user has no active goals and no search filter applied, a MudAlert info banner appears above the goals grid explaining the app's core concept ("Goals are the heart of ChildDev...") and nudging them to add the first goal.

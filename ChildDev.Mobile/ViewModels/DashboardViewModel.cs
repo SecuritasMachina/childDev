@@ -59,8 +59,8 @@ public partial class DashboardViewModel(
 
     private async Task RefreshDataAsync(Account account)
     {
-        var journals = await journalRepo.GetAllActiveAsync(account.Guid);
-        RecentJournals = new ObservableCollection<Journal>(journals.Take(3));
+        var journals = await journalRepo.GetRecentAsync(account.Guid, 3);
+        RecentJournals = new ObservableCollection<Journal>(journals);
 
         var goals = await goalRepo.GetAllActiveAsync(account.Guid);
         var activeGoals = goals.Where(g => g.CompletionDate is null).ToList();
@@ -149,8 +149,8 @@ public partial class DashboardViewModel(
         QuickJournalSaved = true;
         await Task.Delay(1500);
         QuickJournalSaved = false;
-        var journals = await journalRepo.GetAllActiveAsync(account.Guid);
-        RecentJournals = new ObservableCollection<Journal>(journals.Take(3));
+        var journals = await journalRepo.GetRecentAsync(account.Guid, 3);
+        RecentJournals = new ObservableCollection<Journal>(journals);
     }
 
     [RelayCommand]

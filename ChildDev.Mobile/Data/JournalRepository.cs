@@ -26,6 +26,13 @@ public class JournalRepository(SQLiteAsyncConnection db)
           .OrderByDescending(j => j.EnteredDate)
           .ToListAsync();
 
+    public Task<List<Journal>> GetRecentAsync(string accountFk, int count) =>
+        db.Table<Journal>()
+          .Where(j => j.AccountFk == accountFk && j.DeletedAt == null)
+          .OrderByDescending(j => j.EnteredDate)
+          .Take(count)
+          .ToListAsync();
+
     public async Task<Journal?> GetAsync(string guid) =>
         await db.FindAsync<Journal>(guid);
 
