@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 81 — API: Separate GoalText/MeasurableOutcome length validation messages
+
+**What changed:**
+- `GoalEndpoints.cs`: Split the combined `r.GoalText?.Length > 2_000 || r.MeasurableOutcome?.Length > 2_000` check into two sequential checks, each returning a distinct 422 message naming the specific field.
+- `SyncInputValidationTests.cs`: Added `Sync_Goal_MeasurableOutcomeTooLong_Returns422` and `Sync_GoalProgress_NextStepItemsTooLong_Returns422` Fact tests.
+
+**Why:** A single combined error "GoalText and MeasurableOutcome must not exceed 2000 characters" didn't tell the caller which field failed. Separate messages follow the same pattern as all other single-field validations in the API.
+
+**Impact:** 25 mobile tests pass. 61 API tests pass (up from 59).
+
+---
+
 ## 2026-05-16 — Iteration 80 — Bug fix: TodoListViewModel UpdateOverdueCount used filtered collection
 
 **What changed:**
