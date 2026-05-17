@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 185 — Mobile: Comprehensive 4-record mixed active/completed goal ordering
+
+**What changed:**
+- `GoalRepositoryTests.cs`: Added `GetAllActiveAsync_MixedActiveAndCompletedGoals_CorrectOrdering` — inserts 2 active + 2 completed goals with distinct EnteredDates in shuffled insertion order, asserts result is [newer_active, older_active, newer_completed, older_completed].
+
+**Why:** Existing ordering tests covered only partial scenarios: 2-record active-before-completed (iter 58-73), 2-active DESC (iter 227-241), 3-active DESC, 2-completed DESC. None tested the full 4-record `ORDER BY (CompletionDate IS NOT NULL), EnteredDate DESC` with both partition groups populated simultaneously. A bug that put completed-newer before active-older would pass all existing tests but fail this one.
+
+**Impact:** 141 mobile tests pass (was 140). 153 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 184 — Mobile: SyncService overwrites existing local Goal, Todo, GoalProgress
 
 **What changed:**
