@@ -621,6 +621,53 @@ public class SyncServiceTests : IDisposable
         Assert.NotNull(stored);
         Assert.Equal(deletedAt, stored!.DeletedAt);
     }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsDeletedTodo_DeletedAtPropagatedLocally()
+    {
+        await _accountService.CreateAccountAsync("user24", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var deletedAt = 5_000_000L;
+        var serverTodo = new TodoSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, null,
+            null, null, null, deletedAt, deletedAt);
+
+        var handler = new FakeTodoSyncHandler(serverTodo);
+        var service = BuildSyncService(handler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var stored = await _db.FindAsync<Todo>(serverTodo.Guid);
+        Assert.NotNull(stored);
+        Assert.Equal(deletedAt, stored!.DeletedAt);
+    }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsDeletedGoalProgress_DeletedAtPropagatedLocally()
+    {
+        await _accountService.CreateAccountAsync("user25", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var deletedAt = 5_000_000L;
+        var goalFk = System.Guid.NewGuid().ToString();
+        var serverProgress = new GoalProgressSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, goalFk,
+            null, null, deletedAt, deletedAt);
+
+        var handler = new FakeGoalProgressSyncHandler(serverProgress);
+        var service = BuildSyncService(handler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var stored = await _db.FindAsync<GoalProgress>(serverProgress.Guid);
+        Assert.NotNull(stored);
+        Assert.Equal(deletedAt, stored!.DeletedAt);
+    }
 }
 
 // Test helpers
