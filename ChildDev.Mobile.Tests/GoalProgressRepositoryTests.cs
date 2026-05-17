@@ -119,6 +119,25 @@ public class GoalProgressRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task DeleteForGoal_SoftDeletesAllProgressForThatGoal()
+    {
+        var goalFk = System.Guid.NewGuid().ToString();
+        var otherGoalFk = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _repo.SaveAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = "account1", GoalFk = goalFk, NextStepItems = "step A", UpdatedOn = now });
+        await _repo.SaveAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = "account1", GoalFk = goalFk, NextStepItems = "step B", UpdatedOn = now });
+        await _repo.SaveAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = "account1", GoalFk = otherGoalFk, NextStepItems = "other", UpdatedOn = now });
+
+        await _repo.DeleteForGoalAsync(goalFk);
+
+        var deletedItems = await _repo.GetForGoalAsync(goalFk);
+        var otherItems = await _repo.GetForGoalAsync(otherGoalFk);
+        Assert.Empty(deletedItems);
+        Assert.Single(otherItems);
+    }
+
+    [Fact]
     public async Task UpsertFromSync_OverwritesExistingRecord()
     {
         var guid = System.Guid.NewGuid().ToString();

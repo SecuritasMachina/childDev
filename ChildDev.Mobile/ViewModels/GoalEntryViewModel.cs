@@ -118,6 +118,7 @@ public partial class GoalEntryViewModel(
     {
         if (string.IsNullOrEmpty(Guid)) return;
         await repo.DeleteAsync(Guid);
+        await progressRepo.DeleteForGoalAsync(Guid);
         await Shell.Current.GoToAsync("..");
     }
 }

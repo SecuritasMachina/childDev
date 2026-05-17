@@ -32,6 +32,20 @@ public class GoalProgressRepository(SQLiteAsyncConnection db)
           .Where(p => p.AccountFk == accountFk && p.UpdatedOn > since)
           .ToListAsync();
 
+    public async Task DeleteForGoalAsync(string goalFk)
+    {
+        var items = await db.Table<GoalProgress>()
+            .Where(p => p.GoalFk == goalFk && p.DeletedAt == null)
+            .ToListAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        foreach (var item in items)
+        {
+            item.DeletedAt = now;
+            item.UpdatedOn = now;
+            await db.UpdateAsync(item);
+        }
+    }
+
     public Task UpsertFromSyncAsync(GoalProgress progress) =>
         db.InsertOrReplaceAsync(progress);
 }
