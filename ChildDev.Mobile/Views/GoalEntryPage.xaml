@@ -17,6 +17,8 @@
                    FontSize="11" TextColor="Gray" HorizontalOptions="End" />
             <Label Text="Measurable Outcome" />
             <Entry Text="{Binding MeasurableOutcome}" Placeholder="How will you know it's achieved?" />
+            <Label Text="{Binding MeasurableOutcomeLength, StringFormat='{0} characters'}"
+                   FontSize="11" TextColor="Gray" HorizontalOptions="End" />
             <Label Text="Next Steps" />
             <Editor Text="{Binding NextStepItems}" HeightRequest="80" AutoSize="TextChanges" />
             <Label Text="Next Meeting Date" />
