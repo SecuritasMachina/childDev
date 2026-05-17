@@ -11,6 +11,7 @@ public static class JournalEndpoints
 {
     public static void MapJournalEndpoints(this WebApplication app)
     {
+        var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("sync.journal");
         app.MapPost("/api/sync/journal", async (
             SyncRequest<JournalDto> req,
             ClaimsPrincipal user,
@@ -45,6 +46,8 @@ public static class JournalEndpoints
                 .Select(j => EntityToDto(j))
                 .ToListAsync();
 
+            logger.LogDebug("sync/journal account={Account} incoming={Incoming} delta={Delta}",
+                accountGuid[..8], req.Records.Count, delta.Count);
             return Results.Ok(new SyncResponse<JournalDto>(delta));
         }).RequireAuthorization();
     }
