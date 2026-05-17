@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 122 — API Tests: Field-length validation tests for sync endpoints
+
+**What changed:**
+- `SyncInputValidationTests.cs`: Added 7 tests covering field-length validation branches that existed in the endpoint code but had no test coverage: `Sync_Journal_NotesTooLong_Returns422` (> 10000), `Sync_Journal_ActivityTooLong_Returns422` (> 255), `Sync_Journal_MoodTooLong_Returns422` (> 50), `Sync_Journal_TagsTooLong_Returns422` (> 500), `Sync_Goal_GoalTextTooLong_Returns422` (> 2000), `Sync_Todo_TitleTooLong_Returns422` (> 500), `Sync_Todo_NotesTooLong_Returns422` (> 2000).
+
+**Why:** All 7 validation branches existed in the endpoint handlers (JournalEndpoints, GoalEndpoints, TodoEndpoints) but were completely untested. A regression in any of these limits would silently let oversized payloads through. The fresh brainstorm audit of `SyncInputValidationTests.cs` against the endpoint validation code confirmed these as the only remaining coverage gaps.
+
+**Impact:** 44 mobile tests pass. 100 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 121 — Mobile: Error handling in SettingsViewModel.LoadAsync
 
 **What changed:**
