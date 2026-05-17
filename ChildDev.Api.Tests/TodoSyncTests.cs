@@ -378,6 +378,29 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Sync_Notes_CanBeClearedByClient_ViaNewerUpdate()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_notes_clear");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Store todo with Notes set
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, "Task", "Some detail", null, null, ts, null)], 0));
+
+        // Client sends newer UpdatedOn with Notes = null — LWW must clear it
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, "Task", null, null, null, ts + 1000, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+
+        var stored = body!.Records.Single(r => r.Guid == guid);
+        Assert.Null(stored.Notes);
+    }
+
+    [Fact]
     public async Task Sync_DueDate_CanBeClearedByClient_ViaNewerUpdate()
     {
         var (jwt, accountGuid) = await RegisterAsync("tsync_due_clear");

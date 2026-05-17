@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 207 — API: TodoSync Notes can be cleared via LWW update
+
+**What changed:**
+- `TodoSyncTests.cs`: Added `Sync_Notes_CanBeClearedByClient_ViaNewerUpdate` — stores a todo with Notes="Some detail", then sends a newer-UpdatedOn update with Notes=null, asserts stored Notes is null.
+
+**Why:** `Sync_OptionalFieldsRoundTrip` only verifies that Notes persists on initial insert (through `DtoToEntity`). The LWW update path (`ApplyDto`) assigns `e.Notes = dto.Notes` which is untested for the null-clear direction. If this line were accidentally removed, Notes could never be cleared. Mirrors iter 206's gap for MeasurableOutcome.
+
+**Impact:** 159 API tests pass (was 158). 159 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 206 — API: Goal MeasurableOutcome can be cleared via LWW update
 
 **What changed:**
