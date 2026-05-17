@@ -60,6 +60,11 @@ else
     }
 }
 
+@if (!PendingTodos.Any() && AllPendingTodos.Any())
+{
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">No todos matching the current filter.</MudText>
+}
+
 <MudList T="Todo" Dense="false">
     @foreach (var t in PendingTodos)
     {
