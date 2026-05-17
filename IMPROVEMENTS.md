@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 94 — Mobile: Show Activity/Mood/Tags character counts in JournalEntry
+
+**What changed:**
+- `JournalEntryViewModel.cs`: Added `ActivityLength`, `MoodLength`, `TagsLength` observables and `OnActivityChanged`, `OnMoodChanged`, `OnTagsChanged` partials.
+- `JournalEntryPage.xaml`: Added small gray character count labels below each of the three Entry fields.
+
+**Why:** Closes the last gap in entry-form length feedback. Activity (255), Mood (50), and Tags (500) all have DB-level MaxLength limits that are now made visible to users.
+
+**Impact:** 25 mobile tests pass. 72 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 93 — API: Log warning when sync records have mismatched AccountFk
 
 **What changed:**
