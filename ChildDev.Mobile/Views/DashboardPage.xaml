@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:models="clr-namespace:ChildDev.Mobile.Models"
+             xmlns:vm="clr-namespace:ChildDev.Mobile.ViewModels"
              x:Class="ChildDev.Mobile.Views.DashboardPage"
              Title="Dashboard">
     <ContentPage.ToolbarItems>
@@ -50,6 +51,11 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Journal">
                         <Border Padding="12" Margin="0,4" StrokeShape="RoundRectangle 8">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DashboardViewModel}}, Path=OpenJournalCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
                             <Grid ColumnDefinitions="*,Auto">
                                 <Label Text="{Binding Notes}" LineBreakMode="TailTruncation" MaxLines="2" />
                                 <Label Grid.Column="1"
