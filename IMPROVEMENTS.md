@@ -1,5 +1,29 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 71 Brainstorm (fresh — every 3rd)
+
+| # | Description | Dim | Impact | Effort | Risk |
+|---|-------------|-----|--------|--------|------|
+| 1 | Mobile: GoalEntry — trim GoalText/MeasurableOutcome before save (mirrors JournalEntry) | Bug | Medium | XS | Low | **SELECTED** |
+| 2 | API: Reject Todo sync records where Title is blank | Quality | Small | XS | Low | |
+| 3 | Mobile: GoalList footer — split "N active / M completed" count | UI | Small | XS | Low | |
+| 4 | API: X-Request-ID logging middleware for per-request correlation | Observ. | Medium | S | Low | |
+| 5 | Mobile: SyncService — dedicated short-timeout health check | Quality | Small | S | Low | |
+| 6 | Mobile: JournalEntry — show EnteredDate picker for new entries | UX | Small | S | Low | |
+| 7 | API: GoalProgress — validate NextStepItems not blank for non-deleted records | Quality | Small | XS | Low | |
+| 8 | Mobile: TodoList — show overdue count in footer alongside pending count | UI | Small | XS | Low | |
+
+## 2026-05-16 — Iteration 71 — Mobile: Trim GoalText/MeasurableOutcome before saving GoalEntry
+
+**What changed:**
+- `GoalEntryViewModel.cs`: `goal.GoalText = GoalText` → `GoalText.Trim()`; `goal.MeasurableOutcome = MeasurableOutcome` → null when blank, trimmed otherwise. Mirrors the fix applied to JournalEntry in iteration 60.
+
+**Why:** Leading/trailing whitespace in GoalText would cause the goal to display with a leading space in GoalList, and pass the API's blank-text check since the server trims before `IsNullOrWhiteSpace`. The client should be consistent.
+
+**Impact:** 25 mobile tests pass (0 warnings). 55 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 70 — Mobile: Word count in JournalEntry (was character count)
 
 **What changed:**
