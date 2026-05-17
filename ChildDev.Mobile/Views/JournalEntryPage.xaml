@@ -19,6 +19,9 @@
             <Entry Text="{Binding Mood}" Placeholder="e.g. Happy, Focused" />
             <Label Text="Tags" />
             <Entry Text="{Binding Tags}" Placeholder="comma-separated" />
+            <Button Text="Delete Entry" Command="{Binding DeleteCommand}"
+                    BackgroundColor="Red" TextColor="White"
+                    IsVisible="{Binding IsExisting}" Margin="0,8,0,0" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
