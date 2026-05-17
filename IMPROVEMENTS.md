@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 249 — Mobile: SyncService releases _syncing lock after partial entity failure
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_PartialFailure_ReleasesLockSoSubsequentSyncCanRun` (user79) — runs sync with `GoalFailureHandler` (journal succeeds, goal always 500s → Failed), then immediately runs sync again and asserts the second run also returns `Failed` (proving it actually executed, not returned early from the concurrent-call guard).
+
+**Why:** The existing `FailedSync_ReleasesLockSoSubsequentSyncCanRun` test only checks the all-entities-fail case. The partial-failure case (some entities succeed, later one fails) also goes through the `finally { Interlocked.Exchange(ref _syncing, 0); }` block, but this was untested. A refactor that broke the finally block for partial failures would pass the existing tests.
+
+**Impact:** 204 mobile tests pass (was 203). 192 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 248 — Mobile: SyncService returns Failed on 401/403 entity sync response
 
 **What changed:**
