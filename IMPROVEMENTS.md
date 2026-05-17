@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 177 — API: Journal EnteredDate is mutable on LWW overwrite
+
+**What changed:**
+- `JournalSyncTests.cs`: Added `Sync_EnteredDate_UpdatedByClient_OnLWWOverwrite` — stores a journal with EnteredDate=T1, then sends same Guid with EnteredDate=T2 and a newer UpdatedOn; asserts the delta shows the updated EnteredDate=T2.
+
+**Why:** Iter 176 documented that Goal's `EnteredDate` is immutable (creation date locked). Journal's `EnteredDate` is intentionally mutable — users can retroactively correct the date of a journal entry. `JournalEndpoints.ApplyDto` includes `entity.EnteredDate = dto.EnteredDate`, so this works by design. Without a test, the distinction is undocumented, and a developer could accidentally "fix" Journal to match Goal's behavior and break date correction. The test pair (iter 176 for Goal, iter 177 for Journal) documents the intentional asymmetry.
+
+**Impact:** 143 API tests pass (was 142). 136 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 176 — API: Goal EnteredDate is immutable on LWW overwrite
 
 **What changed:**
