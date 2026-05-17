@@ -243,6 +243,23 @@ public class GoalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetModifiedSinceAsync_ExcludesRecordsWithZeroUpdatedOn()
+    {
+        // UpdatedOn = 0 is an invalid sentinel (means never modified). The strict-greater-than
+        // comparison ensures such records are never uploaded, even on initial sync (since = 0).
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalText = "zero updatedOn", EnteredDate = now, UpdatedOn = 0 });
+        await _db.InsertOrReplaceAsync(new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalText = "normal", EnteredDate = now, UpdatedOn = now });
+
+        var results = await _repo.GetModifiedSinceAsync(accountId, 0);
+
+        Assert.Single(results);
+        Assert.Equal("normal", results[0].GoalText);
+    }
+
+    [Fact]
     public async Task GetAllActiveAsync_OrdersActiveGoalsByEnteredDateDescending()
     {
         var accountId = System.Guid.NewGuid().ToString();
