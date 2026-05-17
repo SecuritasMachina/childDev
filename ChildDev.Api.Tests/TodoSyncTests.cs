@@ -266,4 +266,26 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Equal(t2, body.Records[1].UpdatedOn);
         Assert.Equal(t3, body.Records[2].UpdatedOn);
     }
+
+    [Fact]
+    public async Task Sync_TieOnUpdatedOn_ServerVersionWins()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_tie");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, "Server version", null, null, null, ts, null)], 0));
+
+        // Same UpdatedOn, different content — strict > means server keeps its version
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, "Client version", null, null, null, ts, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+
+        var stored = body!.Records.Single(r => r.Guid == guid);
+        Assert.Equal("Server version", stored.Title);
+    }
 }

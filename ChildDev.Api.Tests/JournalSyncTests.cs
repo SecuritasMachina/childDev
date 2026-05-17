@@ -257,4 +257,26 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.Contains(body!.Records, r => r.Guid == guid);
     }
+
+    [Fact]
+    public async Task Sync_TieOnUpdatedOn_ServerVersionWins()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("jsync_tie");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "Server version", null, null, null, ts, ts, null)], 0));
+
+        // Same UpdatedOn, different content — strict > means server keeps its version
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "Client version", null, null, null, ts, ts, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
+
+        var stored = body!.Records.Single(r => r.Guid == guid);
+        Assert.Equal("Server version", stored.Notes);
+    }
 }
