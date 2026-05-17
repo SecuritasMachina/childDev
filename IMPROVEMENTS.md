@@ -1,5 +1,19 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 175 — Mobile: UpsertFromSyncAsync persists all optional fields for all 4 repos
+
+**What changed:**
+- `JournalRepositoryTests.cs`: Added `UpsertFromSyncAsync_PersistsAllOptionalFields` — verifies Activity, Mood, Tags survive the `UpsertFromSyncAsync` path.
+- `GoalRepositoryTests.cs`: Added `UpsertFromSyncAsync_PersistsAllOptionalFields` — verifies MeasurableOutcome, NextMeetingDate, ExpirationDate.
+- `GoalProgressRepositoryTests.cs`: Added `UpsertFromSyncAsync_PersistsAllOptionalFields` — verifies NextStepItems and NextMeetingDate.
+- `TodoRepositoryTests.cs`: Added `UpsertFromSyncAsync_PersistsAllOptionalFields` — verifies Notes and DueDate.
+
+**Why:** Iter 173 added `SaveAsync_PersistsAllOptionalFields` tests (the local-edit path). `UpsertFromSyncAsync` is the distinct inbound-sync path — it calls `InsertOrReplaceAsync` directly without going through `SaveAsync`. If a field were accidentally dropped from the model or a column mapping missed, these tests catch it on the sync path, not just the save path.
+
+**Impact:** 136 mobile tests pass (was 132). 141 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 174 — API: LastSyncAt upper-bound empty delta for Goal, GoalProgress, Todo
 
 **What changed:**
