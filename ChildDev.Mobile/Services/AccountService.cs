@@ -32,8 +32,7 @@ public class AccountService(SQLiteAsyncConnection db)
     {
         var account = await GetAccountAsync();
         if (account is null) return;
-        account.LastSyncAt = timestamp;
-        await db.UpdateAsync(account);
+        await db.ExecuteAsync("UPDATE Account SET LastSyncAt = ? WHERE Guid = ?", timestamp, account.Guid);
     }
 
     public async Task SaveServerCredentialsAsync(string jwt, string serverUrl)
