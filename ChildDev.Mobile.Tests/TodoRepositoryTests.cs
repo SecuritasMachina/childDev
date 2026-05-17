@@ -262,4 +262,34 @@ public class TodoRepositoryTests : IDisposable
         Assert.Single(results);
         Assert.Equal("mine", results[0].Title);
     }
+
+    [Fact]
+    public async Task GetAllActiveAsync_OrdersByUpdatedOnDescending()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var tOlder = DateTimeOffset.UtcNow.AddSeconds(-5).ToUnixTimeMilliseconds();
+        var tNewer = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "older", UpdatedOn = tOlder });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "newer", UpdatedOn = tNewer });
+
+        var all = await _repo.GetAllActiveAsync(accountId);
+
+        Assert.Equal(2, all.Count);
+        Assert.Equal("newer", all[0].Title);
+        Assert.Equal("older", all[1].Title);
+    }
+
+    [Fact]
+    public async Task GetCompletedCountAsync_WhenNone_ReturnsZero()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "pending", UpdatedOn = now });
+
+        var count = await _repo.GetCompletedCountAsync(accountId);
+
+        Assert.Equal(0, count);
+    }
 }
