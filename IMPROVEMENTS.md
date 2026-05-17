@@ -2,6 +2,20 @@
 
 ---
 
+## 2026-05-17 — Test + refactor: GoalProgress upload, dead code, null-steps info (iters 383–385)
+
+**Files:** `ChildDev.Mobile.Tests/SyncServiceTests.cs`, `ChildDev.Mobile/Data/GoalProgressRepository.cs`, `ChildDev.Mobile.Tests/GoalProgressRepositoryTests.cs`
+
+**Iter 383:** Added `RunAsync_LocalGoalProgress_NullNextStepsMeetingDateOnly_IncludedInUploadRequest` — the upload counterpart to iter 379's receive test. Confirms that meeting-date-only GoalProgress records (null `NextStepItems`) are correctly serialized and sent to the server during sync.
+
+**Iter 384:** Removed `GetLatestNextStepsAsync` from `GoalProgressRepository` and its 5 tests. The method was superseded by `GetLatestProgressInfoAsync` and had no callers outside tests.
+
+**Iter 385:** Added `GetLatestProgressInfoAsync_NullNextStepsLatest_ReturnsNullStepsWithCorrectTimestamp` — verifies that when the most recent progress for a goal is a meeting-date-only entry (null `NextStepItems`), `GetLatestProgressInfoAsync` returns null for `Steps` and the correct (newest) `UpdatedOn`. This property is relied on by both `DashboardViewModel` and `GoalListViewModel`.
+
+**Impact:** 242 mobile tests (was 246 before dead-code removal; net -4 tests removed, +3 new tests added) — all passing.
+
+---
+
 ## 2026-05-17 — Fix: today's meeting date not pre-filled in Add Progress dialog (iter 381) + refactor ApplyFilter (iter 382)
 
 **Files:** `ChildDev.Api/Components/Pages/GoalDetail.razor`, `ChildDev.Api/Components/Pages/Todos.razor`

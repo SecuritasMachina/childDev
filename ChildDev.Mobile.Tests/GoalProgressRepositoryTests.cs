@@ -460,4 +460,29 @@ public class GoalProgressRepositoryTests : IDisposable
 
         Assert.False(info.ContainsKey(goalFk));
     }
+
+    [Fact]
+    public async Task GetLatestProgressInfoAsync_NullNextStepsLatest_ReturnsNullStepsWithCorrectTimestamp()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var goalFk = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalFk = goalFk,
+            NextStepItems = "prior steps", UpdatedOn = now - 5000
+        });
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalFk = goalFk,
+            NextStepItems = null, NextMeetingDate = now + 86_400_000L, UpdatedOn = now
+        });
+
+        var info = await _repo.GetLatestProgressInfoAsync(accountId);
+
+        Assert.True(info.ContainsKey(goalFk));
+        Assert.Null(info[goalFk].Steps);
+        Assert.Equal(now, info[goalFk].UpdatedOn);
+    }
 }
