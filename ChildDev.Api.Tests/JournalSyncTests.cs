@@ -299,6 +299,31 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Sync_BatchWithMixedAccountFk_ValidRecordStoredInvalidSkipped()
+    {
+        var (jwt1, accountGuid1) = await RegisterAsync("jsync_mixed_fk1");
+        var (_, accountGuid2) = await RegisterAsync("jsync_mixed_fk2");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt1);
+
+        var validGuid = Guid.NewGuid().ToString();
+        var intruderGuid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Batch contains one valid record (correct AccountFk) and one intruder (wrong AccountFk)
+        await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([
+            new JournalDto(validGuid, accountGuid1, "my note", null, null, null, ts, ts, null),
+            new JournalDto(intruderGuid, accountGuid2, "intruder", null, null, null, ts, ts, null)
+        ], 0));
+
+        // Account1 delta: valid record stored, intruder skipped
+        var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
+
+        Assert.Contains(body!.Records, r => r.Guid == validGuid);
+        Assert.DoesNotContain(body.Records, r => r.Guid == intruderGuid);
+    }
+
+    [Fact]
     public async Task Sync_SoftDeleted_CanBeRestoredByClient_ViaNewerUpdate()
     {
         var (jwt, accountGuid) = await RegisterAsync("jsync_restore");
