@@ -122,4 +122,23 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var body = await syncResponse.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
         Assert.DoesNotContain(body!.Records, r => r.Guid == intruderGuid);
     }
+
+    [Fact]
+    public async Task Sync_SoftDelete_DeletedAtPropagatedInDelta()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("jsync_del1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "to delete", null, null, null, ts, ts, null)], 0));
+        var deletedAt = ts + 1000;
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, null, null, null, null, ts, ts + 1000, deletedAt)], 0));
+        var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
+        var deleted = body!.Records.FirstOrDefault(r => r.Guid == guid);
+        Assert.NotNull(deleted);
+        Assert.Equal(deletedAt, deleted.DeletedAt);
+    }
 }

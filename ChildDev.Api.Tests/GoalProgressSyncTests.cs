@@ -59,6 +59,23 @@ public class GoalProgressSyncTests(ApiFactory factory) : IClassFixture<ApiFactor
     }
 
     [Fact]
+    public async Task Sync_ServerWinsWhenNewerUpdatedOn()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_lww2");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var goalGuid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(guid, accountGuid, goalGuid, "server-wins", null, ts + 2000, null)], 0));
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(guid, accountGuid, goalGuid, "client-stale", null, ts + 1000, null)], 0));
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalProgressDto>>();
+        Assert.Equal("server-wins", body!.Records[0].NextStepItems);
+    }
+
+    [Fact]
     public async Task Sync_DeltaFiltering_OnlyReturnsRecordsNewerThanLastSyncAt()
     {
         var (jwt, accountGuid) = await RegisterAsync("gpsync_delta1");
