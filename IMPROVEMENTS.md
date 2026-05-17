@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 248 — Mobile: SyncService returns Failed on 401/403 entity sync response
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_Server401OnEntitySync_ReturnsFailed` (user77) and `RunAsync_Server403OnEntitySync_ReturnsFailed` (user78), plus `EntitySync401Handler` and `EntitySync403Handler` helper classes.
+
+**Why:** When an entity sync endpoint returns 401 (expired JWT) or 403 (forbidden), `EnsureSuccessStatusCode()` throws and the outer catch returns `Failed`. Neither status was tested — a refactor that changed the exception handling path would have silently changed the return value.
+
+**Impact:** 203 mobile tests pass (was 201). 192 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 247 — API: Goal sync endpoint validation tests
 
 **What changed:**
