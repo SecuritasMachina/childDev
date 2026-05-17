@@ -1,5 +1,18 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 134 — Mobile Tests: SaveAsync edit bumps UpdatedOn + GoalProgress account isolation
+
+**What changed:**
+- `GoalRepositoryTests.cs`: Added `SaveAsync_Edit_BumpsUpdatedOn` and `SaveAsync_Edit_AppearsInGetModifiedSince`.
+- `TodoRepositoryTests.cs`: Added `SaveAsync_Edit_BumpsUpdatedOn` and `SaveAsync_Edit_AppearsInGetModifiedSince`.
+- `GoalProgressRepositoryTests.cs`: Added `GetModifiedSinceAsync_ExcludesOtherAccounts`.
+
+**Why:** `JournalRepository` already had edit-sync tests (`SaveAsync_Edit_BumpsUpdatedOn` and `SaveAsync_Edit_AppearsInGetModifiedSince`) verifying that modifying a record via `SaveAsync` bumps `UpdatedOn` and makes it visible to `GetModifiedSinceAsync`. Goal and Todo lacked these tests despite having identical `SaveAsync` implementations — any accidental removal of the `UpdatedOn =` line in those repos would silently prevent edits from syncing. GoalProgress was also missing the account isolation test for `GetModifiedSinceAsync` that all other repos now have.
+
+**Impact:** 61 mobile tests pass (was 56). 106 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 133 — Mobile Tests: Account isolation in repository queries
 
 **What changed:**
