@@ -1,0 +1,55 @@
+services:
+  traefik:
+    image: traefik:v3.3
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8081:8080"   # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+
+  childdev-api:
+    build:
+      context: ./ChildDev.Api
+      dockerfile: Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      CHILDDEV_DB_CONNECTION: ${CHILDDEV_DB_CONNECTION:-Server=mariadb;Database=childdev;User=childdev;Password=${CHILDDEV_DB_PASSWORD:-changeme};}
+      CHILDDEV_JWT_SECRET: ${CHILDDEV_JWT_SECRET}
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.childdev.rule=Host(`${CHILDDEV_HOST:-localhost}`)"
+      - "traefik.http.routers.childdev.entrypoints=web"
+      - "traefik.http.services.childdev.loadbalancer.server.port=8080"
+
+  mariadb:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: childdev
+      MARIADB_USER: childdev
+      MARIADB_PASSWORD: ${CHILDDEV_DB_PASSWORD:-changeme}
+    volumes:
+      - childdev_mariadb:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  childdev_mariadb:
