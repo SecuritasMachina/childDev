@@ -27,17 +27,40 @@
     return;
 }
 
+<MudGrid Class="mb-6">
+    <MudItem xs="12" sm="4">
+        <MudPaper Elevation="2" Class="pa-4 text-center">
+            <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Primary" Style="font-size:2rem;" />
+            <MudText Typo="Typo.h4" Class="mt-1">@ActiveGoals.Count</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Active Goal@(ActiveGoals.Count == 1 ? "" : "s")</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="4">
+        <MudPaper Elevation="2" Class="pa-4 text-center">
+            <MudIcon Icon="@Icons.Material.Filled.CheckBox" Color="@(OverdueTodoCount > 0 ? Color.Error : Color.Primary)" Style="font-size:2rem;" />
+            <MudText Typo="Typo.h4" Class="mt-1">
+                @PendingTodoCount
+                @if (OverdueTodoCount > 0)
+                {
+                    <MudChip T="string" Color="Color.Error" Size="Size.Small" Class="ml-1">@OverdueTodoCount overdue</MudChip>
+                }
+            </MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Pending Todo@(PendingTodoCount == 1 ? "" : "s")</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="4">
+        <MudPaper Elevation="2" Class="pa-4 text-center">
+            <MudIcon Icon="@Icons.Material.Filled.Book" Color="Color.Primary" Style="font-size:2rem;" />
+            <MudText Typo="Typo.h4" Class="mt-1">@JournalThisWeek</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Journal Entr@(JournalThisWeek == 1 ? "y" : "ies") This Week</MudText>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
 <MudText Typo="Typo.h5" Class="mb-4">
     <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="mr-2" />
     My Goals
 </MudText>
-
-@if (ActiveGoals.Any())
-{
-    <MudText Typo="Typo.subtitle1" Class="mb-2" Color="Color.Secondary">
-        @ActiveGoals.Count active goal@(ActiveGoals.Count == 1 ? "" : "s")
-    </MudText>
-}
 
 <MudGrid>
     @foreach (var g in ActiveGoals)
@@ -137,13 +160,32 @@
     private bool ShowAddDialog;
     private string NewGoalText = string.Empty;
     private string? NewMeasurableOutcome;
+    private int PendingTodoCount;
+    private int OverdueTodoCount;
+    private int JournalThisWeek;
 
     protected override async Task OnInitializedAsync()
     {
         AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
         if (AccountGuid is null) return;
         await LoadGoals();
+        await LoadStats();
         await Analytics.TrackAsync("page_view", AccountGuid, "home");
+    }
+
+    private async Task LoadStats()
+    {
+        var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var todos = await Db.Todos
+            .Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt == null)
+            .Select(t => t.DueDate)
+            .ToListAsync();
+        PendingTodoCount = todos.Count;
+        OverdueTodoCount = todos.Count(d => d.HasValue && d.Value < nowMs);
+
+        var weekStartMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
+        JournalThisWeek = await Db.Journals
+            .CountAsync(j => j.AccountFk == AccountGuid && j.DeletedAt == null && j.EnteredDate >= weekStartMs);
     }
 
     private async Task LoadGoals()
