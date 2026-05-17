@@ -22,6 +22,8 @@ public partial class GoalEntryViewModel(
     [ObservableProperty] private bool isExisting;
     [ObservableProperty] private string enteredDateDisplay = string.Empty;
 
+    private string _loadedNextStepItems = string.Empty;
+
     partial void OnGuidChanged(string value)
     {
         if (!string.IsNullOrEmpty(value))
@@ -43,6 +45,7 @@ public partial class GoalEntryViewModel(
         }
         var progress = await progressRepo.GetForGoalAsync(guid);
         NextStepItems = progress.FirstOrDefault()?.NextStepItems ?? string.Empty;
+        _loadedNextStepItems = NextStepItems;
         EnteredDateDisplay = DateTimeOffset.FromUnixTimeMilliseconds(item.EnteredDate).LocalDateTime.ToString("ddd, MMM d yyyy");
         IsExisting = true;
     }
@@ -67,7 +70,7 @@ public partial class GoalEntryViewModel(
             : null;
         await repo.SaveAsync(goal);
 
-        if (!string.IsNullOrWhiteSpace(NextStepItems))
+        if (!string.IsNullOrWhiteSpace(NextStepItems) && NextStepItems != _loadedNextStepItems)
         {
             var progress = new GoalProgress
             {
