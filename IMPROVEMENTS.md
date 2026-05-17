@@ -1,5 +1,18 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 84 — API: Validate EnteredDate not in far future for Goal and Journal
+
+**What changed:**
+- `GoalEndpoints.cs`: Added check rejecting records where `EnteredDate > now + 10 years` (HTTP 422).
+- `JournalEndpoints.cs`: Same check for journal entries.
+- `SyncInputValidationTests.cs`: Added `Sync_FutureEnteredDate_Returns422` Theory covering both endpoints.
+
+**Why:** `UpdatedOn` already had a 5-minute future cap, but `EnteredDate` (user-visible entry date) had no bound. A corrupt client could persist year-9999 dates. The 10-year window matches the existing `DueDate` cap on todos.
+
+**Impact:** 25 mobile tests pass. 63 API tests pass (up from 61).
+
+---
+
 ## 2026-05-16 — Iteration 83 — Bug fix: EntryCountDisplay stale after inline Add/Delete
 
 **What changed:**
