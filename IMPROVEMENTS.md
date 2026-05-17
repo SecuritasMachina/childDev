@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 231 — Mobile: lastSyncAt verified in all four entity request bodies
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_LastSyncAt_IncludedInAllFourEntityBodies` (user66) — sets a known `LastSyncAt` on the account, runs sync via `CapturingHandler`, and asserts all four entity bodies (journal, goal, goal-progress, todo) contain that exact value.
+
+**Why:** `RunAsync_SecondSync_SendsLastSyncAtFromPriorSync` only verified the journal endpoint. If `SyncEntityAsync` were refactored and any one of the 4 entity calls accidentally dropped `lastSyncAt` from `SyncRequestDto`, the server would silently respond with full history instead of a delta, causing unnecessary data transfer and re-upload loops. This test covers all four.
+
+**Impact:** 188 mobile tests pass (was 187). 164 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 230 — Mobile: Double network failure on entity sync returns Failed
 
 **What changed:**
