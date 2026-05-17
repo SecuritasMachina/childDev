@@ -225,3 +225,107 @@ public class AccountServiceTests : IDisposable
         Assert.Equal(8_000_000L, after!.LastSyncAt);
     }
 }
+
+public class AccountServiceLinkTests : IDisposable
+{
+    private readonly SQLiteAsyncConnection _db;
+    private readonly AccountService _service;
+
+    public AccountServiceLinkTests()
+    {
+        SqliteFixture.EnsureInit();
+        _db = new SQLiteAsyncConnection(":memory:");
+        _db.CreateTableAsync<Account>().GetAwaiter().GetResult();
+        _db.CreateTableAsync<Journal>().GetAwaiter().GetResult();
+        _db.CreateTableAsync<Goal>().GetAwaiter().GetResult();
+        _db.CreateTableAsync<GoalProgress>().GetAwaiter().GetResult();
+        _db.CreateTableAsync<Todo>().GetAwaiter().GetResult();
+        _service = new AccountService(_db);
+    }
+
+    public void Dispose() => _db.CloseAsync().GetAwaiter().GetResult();
+
+    [Fact]
+    public async Task LinkToServer_SameGuid_SavesJwtAndUrl()
+    {
+        await _service.CreateAccountAsync("alice", "1234");
+        var original = await _service.GetAccountAsync();
+
+        await _service.LinkToServerAsync("test-jwt", "https://server.example.com", original!.Guid);
+
+        var account = await _service.GetAccountAsync();
+        Assert.Equal("test-jwt", account!.ServerJwt);
+        Assert.Equal("https://server.example.com", account.ServerUrl);
+        Assert.Equal(original.Guid, account.Guid);
+    }
+
+    [Fact]
+    public async Task LinkToServer_DifferentGuid_MigratesAccountGuid()
+    {
+        await _service.CreateAccountAsync("bob", "1234");
+        var oldAccount = await _service.GetAccountAsync();
+        var oldGuid = oldAccount!.Guid;
+        var newGuid = System.Guid.NewGuid().ToString();
+
+        await _service.LinkToServerAsync("my-jwt", "https://server.example.com", newGuid);
+
+        var account = await _service.GetAccountAsync();
+        Assert.NotNull(account);
+        Assert.Equal(newGuid, account!.Guid);
+        Assert.Equal("my-jwt", account.ServerJwt);
+    }
+
+    [Fact]
+    public async Task LinkToServer_DifferentGuid_MigratesJournalAccountFk()
+    {
+        await _service.CreateAccountAsync("carol", "1234");
+        var old = await _service.GetAccountAsync();
+        var oldGuid = old!.Guid;
+        var newGuid = System.Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = oldGuid, Notes = "test", EnteredDate = ts, UpdatedOn = ts });
+
+        await _service.LinkToServerAsync("jwt", "https://server.com", newGuid);
+
+        var journals = await _db.Table<Journal>().Where(j => j.AccountFk == newGuid).ToListAsync();
+        Assert.Single(journals);
+        var orphaned = await _db.Table<Journal>().Where(j => j.AccountFk == oldGuid).ToListAsync();
+        Assert.Empty(orphaned);
+    }
+
+    [Fact]
+    public async Task LinkToServer_DifferentGuid_MigratesGoalAccountFk()
+    {
+        await _service.CreateAccountAsync("dave", "1234");
+        var old = await _service.GetAccountAsync();
+        var oldGuid = old!.Guid;
+        var newGuid = System.Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertAsync(new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = oldGuid, EnteredDate = ts, UpdatedOn = ts });
+
+        await _service.LinkToServerAsync("jwt", "https://server.com", newGuid);
+
+        var goals = await _db.Table<Goal>().Where(g => g.AccountFk == newGuid).ToListAsync();
+        Assert.Single(goals);
+    }
+
+    [Fact]
+    public async Task ClearServerJwt_RemovesJwtOnly()
+    {
+        await _service.CreateAccountAsync("eve", "1234");
+        await _service.SaveServerCredentialsAsync("my-jwt", "https://server.com");
+        await _service.ClearServerJwtAsync();
+
+        var account = await _service.GetAccountAsync();
+        Assert.Null(account!.ServerJwt);
+        Assert.Equal("https://server.com", account.ServerUrl);
+    }
+
+    [Fact]
+    public async Task ClearServerJwt_WhenNoAccount_DoesNotThrow()
+    {
+        await _service.ClearServerJwtAsync();
+        var account = await _service.GetAccountAsync();
+        Assert.Null(account);
+    }
+}
