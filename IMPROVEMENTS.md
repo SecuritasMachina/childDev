@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 82 — Mobile: Extract UpdateEntryCountDisplay helper in GoalListViewModel
+
+**What changed:**
+- `GoalListViewModel.cs`: Pulled identical 4-line EntryCountDisplay computation from LoadAsync and RefreshAsync into `UpdateEntryCountDisplay()` private method.
+
+**Why:** The duplicated block was the only repeated logic in the viewmodel. Consolidating it ensures future changes to the display format only need one edit.
+
+**Impact:** 25 mobile tests pass. 61 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 81 — API: Separate GoalText/MeasurableOutcome length validation messages
 
 **What changed:**
