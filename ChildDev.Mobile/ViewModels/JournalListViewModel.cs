@@ -114,6 +114,8 @@ public partial class JournalListViewModel(
     [RelayCommand]
     private async Task DeleteAsync(Journal journal)
     {
+        var confirmed = await Shell.Current.DisplayAlert("Delete Entry?", "Remove this journal entry?", "Delete", "Cancel");
+        if (!confirmed) return;
         await repo.DeleteAsync(journal.Guid);
         _allJournals.Remove(journal);
         Journals.Remove(journal);

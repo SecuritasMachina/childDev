@@ -138,6 +138,8 @@ public partial class GoalListViewModel(
     [RelayCommand]
     private async Task DeleteAsync(Goal goal)
     {
+        var confirmed = await Shell.Current.DisplayAlert("Delete Goal?", "Remove this goal and all its progress notes?", "Delete", "Cancel");
+        if (!confirmed) return;
         await repo.DeleteAsync(goal.Guid);
         await progressRepo.DeleteForGoalAsync(goal.Guid);
         _allGoals.Remove(goal);

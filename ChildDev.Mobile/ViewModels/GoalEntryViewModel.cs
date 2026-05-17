@@ -133,6 +133,8 @@ public partial class GoalEntryViewModel(
     private async Task DeleteAsync()
     {
         if (string.IsNullOrEmpty(Guid)) return;
+        var confirmed = await Shell.Current.DisplayAlert("Delete Goal?", "Remove this goal and all its progress notes?", "Delete", "Cancel");
+        if (!confirmed) return;
         await repo.DeleteAsync(Guid);
         await progressRepo.DeleteForGoalAsync(Guid);
         await Shell.Current.GoToAsync("..");

@@ -185,6 +185,8 @@ public partial class TodoListViewModel(
     [RelayCommand]
     private async Task DeleteAsync(Todo todo)
     {
+        var confirmed = await Shell.Current.DisplayAlert("Delete Todo?", "Remove this todo?", "Delete", "Cancel");
+        if (!confirmed) return;
         await repo.DeleteAsync(todo.Guid);
         _allTodos.Remove(todo);
         Todos.Remove(todo);

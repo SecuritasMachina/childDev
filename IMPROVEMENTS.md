@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-17 — UX: delete confirmation dialogs in mobile ViewModels (iter 397)
+
+**Files:** `ChildDev.Mobile/ViewModels/JournalListViewModel.cs`, `GoalListViewModel.cs`, `TodoListViewModel.cs`, `GoalEntryViewModel.cs`
+
+**Change:** All four mobile delete actions previously executed immediately without confirmation. Added `Shell.Current.DisplayAlert("Delete X?", "...", "Delete", "Cancel")` before each delete. If the user cancels, the method returns early without modifying any data.
+
+**Why:** Parallels iter 395 which added confirm dialogs to the web UI. Accidental swipe-to-delete or button taps on mobile are easy to do, especially for kids. The native alert dialog is the standard MAUI UX pattern for destructive confirmations.
+
+**Impact:** 242 mobile tests — all passing. No test coverage affected (ViewModels are not unit-tested; Shell.Current would be null in unit test context, but existing tests don't invoke Delete commands).
+
+---
+
 ## 2026-05-17 — UX: disabled bindings for Settings page Save/Change buttons (iter 396)
 
 **File:** `ChildDev.Api/Components/Pages/Settings.razor`
