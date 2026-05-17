@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 221 — Mobile: GoalRepository and TodoRepository CompleteAsync appear in GetModifiedSince
+
+**What changed:**
+- `GoalRepositoryTests.cs`: Added `CompleteAsync_GoalAppearsInGetModifiedSince`.
+- `TodoRepositoryTests.cs`: Added `CompleteAsync_TodoAppearsInGetModifiedSince`.
+
+**Why:** Mirrors iter 219-220 for the CompleteAsync path. After completing a goal or todo, the record must appear in GetModifiedSinceAsync for sync upload. `CompleteAsync_SetsUpdatedOnToCompletionDate` and `CompleteAsync_SetsCompletionDate` verify the timestamps but don't test the GetModifiedSince integration end-to-end.
+
+**Impact:** 174 mobile tests pass (was 172). 160 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 220 — Mobile: TodoRepository and JournalRepository DeleteAsync appear in GetModifiedSince
 
 **What changed:**
