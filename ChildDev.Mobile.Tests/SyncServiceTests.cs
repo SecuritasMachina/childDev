@@ -1615,6 +1615,24 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_BearerJwt_IncludedInRequestHeaders()
+    {
+        await _accountService.CreateAccountAsync("user67", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "my-secret-jwt";
+
+        var handler = new AuthHeaderCapturingHandler();
+        var service = BuildSyncService(handler);
+        await service.RunAsync(account);
+
+        // The JWT must be sent as a Bearer token on every request including entity syncs
+        Assert.NotNull(handler.CapturedAuthHeader);
+        Assert.Equal("Bearer", handler.CapturedAuthHeader.Scheme);
+        Assert.Equal("my-secret-jwt", handler.CapturedAuthHeader.Parameter);
+    }
+
+    [Fact]
     public async Task RunAsync_LastSyncAt_IncludedInAllFourEntityBodies()
     {
         await _accountService.CreateAccountAsync("user66", "1234");
@@ -1908,6 +1926,27 @@ public class CapturingHandler : HttpMessageHandler
         {
             Content = JsonContent.Create(new { Records = Array.Empty<object>() })
         };
+    }
+}
+
+// Captures the Authorization header from the first request; returns 200 for all calls
+public class AuthHeaderCapturingHandler : HttpMessageHandler
+{
+    public System.Net.Http.Headers.AuthenticationHeaderValue? CapturedAuthHeader { get; private set; }
+
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        CapturedAuthHeader ??= request.Headers.Authorization;
+        if (request.RequestUri!.PathAndQuery.Contains("health"))
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new { status = "ok" })
+            });
+        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new { Records = Array.Empty<object>() })
+        });
     }
 }
 
