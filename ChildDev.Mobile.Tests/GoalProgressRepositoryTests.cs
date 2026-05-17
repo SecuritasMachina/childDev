@@ -72,37 +72,6 @@ public class GoalProgressRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task GetLatestNextStepsAsync_ReturnsLatestPerGoal()
-    {
-        var accountId = System.Guid.NewGuid().ToString();
-        var goalFk = System.Guid.NewGuid().ToString();
-        var tOld = DateTimeOffset.UtcNow.AddSeconds(-5).ToUnixTimeMilliseconds();
-        var tNew = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
-        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalFk = goalFk, NextStepItems = "old step", UpdatedOn = tOld });
-        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalFk = goalFk, NextStepItems = "new step", UpdatedOn = tNew });
-
-        var latest = await _repo.GetLatestNextStepsAsync(accountId);
-
-        Assert.True(latest.ContainsKey(goalFk));
-        Assert.Equal("new step", latest[goalFk]);
-    }
-
-    [Fact]
-    public async Task GetLatestNextStepsAsync_ExcludesSoftDeleted()
-    {
-        var accountId = System.Guid.NewGuid().ToString();
-        var goalFk = System.Guid.NewGuid().ToString();
-        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
-        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalFk = goalFk, NextStepItems = "deleted", UpdatedOn = now, DeletedAt = now });
-
-        var latest = await _repo.GetLatestNextStepsAsync(accountId);
-
-        Assert.False(latest.ContainsKey(goalFk));
-    }
-
-    [Fact]
     public async Task GetModifiedSince_ReturnsOnlyNewerRecords()
     {
         var accountId = System.Guid.NewGuid().ToString();
@@ -335,23 +304,6 @@ public class GoalProgressRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task GetLatestNextStepsAsync_ExcludesOtherAccounts()
-    {
-        var account1 = System.Guid.NewGuid().ToString();
-        var account2 = System.Guid.NewGuid().ToString();
-        var goalFk = System.Guid.NewGuid().ToString();
-        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
-        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = account1, GoalFk = goalFk, NextStepItems = "mine", UpdatedOn = now });
-        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = account2, GoalFk = goalFk, NextStepItems = "theirs", UpdatedOn = now + 1 });
-
-        var result = await _repo.GetLatestNextStepsAsync(account1);
-
-        Assert.True(result.ContainsKey(goalFk));
-        Assert.Equal("mine", result[goalFk]);
-    }
-
-    [Fact]
     public async Task UpsertFromSyncAsync_PreservesServerTimestamp()
     {
         var guid = System.Guid.NewGuid().ToString();
@@ -367,31 +319,6 @@ public class GoalProgressRepositoryTests : IDisposable
         var retrieved = await _db.FindAsync<GoalProgress>(guid);
         Assert.NotNull(retrieved);
         Assert.Equal(serverTs, retrieved!.UpdatedOn);
-    }
-
-    [Fact]
-    public async Task GetLatestNextStepsAsync_WhenLatestIsSoftDeleted_FallsBackToPrior()
-    {
-        var accountId = System.Guid.NewGuid().ToString();
-        var goalFk = System.Guid.NewGuid().ToString();
-        var older = DateTimeOffset.UtcNow.AddSeconds(-10).ToUnixTimeMilliseconds();
-        var newer = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
-        await _db.InsertOrReplaceAsync(new GoalProgress
-        {
-            Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId,
-            GoalFk = goalFk, NextStepItems = "prior steps", UpdatedOn = older
-        });
-        await _db.InsertOrReplaceAsync(new GoalProgress
-        {
-            Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId,
-            GoalFk = goalFk, NextStepItems = "deleted steps", UpdatedOn = newer, DeletedAt = newer
-        });
-
-        var latest = await _repo.GetLatestNextStepsAsync(accountId);
-
-        Assert.True(latest.ContainsKey(goalFk));
-        Assert.Equal("prior steps", latest[goalFk]);
     }
 
     [Fact]
@@ -414,29 +341,6 @@ public class GoalProgressRepositoryTests : IDisposable
         Assert.NotNull(retrieved);
         Assert.Equal("Synced: step A, step B", retrieved!.NextStepItems);
         Assert.Equal(meetingDate, retrieved.NextMeetingDate);
-    }
-
-    [Fact]
-    public async Task GetLatestNextStepsAsync_TwoGoals_ReturnsLatestForEach()
-    {
-        var accountId = System.Guid.NewGuid().ToString();
-        var goalA = System.Guid.NewGuid().ToString();
-        var goalB = System.Guid.NewGuid().ToString();
-        var tOld = DateTimeOffset.UtcNow.AddSeconds(-5).ToUnixTimeMilliseconds();
-        var tNew = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
-        // Goal A: 2 progress items, newer is the latest
-        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalFk = goalA, NextStepItems = "A-old", UpdatedOn = tOld });
-        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalFk = goalA, NextStepItems = "A-new", UpdatedOn = tNew });
-
-        // Goal B: 1 progress item
-        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalFk = goalB, NextStepItems = "B-only", UpdatedOn = tNew });
-
-        var latest = await _repo.GetLatestNextStepsAsync(accountId);
-
-        Assert.Equal(2, latest.Count);
-        Assert.Equal("A-new", latest[goalA]);
-        Assert.Equal("B-only", latest[goalB]);
     }
 
     [Fact]
