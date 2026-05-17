@@ -107,8 +107,17 @@ public class SyncService(
         var localModified = await getLocalModified();
         var dtos = localModified.Select(toDto).ToList();
 
-        var response = await client.PostAsJsonAsync(endpoint,
-            new SyncRequestDto<TDto>(dtos, lastSyncAt));
+        HttpResponseMessage response;
+        try
+        {
+            response = await client.PostAsJsonAsync(endpoint, new SyncRequestDto<TDto>(dtos, lastSyncAt));
+            if ((int)response.StatusCode >= 500)
+                response = await client.PostAsJsonAsync(endpoint, new SyncRequestDto<TDto>(dtos, lastSyncAt));
+        }
+        catch (HttpRequestException)
+        {
+            response = await client.PostAsJsonAsync(endpoint, new SyncRequestDto<TDto>(dtos, lastSyncAt));
+        }
 
         response.EnsureSuccessStatusCode();
 
