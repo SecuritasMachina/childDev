@@ -1,5 +1,30 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 53 Brainstorm (fresh — every 3rd)
+
+| # | Description | Dim | Impact | Effort | Risk |
+|---|-------------|-----|--------|--------|------|
+| 1 | Mobile: JournalList — live search filter (notes/activity/mood/tags) | UI | High | S | Low | **SELECTED** |
+| 2 | Mobile: GoalEntry — Save button disabled when GoalText empty | UI | Medium | XS | Low | |
+| 3 | Mobile: TodoEntry — visible error when Title is blank on save | UI | Medium | S | Low | |
+| 4 | Mobile: GoalProgressRepository — trim NextStepItems before save | Stability | Small | XS | Low | |
+| 5 | Mobile: Settings — show app version number | UI | Small | XS | Low | |
+| 6 | API: Skip DB work on sync when Records.Count == 0 | Perf | Small | XS | Low | |
+| 7 | Mobile: GoalList — show days-until-meeting countdown badge | UI | Medium | S | Low | |
+| 8 | Mobile: JournalEntry — validate Notes non-empty before save | Stability | Medium | XS | Low | |
+
+## 2026-05-16 — Iteration 53 — Mobile: JournalList live search filter
+
+**What changed:**
+- `JournalListViewModel.cs`: Added `FilterText` observable and `_allJournals` backing list; `OnFilterTextChanged` filters across notes, activity, mood, and tags fields (case-insensitive); `Delete` keeps `_allJournals` consistent
+- `JournalListPage.xaml`: Added `SearchBar` (row 1) above the CollectionView; bumped RowDefinitions from 2 to 3 rows
+
+**Why:** Journal entries can accumulate quickly; users had no way to search without scrolling. Consistent with the TodoList filter added in iteration 50.
+
+**Impact:** 25 mobile tests pass. 52 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 52 — Mobile: Journal notes character count
 
 **What changed:**
