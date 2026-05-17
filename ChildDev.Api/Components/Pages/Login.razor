@@ -31,7 +31,8 @@
             </MudCardContent>
             <MudCardActions Class="px-4 pb-4 flex-column">
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
-                           OnClick="DoLogin">Login</MudButton>
+                           OnClick="DoLogin"
+                           Disabled="@(string.IsNullOrWhiteSpace(NickName) || string.IsNullOrWhiteSpace(Pin))">Login</MudButton>
                 <MudText Typo="Typo.body2" Class="mt-3" Align="Align.Center">
                     No account? <MudLink Href="/register">Register</MudLink>
                 </MudText>

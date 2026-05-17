@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-17 — UX: Disabled bindings on Login and Register submit buttons (iter 404)
+
+**Files:** `ChildDev.Api/Components/Pages/Login.razor`, `Register.razor`
+
+**Change:** Login button grays out when either Nickname or PIN is blank. Register "Create Account" button grays out when Nickname is blank, PIN is under 4 chars, or PINs don't match.
+
+**Why:** Completes the button-disable sweep across all web pages (iters 391, 396 covered other pages). These two forms previously allowed submitting with incomplete input, which triggered error alerts instead of preventing the click.
+
+**Impact:** Build: 0 warnings, 0 errors.
+
+---
+
 ## 2026-05-17 — UX: SetupViewModel CanCreate now validates digits and PIN match (iter 403)
 
 **File:** `ChildDev.Mobile/ViewModels/SetupViewModel.cs`
