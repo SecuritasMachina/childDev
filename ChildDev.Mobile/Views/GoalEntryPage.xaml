@@ -19,6 +19,12 @@
             <Editor Text="{Binding NextStepItems}" HeightRequest="80" AutoSize="TextChanges" />
             <Label Text="Next Meeting Date" />
             <DatePicker Date="{Binding NextMeetingDate}" />
+            <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                <Label Grid.Column="0" Text="Target Completion Date" VerticalOptions="Center" />
+                <Switch Grid.Column="1" IsToggled="{Binding HasExpirationDate}" />
+            </Grid>
+            <DatePicker Date="{Binding ExpirationDate}"
+                        IsVisible="{Binding HasExpirationDate}" />
             <Button Text="Mark as Complete" Command="{Binding MarkCompleteCommand}"
                     BackgroundColor="Green" TextColor="White"
                     IsVisible="{Binding IsExisting}" Margin="0,8,0,0" />
