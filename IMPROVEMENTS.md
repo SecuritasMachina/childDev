@@ -4490,6 +4490,26 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — Refactor: remove dead Razor Pages code (iter 362)
+
+**What:** Deleted the entire `Pages/` directory (13 files): `Index.cshtml`, `Login.cshtml`, `Logout.cshtml`, `Register.cshtml`, `Goals/Index.cshtml` and their `.cs` code-behind files, plus `_Layout.cshtml`, `_ViewImports.cshtml`, `_ViewStart.cshtml`. None of these files were routed — `MapRazorPages()` is absent from `Program.cs`.
+
+**Why:** These Razor Pages were from a prior implementation before the Blazor migration. They compiled but were never served. Leaving them created maintenance confusion (any developer reading the codebase would see two implementations of login/register/goals and not know which was live).
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
+## 2026-05-17 — Fix: completed goals sorted above active goals on mobile (iter 363)
+
+**What:** Fixed `GoalListViewModel.LoadGoalsWithStepsAsync` to separate active from completed goals before applying the progress-staleness sort. Active goals are sorted by progress staleness (null-progress first, then oldest-update-first). Completed goals are appended after, sorted by `CompletionDate` descending (most recently completed first).
+
+**Why:** The progress-staleness `OrderBy` was applied to the entire goal list including completed ones. A completed goal with no progress notes (`LatestProgressAt == null`) would sort to position 0 — above all active goals. This made completed, never-progressed goals appear at the top, the opposite of the desired UX.
+
+**Impact:** 238 mobile tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — UX: Restore button on mobile TodoEntryPage (iter 359)
 
 **What:** Added `IsCompleted` property to `TodoEntryViewModel` (populated from `CompletedAt`). Added a "Restore Task" button (blue, visible when `IsCompleted=True`) and fixed "Mark as Done" to be invisible for already-completed todos (previously it was always visible when editing an existing todo).
