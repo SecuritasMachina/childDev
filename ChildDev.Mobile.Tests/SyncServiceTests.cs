@@ -1540,6 +1540,79 @@ public class SyncServiceTests : IDisposable
         Assert.NotNull(journalBody);
         Assert.Contains(account.Guid, journalBody);
     }
+
+    [Fact]
+    public async Task RunAsync_LocalGoal_AccountFkIncludedInUploadRequest()
+    {
+        await _accountService.CreateAccountAsync("user62", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var updatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new Goal
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalText = "test goal", EnteredDate = updatedOn, UpdatedOn = updatedOn
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        await service.RunAsync(account);
+
+        var goalBody = capturingHandler.GetBodyFor("sync/goal");
+        Assert.NotNull(goalBody);
+        Assert.Contains(account.Guid, goalBody);
+    }
+
+    [Fact]
+    public async Task RunAsync_LocalTodo_AccountFkIncludedInUploadRequest()
+    {
+        await _accountService.CreateAccountAsync("user63", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var updatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new Todo
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Title = "test todo", UpdatedOn = updatedOn
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        await service.RunAsync(account);
+
+        var todoBody = capturingHandler.GetBodyFor("sync/todo");
+        Assert.NotNull(todoBody);
+        Assert.Contains(account.Guid, todoBody);
+    }
+
+    [Fact]
+    public async Task RunAsync_LocalGoalProgress_AccountFkIncludedInUploadRequest()
+    {
+        await _accountService.CreateAccountAsync("user64", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var updatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalFk = System.Guid.NewGuid().ToString(),
+            NextStepItems = "test steps", UpdatedOn = updatedOn
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        await service.RunAsync(account);
+
+        var progressBody = capturingHandler.GetBodyFor("sync/goal-progress");
+        Assert.NotNull(progressBody);
+        Assert.Contains(account.Guid, progressBody);
+    }
 }
 
 // Test helpers
