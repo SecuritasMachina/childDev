@@ -20,6 +20,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasIndex(g => new { g.AccountFk, g.UpdatedOn });
         modelBuilder.Entity<GoalProgress>()
             .HasIndex(p => new { p.AccountFk, p.UpdatedOn });
+        modelBuilder.Entity<GoalProgress>()
+            .HasIndex(p => new { p.AccountFk, p.GoalFk });
         modelBuilder.Entity<Todo>()
             .HasIndex(t => new { t.AccountFk, t.UpdatedOn });
         modelBuilder.Entity<Account>()

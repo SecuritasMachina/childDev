@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-17 — Perf: index GoalFk on API GoalProgress for GoalDetail queries (iter 402)
+
+**File:** `ChildDev.Api/Data/AppDbContext.cs`
+
+**Change:** Added composite `(AccountFk, GoalFk)` index to the API `GoalProgress` entity. The `GoalDetail.razor` page always queries `WHERE GoalFk = ? AND AccountFk = ?` to load progress entries; this query now hits an index instead of scanning all progress rows for the account.
+
+**Why:** The existing `(AccountFk, UpdatedOn)` index covers the sync delta queries but not the goal-specific read path. As the number of progress entries grows, the full-account scan to load a single goal's entries becomes increasingly expensive.
+
+**Impact:** 220 API tests — all passing. `EnsureCreated()` creates the index on first run; existing databases get it automatically on next startup.
+
+---
+
 ## 2026-05-17 — Perf: index GoalFk on GoalProgress table (iter 401)
 
 **File:** `ChildDev.Mobile/Models/GoalProgress.cs`
