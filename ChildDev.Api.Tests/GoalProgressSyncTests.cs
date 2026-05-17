@@ -331,6 +331,30 @@ public class GoalProgressSyncTests(ApiFactory factory) : IClassFixture<ApiFactor
     }
 
     [Fact]
+    public async Task Sync_SoftDeleted_CanBeRestoredByClient_ViaNewerUpdate()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_restore");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var goalFk = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Store a soft-deleted progress record
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(guid, accountGuid, goalFk, "steps", null, ts, ts)], 0));
+
+        // Client sends same Guid with DeletedAt = null and newer UpdatedOn — LWW restores the record
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(guid, accountGuid, goalFk, "steps", null, ts + 1000, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalProgressDto>>();
+
+        var stored = body!.Records.Single(r => r.Guid == guid);
+        Assert.Null(stored.DeletedAt);
+    }
+
+    [Fact]
     public async Task Sync_NextMeetingDate_CanBeClearedByClient_ViaNewerUpdate()
     {
         var (jwt, accountGuid) = await RegisterAsync("gpsync_mtg_clear");

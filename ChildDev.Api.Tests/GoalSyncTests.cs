@@ -336,6 +336,29 @@ public class GoalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Sync_SoftDeleted_CanBeRestoredByClient_ViaNewerUpdate()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gsync_restore");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Store a soft-deleted goal
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(guid, accountGuid, "goal", null, null, ts, null, null, ts, ts)], 0));
+
+        // Client sends same Guid with DeletedAt = null and newer UpdatedOn — LWW restores the record
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(guid, accountGuid, "goal", null, null, ts, null, null, ts + 1000, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalDto>>();
+
+        var stored = body!.Records.Single(r => r.Guid == guid);
+        Assert.Null(stored.DeletedAt);
+    }
+
+    [Fact]
     public async Task Sync_ExpirationDate_CanBeClearedByClient_ViaNewerUpdate()
     {
         var (jwt, accountGuid) = await RegisterAsync("gsync_exp_clear");
