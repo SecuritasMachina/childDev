@@ -17,6 +17,7 @@ public partial class JournalEntryViewModel(
     [ObservableProperty] private string mood = string.Empty;
     [ObservableProperty] private string tags = string.Empty;
     [ObservableProperty] private string enteredDateDisplay = string.Empty;
+    [ObservableProperty] private bool isExisting;
 
     partial void OnGuidChanged(string value)
     {
@@ -33,6 +34,7 @@ public partial class JournalEntryViewModel(
         Mood = item.Mood ?? string.Empty;
         Tags = item.Tags ?? string.Empty;
         EnteredDateDisplay = DateTimeOffset.FromUnixTimeMilliseconds(item.EnteredDate).LocalDateTime.ToString("ddd, MMM d yyyy");
+        IsExisting = true;
     }
 
     [RelayCommand]
@@ -51,6 +53,14 @@ public partial class JournalEntryViewModel(
         journal.Tags = Tags;
 
         await repo.SaveAsync(journal);
+        await Shell.Current.GoToAsync("..");
+    }
+
+    [RelayCommand]
+    private async Task DeleteAsync()
+    {
+        if (string.IsNullOrEmpty(Guid)) return;
+        await repo.DeleteAsync(Guid);
         await Shell.Current.GoToAsync("..");
     }
 }
