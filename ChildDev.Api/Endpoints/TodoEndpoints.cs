@@ -30,6 +30,12 @@ public static class TodoEndpoints
                 logger.LogWarning("sync/todo account={Account} rejected: invalid Guid", accountGuid[..8]);
                 return Results.Problem("Record Guid is not a valid GUID.", statusCode: 422);
             }
+            var maxDueDateMs = DateTimeOffset.UtcNow.AddYears(10).ToUnixTimeMilliseconds();
+            if (req.Records.Any(r => r.DueDate.HasValue && r.DueDate.Value > maxDueDateMs))
+            {
+                logger.LogWarning("sync/todo account={Account} rejected: DueDate too far in future", accountGuid[..8]);
+                return Results.Problem("Record DueDate is too far in the future.", statusCode: 422);
+            }
             var incomingGuids = req.Records.Select(r => r.Guid).ToList();
             var existingMap = await db.Todos
                 .Where(t => incomingGuids.Contains(t.Guid))
