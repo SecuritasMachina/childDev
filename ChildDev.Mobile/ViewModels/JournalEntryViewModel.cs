@@ -87,6 +87,8 @@ public partial class JournalEntryViewModel(
     private async Task DeleteAsync()
     {
         if (string.IsNullOrEmpty(Guid)) return;
+        var confirmed = await Shell.Current.DisplayAlert("Delete Entry?", "Remove this journal entry?", "Delete", "Cancel");
+        if (!confirmed) return;
         await repo.DeleteAsync(Guid);
         await Shell.Current.GoToAsync("..");
     }

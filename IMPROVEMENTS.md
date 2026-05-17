@@ -2,6 +2,16 @@
 
 ---
 
+## 2026-05-17 — UX: delete confirmation in JournalEntryViewModel (iter 398)
+
+**File:** `ChildDev.Mobile/ViewModels/JournalEntryViewModel.cs`
+
+**Change:** `DeleteAsync` missed confirmation in iter 397 sweep (only the list-view delete was covered; the entry-page delete was overlooked). Added the same `Shell.Current.DisplayAlert` confirmation pattern.
+
+**Impact:** Build: 0 warnings, 0 errors.
+
+---
+
 ## 2026-05-17 — UX: delete confirmation dialogs in mobile ViewModels (iter 397)
 
 **Files:** `ChildDev.Mobile/ViewModels/JournalListViewModel.cs`, `GoalListViewModel.cs`, `TodoListViewModel.cs`, `GoalEntryViewModel.cs`
