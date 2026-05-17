@@ -1,3 +1,5 @@
+using SQLite;
+
 namespace ChildDev.Mobile.Models;
 
 public class Goal : SyncBase
@@ -8,4 +10,7 @@ public class Goal : SyncBase
     public long EnteredDate { get; set; }
     public string? MeasurableOutcome { get; set; }
     public long? CompletionDate { get; set; }
+
+    [Ignore]
+    public string? LatestNextStepItems { get; set; }
 }
