@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 154 — API: Goal + GoalProgress optional fields round-trip
+
+**What changed:**
+- `GoalSyncTests.cs`: Added `Sync_OptionalFieldsRoundTrip` — syncs a goal with `MeasurableOutcome`, `NextMeetingDate`, and `ExpirationDate` all set; verifies all three preserved in delta response.
+- `GoalProgressSyncTests.cs`: Added `Sync_NextMeetingDateRoundTrips` — syncs a goal-progress with `NextMeetingDate` set; verifies it's preserved in delta.
+
+**Why:** These optional fields had no API-level tests — if the `EntityToDto` mapper dropped them, they would silently disappear for clients downloading a delta. Journal optional fields were already covered (iter 153); this completes parity for Goal and GoalProgress.
+
+**Impact:** 101 mobile tests pass. 121 API tests pass (was 119).
+
+---
+
 ## 2026-05-17 — Iteration 153 — GoalRepo active ordering + Journal optional fields round-trip
 
 **What changed:**
