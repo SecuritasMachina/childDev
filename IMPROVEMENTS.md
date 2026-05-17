@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-17 — Fix: activity-only journal entries show blank in Home dashboard (iter 386)
+
+**File:** `ChildDev.Api/Components/Pages/Home.razor`
+
+**Change:** The recent journal list on the dashboard used `j.Notes` as the display text. For activity-only entries (null Notes), this rendered a blank body line with the Activity shown only in a small secondary caption. Changed to `j.Notes ?? j.Activity` for the primary text, and show Activity as a secondary caption only when both Notes and Activity are present.
+
+**Why:** Iter 375 added support for activity-only journal entries (null Notes with an Activity value). The web dashboard was not updated to handle the null case, causing those entries to appear blank in the "Recent Journal" panel.
+
+**Impact:** 220 API tests — all passing.
+
+---
+
 ## 2026-05-17 — Test + refactor: GoalProgress upload, dead code, null-steps info (iters 383–385)
 
 **Files:** `ChildDev.Mobile.Tests/SyncServiceTests.cs`, `ChildDev.Mobile/Data/GoalProgressRepository.cs`, `ChildDev.Mobile.Tests/GoalProgressRepositoryTests.cs`

@@ -246,8 +246,12 @@
                 <MudListItem>
                     <MudStack Row="true" AlignItems="AlignItems.Start">
                         <MudStack Spacing="0" Style="flex:1">
-                            <MudText Typo="Typo.body2">@(j.Notes?.Length > 120 ? j.Notes[..120] + "…" : j.Notes)</MudText>
-                            @if (!string.IsNullOrWhiteSpace(j.Activity))
+                            @{
+                                var displayText = j.Notes ?? j.Activity;
+                                var truncated = displayText?.Length > 120 ? displayText[..120] + "…" : displayText;
+                            }
+                            <MudText Typo="Typo.body2">@truncated</MudText>
+                            @if (!string.IsNullOrWhiteSpace(j.Notes) && !string.IsNullOrWhiteSpace(j.Activity))
                             {
                                 <MudText Typo="Typo.caption" Color="Color.Secondary">@j.Activity</MudText>
                             }
