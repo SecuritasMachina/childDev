@@ -50,7 +50,7 @@ public partial class JournalListViewModel(
             var items = await repo.GetAllActiveAsync(account.Guid);
             _allJournals = items;
             Journals = new ObservableCollection<Journal>(items);
-            EntryCountDisplay = $"{items.Count} {(items.Count == 1 ? "entry" : "entries")}";
+            UpdateEntryCountDisplay();
         }
         catch
         {
@@ -69,7 +69,7 @@ public partial class JournalListViewModel(
             var items = await repo.GetAllActiveAsync(account.Guid);
             _allJournals = items;
             Journals = new ObservableCollection<Journal>(items);
-            EntryCountDisplay = $"{items.Count} {(items.Count == 1 ? "entry" : "entries")}";
+            UpdateEntryCountDisplay();
             StatusMessage = string.Empty;
         }
         catch
@@ -80,6 +80,12 @@ public partial class JournalListViewModel(
         {
             IsRefreshing = false;
         }
+    }
+
+    private void UpdateEntryCountDisplay()
+    {
+        var count = _allJournals.Count;
+        EntryCountDisplay = $"{count} {(count == 1 ? "entry" : "entries")}";
     }
 
     [RelayCommand]
@@ -96,6 +102,6 @@ public partial class JournalListViewModel(
         await repo.DeleteAsync(journal.Guid);
         _allJournals.Remove(journal);
         Journals.Remove(journal);
-        EntryCountDisplay = $"{_allJournals.Count} {(_allJournals.Count == 1 ? "entry" : "entries")}";
+        UpdateEntryCountDisplay();
     }
 }
