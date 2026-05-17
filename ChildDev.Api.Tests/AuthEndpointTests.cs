@@ -135,4 +135,17 @@ public class AuthEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>
             new { NickName = "nobody_registered_this_nick", PinHash = "anyhash" });
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Register_NickNameWithSurroundingSpaces_StoredTrimmed()
+    {
+        var response = await _client.PostAsJsonAsync("/api/auth/register",
+            new { NickName = "  trimmeduser  ", PinHash = "testhash123" });
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        // Token lookup with exact trimmed name succeeds, proving stored value was trimmed
+        var tokenResponse = await _client.PostAsJsonAsync("/api/auth/token",
+            new { NickName = "trimmeduser", PinHash = "testhash123" });
+        Assert.Equal(HttpStatusCode.OK, tokenResponse.StatusCode);
+    }
 }
