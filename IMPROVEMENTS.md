@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 209 — Mobile: SyncService includes Todo Notes in upload request
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_LocalTodo_NotesIncludedInUploadRequest` — inserts a todo with Notes="Use cold water", runs sync, asserts the captured sync/todo body contains "Use cold water".
+
+**Why:** `RunAsync_LocalTodo_DueDateIncludedInUploadRequest` only verifies DueDate serialization in the toDto lambda. The `t.Notes` field in `t => new TodoSyncDto(..., t.Notes, ...)` is untested for the upload direction. If it were accidentally omitted, todos would silently lose Notes on every upload. `RunAsync_ServerReturnsTodo_DueDateAndNotesStoredLocally` only covers the server→client direction.
+
+**Impact:** 160 mobile tests pass (was 159). 160 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 208 — API: JournalSync aux fields (Activity, Mood, Tags) can be cleared via LWW
 
 **What changed:**
