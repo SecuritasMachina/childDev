@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 223 — Mobile: SyncService health check timeout returns NoServer
+
+**What changed:**
+- `SyncService.cs`: Wrapped `client.GetAsync("health", healthCts.Token)` in a try/catch for `OperationCanceledException` returning `SyncResult.NoServer`. Previously the exception fell through to the outer catch and returned `Failed`.
+- `SyncServiceTests.cs`: Added `RunAsync_HealthCheckTimeout_ReturnsNoServer` with `SlowHealthHandler` (delays 10s to trigger the 5s CTS).
+
+**Why:** A server that is unreachable (times out) should be treated as `NoServer` — the caller uses this to decide whether to schedule a retry vs. show an error. Returning `Failed` for a timeout was semantically wrong and broke any logic branching on `NoServer`.
+
+**Impact:** 176 mobile tests pass (was 175). 160 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 222 — Mobile: GoalProgressRepository DeleteForGoalAsync records appear in GetModifiedSince
 
 **What changed:**
