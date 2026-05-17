@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 242 — Mobile: SyncService verifies DeletedAt serialized in upload body for all 4 entities
+
+**What changed:**
+- `SyncServiceTests.cs`: Added 4 tests (`user73`–`user76`) — `RunAsync_LocalSoftDeletedJournal_DeletedAtSerializedInUploadBody`, `…Goal…`, `…GoalProgress…`, `…Todo…` — each inserts a soft-deleted record then asserts the `deletedAt` timestamp value appears in the JSON request body sent to the server.
+
+**Why:** The existing soft-delete upload tests only verified the GUID appeared in the body (i.e. the record was included). They did not verify `DeletedAt` was serialized with its actual value. If a DTO mapping accidentally passed `null` for `DeletedAt`, the server would treat the record as active and LWW could resurrect deleted items on other devices.
+
+**Impact:** 201 mobile tests pass (was 197). 168 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 241 — Mobile: GoalRepository + TodoRepository.GetAsync returns soft-deleted records
 
 **What changed:**
