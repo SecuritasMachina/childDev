@@ -68,7 +68,7 @@ else
 <MudList T="Todo" Dense="false">
     @foreach (var t in PendingTodos)
     {
-        var isOverdue = t.DueDate.HasValue && t.DueDate.Value < NowMs;
+        var isOverdue = t.DueDate.HasValue && t.DueDate.Value < TodayStartMs;
         <MudListItem>
             <MudStack Row="true" AlignItems="AlignItems.Center">
                 <MudIconButton Icon="@Icons.Material.Filled.RadioButtonUnchecked"
@@ -174,6 +174,7 @@ else
     private List<Todo> CompletedTodos = [];
     private int OverdueCount;
     private long NowMs;
+    private long TodayStartMs;
     private string FilterText = string.Empty;
     private string StatusFilter = "All";
     private List<Todo> PendingTodos = [];
@@ -199,6 +200,7 @@ else
     private async Task LoadTodos()
     {
         NowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        TodayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
         var todos = await Db.Todos
             .Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null)
             .OrderBy(t => t.DueDate ?? long.MaxValue)
@@ -207,7 +209,7 @@ else
 
         AllPendingTodos = todos.Where(t => t.CompletedAt == null).ToList();
         CompletedTodos = todos.Where(t => t.CompletedAt != null).ToList();
-        OverdueCount = AllPendingTodos.Count(t => t.DueDate.HasValue && t.DueDate.Value < NowMs);
+        OverdueCount = AllPendingTodos.Count(t => t.DueDate.HasValue && t.DueDate.Value < TodayStartMs);
         ApplyFilter();
     }
 
@@ -234,7 +236,7 @@ else
 
         filtered = StatusFilter switch
         {
-            "Overdue" => filtered.Where(t => t.DueDate.HasValue && t.DueDate.Value < NowMs),
+            "Overdue" => filtered.Where(t => t.DueDate.HasValue && t.DueDate.Value < TodayStartMs),
             "Today" => filtered.Where(t => t.DueDate.HasValue && t.DueDate.Value >= todayStartMs && t.DueDate.Value < todayEndMs),
             "NoDate" => filtered.Where(t => !t.DueDate.HasValue),
             _ => filtered

@@ -194,8 +194,8 @@ public partial class TodoListViewModel(
     private void UpdateOverdueCount(IEnumerable<Todo> items)
     {
         var list = items as IList<Todo> ?? items.ToList();
-        var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        OverdueTodoCount = list.Count(t => t.DueDate.HasValue && t.DueDate.Value < nowMs);
+        var todayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+        OverdueTodoCount = list.Count(t => t.DueDate.HasValue && t.DueDate.Value < todayStartMs);
         HasOverdueTodos = OverdueTodoCount > 0;
         EntryCountDisplay = OverdueTodoCount > 0
             ? $"{list.Count} pending, {OverdueTodoCount} overdue"

@@ -353,13 +353,13 @@
 
     private async Task LoadStats()
     {
-        var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var todos = await Db.Todos
             .Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt == null)
             .Select(t => t.DueDate)
             .ToListAsync();
+        var todayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
         PendingTodoCount = todos.Count;
-        OverdueTodoCount = todos.Count(d => d.HasValue && d.Value < nowMs);
+        OverdueTodoCount = todos.Count(d => d.HasValue && d.Value < todayStartMs);
 
         var weekStartMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
         JournalThisWeek = await Db.Journals

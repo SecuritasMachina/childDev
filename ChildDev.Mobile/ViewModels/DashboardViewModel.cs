@@ -93,7 +93,8 @@ public partial class DashboardViewModel(
         var todos = await todoRepo.GetPendingAsync(account.Guid);
         PendingTodoCount = todos.Count;
         HasNoPendingTodos = todos.Count == 0;
-        OverdueTodoCount = todos.Count(t => t.DueDate.HasValue && t.DueDate.Value < nowMs);
+        var todayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+        OverdueTodoCount = todos.Count(t => t.DueDate.HasValue && t.DueDate.Value < todayStartMs);
         HasOverdueTodos = OverdueTodoCount > 0;
 
         // Find the active goal with no progress or oldest progress
