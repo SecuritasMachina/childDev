@@ -480,14 +480,15 @@
 
     private async Task CompleteGoal(string guid)
     {
-        var goal = await Db.Goals.FirstOrDefaultAsync(g => g.Guid == guid && g.AccountFk == AccountGuid);
-        if (goal is null) return;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        goal.CompletionDate = now;
-        goal.UpdatedOn = now;
-        await Db.SaveChangesAsync();
+        var rows = await Db.Goals
+            .Where(g => g.Guid == guid && g.AccountFk == AccountGuid && g.CompletionDate == null && g.DeletedAt == null)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(g => g.CompletionDate, now)
+                .SetProperty(g => g.UpdatedOn, now));
+        if (rows == 0) return;
         await Analytics.TrackAsync("goal_complete", AccountGuid, "home", guid);
-        CelebratedGoalText = goal.GoalText;
+        CelebratedGoalText = AllActiveGoals.FirstOrDefault(g => g.Guid == guid)?.GoalText;
         ShowCelebration = true;
         await LoadGoals();
     }

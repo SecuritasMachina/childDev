@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-17 — Perf: CompleteGoal uses ExecuteUpdateAsync + in-memory GoalText (iter 410)
+
+**File:** `ChildDev.Api/Components/Pages/Home.razor`
+
+**Change:** `CompleteGoal` was loading a full `Goal` entity via `FirstOrDefaultAsync` just to read `GoalText` for the celebration banner, then mutating and saving via `SaveChangesAsync`. Replaced with a single `ExecuteUpdateAsync` (targeted `UPDATE … WHERE CompletionDate IS NULL`) and reads `GoalText` from the already-loaded `AllActiveGoals` in-memory list.
+
+**Why:** The full entity load was unnecessary — the goal data is already present in `AllActiveGoals` at the time the Complete button is clicked. The `CompletionDate == null && DeletedAt == null` guards also prevent double-completing or completing already-deleted goals.
+
+**Impact:** 220 API tests — all passing.
+
+---
+
 ## 2026-05-17 — Tests: AccountService LinkToServer coverage for Todo + GoalProgress (iter 409)
 
 **File:** `ChildDev.Mobile.Tests/AccountServiceTests.cs`
