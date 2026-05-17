@@ -74,7 +74,6 @@ public partial class DashboardViewModel(
 
         var todos = await todoRepo.GetPendingAsync(account.Guid);
         PendingTodoCount = todos.Count;
-        var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         OverdueTodoCount = todos.Count(t => t.DueDate.HasValue && t.DueDate.Value < nowMs);
         HasOverdueTodos = OverdueTodoCount > 0;
     }
