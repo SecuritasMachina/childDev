@@ -1,5 +1,19 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 168 — Mobile: SyncService outgoing upload serialization for optional fields
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_LocalJournal_AuxFieldsIncludedInUploadRequest` — inserts a journal with `Activity="Yoga"`, `Mood="Calm"`, `Tags="health,wellness"`, asserts all three appear in the outgoing request body.
+- `SyncServiceTests.cs`: Added `RunAsync_LocalGoal_OptionalFieldsIncludedInUploadRequest` — inserts a goal with `MeasurableOutcome` and `NextMeetingDate`, asserts both appear in the outgoing request body.
+- `SyncServiceTests.cs`: Added `RunAsync_LocalTodo_DueDateIncludedInUploadRequest` — inserts a todo with `DueDate`, asserts the timestamp value appears in the outgoing request body.
+- `SyncServiceTests.cs`: Added `RunAsync_LocalGoalProgress_NextMeetingDateIncludedInUploadRequest` — inserts a progress record with `NextMeetingDate`, asserts it appears in the outgoing request body.
+
+**Why:** The existing upload tests only assert the record's GUID is present in the request body. The `toDto` lambdas in `SyncService.RunAsync` serialize 6-10 fields per entity — if an optional field were accidentally dropped from a lambda, no test would catch it on the upload side. These tests close that gap for all 4 entities.
+
+**Impact:** 124 mobile tests pass (was 120). 135 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 167 — Mobile: Goal completed-section ordering + GoalProgress soft-delete fallback
 
 **What changed:**
