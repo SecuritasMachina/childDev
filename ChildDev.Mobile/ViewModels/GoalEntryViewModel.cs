@@ -91,4 +91,12 @@ public partial class GoalEntryViewModel(
         await repo.CompleteAsync(Guid);
         await Shell.Current.GoToAsync("..");
     }
+
+    [RelayCommand]
+    private async Task DeleteAsync()
+    {
+        if (string.IsNullOrEmpty(Guid)) return;
+        await repo.DeleteAsync(Guid);
+        await Shell.Current.GoToAsync("..");
+    }
 }
