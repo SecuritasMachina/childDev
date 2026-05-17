@@ -106,6 +106,17 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 280 — API: Orphan GoalProgress sync test
+
+**What changed:**
+- `GoalProgressSyncTests.cs`: Added `Sync_OrphanGoalProgress_StoredEvenWhenGoalDoesNotExist` — uploads a GoalProgress with a GoalFk referencing a Goal that was never created, then asserts the record is stored and returned in the delta.
+
+**Why:** Sync must not enforce referential integrity — in multi-device sync, entities can arrive in any order. A GoalProgress might arrive before its parent Goal. Rejecting orphans would silently drop data.
+
+**Impact:** 213 API tests pass (was 212). 214 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 279 — Mobile: Preserve EnteredDate through Goal sync upsert
 
 **What changed:**
