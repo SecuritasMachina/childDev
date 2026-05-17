@@ -33,6 +33,12 @@ public static class JournalEndpoints
                 logger.LogWarning("sync/journal account={Account} rejected: invalid Guid", accountGuid[..8]);
                 return Results.Problem("Record Guid is not a valid GUID.", statusCode: 422);
             }
+            var maxEnteredDateMs = DateTimeOffset.UtcNow.AddYears(10).ToUnixTimeMilliseconds();
+            if (req.Records.Any(r => r.EnteredDate > maxEnteredDateMs))
+            {
+                logger.LogWarning("sync/journal account={Account} rejected: future EnteredDate", accountGuid[..8]);
+                return Results.Problem("Record EnteredDate is too far in the future.", statusCode: 422);
+            }
             if (req.Records.Any(r => r.DeletedAt is null && string.IsNullOrWhiteSpace(r.Notes)))
             {
                 logger.LogWarning("sync/journal account={Account} rejected: blank Notes", accountGuid[..8]);
