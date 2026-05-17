@@ -5,7 +5,7 @@
 | # | Description | Dim | Impact | Effort | Risk | Status |
 |---|-------------|-----|--------|--------|------|--------|
 | 1 | GoalEntryPage: ExpirationDate date picker + display | Func | High | S | Low | **DONE** |
-| 2 | Dashboard: show last-synced timestamp (not just "Synced HH:mm") | UI | Medium | S | Low | Backlog |
+| 2 | Dashboard: show last-synced timestamp (not just "Synced HH:mm") | UI | Medium | S | Low | **DONE** |
 | 3 | API: X-Request-ID echo header for traceability | Perf | Low | S | Low | Backlog |
 | 4 | SyncService: retry once on transient HTTP failure | Stability | Low | M | Medium | Backlog |
 | 5 | GoalListPage: show NextMeetingDate per goal | UI | Medium | S | Low | Backlog |
