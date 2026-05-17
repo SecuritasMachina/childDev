@@ -16,4 +16,7 @@ public class Goal : SyncBase
 
     [Ignore]
     public long? LatestProgressAt { get; set; }
+
+    [Ignore]
+    public bool ShowNoNotesYet => LatestProgressAt is null && CompletionDate is null;
 }
