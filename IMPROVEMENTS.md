@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 234 — Mobile: Synced soft-deleted todo excluded from GetPendingAsync
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_ServerSendsDeletedTodo_ExcludedFromGetPendingAsync` (user69) — pre-inserts an active todo, confirms it's pending, then server sends it as soft-deleted; asserts it's no longer in `GetPendingAsync`.
+
+**Why:** `RunAsync_ServerReturnsDeletedTodo_DeletedAtPropagatedLocally` only checked that `DeletedAt` was stored. This test adds the crucial second assertion: the todo must disappear from the pending UI view. A regression where `GetPendingAsync` fails to filter `DeletedAt IS NOT NULL` after a sync upsert would have been invisible.
+
+**Impact:** 191 mobile tests pass (was 190). 164 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 233 — Mobile: Server-sent null CompletionDate restores goal to active
 
 **What changed:**
