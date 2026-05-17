@@ -595,4 +595,24 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.DoesNotContain(body!.Records, r => r.Guid == guid);
     }
+
+    [Fact]
+    public async Task Sync_DeltaDoesNotContainOtherAccountsRecords()
+    {
+        // Account A uploads a todo
+        var (jwtA, accountGuidA) = await RegisterAsync("tsync_isolation_a1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtA);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid = Guid.NewGuid().ToString();
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuidA, "account A task", null, null, null, ts, null)], 0));
+
+        // Account B fetches delta — must NOT see account A's todo
+        var (jwtB, _) = await RegisterAsync("tsync_isolation_b1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtB);
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+
+        Assert.DoesNotContain(body!.Records, r => r.Guid == guid);
+    }
 }

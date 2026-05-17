@@ -581,4 +581,25 @@ public class GoalProgressSyncTests(ApiFactory factory) : IClassFixture<ApiFactor
 
         Assert.DoesNotContain(body!.Records, r => r.Guid == guid);
     }
+
+    [Fact]
+    public async Task Sync_DeltaDoesNotContainOtherAccountsRecords()
+    {
+        // Account A uploads a goal-progress entry
+        var (jwtA, accountGuidA) = await RegisterAsync("gpsync_isolation_a1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtA);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid = Guid.NewGuid().ToString();
+        var goalGuid = Guid.NewGuid().ToString();
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(guid, accountGuidA, goalGuid, "account A step", null, ts, null)], 0));
+
+        // Account B fetches delta — must NOT see account A's progress entry
+        var (jwtB, _) = await RegisterAsync("gpsync_isolation_b1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtB);
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalProgressDto>>();
+
+        Assert.DoesNotContain(body!.Records, r => r.Guid == guid);
+    }
 }

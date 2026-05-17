@@ -651,4 +651,24 @@ public class GoalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Single(matches);
         Assert.Equal("second upload", matches[0].GoalText);
     }
+
+    [Fact]
+    public async Task Sync_DeltaDoesNotContainOtherAccountsRecords()
+    {
+        // Account A uploads a goal
+        var (jwtA, accountGuidA) = await RegisterAsync("gsync_isolation_a1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtA);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid = Guid.NewGuid().ToString();
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(guid, accountGuidA, "account A goal", null, null, ts, null, null, ts, null)], 0));
+
+        // Account B fetches delta — must NOT see account A's record
+        var (jwtB, _) = await RegisterAsync("gsync_isolation_b1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtB);
+        var response = await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalDto>>();
+
+        Assert.DoesNotContain(body!.Records, r => r.Guid == guid);
+    }
 }
