@@ -560,4 +560,24 @@ public class TodoRepositoryTests : IDisposable
         Assert.NotNull(retrieved);
         Assert.NotNull(retrieved!.DeletedAt);
     }
+
+    [Fact]
+    public async Task GetPendingAsync_OverdueTodo_StillReturnedAsPending()
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var pastDueDate = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
+
+        var guid = System.Guid.NewGuid().ToString();
+        await _db.InsertOrReplaceAsync(new Todo
+        {
+            Guid = guid,
+            AccountFk = "account1",
+            Title = "overdue task",
+            DueDate = pastDueDate,
+            UpdatedOn = now
+        });
+
+        var pending = await _repo.GetPendingAsync("account1");
+        Assert.Contains(pending, t => t.Guid == guid);
+    }
 }
