@@ -382,6 +382,29 @@ public class GoalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Sync_NextMeetingDate_CanBeClearedByClient_ViaNewerUpdate()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gsync_mtg_clear");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Store a goal with NextMeetingDate set
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(guid, accountGuid, "goal", ts + 86400000L, null, ts, null, null, ts, null)], 0));
+
+        // Client sends same Guid with NextMeetingDate = null and newer UpdatedOn — LWW clears the meeting date
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(guid, accountGuid, "goal", null, null, ts, null, null, ts + 1000, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalDto>>();
+
+        var stored = body!.Records.Single(r => r.Guid == guid);
+        Assert.Null(stored.NextMeetingDate);
+    }
+
+    [Fact]
     public async Task Sync_EnteredDate_NotUpdatedOnLWWOverwrite()
     {
         var (jwt, accountGuid) = await RegisterAsync("gsync_entered_date");
