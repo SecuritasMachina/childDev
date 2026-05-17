@@ -13,13 +13,17 @@ public static class AuthEndpoints
     {
         app.MapPost("/api/auth/register", async (RegisterRequest req, AppDbContext db, JwtService jwt) =>
         {
+            if (string.IsNullOrWhiteSpace(req.NickName))
+                return Results.Problem("NickName must not be empty.", statusCode: 400);
+            if (req.NickName.Length > 50)
+                return Results.Problem("NickName must not exceed 50 characters.", statusCode: 400);
             if (await db.Accounts.AnyAsync(a => a.NickName == req.NickName))
                 return Results.Conflict("Nickname already taken");
 
             var account = new Account
             {
                 Guid = Guid.NewGuid().ToString(),
-                NickName = req.NickName,
+                NickName = req.NickName.Trim(),
                 PinHash = BCrypt.Net.BCrypt.HashPassword(req.PinHash),
                 CreatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
             };
