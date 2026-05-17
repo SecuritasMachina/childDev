@@ -396,4 +396,27 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Null(stored.Mood);
         Assert.Null(stored.Tags);
     }
+
+    [Fact]
+    public async Task Sync_SoftDelete_NotesNullInDelta()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("jsync_soft_notes");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "entry to delete", null, null, null, ts, ts, null)], 0));
+
+        var deletedAt = ts + 1000;
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, null, null, null, null, ts, ts + 1000, deletedAt)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
+
+        var deleted = body!.Records.Single(r => r.Guid == guid);
+        Assert.Equal(deletedAt, deleted.DeletedAt);
+        Assert.Null(deleted.Notes);
+    }
 }
