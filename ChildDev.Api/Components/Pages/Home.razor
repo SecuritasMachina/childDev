@@ -277,10 +277,16 @@
 @* Quick progress note dialog *@
 <MudDialog @bind-Visible="ShowQuickNoteDialog">
     <TitleContent>
-        <MudText Typo="Typo.h6">
-            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Class="mr-2" />
-            Add Progress Note
-        </MudText>
+        <MudStack Spacing="0">
+            <MudText Typo="Typo.h6">
+                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Class="mr-2" />
+                Add Progress Note
+            </MudText>
+            @if (!string.IsNullOrWhiteSpace(QuickNoteGoalText))
+            {
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@QuickNoteGoalText</MudText>
+            }
+        </MudStack>
     </TitleContent>
     <DialogContent>
         <MudTextField @bind-Value="QuickNoteText" Label="What happened? What's the next step?"
@@ -332,6 +338,7 @@
     private string? CelebratedGoalText;
     private bool ShowQuickNoteDialog;
     private string? QuickNoteGoalGuid;
+    private string? QuickNoteGoalText;
     private string QuickNoteText = string.Empty;
 
     protected override async Task OnInitializedAsync()
@@ -469,6 +476,7 @@
     private void OpenQuickNote(string goalGuid)
     {
         QuickNoteGoalGuid = goalGuid;
+        QuickNoteGoalText = AllActiveGoals.FirstOrDefault(g => g.Guid == goalGuid)?.GoalText;
         QuickNoteText = string.Empty;
         ShowQuickNoteDialog = true;
     }
