@@ -36,6 +36,18 @@ public partial class TodoListViewModel(
     [ObservableProperty]
     private bool isRefreshing;
 
+    [ObservableProperty]
+    private string filterText = string.Empty;
+
+    private List<Todo> _allTodos = [];
+
+    partial void OnFilterTextChanged(string value) =>
+        Todos = new ObservableCollection<Todo>(
+            string.IsNullOrWhiteSpace(value)
+                ? _allTodos
+                : _allTodos.Where(t => t.Title != null &&
+                    t.Title.Contains(value, StringComparison.OrdinalIgnoreCase)));
+
     [RelayCommand]
     private async Task LoadAsync()
     {
@@ -45,6 +57,7 @@ public partial class TodoListViewModel(
             var account = await accountService.GetAccountAsync();
             if (account is null) return;
             var items = await repo.GetPendingAsync(account.Guid);
+            _allTodos = items;
             Todos = new ObservableCollection<Todo>(items);
             CompletedTodoCount = await repo.GetCompletedCountAsync(account.Guid);
             HasCompletedTodos = CompletedTodoCount > 0;
@@ -65,6 +78,7 @@ public partial class TodoListViewModel(
             if (account is null) { IsRefreshing = false; return; }
             await syncService.RunAsync(account);
             var items = await repo.GetPendingAsync(account.Guid);
+            _allTodos = items;
             Todos = new ObservableCollection<Todo>(items);
             CompletedTodoCount = await repo.GetCompletedCountAsync(account.Guid);
             HasCompletedTodos = CompletedTodoCount > 0;
@@ -96,7 +110,10 @@ public partial class TodoListViewModel(
             UpdatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
         };
         await repo.SaveAsync(todo);
-        Todos.Insert(0, todo);
+        _allTodos.Insert(0, todo);
+        if (string.IsNullOrWhiteSpace(FilterText) ||
+            (todo.Title?.Contains(FilterText, StringComparison.OrdinalIgnoreCase) ?? false))
+            Todos.Insert(0, todo);
         NewTodoTitle = string.Empty;
     }
 
@@ -104,6 +121,7 @@ public partial class TodoListViewModel(
     private async Task CompleteAsync(Todo todo)
     {
         await repo.CompleteAsync(todo.Guid);
+        _allTodos.Remove(todo);
         Todos.Remove(todo);
         CompletedTodoCount++;
         HasCompletedTodos = true;
@@ -114,6 +132,7 @@ public partial class TodoListViewModel(
     private async Task DeleteAsync(Todo todo)
     {
         await repo.DeleteAsync(todo.Guid);
+        _allTodos.Remove(todo);
         Todos.Remove(todo);
         UpdateOverdueCount(Todos);
     }
