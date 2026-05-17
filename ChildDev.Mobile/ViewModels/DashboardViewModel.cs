@@ -24,11 +24,18 @@ public partial class DashboardViewModel(
     [RelayCommand]
     private async Task LoadAsync()
     {
-        var account = await accountService.GetAccountAsync();
-        if (account is null) return;
+        try
+        {
+            var account = await accountService.GetAccountAsync();
+            if (account is null) return;
 
-        await RefreshDataAsync(account);
-        _ = RunSyncAsync(account);
+            await RefreshDataAsync(account);
+            _ = RunSyncAsync(account);
+        }
+        catch
+        {
+            SyncStatus = "Could not load dashboard data.";
+        }
     }
 
     private async Task RefreshDataAsync(Account account)
@@ -58,7 +65,10 @@ public partial class DashboardViewModel(
             _ => string.Empty
         };
         if (result == SyncResult.Success)
-            await RefreshDataAsync(account);
+        {
+            try { await RefreshDataAsync(account); }
+            catch { SyncStatus = "Sync OK but dashboard refresh failed."; }
+        }
     }
 
     [RelayCommand]
