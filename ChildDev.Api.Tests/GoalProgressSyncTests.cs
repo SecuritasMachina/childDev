@@ -284,4 +284,31 @@ public class GoalProgressSyncTests(ApiFactory factory) : IClassFixture<ApiFactor
         var stored = body!.Records.Single(r => r.Guid == guid);
         Assert.Equal("Server version", stored.NextStepItems);
     }
+
+    [Fact]
+    public async Task Sync_GoalFkNotChangedOnLWWUpdate()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_goalfk");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var originalGoalFk = Guid.NewGuid().ToString();
+        var differentGoalFk = Guid.NewGuid().ToString();
+        var t1 = 1_000_000L;
+        var t2 = 2_000_000L;
+
+        // Store the initial record with originalGoalFk
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(guid, accountGuid, originalGoalFk, "initial", null, t1, null)], 0));
+
+        // Send same Guid with a different GoalFk and newer UpdatedOn — ApplyDto should NOT update GoalFk
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(guid, accountGuid, differentGoalFk, "updated", null, t2, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalProgressDto>>();
+
+        var stored = body!.Records.Single(r => r.Guid == guid);
+        Assert.Equal(originalGoalFk, stored.GoalFk);
+        Assert.Equal("updated", stored.NextStepItems);
+    }
 }
