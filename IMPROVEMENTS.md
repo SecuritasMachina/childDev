@@ -4583,3 +4583,32 @@ Updated `SettingsPage.xaml` with a conditional section:
 
 **Impact:** 238 mobile tests, 217 API tests — all passing. Build clean.
 
+
+---
+
+## 2026-05-17 — Fix: 'No notes yet' shown on completed goals in mobile goal list (iter 365)
+
+**What:** Added `ShowNoNotesYet` computed property to `Goal` model: returns `true` only when both `LatestProgressAt is null` AND `CompletionDate is null`. Updated `GoalListPage.xaml` binding from `NullConverter` on `LatestProgressAt` to the new property.
+
+**Why:** A completed goal with no progress notes is done — it shouldn't show "No notes yet" since the goal has been achieved. The "No notes yet" label is intended to prompt the user to add progress, which is not relevant for completed goals.
+
+**Impact:** 238 mobile tests pass. Build clean.
+
+---
+
+## 2026-05-17 — Fix: JSON deserialization for server auth response in Settings (iter 365b)
+
+**What:** Added `PropertyNameCaseInsensitive = true` to `ReadFromJsonAsync<AuthResponse>` in `SettingsViewModel.LinkToServerAsync`. The server returns camelCase JSON (`jwt`, `accountGuid`) but the private `AuthResponse` record has PascalCase fields. Without case-insensitive matching, the response would always deserialize as null and the link flow would silently fail.
+
+**Impact:** 238 mobile tests pass. Build clean.
+
+---
+
+## 2026-05-17 — UX: show 'No notes yet' on web goal cards with zero progress (iter 366)
+
+**What:** Goal cards on the web home page now show a "No notes yet" caption when a goal has zero progress entries and no expiration date. Previously those cards had an invisible MudCardContent with no content.
+
+**Why:** Active goals with no progress notes need attention — the visual gap was invisible, making it unclear whether the goal had been worked on. Consistent with the mobile goal list treatment.
+
+**Impact:** 217 API tests pass. Build clean.
+
