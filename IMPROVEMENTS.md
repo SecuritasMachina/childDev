@@ -1,5 +1,19 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 165 — Mobile: SyncService inbound optional field propagation for all 4 entities
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsJournal_AuxFieldsStoredLocally` — verifies `Activity`, `Mood`, `Tags` all survive inbound sync (previously only `Notes` was checked).
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsGoalProgress_NextMeetingDateStoredLocally` — verifies `NextMeetingDate` is stored when server returns a progress record with that field set.
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsTodo_DueDateAndNotesStoredLocally` — verifies `DueDate` and `Notes` survive inbound sync (previously only `Title` was checked).
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsGoal_OptionalFieldsStoredLocally` — verifies `NextMeetingDate`, `ExpirationDate`, `MeasurableOutcome` are stored from inbound sync (previously only `GoalText` was checked).
+
+**Why:** The existing per-entity "UpsertsLocally" tests each verified only the primary required field. The SyncService `RunAsync` maps 7–10 fields per entity — if any optional field were accidentally dropped from the mapping, inbound data from other devices would silently be lost. These tests provide regression protection for every optional field in the inbound path.
+
+**Impact:** 118 mobile tests pass (was 114). 130 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 164 — Mobile: SyncService inbound CompletionDate + CompletedAt propagation
 
 **What changed:**
