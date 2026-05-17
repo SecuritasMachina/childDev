@@ -42,6 +42,9 @@
                             <Label Text="{Binding MeasurableOutcome}" FontSize="12" TextColor="Gray"
                                    LineBreakMode="TailTruncation" MaxLines="1"
                                    IsVisible="{Binding MeasurableOutcome, Converter={x:StaticResource StringToBoolConverter}}" />
+                            <Label Text="{Binding NextMeetingDate, Converter={x:StaticResource MeetingDateConverter}}"
+                                   FontSize="11" TextColor="Gray"
+                                   IsVisible="{Binding NextMeetingDate, Converter={x:StaticResource NotNullConverter}}" />
                         </VerticalStackLayout>
                         <Label Grid.Column="1" Text="✓ Done" FontSize="11" TextColor="Green"
                                VerticalOptions="Start" Margin="8,2,0,0"

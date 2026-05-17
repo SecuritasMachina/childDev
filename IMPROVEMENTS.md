@@ -8,7 +8,7 @@
 | 2 | Dashboard: show last-synced timestamp (not just "Synced HH:mm") | UI | Medium | S | Low | **DONE** |
 | 3 | API: X-Request-ID echo header for traceability | Perf | Low | S | Low | Backlog |
 | 4 | SyncService: retry once on transient HTTP failure | Stability | Low | M | Medium | Backlog |
-| 5 | GoalListPage: show NextMeetingDate per goal | UI | Medium | S | Low | Backlog |
+| 5 | GoalListPage: show NextMeetingDate per goal | UI | Medium | S | Low | **DONE** |
 | 6 | API: CORS policy — restrict to expected origins | Security | Low | S | Low | Backlog |
 | 7 | JournalListPage: activity chip/badge alongside mood | UI | Low | S | Low | Backlog |
 | 8 | TodoEntryPage: due date picker UI (DatePicker element) | Func | Medium | S | Low | Backlog |

@@ -15,6 +15,7 @@
             <converters:DueDateLabelConverter x:Key="DueDateLabelConverter" />
             <converters:DueDateColorConverter x:Key="DueDateColorConverter" />
             <converters:EntryDateConverter x:Key="EntryDateConverter" />
+            <converters:MeetingDateConverter x:Key="MeetingDateConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
