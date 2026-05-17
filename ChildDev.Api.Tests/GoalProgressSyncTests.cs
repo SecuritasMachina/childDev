@@ -602,4 +602,19 @@ public class GoalProgressSyncTests(ApiFactory factory) : IClassFixture<ApiFactor
 
         Assert.DoesNotContain(body!.Records, r => r.Guid == guid);
     }
+
+    [Fact]
+    public async Task Sync_DeletedAtGreaterThanUpdatedOn_Returns422()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_deletedinvariant1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goalGuid = Guid.NewGuid().ToString();
+
+        // DeletedAt = ts+1, UpdatedOn = ts → invalid invariant
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(Guid.NewGuid().ToString(), accountGuid, goalGuid, "step", null, ts, ts + 1)], 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
 }

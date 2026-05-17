@@ -56,6 +56,11 @@ public static class GoalProgressEndpoints
                 logger.LogWarning("sync/goal-progress account={Account} rejected: NextStepItems too long", accountGuid[..8]);
                 return Results.Problem("Record NextStepItems must not exceed 2000 characters.", statusCode: 422);
             }
+            if (req.Records.Any(r => r.DeletedAt.HasValue && r.DeletedAt.Value > r.UpdatedOn))
+            {
+                logger.LogWarning("sync/goal-progress account={Account} rejected: DeletedAt > UpdatedOn", accountGuid[..8]);
+                return Results.Problem("Record DeletedAt must not exceed UpdatedOn.", statusCode: 422);
+            }
             var mismatchCount = req.Records.Count(r => r.AccountFk != accountGuid);
             if (mismatchCount > 0)
                 logger.LogWarning("sync/goal-progress account={Account} skipped {Skipped} records with mismatched AccountFk",

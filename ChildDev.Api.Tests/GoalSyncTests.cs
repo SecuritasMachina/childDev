@@ -671,4 +671,17 @@ public class GoalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.DoesNotContain(body!.Records, r => r.Guid == guid);
     }
+
+    [Fact]
+    public async Task Sync_DeletedAtGreaterThanUpdatedOn_Returns422()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gsync_deletedinvariant1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(Guid.NewGuid().ToString(), accountGuid, "goal text", null, null, ts, null, null, ts, ts + 1)], 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
 }

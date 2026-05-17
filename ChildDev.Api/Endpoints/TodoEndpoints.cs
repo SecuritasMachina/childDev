@@ -61,6 +61,11 @@ public static class TodoEndpoints
                 logger.LogWarning("sync/todo account={Account} rejected: blank Title", accountGuid[..8]);
                 return Results.Problem("Record Title must not be blank.", statusCode: 422);
             }
+            if (req.Records.Any(r => r.DeletedAt.HasValue && r.DeletedAt.Value > r.UpdatedOn))
+            {
+                logger.LogWarning("sync/todo account={Account} rejected: DeletedAt > UpdatedOn", accountGuid[..8]);
+                return Results.Problem("Record DeletedAt must not exceed UpdatedOn.", statusCode: 422);
+            }
             var mismatchCount = req.Records.Count(r => r.AccountFk != accountGuid);
             if (mismatchCount > 0)
                 logger.LogWarning("sync/todo account={Account} skipped {Skipped} records with mismatched AccountFk",

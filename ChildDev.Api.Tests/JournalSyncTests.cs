@@ -589,4 +589,18 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.DoesNotContain(body!.Records, r => r.Guid == guid);
     }
+
+    [Fact]
+    public async Task Sync_DeletedAtGreaterThanUpdatedOn_Returns422()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("jsync_deletedinvariant1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // DeletedAt = ts+1, UpdatedOn = ts → invalid invariant
+        var response = await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(Guid.NewGuid().ToString(), accountGuid, null, null, null, null, ts, ts, ts + 1)], 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
 }
