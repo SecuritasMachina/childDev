@@ -14,6 +14,7 @@ public partial class TodoEntryViewModel(
     [ObservableProperty] private string guid = string.Empty;
     [ObservableProperty] private string title = string.Empty;
     [ObservableProperty] private string notes = string.Empty;
+    [ObservableProperty] private int notesLength;
     [ObservableProperty] private bool hasDueDate;
     [ObservableProperty] private DateTime dueDate = DateTime.Today.AddDays(1);
     [ObservableProperty] private bool isExisting;
@@ -21,6 +22,8 @@ public partial class TodoEntryViewModel(
     private bool CanSave() => !string.IsNullOrWhiteSpace(Title);
 
     partial void OnTitleChanged(string value) => SaveCommand.NotifyCanExecuteChanged();
+
+    partial void OnNotesChanged(string value) => NotesLength = value?.Length ?? 0;
 
     partial void OnGuidChanged(string value)
     {
