@@ -1,5 +1,20 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 184 — Mobile: SyncService overwrites existing local Goal, Todo, GoalProgress
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsExistingGoal_OverwritesLocalVersion`
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsExistingTodo_OverwritesLocalVersion`
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsExistingGoalProgress_OverwritesLocalVersion`
+
+All 3 tests follow iter 183's pattern: pre-insert a local record, sync with server returning same Guid with newer UpdatedOn and updated content, assert local record is overwritten.
+
+**Why:** Iter 183 added the overwrite test for Journal. Goal, Todo, and GoalProgress had only "upserts new record" tests (Guid doesn't exist locally). The overwrite path uses the same `InsertOrReplaceAsync` call, but documenting it for all 4 entities ensures symmetry and protects against entity-specific bugs in the `UpsertFromSyncAsync` implementations.
+
+**Impact:** 140 mobile tests pass (was 137). 153 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 183 — Mobile: SyncService overwrites existing local journal with server version
 
 **What changed:**
