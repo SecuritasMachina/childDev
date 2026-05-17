@@ -31,8 +31,8 @@
     <MudItem xs="12" sm="4">
         <MudPaper Elevation="2" Class="pa-4 text-center">
             <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Primary" Style="font-size:2rem;" />
-            <MudText Typo="Typo.h4" Class="mt-1">@ActiveGoals.Count</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">Active Goal@(ActiveGoals.Count == 1 ? "" : "s")</MudText>
+            <MudText Typo="Typo.h4" Class="mt-1">@AllActiveGoals.Count</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Active Goal@(AllActiveGoals.Count == 1 ? "" : "s")</MudText>
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="4">
@@ -57,10 +57,22 @@
     </MudItem>
 </MudGrid>
 
-<MudText Typo="Typo.h5" Class="mb-4">
-    <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="mr-2" />
-    My Goals
-</MudText>
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
+    <MudText Typo="Typo.h5">
+        <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="mr-2" />
+        My Goals
+    </MudText>
+    <MudSpacer />
+    <MudTextField Value="@FilterText" ValueChanged="@((string v) => OnFilterChanged(v))"
+                  Placeholder="Search goals…" Variant="Variant.Outlined"
+                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                  Clearable="true" Margin="Margin.Dense" Style="max-width:260px;" />
+</MudStack>
+
+@if (!string.IsNullOrWhiteSpace(FilterText) && ActiveGoals.Count == 0)
+{
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">No goals matching "@FilterText".</MudText>
+}
 
 <MudGrid>
     @foreach (var g in ActiveGoals)
@@ -236,8 +248,10 @@
 
 @code {
     private string? AccountGuid;
+    private List<Goal> AllActiveGoals = [];
     private List<Goal> ActiveGoals = [];
     private List<Goal> CompletedGoals = [];
+    private string FilterText = string.Empty;
     private Dictionary<string, int> ProgressCounts = new();
     private Dictionary<string, long> LastProgressAt = new();
     private bool ShowAddDialog;
@@ -281,10 +295,10 @@
             .OrderByDescending(g => g.EnteredDate)
             .ToListAsync();
 
-        ActiveGoals = goals.Where(g => g.CompletionDate == null).ToList();
+        AllActiveGoals = goals.Where(g => g.CompletionDate == null).ToList();
         CompletedGoals = goals.Where(g => g.CompletionDate != null).ToList();
 
-        var guids = ActiveGoals.Select(g => g.Guid).ToList();
+        var guids = AllActiveGoals.Select(g => g.Guid).ToList();
         var progressGroups = await Db.GoalProgresses
             .Where(p => guids.Contains(p.GoalFk) && p.DeletedAt == null)
             .GroupBy(p => p.GoalFk)
@@ -294,9 +308,32 @@
         LastProgressAt = progressGroups.ToDictionary(x => x.GoalFk, x => x.LastAt);
 
         // Sort: goals with no progress first (needs attention), then by oldest-update-first
-        ActiveGoals = ActiveGoals
+        AllActiveGoals = AllActiveGoals
             .OrderBy(g => LastProgressAt.ContainsKey(g.Guid) ? 1 : 0)
             .ThenBy(g => LastProgressAt.GetValueOrDefault(g.Guid, 0))
+            .ToList();
+        ApplyFilter();
+    }
+
+    private void OnFilterChanged(string value)
+    {
+        FilterText = value;
+        ApplyFilter();
+        if (!string.IsNullOrWhiteSpace(value))
+            _ = Analytics.TrackAsync("goal_filter", AccountGuid, "home");
+    }
+
+    private void ApplyFilter()
+    {
+        if (string.IsNullOrWhiteSpace(FilterText))
+        {
+            ActiveGoals = AllActiveGoals;
+            return;
+        }
+        var q = FilterText.Trim();
+        ActiveGoals = AllActiveGoals
+            .Where(g => (g.GoalText?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false)
+                     || (g.MeasurableOutcome?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false))
             .ToList();
     }
 

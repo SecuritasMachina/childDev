@@ -4053,3 +4053,13 @@ Both match mobile filter behavior (TodoListViewModel.FilterText, JournalListView
 **Impact:** 217 API tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — Home dashboard staleness sort + goal search filter (iters 313–314)
+
+**Iter 313 — Active goals staleness sort:** `LoadGoals()` now sorts `ActiveGoals` so goals with no progress entries appear first (needing attention), then by `LastProgressAt` ascending (oldest update first). Caregivers see the goals that need the most attention at the top.
+
+**Iter 314 — Goal search filter on home dashboard:** Added `AllActiveGoals` backing list and `FilterText` field. A `MudTextField` search bar appears inline next to the "My Goals" heading. `ApplyFilter()` searches `GoalText` and `MeasurableOutcome` case-insensitively. Stats panel badge still reflects the full unfiltered count. Completes filter parity: Todos ✓, Journal ✓, Goals ✓.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
