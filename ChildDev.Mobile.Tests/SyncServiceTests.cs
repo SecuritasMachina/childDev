@@ -668,6 +668,20 @@ public class SyncServiceTests : IDisposable
         Assert.NotNull(stored);
         Assert.Equal(deletedAt, stored!.DeletedAt);
     }
+
+    [Fact]
+    public async Task RunAsync_EntitySyncNetworkError_RetriesAndSucceeds()
+    {
+        await _accountService.CreateAccountAsync("user26", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var service = BuildSyncService(new NetworkErrorThenSucceedHandler());
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+    }
 }
 
 // Test helpers
@@ -728,6 +742,31 @@ public class GoalFailureHandler : HttpMessageHandler
         return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = JsonContent.Create(new { Records = Array.Empty<object>() })
+        });
+    }
+}
+
+// Throws HttpRequestException on first entity sync call, then succeeds on retry
+public class NetworkErrorThenSucceedHandler : HttpMessageHandler
+{
+    private int _entityCallCount;
+
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        if (request.RequestUri!.PathAndQuery.Contains("health"))
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new { status = "ok" })
+            });
+
+        _entityCallCount++;
+        if (_entityCallCount == 1)
+            throw new HttpRequestException("Simulated network error");
+
+        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new SyncResponseDto<JournalSyncDto>([]))
         });
     }
 }
