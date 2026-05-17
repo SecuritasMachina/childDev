@@ -826,6 +826,111 @@ public class SyncServiceTests : IDisposable
         Assert.Equal(expiration, stored.ExpirationDate);
         Assert.Equal("Play one song fluently", stored.MeasurableOutcome);
     }
+
+    [Fact]
+    public async Task RunAsync_LocalJournal_AuxFieldsIncludedInUploadRequest()
+    {
+        await _accountService.CreateAccountAsync("user33", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var updatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new Journal
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Notes = "a note", Activity = "Yoga", Mood = "Calm", Tags = "health,wellness",
+            EnteredDate = updatedOn, UpdatedOn = updatedOn
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        await service.RunAsync(account);
+
+        var body = capturingHandler.GetBodyFor("sync/journal");
+        Assert.NotNull(body);
+        Assert.Contains("Yoga", body);
+        Assert.Contains("Calm", body);
+        Assert.Contains("health,wellness", body);
+    }
+
+    [Fact]
+    public async Task RunAsync_LocalGoal_OptionalFieldsIncludedInUploadRequest()
+    {
+        await _accountService.CreateAccountAsync("user34", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var updatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var nextMeeting = updatedOn + 1_000_000L;
+        await _db.InsertOrReplaceAsync(new Goal
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalText = "Run a marathon", MeasurableOutcome = "Complete 42km",
+            NextMeetingDate = nextMeeting, EnteredDate = updatedOn, UpdatedOn = updatedOn
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        await service.RunAsync(account);
+
+        var body = capturingHandler.GetBodyFor("sync/goal");
+        Assert.NotNull(body);
+        Assert.Contains("Complete 42km", body);
+        Assert.Contains(nextMeeting.ToString(), body);
+    }
+
+    [Fact]
+    public async Task RunAsync_LocalTodo_DueDateIncludedInUploadRequest()
+    {
+        await _accountService.CreateAccountAsync("user35", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var updatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var dueDate = updatedOn + 86_400_000L;
+        await _db.InsertOrReplaceAsync(new Todo
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Title = "Buy milk", DueDate = dueDate, UpdatedOn = updatedOn
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        await service.RunAsync(account);
+
+        var body = capturingHandler.GetBodyFor("sync/todo");
+        Assert.NotNull(body);
+        Assert.Contains(dueDate.ToString(), body);
+    }
+
+    [Fact]
+    public async Task RunAsync_LocalGoalProgress_NextMeetingDateIncludedInUploadRequest()
+    {
+        await _accountService.CreateAccountAsync("user36", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var updatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var nextMeeting = updatedOn + 2_000_000L;
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalFk = System.Guid.NewGuid().ToString(), NextStepItems = "draft plan",
+            NextMeetingDate = nextMeeting, UpdatedOn = updatedOn
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        await service.RunAsync(account);
+
+        var body = capturingHandler.GetBodyFor("sync/goal-progress");
+        Assert.NotNull(body);
+        Assert.Contains(nextMeeting.ToString(), body);
+    }
 }
 
 // Test helpers
