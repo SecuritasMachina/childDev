@@ -446,4 +446,27 @@ public class GoalProgressSyncTests(ApiFactory factory) : IClassFixture<ApiFactor
         var record = body!.Records.Single(r => r.Guid == guid);
         Assert.Equal(accountGuid, record.AccountFk);
     }
+
+    [Fact]
+    public async Task Sync_SoftDelete_UpdatedOnEqualsDeletedAtInDelta()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_lwwdel1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var goalFk = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(guid, accountGuid, goalFk, "step", null, ts, null)], 0));
+        var deletedAt = ts + 500;
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(guid, accountGuid, goalFk, null, null, deletedAt, deletedAt)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalProgressDto>>();
+        var deleted = body!.Records.Single(r => r.Guid == guid);
+
+        Assert.NotNull(deleted.DeletedAt);
+        Assert.Equal(deleted.DeletedAt!.Value, deleted.UpdatedOn);
+    }
 }
