@@ -4612,3 +4612,16 @@ Updated `SettingsPage.xaml` with a conditional section:
 
 **Impact:** 217 API tests pass. Build clean.
 
+
+---
+
+## 2026-05-17 — Fix: activity-only journal entries blocked from sync (iter 367)
+
+**What:** 
+1. Server sync validation changed from "reject if Notes is blank" to "reject if BOTH Notes AND Activity are blank". Added 1 API test confirming Activity-only entries are accepted.
+2. Mobile `JournalEntryViewModel.CanSave()` changed to allow saving when either Notes OR Activity is non-empty (was Notes-only). `SaveAsync` now stores null Notes instead of empty-string when Notes field is blank.
+
+**Why:** The web journal has always allowed Activity-only entries (`if (string.IsNullOrWhiteSpace(NewNotes) && string.IsNullOrWhiteSpace(NewActivity)) return;`). These entries (null Notes, non-null Activity) were stored directly to the server DB and returned to mobile during sync. But the server sync endpoint would then reject those same entries if mobile tried to push them back. Inconsistency in both the web, server validation, and mobile CanSave.
+
+**Impact:** 218 API tests, 238 mobile tests — all passing. Build clean.
+
