@@ -4666,6 +4666,18 @@ Updated `SettingsPage.xaml` with a conditional section:
 
 ---
 
+## 2026-05-17 — Fix: stale dialog state in Home.razor Add Goal card (iter 373)
+
+**File:** `ChildDev.Api/Components/Pages/Home.razor`
+
+**Change:** Replaced `@onclick="() => ShowAddDialog = true"` on the "Add New Goal" card with a call to `OpenAddGoalDialog()` that resets `NewGoalText` and `NewMeasurableOutcome` before showing the dialog.
+
+**Why:** Same stale-state pattern as iter 371 — if the user started typing a goal, cancelled, then clicked the card again, the previous text reappeared. This fix ensures a fresh state every time.
+
+**Impact:** 220 API tests — all passing.
+
+---
+
 ## 2026-05-17 — Fix: GoalProgress sync rejects meeting-date-only records (iter 372)
 
 **Files:** `ChildDev.Api/Endpoints/GoalProgressEndpoints.cs`, `ChildDev.Api.Tests/GoalProgressSyncTests.cs`

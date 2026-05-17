@@ -174,7 +174,7 @@
     <MudItem xs="12" sm="6" md="4">
         <MudCard Elevation="1" Style="border: 2px dashed var(--mud-palette-primary); cursor:pointer;"
                  Class="h-100 d-flex align-items-center justify-content-center"
-                 @onclick="() => ShowAddDialog = true">
+                 @onclick="OpenAddGoalDialog">
             <MudCardContent Class="text-center">
                 <MudIcon Icon="@Icons.Material.Filled.AddCircleOutline" Color="Color.Primary" Style="font-size:3rem;" />
                 <MudText Typo="Typo.body1" Color="Color.Primary" Class="mt-2">Add New Goal</MudText>
@@ -419,6 +419,13 @@
             .Where(g => (g.GoalText?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false)
                      || (g.MeasurableOutcome?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false))
             .ToList();
+    }
+
+    private void OpenAddGoalDialog()
+    {
+        NewGoalText = string.Empty;
+        NewMeasurableOutcome = null;
+        ShowAddDialog = true;
     }
 
     private async Task AddGoal()
