@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 257 — API: Goal delta strict-greater-than LastSyncAt boundary test
+
+**What changed:**
+- `GoalSyncTests.cs`: Added `Sync_LastSyncAt_ExactlyEqualToRecordUpdatedOn_ExcludedFromDelta` (gsync_exact_boundary1) — uploads a goal with `UpdatedOn = ts`, then syncs with `LastSyncAt = ts`, and asserts the record does NOT appear in the delta.
+
+**Why:** The server filter is `UpdatedOn > req.LastSyncAt` (strict `>`). Existing tests use `LastSyncAt` that's definitely larger or smaller than the record's timestamp. If the filter were accidentally changed to `>=`, the exact-boundary case would incorrectly include a record the client already has, causing an infinite re-sync loop. No test previously validated the exact `==` boundary.
+
+**Impact:** 194 API tests pass (was 193). 210 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 256 — Mobile: SyncService upserts all goal-progress records when server returns multiple
 
 **What changed:**
