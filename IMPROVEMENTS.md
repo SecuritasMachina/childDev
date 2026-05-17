@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 261 — API: Journal delta strict-greater-than LastSyncAt boundary test
+
+**What changed:**
+- `JournalSyncTests.cs`: Added `Sync_LastSyncAt_ExactlyEqualToRecordUpdatedOn_ExcludedFromDelta` (jsync_exact_boundary1) — uploads a journal with `UpdatedOn = ts`, syncs with `LastSyncAt = ts`, asserts the record does NOT appear in the delta.
+
+**Why:** Iteration 257 added this exact-boundary test for Goal. Journal is the most frequently synced entity and has its own filter query (`WHERE UpdatedOn > LastSyncAt`). If the filter were changed to `>=`, existing tests would not detect it since none tested the exact-equal boundary. Completing 2 of 4 entities with this boundary coverage (Journal and Goal).
+
+**Impact:** 198 API tests pass (was 197). 210 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 260 — API: Goal sync idempotent upsert — completes 4-entity idempotency set
 
 **What changed:**
