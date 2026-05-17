@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 161 — Mobile: SyncService inbound soft-delete propagation for Todo + GoalProgress
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsDeletedTodo_DeletedAtPropagatedLocally`
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsDeletedGoalProgress_DeletedAtPropagatedLocally`
+
+**Why:** Completes the inbound `DeletedAt` propagation coverage across all 4 entity types. Journal and Goal were covered in iter 160. Todo and GoalProgress had the same mapper gap (dropping `DeletedAt` from `DtoToEntity` would silently prevent cross-device deletion propagation).
+
+**Impact:** 110 mobile tests pass (was 108). 128 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 160 — Mobile: SyncService inbound soft-delete propagation for Journal + Goal
 
 **What changed:**
