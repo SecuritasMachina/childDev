@@ -499,4 +499,69 @@ public class SyncInputValidationTests(ApiFactory factory) : IClassFixture<ApiFac
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Sync_Journal_SoftDeletedWithBlankNotes_IsAccepted()
+    {
+        var jwt = await RegisterJwtAsync("journalsoftdelnotes");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var guid = Guid.NewGuid();
+        var deletedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var body = new StringContent(
+            $"{{\"Records\":[{{\"Guid\":\"{guid}\",\"AccountFk\":\"a1\",\"Notes\":null,\"EnteredDate\":0,\"UpdatedOn\":{deletedAt},\"DeletedAt\":{deletedAt}}}],\"LastSyncAt\":0}}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync("/api/sync/journal", body);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_Goal_SoftDeletedWithBlankGoalText_IsAccepted()
+    {
+        var jwt = await RegisterJwtAsync("goalsoftdeltext");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var guid = Guid.NewGuid();
+        var deletedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var body = new StringContent(
+            $"{{\"Records\":[{{\"Guid\":\"{guid}\",\"AccountFk\":\"a1\",\"GoalText\":null,\"EnteredDate\":0,\"UpdatedOn\":{deletedAt},\"DeletedAt\":{deletedAt}}}],\"LastSyncAt\":0}}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync("/api/sync/goal", body);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_GoalProgress_SoftDeletedWithBlankNextStepItems_IsAccepted()
+    {
+        var jwt = await RegisterJwtAsync("gpsoftdelnextsteps");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var guid = Guid.NewGuid();
+        var goalFk = Guid.NewGuid();
+        var deletedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var body = new StringContent(
+            $"{{\"Records\":[{{\"Guid\":\"{guid}\",\"AccountFk\":\"a1\",\"GoalFk\":\"{goalFk}\",\"NextStepItems\":null,\"UpdatedOn\":{deletedAt},\"DeletedAt\":{deletedAt}}}],\"LastSyncAt\":0}}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync("/api/sync/goal-progress", body);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_Todo_SoftDeletedWithBlankTitle_IsAccepted()
+    {
+        var jwt = await RegisterJwtAsync("todosoftdeltitle");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var guid = Guid.NewGuid();
+        var deletedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var body = new StringContent(
+            $"{{\"Records\":[{{\"Guid\":\"{guid}\",\"AccountFk\":\"a1\",\"Title\":null,\"UpdatedOn\":{deletedAt},\"DeletedAt\":{deletedAt}}}],\"LastSyncAt\":0}}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync("/api/sync/todo", body);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
 }
