@@ -337,6 +337,28 @@ public class SyncServiceTests : IDisposable
         Assert.NotNull(progressBody);
         Assert.Contains(progressGuid, progressBody);
     }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsGoal_UpsertsLocally()
+    {
+        await _accountService.CreateAccountAsync("user12", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var serverGoal = new GoalSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, "From server goal",
+            null, null, 1000, null, null, 1000, null);
+
+        var handler = new FakeGoalSyncHandler(serverGoal);
+        var service = BuildSyncService(handler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var goals = await _goalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Single(goals);
+        Assert.Equal("From server goal", goals[0].GoalText);
+    }
 }
 
 // Test helpers
@@ -434,6 +456,27 @@ public class FakeSyncHandler(JournalSyncDto journal) : HttpMessageHandler
         if (request.RequestUri!.PathAndQuery.Contains("journal"))
         {
             var response = new SyncResponseDto<JournalSyncDto>([journal]);
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(response)
+            });
+        }
+        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new { Records = Array.Empty<object>() })
+        });
+    }
+}
+
+public class FakeGoalSyncHandler(GoalSyncDto goal) : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        if (request.RequestUri!.PathAndQuery.Contains("sync/goal") &&
+            !request.RequestUri.PathAndQuery.Contains("goal-progress"))
+        {
+            var response = new SyncResponseDto<GoalSyncDto>([goal]);
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = JsonContent.Create(response)
