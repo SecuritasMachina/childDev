@@ -4113,3 +4113,13 @@ Both match mobile filter behavior (TodoListViewModel.FilterText, JournalListView
 **Impact:** 217 API tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — Home goal cards: quick progress note button (iter 320)
+
+**What:** Added a "Note" button to each goal card on the home dashboard. Clicking it opens a dialog with a text field; saving creates a `GoalProgress` entry without navigating away. The goal list refreshes after save so staleness chips update immediately. Tracks `progress_quickadd` analytics event.
+
+**Why:** The primary workflow — see a goal → log progress — required two navigations (home → goal detail → click "Add Progress Note"). The quick note button collapses that to one click from the dashboard.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---

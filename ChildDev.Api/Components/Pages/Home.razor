@@ -140,7 +140,10 @@
                 }
                 <MudCardActions>
                     <MudButton Variant="Variant.Text" Color="Color.Primary"
-                               Href="@($"/goals/{g.Guid}")">View Progress</MudButton>
+                               Href="@($"/goals/{g.Guid}")">View</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Secondary"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="() => OpenQuickNote(g.Guid)">Note</MudButton>
                     <MudSpacer />
                     <MudIconButton Icon="@Icons.Material.Filled.CheckCircle"
                                    Color="Color.Success"
@@ -257,6 +260,24 @@
                OnClick="SaveQuickJournal">Save Entry</MudButton>
 </MudPaper>
 
+@* Quick progress note dialog *@
+<MudDialog @bind-Visible="ShowQuickNoteDialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Class="mr-2" />
+            Add Progress Note
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="QuickNoteText" Label="What happened? What's the next step?"
+                      Variant="Variant.Outlined" Lines="3" AutoFocus="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => ShowQuickNoteDialog = false">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveQuickNote">Save Note</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @* Add Goal Dialog *@
 <MudDialog @bind-Visible="ShowAddDialog">
     <TitleContent>
@@ -295,6 +316,9 @@
     private List<Journal> RecentJournals = [];
     private bool ShowCelebration;
     private string? CelebratedGoalText;
+    private bool ShowQuickNoteDialog;
+    private string? QuickNoteGoalGuid;
+    private string QuickNoteText = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -426,6 +450,34 @@
         Snackbar.Add("Goal deleted.", Severity.Info);
         await LoadGoals();
         await LoadStats();
+    }
+
+    private void OpenQuickNote(string goalGuid)
+    {
+        QuickNoteGoalGuid = goalGuid;
+        QuickNoteText = string.Empty;
+        ShowQuickNoteDialog = true;
+    }
+
+    private async Task SaveQuickNote()
+    {
+        var text = QuickNoteText.Trim();
+        if (string.IsNullOrWhiteSpace(text) || QuickNoteGoalGuid is null) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        Db.GoalProgresses.Add(new GoalProgress
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = AccountGuid!,
+            GoalFk = QuickNoteGoalGuid,
+            NextStepItems = text,
+            UpdatedOn = now
+        });
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("progress_quickadd", AccountGuid, "home", QuickNoteGoalGuid);
+        ShowQuickNoteDialog = false;
+        QuickNoteText = string.Empty;
+        Snackbar.Add("Progress note saved!", Severity.Success);
+        await LoadGoals();
     }
 
     private async Task SaveQuickJournal()
