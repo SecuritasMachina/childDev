@@ -117,11 +117,14 @@ public partial class GoalListViewModel(
                 g.LatestProgressAt = p.UpdatedOn;
             }
         }
-        // Goals with no progress first (needs attention), then oldest-update-first
-        return goals
+        var active = goals.Where(g => g.CompletionDate is null)
             .OrderBy(g => g.LatestProgressAt.HasValue ? 1 : 0)
             .ThenBy(g => g.LatestProgressAt ?? 0)
             .ToList();
+        var completed = goals.Where(g => g.CompletionDate is not null)
+            .OrderByDescending(g => g.CompletionDate ?? 0)
+            .ToList();
+        return [.. active, .. completed];
     }
 
     [RelayCommand]
