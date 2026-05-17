@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 61 — Mobile: Fade completed goals in GoalList with 0.5 opacity
+
+**What changed:**
+- `GoalListPage.xaml`: Added `DataTrigger` on the row `Grid` that sets `Opacity=0.5` when `CompletionDate` is not null (via `NotNullConverter`). Completed goals already sort last via `GoalRepository.GetAllActiveAsync`; fading provides additional visual differentiation without hiding them.
+
+**Why:** Completed goals cluttered the list visually — they blended with active goals. Making them translucent communicates "done / lower priority" at a glance while keeping the history accessible.
+
+**Impact:** 25 mobile tests pass (0 warnings). 52 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 60 — Mobile: Trim Activity/Mood/Tags before saving journal entries
 
 **What changed:**
