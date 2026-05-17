@@ -445,4 +445,44 @@ public class TodoRepositoryTests : IDisposable
         Assert.Equal("Cover all edge cases", retrieved!.Notes);
         Assert.Equal(dueDate, retrieved.DueDate);
     }
+
+    [Fact]
+    public async Task GetAllActiveAsync_UpsertedSoftDeletedRecord_IsExcluded()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // A soft-deleted todo arriving via sync should not appear in GetAllActiveAsync
+        await _repo.UpsertFromSyncAsync(new Todo
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = accountId,
+            Title = "synced deleted task",
+            UpdatedOn = now,
+            DeletedAt = now
+        });
+
+        var all = await _repo.GetAllActiveAsync(accountId);
+        Assert.Empty(all);
+    }
+
+    [Fact]
+    public async Task GetPendingAsync_UpsertedSoftDeletedRecord_IsExcluded()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // A soft-deleted todo arriving via sync should not appear in GetPendingAsync
+        await _repo.UpsertFromSyncAsync(new Todo
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = accountId,
+            Title = "synced deleted pending",
+            UpdatedOn = now,
+            DeletedAt = now
+        });
+
+        var pending = await _repo.GetPendingAsync(accountId);
+        Assert.Empty(pending);
+    }
 }
