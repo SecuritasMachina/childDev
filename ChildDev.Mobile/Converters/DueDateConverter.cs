@@ -63,7 +63,22 @@ public class MeetingDateConverter : IValueConverter
     {
         if (value is not long ms) return null;
         var dt = DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime;
-        return dt.Year == DateTime.Today.Year ? $"Meet: {dt:ddd, MMM d}" : $"Meet: {dt:ddd, MMM d yyyy}";
+        var past = dt.Date < DateTime.Today;
+        var prefix = past ? "Missed:" : "Meet:";
+        return dt.Year == DateTime.Today.Year ? $"{prefix} {dt:ddd, MMM d}" : $"{prefix} {dt:ddd, MMM d yyyy}";
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotImplementedException();
+}
+
+public class MeetingDateColorConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is not long ms) return Colors.Gray;
+        var dt = DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime.Date;
+        return dt < DateTime.Today ? Colors.Orange : Colors.Gray;
     }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>

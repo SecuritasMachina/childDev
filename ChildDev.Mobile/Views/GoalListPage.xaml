@@ -54,7 +54,8 @@
                                    LineBreakMode="TailTruncation" MaxLines="1"
                                    IsVisible="{Binding MeasurableOutcome, Converter={x:StaticResource StringToBoolConverter}}" />
                             <Label Text="{Binding NextMeetingDate, Converter={x:StaticResource MeetingDateConverter}}"
-                                   FontSize="11" TextColor="Gray"
+                                   TextColor="{Binding NextMeetingDate, Converter={x:StaticResource MeetingDateColorConverter}}"
+                                   FontSize="11"
                                    IsVisible="{Binding NextMeetingDate, Converter={x:StaticResource NotNullConverter}}" />
                             <Label Text="{Binding ExpirationDate, Converter={x:StaticResource ExpirationDateConverter}}"
                                    TextColor="{Binding ExpirationDate, Converter={x:StaticResource ExpirationColorConverter}}"
