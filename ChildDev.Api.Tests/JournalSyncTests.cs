@@ -259,6 +259,24 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Sync_LastSyncAt_LargerThanAllRecords_EmptyDelta()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("jsync_future_lastsync");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(Guid.NewGuid().ToString(), accountGuid, "old note", null, null, null, ts, ts, null)], 0));
+
+        // LastSyncAt is larger than the record's UpdatedOn — delta must be empty
+        var futureSync = ts + 10_000L;
+        var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], futureSync));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
+
+        Assert.Empty(body!.Records);
+    }
+
+    [Fact]
     public async Task Sync_TieOnUpdatedOn_ServerVersionWins()
     {
         var (jwt, accountGuid) = await RegisterAsync("jsync_tie");

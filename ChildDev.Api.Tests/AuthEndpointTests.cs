@@ -162,4 +162,20 @@ public class AuthEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Token_ValidCredentials_ResponseIncludesAccountGuid()
+    {
+        var nick = "tokenaccguid";
+        var pin = "hashedpin123";
+        var regRes = await _client.PostAsJsonAsync("/api/auth/register", new { NickName = nick, PinHash = pin });
+        var regBody = await regRes.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+        var registeredGuid = regBody!["AccountGuid"];
+
+        var tokenRes = await _client.PostAsJsonAsync("/api/auth/token", new { NickName = nick, PinHash = pin });
+        var tokenBody = await tokenRes.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+
+        Assert.NotNull(tokenBody!["AccountGuid"]);
+        Assert.Equal(registeredGuid, tokenBody["AccountGuid"]);
+    }
 }
