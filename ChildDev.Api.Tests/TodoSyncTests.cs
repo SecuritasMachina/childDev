@@ -290,6 +290,29 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Sync_CompletedTodo_CanBeUncompletedByClient_ViaNewerUpdate()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_uncomplete");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Store a completed todo
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, "Task", null, null, ts - 1000, ts, null)], 0));
+
+        // Client sends same Guid with CompletedAt = null and newer UpdatedOn — LWW unsets completion
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, "Task", null, null, null, ts + 1000, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+
+        var stored = body!.Records.Single(r => r.Guid == guid);
+        Assert.Null(stored.CompletedAt);
+    }
+
+    [Fact]
     public async Task Sync_LastSyncAt_LargerThanAllRecords_EmptyDelta()
     {
         var (jwt, accountGuid) = await RegisterAsync("tsync_future_lastsync");
