@@ -34,7 +34,15 @@ public class SyncService(
 
             // Pre-flight with a short deadline — if the server doesn't respond in 5s it's unreachable
             using var healthCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-            var ping = await client.GetAsync("health", healthCts.Token);
+            HttpResponseMessage ping;
+            try
+            {
+                ping = await client.GetAsync("health", healthCts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return SyncResult.NoServer;
+            }
             if (!ping.IsSuccessStatusCode) return SyncResult.NoServer;
 
             // Capture start time before any entity syncs so records modified during
