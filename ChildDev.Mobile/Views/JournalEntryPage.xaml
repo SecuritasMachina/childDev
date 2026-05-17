@@ -9,8 +9,9 @@
 
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="12">
-            <Label Text="{Binding EnteredDateDisplay}" FontSize="12" TextColor="Gray"
-                   IsVisible="{Binding EnteredDateDisplay, Converter={x:StaticResource StringToBoolConverter}}" />
+            <Label Text="Entry Date" FontSize="12" TextColor="Gray" />
+            <DatePicker Date="{Binding EnteredDate}" MaximumDate="{x:Static system:DateTime.Today}"
+                        xmlns:system="clr-namespace:System;assembly=netstandard" />
             <Label Text="Notes" />
             <Editor Text="{Binding Notes}" HeightRequest="150" AutoSize="TextChanges" />
             <Label Text="Activity" />
