@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 85 — Mobile: Extract UpdateEntryCountDisplay helper in JournalListViewModel
+
+**What changed:**
+- `JournalListViewModel.cs`: Extracted `UpdateEntryCountDisplay()` helper replacing inline count format in LoadAsync, RefreshAsync, and DeleteAsync.
+
+**Why:** Mirrors the GoalListViewModel refactor (iter 82). Consolidates the format string in one place and ensures all three mutation paths stay in sync.
+
+**Impact:** 25 mobile tests pass. 63 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 84 — API: Validate EnteredDate not in far future for Goal and Journal
 
 **What changed:**
