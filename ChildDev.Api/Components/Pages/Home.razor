@@ -178,6 +178,24 @@
     </MudExpansionPanels>
 }
 
+@* Quick-add journal entry *@
+<MudPaper Elevation="1" Class="pa-4 mt-6">
+    <MudText Typo="Typo.subtitle2" Class="mb-3">
+        <MudIcon Icon="@Icons.Material.Filled.EditNote" Class="mr-1" Size="Size.Small" />
+        Quick Journal Entry
+    </MudText>
+    <MudTextField @bind-Value="QuickJournalText"
+                  Label="What happened today? What did you observe?"
+                  Variant="Variant.Outlined" Lines="2" Class="mb-3" />
+    <MudButton Variant="Variant.Filled" Color="Color.Secondary"
+               StartIcon="@Icons.Material.Filled.Save"
+               Disabled="@string.IsNullOrWhiteSpace(QuickJournalText)"
+               OnClick="SaveQuickJournal">Save Entry</MudButton>
+    <MudButton Href="/journal" Variant="Variant.Text" Color="Color.Secondary" Class="ml-2">
+        View All Journal Entries
+    </MudButton>
+</MudPaper>
+
 @* Add Goal Dialog *@
 <MudDialog @bind-Visible="ShowAddDialog">
     <TitleContent>
@@ -210,6 +228,7 @@
     private int PendingTodoCount;
     private int OverdueTodoCount;
     private int JournalThisWeek;
+    private string QuickJournalText = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -304,6 +323,26 @@
         await Analytics.TrackAsync("goal_delete", AccountGuid, "home", guid);
         Snackbar.Add("Goal deleted.", Severity.Info);
         await LoadGoals();
+        await LoadStats();
+    }
+
+    private async Task SaveQuickJournal()
+    {
+        var text = QuickJournalText.Trim();
+        if (string.IsNullOrWhiteSpace(text)) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        Db.Journals.Add(new Journal
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = AccountGuid!,
+            Notes = text,
+            EnteredDate = now,
+            UpdatedOn = now
+        });
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("journal_quickadd", AccountGuid, "home");
+        QuickJournalText = string.Empty;
+        Snackbar.Add("Journal entry saved!", Severity.Success);
         await LoadStats();
     }
 }
