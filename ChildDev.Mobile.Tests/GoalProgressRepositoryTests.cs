@@ -486,4 +486,47 @@ public class GoalProgressRepositoryTests : IDisposable
         Assert.Equal(2, modified.Count);
         Assert.All(modified, p => Assert.NotNull(p.DeletedAt));
     }
+
+    [Fact]
+    public async Task GetLatestProgressInfoAsync_ReturnsLatestPerGoal()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var goalFk = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalFk = goalFk,
+            NextStepItems = "older", UpdatedOn = now - 5000
+        });
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalFk = goalFk,
+            NextStepItems = "latest", UpdatedOn = now - 1000
+        });
+
+        var info = await _repo.GetLatestProgressInfoAsync(accountId);
+
+        Assert.True(info.ContainsKey(goalFk));
+        Assert.Equal("latest", info[goalFk].Steps);
+        Assert.Equal(now - 1000, info[goalFk].UpdatedOn);
+    }
+
+    [Fact]
+    public async Task GetLatestProgressInfoAsync_ExcludesDeletedEntries()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var goalFk = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalFk = goalFk,
+            NextStepItems = "deleted", UpdatedOn = now, DeletedAt = now
+        });
+
+        var info = await _repo.GetLatestProgressInfoAsync(accountId);
+
+        Assert.False(info.ContainsKey(goalFk));
+    }
 }

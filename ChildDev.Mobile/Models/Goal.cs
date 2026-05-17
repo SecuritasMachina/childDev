@@ -13,4 +13,7 @@ public class Goal : SyncBase
 
     [Ignore]
     public string? LatestNextStepItems { get; set; }
+
+    [Ignore]
+    public long? LatestProgressAt { get; set; }
 }

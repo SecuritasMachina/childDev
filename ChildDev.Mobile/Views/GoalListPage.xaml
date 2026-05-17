@@ -63,6 +63,10 @@
                             <Label Text="{Binding LatestNextStepItems}" FontSize="11" TextColor="Gray"
                                    LineBreakMode="TailTruncation" MaxLines="2"
                                    IsVisible="{Binding LatestNextStepItems, Converter={x:StaticResource StringToBoolConverter}}" />
+                            <Label Text="{Binding LatestProgressAt, Converter={x:StaticResource ProgressStalenessConverter}}"
+                                   TextColor="{Binding LatestProgressAt, Converter={x:StaticResource ProgressStalenessColorConverter}}"
+                                   FontSize="10"
+                                   IsVisible="{Binding LatestProgressAt, Converter={x:StaticResource NotNullConverter}}" />
                         </VerticalStackLayout>
                         <Label Grid.Column="1" Text="✓ Done" FontSize="11" TextColor="Green"
                                VerticalOptions="Start" Margin="8,2,0,0"
