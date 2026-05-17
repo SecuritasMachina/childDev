@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 67 — Mobile: Zero-state hints in Dashboard goal/todo tiles
+
+**What changed:**
+- `DashboardViewModel.cs`: Added `HasNoActiveGoals` and `HasNoPendingTodos` bool observables, set in `RefreshDataAsync` alongside their count counterparts.
+- `DashboardPage.xaml`: Added small gray hint labels ("Set a goal!" / "All caught up!") inside each summary tile, visible only when the respective count is zero.
+
+**Why:** A tile showing "0 Active Goals" with no hint text is ambiguous — is the data still loading? Did sync not run? The hint text clarifies the empty state and provides a subtle CTA.
+
+**Impact:** 25 mobile tests pass (0 warnings). 53 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 66 — Mobile: Show total entry count in JournalList footer
 
 **What changed:**
