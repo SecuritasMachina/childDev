@@ -1,5 +1,18 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 83 — Bug fix: EntryCountDisplay stale after inline Add/Delete
+
+**What changed:**
+- `TodoListViewModel.cs`: Added `UpdateOverdueCount(_allTodos)` call at end of `AddAsync` so EntryCountDisplay refreshes immediately when a task is quick-added.
+- `JournalListViewModel.cs`: Added count recomputation in `DeleteAsync` after removing from `_allJournals`.
+- `GoalListViewModel.cs`: Added `UpdateEntryCountDisplay()` call in `DeleteAsync` after removing from `_allGoals`.
+
+**Why:** All three list viewmodels maintained counts correctly in Load/Refresh but forgot to update them during inline mutations. The count label would show the old total until the next refresh.
+
+**Impact:** 25 mobile tests pass. 61 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 82 — Mobile: Extract UpdateEntryCountDisplay helper in GoalListViewModel
 
 **What changed:**
