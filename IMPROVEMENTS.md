@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 113 — API: PinHash max-length (200 chars) validation on register
+
+**What changed:**
+- `AuthEndpoints.cs`: Added `req.PinHash.Length > 200` check returning 400.
+- `AuthEndpointTests.cs`: Added `Register_TooLongPinHash_Returns400`.
+
+**Why:** BCrypt silently truncates input at 72 bytes, so a 201-char PinHash has the same bcrypt result as its first 200 chars — creating silent collision risk. Rejecting inputs over 200 chars prevents pathological inputs while allowing any reasonable hash algorithm output (SHA-512 hex is 128 chars).
+
+**Impact:** 42 mobile tests pass. 92 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 112 — Mobile Tests: UpsertFromSync tests for Goal and Journal repos
 
 **What changed:**
