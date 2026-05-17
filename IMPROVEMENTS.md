@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 97 — Mobile: Show Title character count in TodoEntry
+
+**What changed:**
+- `TodoEntryViewModel.cs`: Added `TitleLength` observable; expanded `OnTitleChanged` to block form that sets `TitleLength` and calls `SaveCommand.NotifyCanExecuteChanged()`.
+- `TodoEntryPage.xaml`: Added small gray character count label beneath the Title Entry.
+
+**Why:** Title has a 500-char API limit; all other fields with enforced limits already show counters. This closes the last gap.
+
+**Impact:** 25 mobile tests pass. 76 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 96 — API: Reject sync batches with duplicate Guids (422)
 
 **What changed:**
