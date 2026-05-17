@@ -1615,6 +1615,41 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_ServerSendsDeletedGoal_ExcludedFromGetAllActiveAsync()
+    {
+        await _accountService.CreateAccountAsync("user71", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var goalGuid = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Pre-insert the goal locally as active
+        await _db.InsertOrReplaceAsync(new Goal
+        {
+            Guid = goalGuid, AccountFk = account.Guid, GoalText = "Active goal",
+            EnteredDate = now, UpdatedOn = now
+        });
+
+        // Confirm active before sync
+        var activeBefore = await _goalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Contains(activeBefore, g => g.Guid == goalGuid);
+
+        // Server sends same Guid soft-deleted with newer UpdatedOn
+        var deletedAt = now + 1000;
+        var serverGoal = new GoalSyncDto(goalGuid, account.Guid, null,
+            null, null, now, null, null, deletedAt, deletedAt);
+
+        var service = BuildSyncService(new FakeGoalSyncHandler(serverGoal));
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var activeAfter = await _goalRepo.GetAllActiveAsync(account.Guid);
+        Assert.DoesNotContain(activeAfter, g => g.Guid == goalGuid);
+    }
+
+    [Fact]
     public async Task RunAsync_ServerSendsDeletedJournal_ExcludedFromGetAllActiveAsync()
     {
         await _accountService.CreateAccountAsync("user70", "1234");
