@@ -165,6 +165,31 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Sync_Delta_OrderedByUpdatedOnAscending()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("jsync_order1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var t1 = 1_000_000L;
+        var t2 = 2_000_000L;
+        var t3 = 3_000_000L;
+
+        // Insert in non-ascending order
+        await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([
+            new JournalDto(Guid.NewGuid().ToString(), accountGuid, "at t3", null, null, null, t3, t3, null),
+            new JournalDto(Guid.NewGuid().ToString(), accountGuid, "at t1", null, null, null, t1, t1, null),
+            new JournalDto(Guid.NewGuid().ToString(), accountGuid, "at t2", null, null, null, t2, t2, null)
+        ], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
+
+        Assert.Equal(3, body!.Records.Count);
+        Assert.Equal(t1, body.Records[0].UpdatedOn);
+        Assert.Equal(t2, body.Records[1].UpdatedOn);
+        Assert.Equal(t3, body.Records[2].UpdatedOn);
+    }
+
+    [Fact]
     public async Task Sync_BatchMixedLWW_PerRecordWinnerApplied()
     {
         var (jwt, accountGuid) = await RegisterAsync("jsync_mixed_lww");
