@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 150 — API Journal batch LWW + Mobile TodoRepo due-date ordering
+
+**What changed:**
+- `JournalSyncTests.cs`: Added `Sync_BatchMixedLWW_PerRecordWinnerApplied` — same per-record LWW batch test as Todo (iter 149) applied to Journal.
+- `TodoRepositoryTests.cs`: Added `GetPendingAsync_MultipleWithDueDate_OrderedByDueDateAscending` — inserts three todos with DueDates at day+1/2/3 in shuffled order, asserts they're returned ascending by DueDate.
+
+**Why:** Journal uses the same LWW logic as Todo — the test validates the pattern holds across entity types. The due-date ordering test goes beyond the existing `GetPendingAsync_DueDateTodosOrderedBeforeNullDueDate` which only checked that due-date items come before no-due-date items, not that multiple due-date items are ordered correctly among themselves.
+
+**Impact:** 100 mobile tests pass (was 99). 114 API tests pass (was 113).
+
+---
+
 ## 2026-05-17 — Iteration 149 — API Tests: batch mixed LWW per-record + negative LastSyncAt
 
 **What changed:**
