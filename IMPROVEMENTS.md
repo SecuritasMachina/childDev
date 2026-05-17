@@ -3876,3 +3876,18 @@ Multiple `azAuthHeader` quoting, line-length, and semicolon issues across `goal.
 **Impact:** 217 API tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — Iteration 300 Brainstorm (fresh)
+
+| # | Description | Dim | Impact | Effort | Risk | Status |
+|---|---|---|---|---|---|---|
+| 1 | GoalDetail: delete goal from detail page | Func | High | S | Low | **DONE (iter 301)** |
+| 2 | API: batch size limit test (>500 records returns 400) | Quality | Low | S | Low | **DONE (iter 302)** |
+| 3 | Web: Todo uncomplete (restore pending) | Func | Medium | M | Low | **DONE (iter 303)** |
+| 4 | Mobile: TodoRepository due-date ordering test | Quality | Medium | S | Low | Backlog |
+| 5 | Mobile: SyncService 401 handling test | Stability | High | M | Low | Backlog |
+| 6 | Web: JournalPage show mood/activity as tags | UI | Low | S | Low | Backlog |
+| 7 | API: concurrent same-guid upload — idempotency test | Quality | Medium | M | Low | Backlog |
+| 8 | Web: Home dashboard — show last sync time | UI | Low | S | Low | Backlog |
+
+---
