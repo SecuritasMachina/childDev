@@ -1100,6 +1100,33 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_LocalCompletedGoal_CompletionDateIncludedInUploadRequest()
+    {
+        await _accountService.CreateAccountAsync("user44", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var goalGuid = System.Guid.NewGuid().ToString();
+        var completionDate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new Goal
+        {
+            Guid = goalGuid, AccountFk = account.Guid, GoalText = "done goal",
+            EnteredDate = completionDate, UpdatedOn = completionDate, CompletionDate = completionDate
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var goalBody = capturingHandler.GetBodyFor("sync/goal");
+        Assert.NotNull(goalBody);
+        Assert.Contains(goalGuid, goalBody);
+        Assert.Contains(completionDate.ToString(), goalBody);
+    }
+
+    [Fact]
     public async Task RunAsync_LocalCompletedTodo_CompletedAtIncludedInUploadRequest()
     {
         await _accountService.CreateAccountAsync("user43", "1234");
