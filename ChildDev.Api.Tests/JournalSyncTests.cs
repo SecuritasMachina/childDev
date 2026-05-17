@@ -529,4 +529,26 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Sync_SameGuidUploadedTwice_DeltaContainsExactlyOneRecord()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("jsync_idempotent1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid = Guid.NewGuid().ToString();
+
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "first upload", null, null, null, ts, ts, null)], 0));
+
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "second upload", null, null, null, ts, ts + 1, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
+
+        var matches = body!.Records.Where(r => r.Guid == guid).ToList();
+        Assert.Single(matches);
+        Assert.Equal("second upload", matches[0].Notes);
+    }
 }
