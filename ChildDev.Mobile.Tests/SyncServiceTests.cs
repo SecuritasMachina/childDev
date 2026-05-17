@@ -1432,6 +1432,69 @@ public class SyncServiceTests : IDisposable
 
         Assert.Equal(SyncResult.NoServer, result);
     }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsJournal_UpdatedOnStoredLocally()
+    {
+        await _accountService.CreateAccountAsync("user57", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var serverUpdatedOn = 9_000_000L;
+        var serverJournal = new JournalSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, "server note",
+            null, null, null, serverUpdatedOn, serverUpdatedOn, null);
+
+        var service = BuildSyncService(new FakeSyncHandler(serverJournal));
+        await service.RunAsync(account);
+
+        var stored = await _db.FindAsync<Journal>(serverJournal.Guid);
+        Assert.NotNull(stored);
+        Assert.Equal(serverUpdatedOn, stored!.UpdatedOn);
+    }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsTodo_UpdatedOnStoredLocally()
+    {
+        await _accountService.CreateAccountAsync("user58", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var serverUpdatedOn = 9_100_000L;
+        var serverTodo = new TodoSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, "server task",
+            null, null, null, serverUpdatedOn, null);
+
+        var service = BuildSyncService(new FakeTodoSyncHandler(serverTodo));
+        await service.RunAsync(account);
+
+        var stored = await _db.FindAsync<Todo>(serverTodo.Guid);
+        Assert.NotNull(stored);
+        Assert.Equal(serverUpdatedOn, stored!.UpdatedOn);
+    }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsGoalProgress_UpdatedOnStoredLocally()
+    {
+        await _accountService.CreateAccountAsync("user59", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var serverUpdatedOn = 9_200_000L;
+        var serverProgress = new GoalProgressSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, System.Guid.NewGuid().ToString(),
+            "server steps", null, serverUpdatedOn, null);
+
+        var service = BuildSyncService(new FakeGoalProgressSyncHandler(serverProgress));
+        await service.RunAsync(account);
+
+        var stored = await _db.FindAsync<GoalProgress>(serverProgress.Guid);
+        Assert.NotNull(stored);
+        Assert.Equal(serverUpdatedOn, stored!.UpdatedOn);
+    }
 }
 
 // Test helpers
