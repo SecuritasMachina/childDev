@@ -39,6 +39,9 @@ public partial class TodoListViewModel(
     [ObservableProperty]
     private string filterText = string.Empty;
 
+    [ObservableProperty]
+    private string entryCountDisplay = string.Empty;
+
     private List<Todo> _allTodos = [];
 
     partial void OnFilterTextChanged(string value) =>
@@ -59,6 +62,7 @@ public partial class TodoListViewModel(
             var items = await repo.GetPendingAsync(account.Guid);
             _allTodos = items;
             Todos = new ObservableCollection<Todo>(items);
+            EntryCountDisplay = $"{items.Count} {(items.Count == 1 ? "task" : "tasks")} pending";
             CompletedTodoCount = await repo.GetCompletedCountAsync(account.Guid);
             HasCompletedTodos = CompletedTodoCount > 0;
             UpdateOverdueCount(items);
@@ -80,6 +84,7 @@ public partial class TodoListViewModel(
             var items = await repo.GetPendingAsync(account.Guid);
             _allTodos = items;
             Todos = new ObservableCollection<Todo>(items);
+            EntryCountDisplay = $"{items.Count} {(items.Count == 1 ? "task" : "tasks")} pending";
             CompletedTodoCount = await repo.GetCompletedCountAsync(account.Guid);
             HasCompletedTodos = CompletedTodoCount > 0;
             UpdateOverdueCount(items);
