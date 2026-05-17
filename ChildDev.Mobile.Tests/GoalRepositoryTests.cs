@@ -241,6 +241,23 @@ public class GoalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetModifiedSinceAsync_IncludesSoftDeletedRecords()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Goal
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId,
+            GoalText = "deleted goal", EnteredDate = now, UpdatedOn = now, DeletedAt = now
+        });
+
+        var modified = await _repo.GetModifiedSinceAsync(accountId, 0);
+        Assert.Single(modified);
+        Assert.NotNull(modified[0].DeletedAt);
+    }
+
+    [Fact]
     public async Task UpsertFromSyncAsync_PreservesServerTimestamp()
     {
         var guid = System.Guid.NewGuid().ToString();
