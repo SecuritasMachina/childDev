@@ -8,6 +8,7 @@ public partial class SettingsViewModel(AccountService accountService, IHttpClien
 {
     [ObservableProperty] private string serverUrl = string.Empty;
     [ObservableProperty] private string nickName = string.Empty;
+    [ObservableProperty] private string accountCreatedDisplay = string.Empty;
     [ObservableProperty] private string lastSyncDisplay = "Never";
     [ObservableProperty] private string statusMessage = string.Empty;
 
@@ -18,6 +19,7 @@ public partial class SettingsViewModel(AccountService accountService, IHttpClien
         if (account is null) return;
         NickName = account.NickName;
         ServerUrl = account.ServerUrl ?? string.Empty;
+        AccountCreatedDisplay = DateTimeOffset.FromUnixTimeMilliseconds(account.CreatedOn).LocalDateTime.ToString("ddd, MMM d yyyy");
         LastSyncDisplay = account.LastSyncAt == 0
             ? "Never"
             : DateTimeOffset.FromUnixTimeMilliseconds(account.LastSyncAt).LocalDateTime.ToString("g");
