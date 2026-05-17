@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 99 — Mobile: Show filtered count in EntryCountDisplay when search is active
+
+**What changed:**
+- `GoalListViewModel.cs`, `JournalListViewModel.cs`, `TodoListViewModel.cs`: Expanded `OnFilterTextChanged` to an if/else block. When a filter is active, `EntryCountDisplay` now shows "N matching" instead of the stale total count. When filter is cleared, the normal count summary is restored via the existing helper.
+
+**Why:** Searching filtered the list but the count label kept showing the total. This was misleading — e.g. "3 active, 2 completed" when only 1 goal was visible.
+
+**Impact:** 25 mobile tests pass. 76 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 98 — Mobile: Show NextStepItems character count in GoalEntry
 
 **What changed:**
