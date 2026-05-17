@@ -63,7 +63,7 @@ public partial class JournalEntryViewModel(
         var account = await accountService.GetAccountAsync();
         if (account is null) return;
 
-        var enteredMs = new DateTimeOffset(EnteredDate, TimeSpan.Zero).ToUnixTimeMilliseconds();
+        var enteredMs = new DateTimeOffset(DateTime.SpecifyKind(EnteredDate, DateTimeKind.Local)).ToUnixTimeMilliseconds();
         var journal = string.IsNullOrEmpty(Guid)
             ? new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid, EnteredDate = enteredMs }
             : await repo.GetAsync(Guid) ?? new Journal { Guid = Guid, AccountFk = account.Guid, EnteredDate = enteredMs };

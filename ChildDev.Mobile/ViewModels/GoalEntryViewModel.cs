@@ -81,9 +81,9 @@ public partial class GoalEntryViewModel(
 
         goal.GoalText = GoalText.Trim();
         goal.MeasurableOutcome = string.IsNullOrWhiteSpace(MeasurableOutcome) ? null : MeasurableOutcome.Trim();
-        goal.NextMeetingDate = new DateTimeOffset(NextMeetingDate, TimeSpan.Zero).ToUnixTimeMilliseconds();
+        goal.NextMeetingDate = new DateTimeOffset(DateTime.SpecifyKind(NextMeetingDate, DateTimeKind.Local)).ToUnixTimeMilliseconds();
         goal.ExpirationDate = HasExpirationDate
-            ? new DateTimeOffset(ExpirationDate, TimeSpan.Zero).ToUnixTimeMilliseconds()
+            ? new DateTimeOffset(DateTime.SpecifyKind(ExpirationDate, DateTimeKind.Local)).ToUnixTimeMilliseconds()
             : null;
         await repo.SaveAsync(goal);
 

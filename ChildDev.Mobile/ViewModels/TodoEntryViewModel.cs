@@ -64,7 +64,7 @@ public partial class TodoEntryViewModel(
         todo.Title = Title.Trim();
         todo.Notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim();
         todo.DueDate = HasDueDate
-            ? new DateTimeOffset(DueDate, TimeSpan.Zero).ToUnixTimeMilliseconds()
+            ? new DateTimeOffset(DateTime.SpecifyKind(DueDate, DateTimeKind.Local)).ToUnixTimeMilliseconds()
             : null;
 
         await repo.SaveAsync(todo);
