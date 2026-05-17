@@ -64,8 +64,7 @@ public partial class DashboardViewModel(
         RecentJournals = new ObservableCollection<Journal>(journals);
 
         var weekStartMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
-        var allJournals = await journalRepo.GetAllActiveAsync(account.Guid);
-        JournalThisWeek = allJournals.Count(j => j.EnteredDate >= weekStartMs);
+        JournalThisWeek = await journalRepo.GetCountSinceAsync(account.Guid, weekStartMs);
 
         var goals = await goalRepo.GetAllActiveAsync(account.Guid);
         var activeGoals = goals.Where(g => g.CompletionDate is null).ToList();

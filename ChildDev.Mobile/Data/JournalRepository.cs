@@ -33,6 +33,11 @@ public class JournalRepository(SQLiteAsyncConnection db)
           .Take(count)
           .ToListAsync();
 
+    public Task<int> GetCountSinceAsync(string accountFk, long sinceMs) =>
+        db.Table<Journal>()
+          .Where(j => j.AccountFk == accountFk && j.DeletedAt == null && j.EnteredDate >= sinceMs)
+          .CountAsync();
+
     public async Task<Journal?> GetAsync(string guid) =>
         await db.FindAsync<Journal>(guid);
 

@@ -475,4 +475,51 @@ public class JournalRepositoryTests : IDisposable
         Assert.Single(recent);
         Assert.Equal("visible", recent[0].Notes);
     }
+
+    [Fact]
+    public async Task GetCountSinceAsync_CountsEntriesOnOrAfterThreshold()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var weekAgoMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
+        var recentMs = DateTimeOffset.UtcNow.AddDays(-3).ToUnixTimeMilliseconds();
+        var oldMs = DateTimeOffset.UtcNow.AddDays(-14).ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "recent", EnteredDate = recentMs, UpdatedOn = recentMs });
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "old", EnteredDate = oldMs, UpdatedOn = oldMs });
+
+        var count = await _repo.GetCountSinceAsync(accountId, weekAgoMs);
+
+        Assert.Equal(1, count);
+    }
+
+    [Fact]
+    public async Task GetCountSinceAsync_ExcludesSoftDeletedEntries()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var sinceMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
+        var recentMs = DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "active", EnteredDate = recentMs, UpdatedOn = recentMs });
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "deleted", EnteredDate = recentMs + 1000, UpdatedOn = recentMs + 1000, DeletedAt = recentMs + 1000 });
+
+        var count = await _repo.GetCountSinceAsync(accountId, sinceMs);
+
+        Assert.Equal(1, count);
+    }
+
+    [Fact]
+    public async Task GetCountSinceAsync_ExcludesOtherAccounts()
+    {
+        var account1 = System.Guid.NewGuid().ToString();
+        var account2 = System.Guid.NewGuid().ToString();
+        var sinceMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
+        var recentMs = DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account1, Notes = "mine", EnteredDate = recentMs, UpdatedOn = recentMs });
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account2, Notes = "theirs", EnteredDate = recentMs + 500, UpdatedOn = recentMs + 500 });
+
+        var count = await _repo.GetCountSinceAsync(account1, sinceMs);
+
+        Assert.Equal(1, count);
+    }
 }
