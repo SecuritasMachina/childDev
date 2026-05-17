@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 132 — Mobile Tests: JournalRepository GetAllActiveAsync ordering
+
+**What changed:**
+- `JournalRepositoryTests.cs`: Added `GetAllActiveAsync_OrdersByEnteredDateDescending` — inserts two journals with different `EnteredDate` values, calls `GetAllActiveAsync`, and verifies the newer entry appears first.
+
+**Why:** `JournalRepository.GetAllActiveAsync` orders by `EnteredDate DESC`, which determines the display order in the journal list. This ordering was completely untested. A refactor removing the `OrderByDescending` clause would silently break the display order with no failing test. GoalRepository has an ordering test; this brings Journal in line.
+
+**Impact:** 53 mobile tests pass. 106 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 131 — Mobile Tests: SyncService sends locally modified Goal and Todo
 
 **What changed:**
