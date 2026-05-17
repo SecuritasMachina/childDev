@@ -1,0 +1,145 @@
+@page "/journal"
+@inject AppDbContext Db
+@inject NavigationManager Nav
+@inject IHttpContextAccessor HttpContextAccessor
+@inject ISnackbar Snackbar
+@inject WebAnalyticsService Analytics
+
+<PageTitle>Journal – ChildDev</PageTitle>
+
+@if (AccountGuid is null)
+{
+    Nav.NavigateTo("/login");
+    return;
+}
+
+<MudText Typo="Typo.h5" Class="mb-4">
+    <MudIcon Icon="@Icons.Material.Filled.Book" Class="mr-2" />
+    Journal
+</MudText>
+
+<MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mb-4"
+           StartIcon="@Icons.Material.Filled.Add"
+           OnClick="() => ShowAddDialog = true">New Entry</MudButton>
+
+@if (!Entries.Any())
+{
+    <MudText Typo="Typo.body2" Color="Color.Secondary">No journal entries yet. Write the first one!</MudText>
+}
+else
+{
+    <MudGrid>
+        @foreach (var j in Entries)
+        {
+            var enteredDate = DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime;
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="2" Class="h-100">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@enteredDate.ToString("MMM d, yyyy")</MudText>
+                            @if (!string.IsNullOrWhiteSpace(j.Activity))
+                            {
+                                <MudText Typo="Typo.body2" Class="mt-1"><strong>@j.Activity</strong></MudText>
+                            }
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            @if (!string.IsNullOrWhiteSpace(j.Mood))
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Secondary">@j.Mood</MudChip>
+                            }
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    @if (!string.IsNullOrWhiteSpace(j.Notes))
+                    {
+                        <MudCardContent Class="pt-0">
+                            <MudText Typo="Typo.body2">@(j.Notes.Length > 200 ? j.Notes[..200] + "…" : j.Notes)</MudText>
+                        </MudCardContent>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(j.Tags))
+                    {
+                        <MudCardActions>
+                            @foreach (var tag in j.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                            {
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@tag</MudChip>
+                            }
+                        </MudCardActions>
+                    }
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+<MudDialog @bind-Visible="ShowAddDialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.EditNote" Class="mr-2" />
+            New Journal Entry
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="NewNotes" Label="What happened? What did you observe?" Variant="Variant.Outlined"
+                      Lines="4" Class="mb-4" AutoFocus="true" />
+        <MudTextField @bind-Value="NewActivity" Label="Activity (optional)" Variant="Variant.Outlined" Class="mb-4" />
+        <MudTextField @bind-Value="NewMood" Label="Mood (optional)" Variant="Variant.Outlined" Class="mb-4" />
+        <MudTextField @bind-Value="NewTags" Label="Tags (optional, comma-separated)" Variant="Variant.Outlined" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => ShowAddDialog = false">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddEntry">Save Entry</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private string? AccountGuid;
+    private List<Journal> Entries = [];
+    private bool ShowAddDialog;
+    private string NewNotes = string.Empty;
+    private string NewActivity = string.Empty;
+    private string NewMood = string.Empty;
+    private string NewTags = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
+        if (AccountGuid is null) return;
+        await LoadEntries();
+        await Analytics.TrackAsync("page_view", AccountGuid, "journal");
+    }
+
+    private async Task LoadEntries()
+    {
+        Entries = await Db.Journals
+            .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null)
+            .OrderByDescending(j => j.EnteredDate)
+            .ToListAsync();
+    }
+
+    private async Task AddEntry()
+    {
+        if (string.IsNullOrWhiteSpace(NewNotes) && string.IsNullOrWhiteSpace(NewActivity)) return;
+
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        Db.Journals.Add(new Journal
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = AccountGuid!,
+            Notes = string.IsNullOrWhiteSpace(NewNotes) ? null : NewNotes.Trim(),
+            Activity = string.IsNullOrWhiteSpace(NewActivity) ? null : NewActivity.Trim(),
+            Mood = string.IsNullOrWhiteSpace(NewMood) ? null : NewMood.Trim(),
+            Tags = string.IsNullOrWhiteSpace(NewTags) ? null : NewTags.Trim(),
+            EnteredDate = now,
+            UpdatedOn = now
+        });
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("journal_add", AccountGuid, "journal");
+
+        NewNotes = string.Empty;
+        NewActivity = string.Empty;
+        NewMood = string.Empty;
+        NewTags = string.Empty;
+        ShowAddDialog = false;
+        Snackbar.Add("Entry saved!", Severity.Success);
+        await LoadEntries();
+    }
+}
