@@ -106,6 +106,23 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 265 — Web: Analytics tracking + Todos page
+
+**What changed:**
+- `AnalyticsEvent.cs`: New entity (Id, EventName, Timestamp, AccountGuid, Page, Context). Registered in `AppDbContext`. `EnsureCreated` handles table creation.
+- `WebAnalyticsService.cs`: Scoped service wrapping `TrackAsync(eventName, accountGuid, page, context)`.
+- `Home.razor`: Tracks `page_view`, `goal_add`, `goal_complete` events. `@inject WebAnalyticsService`.
+- `Todos.razor`: New `/todos` page — pending list with overdue alert (red badge), add dialog with due-date picker, completed expansion panel. Tracks `page_view`, `todo_add`, `todo_complete`.
+- `MainLayout.razor`: Added Goals + Todos nav links for authenticated users.
+- `Program.cs`: `AddScoped<WebAnalyticsService>()`.
+- `_Imports.razor`: `@using ChildDev.Api.Services`.
+
+**Why:** CLAUDE.md mandates user behavior analytics for all created apps. Todos was the highest-impact missing web page (all 4 sync entities now have web coverage).
+
+**Impact:** 200 API tests pass. Build clean. Web UI now covers Goals + Todos with full analytics.
+
+---
+
 ## 2026-05-17 — Iteration 264 — Web: Blazor Server + MudBlazor migration complete
 
 **What changed:**
