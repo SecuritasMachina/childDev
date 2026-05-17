@@ -241,6 +241,26 @@ public class GoalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetAllActiveAsync_MultipleActiveGoals_OrderedByEnteredDateDescending()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var older = DateTimeOffset.UtcNow.AddDays(-5).ToUnixTimeMilliseconds();
+        var middle = DateTimeOffset.UtcNow.AddDays(-2).ToUnixTimeMilliseconds();
+        var newer = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalText = "middle", EnteredDate = middle, UpdatedOn = middle });
+        await _db.InsertOrReplaceAsync(new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalText = "older", EnteredDate = older, UpdatedOn = older });
+        await _db.InsertOrReplaceAsync(new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalText = "newer", EnteredDate = newer, UpdatedOn = newer });
+
+        var results = await _repo.GetAllActiveAsync(accountId);
+
+        Assert.Equal(3, results.Count);
+        Assert.Equal("newer", results[0].GoalText);
+        Assert.Equal("middle", results[1].GoalText);
+        Assert.Equal("older", results[2].GoalText);
+    }
+
+    [Fact]
     public async Task GetModifiedSinceAsync_IncludesSoftDeletedRecords()
     {
         var accountId = System.Guid.NewGuid().ToString();

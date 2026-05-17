@@ -165,6 +165,27 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Sync_OptionalFieldsRoundTrip()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("jsync_optional1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid = Guid.NewGuid().ToString();
+
+        await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([
+            new JournalDto(guid, accountGuid, "Full entry", "Swimming", "Happy", "fitness,sport", ts, ts, null)
+        ], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
+        var record = body!.Records.First(r => r.Guid == guid);
+
+        Assert.Equal("Swimming", record.Activity);
+        Assert.Equal("Happy", record.Mood);
+        Assert.Equal("fitness,sport", record.Tags);
+    }
+
+    [Fact]
     public async Task Sync_Delta_OrderedByUpdatedOnAscending()
     {
         var (jwt, accountGuid) = await RegisterAsync("jsync_order1");
