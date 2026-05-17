@@ -106,6 +106,17 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 273 — Web: Soft-delete todo from web
+
+**What changed:**
+- `Todos.razor`: Added delete (trash) icon to each pending todo row. Sets `DeletedAt = UpdatedOn = now` — matches the LWW soft-delete convention used by mobile. Tracks `todo_delete` analytics event. Deleted todos disappear from pending list immediately.
+
+**Why:** Mobile can soft-delete todos; web had no equivalent. Without web delete, users had to open the mobile app to remove junk entries.
+
+**Impact:** 200 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Iteration 272 — Web: Todo edit dialog
 
 **What changed:**
