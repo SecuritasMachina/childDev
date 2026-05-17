@@ -313,4 +313,22 @@ public class GoalProgressRepositoryTests : IDisposable
         Assert.True(result.ContainsKey(goalFk));
         Assert.Equal("mine", result[goalFk]);
     }
+
+    [Fact]
+    public async Task UpsertFromSyncAsync_PreservesServerTimestamp()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var goalFk = System.Guid.NewGuid().ToString();
+        var serverTs = 12345678L;
+
+        await _repo.UpsertFromSyncAsync(new GoalProgress
+        {
+            Guid = guid, AccountFk = "account1", GoalFk = goalFk,
+            NextStepItems = "server step", UpdatedOn = serverTs
+        });
+
+        var retrieved = await _db.FindAsync<GoalProgress>(guid);
+        Assert.NotNull(retrieved);
+        Assert.Equal(serverTs, retrieved!.UpdatedOn);
+    }
 }

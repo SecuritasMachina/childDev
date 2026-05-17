@@ -332,6 +332,23 @@ public class TodoRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task UpsertFromSyncAsync_PreservesServerTimestamp()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var serverTs = 12345678L;
+
+        await _repo.UpsertFromSyncAsync(new Todo
+        {
+            Guid = guid, AccountFk = "account1", Title = "server todo",
+            UpdatedOn = serverTs
+        });
+
+        var retrieved = await _repo.GetAsync(guid);
+        Assert.NotNull(retrieved);
+        Assert.Equal(serverTs, retrieved!.UpdatedOn);
+    }
+
+    [Fact]
     public async Task DeleteAsync_WhenGuidNotFound_DoesNotThrow()
     {
         var nonExistentGuid = System.Guid.NewGuid().ToString();
