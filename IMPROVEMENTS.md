@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 253 — Mobile: SyncService uploads all modified journals when multiple exist
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_TwoLocalJournalsModified_BothIncludedInUpload` (user82) — inserts 2 journals with `UpdatedOn > 0` (account `LastSyncAt` defaults to 0), runs sync, and asserts both GUIDs appear in the upload body captured by `CapturingHandler`.
+
+**Why:** All existing upload-direction tests insert exactly 1 modified record. The `SyncEntityAsync` method collects `GetModifiedSinceAsync` results into a list and sends them all in one batch, but this multi-record upload path was untested. If the batch were accidentally truncated to the first record (e.g., `.First()` instead of the full list), only the 2-record test would catch it.
+
+**Impact:** 207 mobile tests pass (was 206). 193 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 252 — Mobile: Overdue todos remain in pending list
 
 **What changed:**
