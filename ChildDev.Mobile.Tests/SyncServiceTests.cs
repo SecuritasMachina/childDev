@@ -1615,6 +1615,38 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_ServerSendsGoalWithNullCompletionDate_GoalAppearsActiveLocally()
+    {
+        await _accountService.CreateAccountAsync("user68", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var goalGuid = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Insert a locally-completed goal directly
+        await _db.InsertOrReplaceAsync(new Goal
+        {
+            Guid = goalGuid, AccountFk = account.Guid, GoalText = "completed locally",
+            EnteredDate = now, UpdatedOn = now, CompletionDate = now
+        });
+
+        // Server sends same goal with newer UpdatedOn and CompletionDate = null — goal is un-completed
+        var serverGoal = new GoalSyncDto(goalGuid, account.Guid, "un-completed goal",
+            null, null, now, null, null, now + 1000, null);
+
+        var service = BuildSyncService(new FakeGoalSyncHandler(serverGoal));
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var activeGoals = await _goalRepo.GetAllActiveAsync(account.Guid);
+        var stored = activeGoals.FirstOrDefault(g => g.Guid == goalGuid);
+        Assert.NotNull(stored);
+        Assert.Null(stored!.CompletionDate);
+    }
+
+    [Fact]
     public async Task RunAsync_BearerJwt_IncludedInRequestHeaders()
     {
         await _accountService.CreateAccountAsync("user67", "1234");
