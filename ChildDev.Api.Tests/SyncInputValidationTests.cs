@@ -35,4 +35,20 @@ public class SyncInputValidationTests(ApiFactory factory) : IClassFixture<ApiFac
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+
+    [Theory]
+    [InlineData("/api/sync/journal",  "{\"Records\":[{\"Guid\":\"g1\",\"AccountFk\":\"a1\",\"UpdatedOn\":9999999999999,\"EnteredDate\":0,\"DeletedAt\":null}],\"LastSyncAt\":0}")]
+    [InlineData("/api/sync/goal",     "{\"Records\":[{\"Guid\":\"g1\",\"AccountFk\":\"a1\",\"UpdatedOn\":9999999999999,\"EnteredDate\":0,\"DeletedAt\":null}],\"LastSyncAt\":0}")]
+    [InlineData("/api/sync/goal-progress", "{\"Records\":[{\"Guid\":\"g1\",\"AccountFk\":\"a1\",\"GoalFk\":\"f1\",\"UpdatedOn\":9999999999999,\"DeletedAt\":null}],\"LastSyncAt\":0}")]
+    [InlineData("/api/sync/todo",     "{\"Records\":[{\"Guid\":\"g1\",\"AccountFk\":\"a1\",\"UpdatedOn\":9999999999999,\"DeletedAt\":null}],\"LastSyncAt\":0}")]
+    public async Task Sync_FutureUpdatedOn_Returns422(string endpoint, string body)
+    {
+        var jwt = await RegisterJwtAsync($"futval_{endpoint.Replace("/", "_")}");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var response = await _client.PostAsync(endpoint,
+            new StringContent(body, Encoding.UTF8, "application/json"));
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
 }
