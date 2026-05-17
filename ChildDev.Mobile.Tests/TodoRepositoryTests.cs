@@ -365,4 +365,25 @@ public class TodoRepositoryTests : IDisposable
         var retrieved = await _repo.GetAsync(nonExistentGuid);
         Assert.Null(retrieved);
     }
+
+    [Fact]
+    public async Task GetPendingAsync_ThreeItems_DueDateTodosBeforeNoDueDate()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var day1 = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeMilliseconds();
+        var day2 = DateTimeOffset.UtcNow.AddDays(2).ToUnixTimeMilliseconds();
+
+        // Insert in shuffled order to verify sort is not insertion-order dependent
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "no due date", UpdatedOn = now });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "due day2", UpdatedOn = now, DueDate = day2 });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "due day1", UpdatedOn = now, DueDate = day1 });
+
+        var pending = await _repo.GetPendingAsync(accountId);
+
+        Assert.Equal(3, pending.Count);
+        Assert.Equal("due day1", pending[0].Title);
+        Assert.Equal("due day2", pending[1].Title);
+        Assert.Equal("no due date", pending[2].Title);
+    }
 }

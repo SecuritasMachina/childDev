@@ -931,6 +931,33 @@ public class SyncServiceTests : IDisposable
         Assert.NotNull(body);
         Assert.Contains(nextMeeting.ToString(), body);
     }
+
+    [Fact]
+    public async Task RunAsync_MultipleLocalModifications_AllFourEndpointsReceiveData()
+    {
+        await _accountService.CreateAccountAsync("user37", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var updatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goalGuid = System.Guid.NewGuid().ToString();
+
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "a note", EnteredDate = updatedOn, UpdatedOn = updatedOn });
+        await _db.InsertOrReplaceAsync(new Goal { Guid = goalGuid, AccountFk = account.Guid, GoalText = "a goal", EnteredDate = updatedOn, UpdatedOn = updatedOn });
+        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goalGuid, NextStepItems = "step", UpdatedOn = updatedOn });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "a todo", UpdatedOn = updatedOn });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        Assert.NotNull(capturingHandler.GetBodyFor("sync/journal"));
+        Assert.NotNull(capturingHandler.GetBodyFor("sync/goal"));
+        Assert.NotNull(capturingHandler.GetBodyFor("sync/goal-progress"));
+        Assert.NotNull(capturingHandler.GetBodyFor("sync/todo"));
+    }
 }
 
 // Test helpers
