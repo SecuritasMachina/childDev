@@ -106,6 +106,17 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 284 — Web: Show NextMeetingDate on goal cards
+
+**What changed:**
+- `Home.razor`: Goal cards now show a "Next meeting: MMM d" caption line when `NextMeetingDate` is set, using `Color.Info` to distinguish it from the goal text and measurable outcome.
+
+**Why:** `NextMeetingDate` was only visible inside the GoalDetail page. Surfacing it on the card lets kids see all upcoming goal meetings at a glance from the dashboard without clicking into each goal.
+
+**Impact:** 213 API tests pass. 216 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 283 — Web: Goal expiration warning chips on home page cards
 
 **What changed:**
