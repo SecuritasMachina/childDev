@@ -1,5 +1,35 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 19 Brainstorm (fresh — every 3rd)
+
+| # | Description | Dim | Impact | Effort | Risk | Status |
+|---|-------------|-----|--------|--------|------|--------|
+| 1 | GoalEntryPage: ExpirationDate date picker + display | Func | High | S | Low | **DONE** |
+| 2 | Dashboard: show last-synced timestamp (not just "Synced HH:mm") | UI | Medium | S | Low | Backlog |
+| 3 | API: X-Request-ID echo header for traceability | Perf | Low | S | Low | Backlog |
+| 4 | SyncService: retry once on transient HTTP failure | Stability | Low | M | Medium | Backlog |
+| 5 | GoalListPage: show NextMeetingDate per goal | UI | Medium | S | Low | Backlog |
+| 6 | API: CORS policy — restrict to expected origins | Security | Low | S | Low | Backlog |
+| 7 | JournalListPage: activity chip/badge alongside mood | UI | Low | S | Low | Backlog |
+| 8 | TodoEntryPage: due date picker UI (DatePicker element) | Func | Medium | S | Low | Backlog |
+| 9 | API: structured logging for sync (record counts, account) | Ops | Low | S | Low | Backlog |
+| 10 | GoalEntryPage: clear ExpirationDate (nullable DatePicker) | Func | Low | S | Low | Backlog |
+
+---
+
+## 2026-05-16 — Pull-to-refresh sync on Journal, Goal, and Todo list pages
+
+**What changed:**
+- `JournalListViewModel`, `GoalListViewModel`, `TodoListViewModel`: Added `SyncService` constructor parameter, `IsRefreshing` observable, and `RefreshCommand`. Refresh runs sync, reloads data from local DB, clears status message on success, sets error on failure, always sets `IsRefreshing = false` in finally.
+- `JournalListPage.xaml`, `GoalListPage.xaml`: Wrapped `CollectionView` in `RefreshView` bound to `RefreshCommand`/`IsRefreshing`.
+- `TodoListPage.xaml`: Same RefreshView wrapper around the CollectionView (Grid.Row="2").
+
+**Why:** Users had no way to trigger sync from within a list page. They had to navigate to the dashboard and wait for auto-sync. Pull-to-refresh is the standard mobile pattern for on-demand refresh.
+
+**Impact:** All three list pages now support pull-to-refresh, triggering a full sync + local reload. 21 mobile tests, 42 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 16 Brainstorm (fresh — every 3rd)
 
 | # | Description | Dim | Impact | Effort | Risk | Status |
