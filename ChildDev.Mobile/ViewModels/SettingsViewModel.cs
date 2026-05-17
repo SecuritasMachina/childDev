@@ -11,6 +11,7 @@ public partial class SettingsViewModel(AccountService accountService, IHttpClien
     [ObservableProperty] private string accountCreatedDisplay = string.Empty;
     [ObservableProperty] private string lastSyncDisplay = "Never";
     [ObservableProperty] private string statusMessage = string.Empty;
+    [ObservableProperty] private string accountGuid = string.Empty;
 
     [RelayCommand]
     private async Task LoadAsync()
@@ -18,6 +19,7 @@ public partial class SettingsViewModel(AccountService accountService, IHttpClien
         var account = await accountService.GetAccountAsync();
         if (account is null) return;
         NickName = account.NickName;
+        AccountGuid = account.Guid;
         ServerUrl = account.ServerUrl ?? string.Empty;
         AccountCreatedDisplay = DateTimeOffset.FromUnixTimeMilliseconds(account.CreatedOn).LocalDateTime.ToString("ddd, MMM d yyyy");
         LastSyncDisplay = account.LastSyncAt == 0
