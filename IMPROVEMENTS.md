@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 201 — Mobile: GetAsync returns null when GUID not found (Goal, Journal, Todo)
+
+**What changed:**
+- `GoalRepositoryTests.cs`, `JournalRepositoryTests.cs`, `TodoRepositoryTests.cs`: Added `GetAsync_WhenGuidNotFound_ReturnsNull` to each — calls GetAsync with a non-existent GUID, asserts null.
+
+**Why:** The `FindAsync<T>` contract returns null for missing records. While implicitly exercised in other tests, no test explicitly documented this boundary for any of the 3 repositories. Added 3 tests in one iteration due to trivial shared structure.
+
+**Impact:** 156 mobile tests pass (was 153). 157 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 200 — Mobile: AccountService SaveServerCredentials second call overwrites first
 
 **What changed:**
