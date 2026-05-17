@@ -172,4 +172,53 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.DoesNotContain(body!.Records, r => r.Guid == guid);
     }
+
+    [Fact]
+    public async Task Sync_BatchMixedLWW_PerRecordWinnerApplied()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_mixed_lww");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var guidA = Guid.NewGuid().ToString();
+        var guidB = Guid.NewGuid().ToString();
+
+        // Establish server state: A at ts+1000, B at ts+2000
+        await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([
+            new TodoDto(guidA, accountGuid, "A server", null, null, null, ts + 1000, null),
+            new TodoDto(guidB, accountGuid, "B server", null, null, null, ts + 2000, null)
+        ], 0));
+
+        // Client sends A at ts+2000 (newer → client wins) and B at ts+1000 (older → server wins)
+        await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([
+            new TodoDto(guidA, accountGuid, "A client newer", null, null, null, ts + 2000, null),
+            new TodoDto(guidB, accountGuid, "B client stale", null, null, null, ts + 1000, null)
+        ], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+
+        var recordA = body!.Records.First(r => r.Guid == guidA);
+        var recordB = body.Records.First(r => r.Guid == guidB);
+        Assert.Equal("A client newer", recordA.Title);
+        Assert.Equal("B server", recordB.Title);
+    }
+
+    [Fact]
+    public async Task Sync_LastSyncAt_NegativeValue_ReturnsAllRecords()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_neg_lastsync");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, "Always returned", null, null, null, ts, null)], 0));
+
+        // LastSyncAt = -1 means "never synced before". All records must be in delta.
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], -1));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+
+        Assert.Contains(body!.Records, r => r.Guid == guid);
+    }
 }
