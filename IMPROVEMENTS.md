@@ -106,6 +106,18 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 282 — Mobile: Preserve EnteredDate through Journal sync upsert
+
+**What changed:**
+- `JournalRepository.cs`: `UpsertFromSyncAsync` now loads the existing record first and preserves its `EnteredDate`, mirroring the same fix applied to `GoalRepository` in iteration 279.
+- `JournalRepositoryTests.cs`: Added `UpsertFromSyncAsync_PreservesOriginalEnteredDate_WhenServerSendsDifferentValue`.
+
+**Why:** `EnteredDate` on a Journal entry represents the date the user wrote the entry. The server should never overwrite this with a different value — the same bug that existed in GoalRepository was present here too.
+
+**Impact:** 213 API tests pass. 216 mobile tests pass (was 215).
+
+---
+
 ## 2026-05-17 — Iteration 281 — Mobile: GetModifiedSinceAsync zero UpdatedOn exclusion test
 
 **What changed:**
