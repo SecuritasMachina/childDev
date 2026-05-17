@@ -1,4 +1,7 @@
 is_global = true
+build_property.MudDebugAnalyzer = 
+build_property.MudAllowedAttributePattern = 
+build_property.MudIllegalParameters = 
 build_property.TargetFramework = net8.0
 build_property.TargetPlatformMinVersion = 
 build_property.UsingMicrosoftNETSdkWeb = true
@@ -18,34 +21,54 @@ build_property.GenerateRazorMetadataSourceChecksumAttributes =
 build_property.MSBuildProjectDirectory = /mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api
 build_property._RazorSourceGeneratorDebug = 
 
-[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Pages/Goals/Index.cshtml]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXMvR29hbHMvSW5kZXguY3NodG1s
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Components/App.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9BcHAucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Pages/Index.cshtml]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXMvSW5kZXguY3NodG1s
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Components/Layout/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvTWFpbkxheW91dC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Pages/Login.cshtml]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTG9naW4uY3NodG1s
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Components/Pages/GoalDetail.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Hb2FsRGV0YWlsLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Pages/Logout.cshtml]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTG9nb3V0LmNzaHRtbA==
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Components/Pages/Home.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Ib21lLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Pages/Register.cshtml]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUmVnaXN0ZXIuY3NodG1s
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Components/Pages/Insights.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9JbnNpZ2h0cy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Pages/Shared/_Layout.cshtml]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXMvU2hhcmVkL19MYXlvdXQuY3NodG1s
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Components/Pages/JournalPage.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Kb3VybmFsUGFnZS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Pages/_ViewImports.cshtml]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXMvX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Components/Pages/Login.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Mb2dpbi5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Pages/_ViewStart.cshtml]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXMvX1ZpZXdTdGFydC5jc2h0bWw=
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Components/Pages/Logout.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Mb2dvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Components/Pages/Register.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9SZWdpc3Rlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Components/Pages/Settings.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9TZXR0aW5ncy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Components/Pages/Todos.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Ub2Rvcy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Components/Routes.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Sb3V0ZXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Components/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9fSW1wb3J0cy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 

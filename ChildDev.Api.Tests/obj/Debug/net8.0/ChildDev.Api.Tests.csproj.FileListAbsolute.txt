@@ -451,3 +451,13 @@
 /mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/obj/Debug/net8.0/ChildDev.Api.Tests.pdb
 /mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/obj/Debug/net8.0/ChildDev.Api.Tests.genruntimeconfig.cache
 /mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/obj/Debug/net8.0/ref/ChildDev.Api.Tests.dll
+/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/ChildDev.Api.staticwebassets.runtime.json
+/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/Microsoft.AspNetCore.Authorization.dll
+/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/Microsoft.AspNetCore.Components.dll
+/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/Microsoft.AspNetCore.Components.Forms.dll
+/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/Microsoft.AspNetCore.Components.Web.dll
+/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/Microsoft.AspNetCore.Metadata.dll
+/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/Microsoft.Extensions.Localization.dll
+/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/Microsoft.Extensions.Localization.Abstractions.dll
+/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/Microsoft.JSInterop.dll
+/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/MudBlazor.dll
