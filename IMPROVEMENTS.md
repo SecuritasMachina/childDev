@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 118 — Mobile Tests: Strengthen soft-delete assertions in Journal and Goal repos
+
+**What changed:**
+- `JournalRepositoryTests.cs`, `GoalRepositoryTests.cs`: `Delete_SoftDeletes_ExcludedFromActive` tests now also call `GetAsync` and assert `DeletedAt` is not null.
+
+**Why (justification for modifying tests):** The existing assertions only verified behavioral exclusion from the active list. They did not verify the soft-delete invariant — that the record still exists in SQLite with `DeletedAt` set (required for sync uplink). The `TodoRepositoryTests` already had this stronger assertion; this brings the others in line.
+
+**Impact:** 43 mobile tests pass. 93 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 117 — Mobile: Error handling in SetupViewModel.CreateAccountAsync
 
 **What changed:**
