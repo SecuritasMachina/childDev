@@ -1,5 +1,20 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 204 — API: JournalSync optional fields round-trip (Activity, Mood, Tags)
+
+**What changed:**
+- `JournalSyncTests.cs`: Added `Sync_OptionalFieldsRoundTrip` — syncs a journal with Activity="Running", Mood="Energized", Tags="fitness,outdoors", then syncs with `LastSyncAt=0` and asserts all three fields are returned correctly in the delta.
+
+**Why:** Goal and Todo both have `Sync_OptionalFieldsRoundTrip`. Journal has three optional fields (Activity, Mood, Tags) tested for length limits in SyncInputValidationTests but never verified to survive the full HTTP JSON store-and-retrieve cycle. If the API's `EntityToDto` or `DtoToEntity` accidentally dropped a field, no test would catch it.
+
+**Impact:** 158 API tests pass (was 157). 157 mobile tests pass.
+
+---
+
+## 2026-05-17 — Iteration 203 — SKIP (redundant; GoalProgress GetModifiedSinceAsync soft-delete test already in iter 148)
+
+---
+
 ## 2026-05-17 — Iteration 202 — Mobile: TodoRepository GetCompletedCount counts all 3 completed, excludes pending
 
 **What changed:**
