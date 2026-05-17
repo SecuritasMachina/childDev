@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 136 — Mobile Tests: TodoRepository.GetAllActiveAsync coverage + server Todo/GoalProgress inbound upsert
+
+**What changed:**
+- `TodoRepositoryTests.cs`: Added `GetAllActiveAsync_IncludesCompletedExcludesDeleted` and `GetAllActiveAsync_ExcludesOtherAccounts` — `GetAllActiveAsync` had zero test coverage.
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsTodo_UpsertsLocally` and `RunAsync_ServerReturnsGoalProgress_UpsertsLocally` with new `FakeTodoSyncHandler` and `FakeGoalProgressSyncHandler` — completing inbound sync coverage for all 4 entity types.
+
+**Why:** `TodoRepository.GetAllActiveAsync` (which includes both pending and completed non-deleted todos) was completely untested — any regression in its filter or account-scope clause would go undetected. Similarly, the SyncService inbound-upsert path was only verified for Journal and Goal (iter 135); Todo and GoalProgress were missing parallel tests, meaning the `UpsertFromSyncAsync` paths for those entities were untested at the service layer.
+
+**Impact:** 67 mobile tests pass (was 63). 107 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 135 — API + Mobile Tests: Todo completed blank title; GoalProgress ordering; server Goal upsert
 
 **What changed:**
