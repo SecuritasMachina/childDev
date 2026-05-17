@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 212 — Mobile: SyncService includes Journal Notes in upload request
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_LocalJournal_NotesIncludedInUploadRequest` — inserts a journal with Notes="Reflection on the week", runs sync, asserts the captured sync/journal body contains that text.
+
+**Why:** `RunAsync_LocalJournalModifiedSinceLastSync_IncludedInRequest` only asserts the Guid. `RunAsync_LocalJournal_AuxFieldsIncludedInUploadRequest` checks Activity/Mood/Tags but not Notes — the primary content field. If `j.Notes` were accidentally dropped from the toDto lambda, journals would upload with null Notes silently.
+
+**Impact:** 163 mobile tests pass (was 162). 160 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 211 — Mobile: SyncService includes Goal GoalText in upload request
 
 **What changed:**
