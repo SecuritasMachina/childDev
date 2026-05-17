@@ -4063,3 +4063,13 @@ Both match mobile filter behavior (TodoListViewModel.FilterText, JournalListView
 **Impact:** 217 API tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — Analytics insights page (iter 315)
+
+**What:** New `/insights` Blazor page showing personal usage stats for the logged-in caregiver. Displays: total actions (last 30 days), actions this week, active day count, 14-day daily bar chart, top features used, and pages visited. Added "Insights" nav link in MainLayout.
+
+**Why:** CLAUDE.md requires analytics in all web UI pages and says "usage data should be used to promote high-usage features." The insights page exposes that data directly to caregivers so they can see their own activity patterns. No new infrastructure — reads from existing `AnalyticsEvents` table.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---

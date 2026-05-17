@@ -1,0 +1,188 @@
+@page "/insights"
+@inject AppDbContext Db
+@inject IHttpContextAccessor HttpContextAccessor
+@inject WebAnalyticsService Analytics
+
+<PageTitle>My Insights – ChildDev</PageTitle>
+
+@if (AccountGuid is null)
+{
+    <MudText>Please <MudLink Href="/login">log in</MudLink> to view insights.</MudText>
+    return;
+}
+
+<MudText Typo="Typo.h5" Class="mb-4">
+    <MudIcon Icon="@Icons.Material.Filled.BarChart" Class="mr-2" />
+    My Activity Insights
+</MudText>
+
+<MudGrid Class="mb-6">
+    <MudItem xs="12" sm="4">
+        <MudPaper Elevation="2" Class="pa-4 text-center">
+            <MudIcon Icon="@Icons.Material.Filled.TouchApp" Color="Color.Primary" Style="font-size:2rem;" />
+            <MudText Typo="Typo.h4" Class="mt-1">@TotalLast30</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Actions (last 30 days)</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="4">
+        <MudPaper Elevation="2" Class="pa-4 text-center">
+            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="Color.Success" Style="font-size:2rem;" />
+            <MudText Typo="Typo.h4" Class="mt-1">@TotalThisWeek</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Actions this week</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="4">
+        <MudPaper Elevation="2" Class="pa-4 text-center">
+            <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Color="Color.Info" Style="font-size:2rem;" />
+            <MudText Typo="Typo.h4" Class="mt-1">@ActiveDaysLast30</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Active days (last 30)</MudText>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@if (DailyChartSeries.Count > 0)
+{
+    <MudPaper Elevation="1" Class="pa-4 mb-6">
+        <MudText Typo="Typo.subtitle2" Class="mb-3">Daily Activity — Last 14 Days</MudText>
+        <MudChart ChartType="ChartType.Bar"
+                  ChartSeries="@DailyChartSeries"
+                  XAxisLabels="@DailyChartLabels"
+                  Width="100%" Height="160px"
+                  ChartOptions="@(new ChartOptions { YAxisTicks = 1 })" />
+    </MudPaper>
+}
+
+<MudGrid>
+    <MudItem xs="12" sm="6">
+        <MudPaper Elevation="1" Class="pa-4">
+            <MudText Typo="Typo.subtitle2" Class="mb-3">Top Features Used (last 30 days)</MudText>
+            @foreach (var item in TopEvents)
+            {
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+                    <MudText Typo="Typo.body2" Style="flex:1">@FormatEventName(item.Key)</MudText>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary">@item.Value</MudChip>
+                </MudStack>
+            }
+            @if (!TopEvents.Any())
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">No feature usage tracked yet.</MudText>
+            }
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudPaper Elevation="1" Class="pa-4">
+            <MudText Typo="Typo.subtitle2" Class="mb-3">Pages Visited (last 30 days)</MudText>
+            @foreach (var item in PageViews)
+            {
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+                    <MudText Typo="Typo.body2" Style="flex:1">@FormatPageName(item.Key)</MudText>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info">@item.Value</MudChip>
+                </MudStack>
+            }
+            @if (!PageViews.Any())
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">No page views tracked yet.</MudText>
+            }
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private string? AccountGuid;
+    private int TotalLast30;
+    private int TotalThisWeek;
+    private int ActiveDaysLast30;
+    private List<ChartSeries> DailyChartSeries = [];
+    private string[] DailyChartLabels = [];
+    private Dictionary<string, int> TopEvents = new();
+    private Dictionary<string, int> PageViews = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
+        if (AccountGuid is null) return;
+        await LoadInsights();
+        await Analytics.TrackAsync("page_view", AccountGuid, "insights");
+    }
+
+    private async Task LoadInsights()
+    {
+        var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var day30Ms = DateTimeOffset.UtcNow.AddDays(-30).ToUnixTimeMilliseconds();
+        var day7Ms = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
+        var day14Ms = DateTimeOffset.UtcNow.AddDays(-14).ToUnixTimeMilliseconds();
+
+        var last30 = await Db.AnalyticsEvents
+            .Where(e => e.AccountGuid == AccountGuid && e.Timestamp >= day30Ms)
+            .ToListAsync();
+
+        TotalLast30 = last30.Count;
+        TotalThisWeek = last30.Count(e => e.Timestamp >= day7Ms);
+
+        ActiveDaysLast30 = last30
+            .Select(e => DateTimeOffset.FromUnixTimeMilliseconds(e.Timestamp).LocalDateTime.Date)
+            .Distinct()
+            .Count();
+
+        TopEvents = last30
+            .Where(e => e.EventName != "page_view")
+            .GroupBy(e => e.EventName)
+            .OrderByDescending(g => g.Count())
+            .Take(8)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        PageViews = last30
+            .Where(e => e.EventName == "page_view" && e.Page != null)
+            .GroupBy(e => e.Page!)
+            .OrderByDescending(g => g.Count())
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        BuildDailyChart(last30, day14Ms, nowMs);
+    }
+
+    private void BuildDailyChart(List<AnalyticsEvent> events, long fromMs, long nowMs)
+    {
+        var today = DateTimeOffset.UtcNow.LocalDateTime.Date;
+        var labels = new string[14];
+        var counts = new double[14];
+
+        for (int i = 13; i >= 0; i--)
+        {
+            var d = today.AddDays(-(13 - i));
+            labels[i] = d.ToString("M/d");
+            var startMs = new DateTimeOffset(d, TimeSpan.Zero).ToUnixTimeMilliseconds();
+            var endMs = startMs + 86_400_000L;
+            counts[i] = events.Count(e => e.Timestamp >= startMs && e.Timestamp < endMs);
+        }
+
+        DailyChartLabels = labels;
+        DailyChartSeries = [new ChartSeries { Name = "Actions", Data = counts }];
+    }
+
+    private static string FormatEventName(string name) => name switch
+    {
+        "goal_add" => "Add goal",
+        "goal_complete" => "Complete goal",
+        "goal_delete" => "Delete goal",
+        "goal_filter" => "Filter goals",
+        "progress_add" => "Add progress note",
+        "journal_quickadd" => "Quick journal entry",
+        "journal_add" => "Add journal entry",
+        "todo_add" => "Add todo",
+        "todo_complete" => "Complete todo",
+        "todo_delete" => "Delete todo",
+        "todo_filter" => "Filter todos",
+        "journal_filter" => "Filter journal",
+        _ => name.Replace("_", " ")
+    };
+
+    private static string FormatPageName(string page) => page switch
+    {
+        "home" => "Goals dashboard",
+        "todos" => "Todos",
+        "journal" => "Journal",
+        "goal_detail" => "Goal detail",
+        "insights" => "Insights",
+        _ => page
+    };
+}

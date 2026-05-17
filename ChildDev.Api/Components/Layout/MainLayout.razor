@@ -20,6 +20,8 @@
                        Variant="@(IsActive("/todos") ? Variant.Outlined : Variant.Text)">Todos</MudButton>
             <MudButton Color="Color.Inherit" Href="/journal"
                        Variant="@(IsActive("/journal") ? Variant.Outlined : Variant.Text)">Journal</MudButton>
+            <MudButton Color="Color.Inherit" Href="/insights"
+                       Variant="@(IsActive("/insights") ? Variant.Outlined : Variant.Text)">Insights</MudButton>
             <MudText Typo="Typo.body2" Class="ml-3 mr-2">@NickName</MudText>
             <MudButton Color="Color.Inherit" Href="/logout">Logout</MudButton>
         }
