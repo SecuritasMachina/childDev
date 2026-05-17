@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 98 — Mobile: Show NextStepItems character count in GoalEntry
+
+**What changed:**
+- `GoalEntryViewModel.cs`: Added `NextStepItemsLength` observable and `OnNextStepItemsChanged` partial.
+- `GoalEntryPage.xaml`: Added small gray character count label beneath the Next Steps Editor.
+
+**Why:** NextStepItems has a 2000-char API limit. This was the only editable field in GoalEntry without a counter.
+
+**Impact:** 25 mobile tests pass. 76 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 97 — Mobile: Show Title character count in TodoEntry
 
 **What changed:**
