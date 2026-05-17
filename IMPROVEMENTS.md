@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 193 — Mobile: SyncService includes Goal ExpirationDate in upload request
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_LocalGoal_ExpirationDateIncludedInUploadRequest` — pre-inserts a goal with ExpirationDate set, syncs, asserts the upload body for sync/goal contains the ExpirationDate timestamp.
+
+**Why:** `RunAsync_LocalGoal_OptionalFieldsIncludedInUploadRequest` tests MeasurableOutcome and NextMeetingDate but not ExpirationDate. Adding coverage for the third optional Goal field in the upload path. If ExpirationDate serialization were broken, this test would catch it.
+
+**Impact:** 145 mobile tests pass (was 144). 157 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 192 — Mobile: GoalProgress GetForGoal 3-item ordering test
 
 **What changed:**
