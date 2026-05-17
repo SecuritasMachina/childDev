@@ -1615,6 +1615,41 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_ServerSendsDeletedJournal_ExcludedFromGetAllActiveAsync()
+    {
+        await _accountService.CreateAccountAsync("user70", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var journalGuid = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Pre-insert the journal locally as active
+        await _db.InsertOrReplaceAsync(new Journal
+        {
+            Guid = journalGuid, AccountFk = account.Guid, Notes = "Active journal",
+            EnteredDate = now, UpdatedOn = now
+        });
+
+        // Verify it's active before sync
+        var activeBefore = await _journalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Contains(activeBefore, j => j.Guid == journalGuid);
+
+        // Server sends same Guid with DeletedAt set and newer UpdatedOn — journal is soft-deleted
+        var deletedAt = now + 1000;
+        var serverJournal = new JournalSyncDto(journalGuid, account.Guid, null,
+            null, null, null, now, deletedAt, deletedAt);
+
+        var service = BuildSyncService(new FakeSyncHandler(serverJournal));
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var activeAfter = await _journalRepo.GetAllActiveAsync(account.Guid);
+        Assert.DoesNotContain(activeAfter, j => j.Guid == journalGuid);
+    }
+
+    [Fact]
     public async Task RunAsync_ServerSendsDeletedTodo_ExcludedFromGetPendingAsync()
     {
         await _accountService.CreateAccountAsync("user69", "1234");
