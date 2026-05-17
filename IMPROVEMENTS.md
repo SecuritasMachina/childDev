@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 156 — API: Todo optional fields round-trip + delta ordering
+
+**What changed:**
+- `TodoSyncTests.cs`: Added `Sync_OptionalFieldsRoundTrip` — syncs a todo with `Notes="Pick up milk and eggs"` and `DueDate=ts+86400000`; verifies both survive the `EntityToDto` mapper in the delta response.
+- `TodoSyncTests.cs`: Added `Sync_Delta_OrderedByUpdatedOnAscending` — inserts 3 todos at T3/T1/T2, asserts delta returns them T1→T2→T3. Mirrors the existing Journal test.
+
+**Why:** `TodoDto` has two nullable optional fields (Notes, DueDate) with no API round-trip test — a silent mapper regression would drop data on client sync. The ordering test guards `ORDER BY UpdatedOn ASC` in the Todo delta query. Journal had both tests (iters 151, 153); this brings Todo to parity.
+
+**Impact:** 103 mobile tests pass. 123 API tests pass (was 121).
+
+---
+
 ## 2026-05-17 — Iteration 155 — Mobile: UpsertFromSyncAsync timestamp invariant for Todo + GoalProgress
 
 **What changed:**
