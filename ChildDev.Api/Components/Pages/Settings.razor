@@ -51,7 +51,8 @@
                 }
             </MudCardContent>
             <MudCardActions Class="px-4 pb-4">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ChangeNickName">Save Nickname</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ChangeNickName"
+                           Disabled="@(string.IsNullOrWhiteSpace(NewNickName) || NewNickName.Trim() == CurrentNickName || NewNickName.Trim().Length > 50)">Save Nickname</MudButton>
             </MudCardActions>
         </MudCard>
 
@@ -75,7 +76,8 @@
                 }
             </MudCardContent>
             <MudCardActions Class="px-4 pb-4">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ChangePin">Change PIN</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ChangePin"
+                           Disabled="@(string.IsNullOrWhiteSpace(CurrentPin) || NewPin.Length < 4 || NewPin != ConfirmNewPin)">Change PIN</MudButton>
             </MudCardActions>
         </MudCard>
     </MudItem>

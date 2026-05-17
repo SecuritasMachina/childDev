@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-17 — UX: disabled bindings for Settings page Save/Change buttons (iter 396)
+
+**File:** `ChildDev.Api/Components/Pages/Settings.razor`
+
+**Change:** "Save Nickname" grays out when the field is blank, exceeds 50 characters, or is unchanged from the current nickname. "Change PIN" grays out when current PIN is blank, new PIN is fewer than 4 characters, or the confirmation doesn't match.
+
+**Why:** Continuation of the button-disable sweep from iter 391. Both buttons previously allowed submission that would immediately fail with an error message. The `Disabled` binding gives immediate visual feedback without requiring a server round-trip or an error snackbar for obvious invalid states.
+
+**Impact:** Build: 0 warnings, 0 errors.
+
+---
+
 ## 2026-05-17 — UX: add confirmation dialogs for all destructive delete actions in web UI (iter 395)
 
 **Files:** `ChildDev.Api/Components/Pages/Home.razor`, `GoalDetail.razor`, `JournalPage.razor`, `Todos.razor`
