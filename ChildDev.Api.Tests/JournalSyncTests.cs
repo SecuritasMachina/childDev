@@ -141,4 +141,26 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.NotNull(deleted);
         Assert.Equal(deletedAt, deleted.DeletedAt);
     }
+
+    [Fact]
+    public async Task Sync_DeltaIsolation_OtherUsersRecordsNotReturned()
+    {
+        var (jwt1, accountGuid1) = await RegisterAsync("jsync_iso1");
+        var (jwt2, _) = await RegisterAsync("jsync_iso2");
+
+        // User 1 uploads a journal entry
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt1);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid1, "user1 private note", null, null, null, ts, ts, null)], 0));
+
+        // User 2 syncs with LastSyncAt=0 (would return everything for their account)
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt2);
+        var response = await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
+
+        Assert.DoesNotContain(body!.Records, r => r.Guid == guid);
+    }
 }
