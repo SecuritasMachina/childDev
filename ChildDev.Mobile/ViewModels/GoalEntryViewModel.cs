@@ -22,11 +22,17 @@ public partial class GoalEntryViewModel(
     [ObservableProperty] private bool isExisting;
     [ObservableProperty] private string enteredDateDisplay = string.Empty;
 
+    [ObservableProperty] private int goalTextLength;
+
     private string _loadedNextStepItems = string.Empty;
 
     private bool CanSave() => !string.IsNullOrWhiteSpace(GoalText);
 
-    partial void OnGoalTextChanged(string value) => SaveCommand.NotifyCanExecuteChanged();
+    partial void OnGoalTextChanged(string value)
+    {
+        GoalTextLength = value?.Length ?? 0;
+        SaveCommand.NotifyCanExecuteChanged();
+    }
 
     partial void OnGuidChanged(string value)
     {
