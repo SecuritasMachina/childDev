@@ -4625,3 +4625,30 @@ Updated `SettingsPage.xaml` with a conditional section:
 
 **Impact:** 218 API tests, 238 mobile tests — all passing. Build clean.
 
+
+---
+
+## 2026-05-17 — UX: Enter key submits register form from all fields (iter 368)
+
+**What:** Added `@onkeyup` Enter handler to NickName and PIN fields on `Register.razor`. Previously only Confirm PIN submitted on Enter; the other fields did nothing on Enter.
+
+**Why:** Consistent with `Login.razor` which added Enter key support in iter 333. Users who press Enter after filling in Nickname or PIN expect the form to advance or submit.
+
+**Impact:** 218 API tests pass. Build clean.
+
+---
+
+## 2026-05-17 — Test: coverage for AccountService.LinkToServerAsync and ClearServerJwtAsync (iter 369)
+
+**What:** Added `AccountServiceLinkTests` class to `AccountServiceTests.cs` with 6 tests:
+- Link with same GUID saves JWT/URL without migrating
+- Link with different GUID migrates account.Guid 
+- Link with different GUID migrates Journal.AccountFk
+- Link with different GUID migrates Goal.AccountFk
+- ClearServerJwt removes JWT, preserves ServerUrl
+- ClearServerJwt with no account is safe
+
+**Why:** The `LinkToServerAsync` method introduced in iter 364 is critical path for enabling sync. It does raw SQL cross-table migrations, which are hard to verify without tests. Zero test coverage was a risk.
+
+**Impact:** 244 mobile tests (was 238), 218 API tests — all passing.
+
