@@ -26,6 +26,9 @@ public partial class GoalListViewModel(
     [ObservableProperty]
     private string filterText = string.Empty;
 
+    [ObservableProperty]
+    private string entryCountDisplay = string.Empty;
+
     private List<Goal> _allGoals = [];
 
     partial void OnFilterTextChanged(string value) =>
@@ -47,6 +50,7 @@ public partial class GoalListViewModel(
             if (account is null) return;
             _allGoals = await LoadGoalsWithStepsAsync(account.Guid);
             Goals = new ObservableCollection<Goal>(_allGoals);
+            EntryCountDisplay = $"{_allGoals.Count} {(_allGoals.Count == 1 ? "goal" : "goals")}";
         }
         catch
         {
@@ -64,6 +68,7 @@ public partial class GoalListViewModel(
             await syncService.RunAsync(account);
             _allGoals = await LoadGoalsWithStepsAsync(account.Guid);
             Goals = new ObservableCollection<Goal>(_allGoals);
+            EntryCountDisplay = $"{_allGoals.Count} {(_allGoals.Count == 1 ? "goal" : "goals")}";
             StatusMessage = string.Empty;
         }
         catch

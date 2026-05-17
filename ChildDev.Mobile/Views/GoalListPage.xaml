@@ -22,6 +22,11 @@
                 <Label Text="Tap + to set your first goal." TextColor="Gray" HorizontalOptions="Center" />
             </VerticalStackLayout>
         </CollectionView.EmptyView>
+        <CollectionView.Footer>
+            <Label Text="{Binding EntryCountDisplay}" FontSize="11" TextColor="Gray"
+                   HorizontalOptions="Center" Padding="0,8,0,16"
+                   IsVisible="{Binding EntryCountDisplay, Converter={StaticResource StringToBoolConverter}}" />
+        </CollectionView.Footer>
         <CollectionView.ItemTemplate>
             <DataTemplate x:DataType="models:Goal">
                 <SwipeView>
