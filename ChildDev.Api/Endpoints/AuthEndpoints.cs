@@ -17,6 +17,8 @@ public static class AuthEndpoints
                 return Results.Problem("NickName must not be empty.", statusCode: 400);
             if (req.NickName.Length > 50)
                 return Results.Problem("NickName must not exceed 50 characters.", statusCode: 400);
+            if (string.IsNullOrWhiteSpace(req.PinHash))
+                return Results.Problem("PinHash must not be empty.", statusCode: 400);
             if (await db.Accounts.AnyAsync(a => a.NickName == req.NickName))
                 return Results.Conflict("Nickname already taken");
 
