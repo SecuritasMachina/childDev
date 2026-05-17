@@ -33,15 +33,29 @@
 }
 else
 {
-    <MudTextField Value="@FilterText" ValueChanged="@((string v) => OnFilterChanged(v))"
-                  Placeholder="Filter tasks…" Variant="Variant.Outlined"
-                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
-                  Class="mb-3" Clearable="true" Immediate="true"
-                  AdornmentColor="Color.Secondary" />
+    <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3" Spacing="2">
+        <MudChipSet T="string" SelectionMode="SelectionMode.SingleSelection"
+                    SelectedValue="@StatusFilter"
+                    SelectedValueChanged="@((string v) => OnStatusFilterChanged(v))">
+            <MudChip T="string" Value="@("All")" Variant="Variant.Filled" Color="Color.Default">All</MudChip>
+            @if (OverdueCount > 0)
+            {
+                <MudChip T="string" Value="@("Overdue")" Variant="Variant.Filled" Color="Color.Error">Overdue (@OverdueCount)</MudChip>
+            }
+            <MudChip T="string" Value="@("Today")" Variant="Variant.Filled" Color="Color.Warning">Due Today</MudChip>
+            <MudChip T="string" Value="@("NoDate")" Variant="Variant.Filled" Color="Color.Info">No Date</MudChip>
+        </MudChipSet>
+        <MudSpacer />
+        <MudTextField Value="@FilterText" ValueChanged="@((string v) => OnFilterChanged(v))"
+                      Placeholder="Search tasks…" Variant="Variant.Outlined"
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                      Clearable="true" Immediate="true" Margin="Margin.Dense"
+                      AdornmentColor="Color.Secondary" Style="max-width:240px;" />
+    </MudStack>
     @if (AllPendingTodos.Any())
     {
         <MudText Typo="Typo.subtitle1" Class="mb-2" Color="Color.Secondary">
-            @PendingTodos.Count @(!string.IsNullOrWhiteSpace(FilterText) ? $"matching \"{FilterText}\"" : "pending")
+            @PendingTodos.Count @(!string.IsNullOrWhiteSpace(FilterText) || StatusFilter != "All" ? "matching" : "pending")
         </MudText>
     }
 }
@@ -156,6 +170,7 @@ else
     private int OverdueCount;
     private long NowMs;
     private string FilterText = string.Empty;
+    private string StatusFilter = "All";
     private List<Todo> PendingTodos = [];
     private bool ShowAddDialog;
     private string NewTitle = string.Empty;
@@ -196,20 +211,35 @@ else
         ApplyFilter();
     }
 
+    private void OnStatusFilterChanged(string value)
+    {
+        StatusFilter = value ?? "All";
+        ApplyFilter();
+    }
+
     private void ApplyFilter()
     {
-        if (string.IsNullOrWhiteSpace(FilterText))
+        var todayStartMs = new DateTimeOffset(DateTime.Today, TimeSpan.Zero).ToUnixTimeMilliseconds();
+        var todayEndMs = todayStartMs + 86_400_000L;
+
+        IEnumerable<Todo> filtered = AllPendingTodos;
+
+        filtered = StatusFilter switch
         {
-            PendingTodos = AllPendingTodos;
-        }
-        else
+            "Overdue" => filtered.Where(t => t.DueDate.HasValue && t.DueDate.Value < NowMs),
+            "Today" => filtered.Where(t => t.DueDate.HasValue && t.DueDate.Value >= todayStartMs && t.DueDate.Value < todayEndMs),
+            "NoDate" => filtered.Where(t => !t.DueDate.HasValue),
+            _ => filtered
+        };
+
+        if (!string.IsNullOrWhiteSpace(FilterText))
         {
             var q = FilterText.Trim();
-            PendingTodos = AllPendingTodos
-                .Where(t => (t.Title?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                            (t.Notes?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false))
-                .ToList();
+            filtered = filtered.Where(t => (t.Title?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                                           (t.Notes?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false));
         }
+
+        PendingTodos = filtered.ToList();
     }
 
     private async Task AddTodo()

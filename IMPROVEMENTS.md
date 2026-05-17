@@ -4093,3 +4093,13 @@ Both match mobile filter behavior (TodoListViewModel.FilterText, JournalListView
 **Impact:** 228 mobile tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — Todos page due-date status filter chips (iter 318)
+
+**What:** Added `MudChipSet` filter tabs to the web Todos page: All | Overdue (N) | Due Today | No Date. Filter chips work independently and stack with the existing text search. `StatusFilter` field tracks selection; `ApplyFilter()` applies both status and text predicates.
+
+**Why:** The overdue alert told caregivers how many tasks were overdue but gave no way to isolate them. Now one click shows only overdue or only today's tasks, making the page much more actionable.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
