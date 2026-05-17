@@ -106,6 +106,17 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 276 — Web: Journal entry edit + soft-delete
+
+**What changed:**
+- `JournalPage.razor`: Added edit icon (opens dialog pre-filled with Notes/Activity/Mood/Tags) and delete icon (soft-delete, `DeletedAt = UpdatedOn = now`) to each journal card. Cards now always show `MudCardActions` row with edit/delete icons. Tracks `journal_edit` and `journal_delete` analytics events.
+
+**Why:** Journal was the only entity where web users couldn't correct or remove entries. Completes full CRUD parity across all 4 entities on the web.
+
+**Impact:** 204 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Iteration 275 — API: Delta account isolation tests for all 4 entities
 
 **What changed:**
