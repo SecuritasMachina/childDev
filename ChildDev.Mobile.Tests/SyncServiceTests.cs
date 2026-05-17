@@ -1615,6 +1615,40 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_ServerSendsDeletedTodo_ExcludedFromGetPendingAsync()
+    {
+        await _accountService.CreateAccountAsync("user69", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var todoGuid = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Pre-insert the todo locally as active (pending)
+        await _db.InsertOrReplaceAsync(new Todo
+        {
+            Guid = todoGuid, AccountFk = account.Guid, Title = "Active task", UpdatedOn = now
+        });
+
+        // Verify it's pending before sync
+        var pendingBefore = await _todoRepo.GetPendingAsync(account.Guid);
+        Assert.Contains(pendingBefore, t => t.Guid == todoGuid);
+
+        // Server sends same Guid with DeletedAt set and newer UpdatedOn — todo is soft-deleted
+        var deletedAt = now + 1000;
+        var serverTodo = new TodoSyncDto(todoGuid, account.Guid, null,
+            null, null, null, deletedAt, deletedAt);
+
+        var service = BuildSyncService(new FakeTodoSyncHandler(serverTodo));
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var pendingAfter = await _todoRepo.GetPendingAsync(account.Guid);
+        Assert.DoesNotContain(pendingAfter, t => t.Guid == todoGuid);
+    }
+
+    [Fact]
     public async Task RunAsync_ServerSendsGoalWithNullCompletionDate_GoalAppearsActiveLocally()
     {
         await _accountService.CreateAccountAsync("user68", "1234");
