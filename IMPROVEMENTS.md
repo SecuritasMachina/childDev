@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 191 — Mobile: SyncService includes locally-completed goal with CompletionDate in upload
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_LocalCompletedGoal_CompletionDateIncludedInUploadRequest` — pre-inserts a goal with CompletionDate set, syncs, asserts the upload body for sync/goal contains Guid and CompletionDate timestamp.
+
+**Why:** Mirrors iter 190's completed-todo upload test for Goal entity. Completes the pair: if someone accidentally filtered completed items out of `GetModifiedSinceAsync` for Goals, this test would fail.
+
+**Impact:** 143 mobile tests pass (was 142). 157 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 190 — Mobile: SyncService includes locally-completed todo with CompletedAt in upload
 
 **What changed:**
