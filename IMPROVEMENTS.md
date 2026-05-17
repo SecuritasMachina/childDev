@@ -1,5 +1,19 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 137 — Mobile Tests: GetModifiedSinceAsync account isolation + GoalProgress edit invariants
+
+**What changed:**
+- `GoalRepositoryTests.cs`: Added `GetModifiedSinceAsync_ExcludesOtherAccounts`.
+- `JournalRepositoryTests.cs`: Added `GetModifiedSinceAsync_ExcludesOtherAccounts`.
+- `TodoRepositoryTests.cs`: Added `GetModifiedSinceAsync_ExcludesOtherAccounts`.
+- `GoalProgressRepositoryTests.cs`: Added `SaveAsync_Edit_BumpsUpdatedOn` and `SaveAsync_Edit_AppearsInGetModifiedSince`.
+
+**Why:** `GetModifiedSinceAsync` is the sync-critical query that determines which records are uploaded. The existing tests verified timestamp filtering but did NOT verify account isolation (records for another account were never present to accidentally leak). Removing the `AccountFk` filter from any repo's `GetModifiedSinceAsync` would pass existing tests. GoalProgress was also missing the edit-sync tests that all other repos now have (Journal/Goal/Todo got them in iter 134).
+
+**Impact:** 72 mobile tests pass (was 67). 107 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 136 — Mobile Tests: TodoRepository.GetAllActiveAsync coverage + server Todo/GoalProgress inbound upsert
 
 **What changed:**
