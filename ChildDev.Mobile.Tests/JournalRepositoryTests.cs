@@ -257,6 +257,27 @@ public class JournalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetAllActiveAsync_UpsertedSoftDeletedRecord_IsExcluded()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // A soft-deleted journal arriving via sync should not appear in GetAllActiveAsync
+        await _repo.UpsertFromSyncAsync(new Journal
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = accountId,
+            Notes = "synced deleted note",
+            EnteredDate = now,
+            UpdatedOn = now,
+            DeletedAt = now
+        });
+
+        var all = await _repo.GetAllActiveAsync(accountId);
+        Assert.Empty(all);
+    }
+
+    [Fact]
     public async Task DeleteAsync_WhenGuidNotFound_DoesNotThrow()
     {
         var nonExistentGuid = System.Guid.NewGuid().ToString();
