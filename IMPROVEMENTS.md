@@ -106,6 +106,19 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 264 — Web: Blazor Server + MudBlazor migration complete
+
+**What changed:**
+- `ChildDev.Api/Program.cs`: Replaced `AddRazorPages`/`MapRazorPages` with `AddRazorComponents().AddInteractiveServerComponents()` / `MapRazorComponents<App>().AddInteractiveServerRenderMode()`. Added `AddHttpContextAccessor()`.
+- `ChildDev.Api/Components/Pages/Home.razor`: Fixed MUD0002 warning (removed invalid `Title` attribute on `MudIconButton`).
+- Merged `improve/mudblazor-web-ui-20264` to master.
+
+**Why:** Completes the user-requested switch from Razor Pages to Blazor Server + MudBlazor, enabling the goal-centric web UI (Home, Login, Register, Logout) added in the same branch.
+
+**Impact:** 200 API tests pass. Build clean (0 warnings, 0 errors).
+
+---
+
 ## 2026-05-17 — Iteration 260 — API: Goal sync idempotent upsert — completes 4-entity idempotency set
 
 **What changed:**
