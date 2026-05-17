@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 90 — API: Validate Goal.ExpirationDate not in far future
+
+**What changed:**
+- `GoalEndpoints.cs`: Added check rejecting `ExpirationDate > now + 10 years` (HTTP 422). Uses the existing `maxFutureTimestampMs` local already computed for other Goal date fields.
+- `SyncInputValidationTests.cs`: Added `Sync_Goal_FutureExpirationDate_Returns422` Fact test.
+
+**Why:** ExpirationDate was the last optional date field in all 4 sync endpoints without a future cap. All date fields now have consistent 10-year bounds.
+
+**Impact:** 25 mobile tests pass. 72 API tests pass (up from 71).
+
+---
+
 ## 2026-05-16 — Iteration 89 — API: Validate Journal auxiliary fields and Todo Title/Notes lengths
 
 **What changed:**
