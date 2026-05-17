@@ -255,4 +255,21 @@ public class GoalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Equal("A client newer", recordA.GoalText);
         Assert.Equal("B server", recordB.GoalText);
     }
+
+    [Fact]
+    public async Task Sync_LastSyncAt_NegativeValue_ReturnsAllRecords()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gsync_neg_lastsync");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(guid, accountGuid, "Always returned", null, null, ts, null, null, ts, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([], -1));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalDto>>();
+
+        Assert.Contains(body!.Records, r => r.Guid == guid);
+    }
 }
