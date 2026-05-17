@@ -3850,3 +3850,29 @@ Multiple `azAuthHeader` quoting, line-length, and semicolon issues across `goal.
 **Impact:** 217 API tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — GoalDetail progress note edit dialog (iter 298)
+
+**Branch:** `improve/goaldetail-edit-progress-298`
+
+**What:** Added an Edit button to each progress note in the GoalDetail timeline. Opens a pre-filled dialog with NextStepItems and NextMeetingDate. Saves with LWW UpdatedOn and tracks `progress_edit` analytics.
+
+**Why:** Progress notes could only be deleted, not corrected. Users who made typos or wanted to update next steps had to delete and re-add.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
+## 2026-05-17 — Completed goals View link + completion dates (iter 299)
+
+**Branch:** `improve/completed-goals-view-links-299`
+
+**What:**
+- Home page completed goals panel: each entry now shows completion date and a "View" button linking to GoalDetail (enabling Reopen from there)
+- Todos completed section: each completed todo now shows "Done MMM d" completion date
+
+**Why:** Completed items were opaque — no dates, no way to navigate to detail. Now users can see when goals were completed and navigate to reopen them if needed.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
