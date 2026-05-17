@@ -632,4 +632,25 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.NotNull(newRecord);
         Assert.Equal("brand new note", newRecord.Notes);
     }
+
+    [Fact]
+    public async Task Sync_SoftDeletedRecord_BlankNotes_Accepted()
+    {
+        // Validation requires Notes only for non-deleted records (DeletedAt is null).
+        // A soft-deleted journal entry with null Notes must be accepted and stored.
+        var (jwt, accountGuid) = await RegisterAsync("jsync_softdel_blank");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var upload = await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, null, null, null, null, ts, ts, ts)], 0));
+        Assert.Equal(HttpStatusCode.OK, upload.StatusCode);
+
+        var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
+        var stored = body!.Records.FirstOrDefault(r => r.Guid == guid);
+        Assert.NotNull(stored);
+        Assert.Equal(ts, stored!.DeletedAt);
+    }
 }
