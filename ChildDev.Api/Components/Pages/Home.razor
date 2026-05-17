@@ -208,8 +208,42 @@
     </DialogActions>
 </MudDialog>
 
-@* Quick-add journal entry *@
+@* Recent journal entries + quick-add *@
 <MudPaper Elevation="1" Class="pa-4 mt-6">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+        <MudText Typo="Typo.subtitle2">
+            <MudIcon Icon="@Icons.Material.Filled.Book" Class="mr-1" Size="Size.Small" />
+            Recent Journal
+        </MudText>
+        <MudSpacer />
+        <MudButton Href="/journal" Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small">View All</MudButton>
+    </MudStack>
+    @if (RecentJournals.Any())
+    {
+        <MudList T="Journal" Dense="true" Class="mb-4">
+            @foreach (var j in RecentJournals)
+            {
+                var jDate = DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime;
+                <MudListItem>
+                    <MudStack Row="true" AlignItems="AlignItems.Start">
+                        <MudStack Spacing="0" Style="flex:1">
+                            <MudText Typo="Typo.body2">@(j.Notes?.Length > 120 ? j.Notes[..120] + "…" : j.Notes)</MudText>
+                            @if (!string.IsNullOrWhiteSpace(j.Activity))
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@j.Activity</MudText>
+                            }
+                        </MudStack>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="white-space:nowrap">@jDate.ToString("MMM d")</MudText>
+                    </MudStack>
+                </MudListItem>
+            }
+        </MudList>
+    }
+    else
+    {
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">No journal entries yet.</MudText>
+    }
+    <MudDivider Class="mb-3" />
     <MudText Typo="Typo.subtitle2" Class="mb-3">
         <MudIcon Icon="@Icons.Material.Filled.EditNote" Class="mr-1" Size="Size.Small" />
         Quick Journal Entry
@@ -221,9 +255,6 @@
                StartIcon="@Icons.Material.Filled.Save"
                Disabled="@string.IsNullOrWhiteSpace(QuickJournalText)"
                OnClick="SaveQuickJournal">Save Entry</MudButton>
-    <MudButton Href="/journal" Variant="Variant.Text" Color="Color.Secondary" Class="ml-2">
-        View All Journal Entries
-    </MudButton>
 </MudPaper>
 
 @* Add Goal Dialog *@
@@ -261,6 +292,7 @@
     private int OverdueTodoCount;
     private int JournalThisWeek;
     private string QuickJournalText = string.Empty;
+    private List<Journal> RecentJournals = [];
     private bool ShowCelebration;
     private string? CelebratedGoalText;
 
@@ -286,6 +318,12 @@
         var weekStartMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
         JournalThisWeek = await Db.Journals
             .CountAsync(j => j.AccountFk == AccountGuid && j.DeletedAt == null && j.EnteredDate >= weekStartMs);
+
+        RecentJournals = await Db.Journals
+            .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null)
+            .OrderByDescending(j => j.EnteredDate)
+            .Take(3)
+            .ToListAsync();
     }
 
     private async Task LoadGoals()
@@ -408,5 +446,6 @@
         QuickJournalText = string.Empty;
         Snackbar.Add("Journal entry saved!", Severity.Success);
         await LoadStats();
+        StateHasChanged();
     }
 }

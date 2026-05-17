@@ -4103,3 +4103,13 @@ Both match mobile filter behavior (TodoListViewModel.FilterText, JournalListView
 **Impact:** 217 API tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — Home page recent journal entries section (iter 319)
+
+**What:** Added "Recent Journal" section above the quick-add form on the web home page. Shows the last 3 journal entries (truncated at 120 chars) with date and activity. A "View All" link navigates to the full journal page. The section refreshes after a quick-add save.
+
+**Why:** Mobile dashboard already showed recent journals. Web home was purely goal-focused and required navigating away to see any journal activity. Surfacing recent entries gives caregivers context about what's been logged without leaving the dashboard.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
