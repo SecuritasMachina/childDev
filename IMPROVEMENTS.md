@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 92 — Mobile: MeasurableOutcome character count in GoalEntry
+
+**What changed:**
+- `GoalEntryViewModel.cs`: Added `MeasurableOutcomeLength` observable and `OnMeasurableOutcomeChanged` partial setting it.
+- `GoalEntryPage.xaml`: Added small gray label below MeasurableOutcome Entry showing `{Binding MeasurableOutcomeLength, StringFormat='{0} characters'}`.
+
+**Why:** GoalText already showed a character count (iter 79); MeasurableOutcome has the same 2000-char server limit but no feedback. Both fields now give users visibility into their length.
+
+**Impact:** 25 mobile tests pass. 72 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 91 — Mobile: Empty view differentiates filter-active vs truly empty
 
 **What changed:**
