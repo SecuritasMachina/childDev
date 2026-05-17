@@ -469,4 +469,74 @@ public class GoalProgressSyncTests(ApiFactory factory) : IClassFixture<ApiFactor
         Assert.NotNull(deleted.DeletedAt);
         Assert.Equal(deleted.DeletedAt!.Value, deleted.UpdatedOn);
     }
+
+    [Fact]
+    public async Task Sync_DuplicateGuidsInBatch_Returns422()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_dupguid1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var goalFk = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var dup = new GoalProgressDto(guid, accountGuid, goalFk, "step", null, ts, null);
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([dup, dup], 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_FutureUpdatedOn_Returns422()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_future1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var futureTs = DateTimeOffset.UtcNow.AddHours(2).ToUnixTimeMilliseconds();
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(Guid.NewGuid().ToString(), accountGuid, Guid.NewGuid().ToString(), "step", null, futureTs, null)], 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_TooManyRecords_Returns400()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_toomany1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var records = Enumerable.Range(0, 501)
+            .Select(_ => new GoalProgressDto(Guid.NewGuid().ToString(), accountGuid, Guid.NewGuid().ToString(), "step", null, ts, null))
+            .ToList();
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>(records, 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_InvalidGoalFkFormat_Returns422()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_badgoalfk1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(Guid.NewGuid().ToString(), accountGuid, "not-a-uuid", "step", null, ts, null)], 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_BlankNextStepItems_Returns422()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_blanksteps1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(Guid.NewGuid().ToString(), accountGuid, Guid.NewGuid().ToString(), "   ", null, ts, null)], 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
 }
