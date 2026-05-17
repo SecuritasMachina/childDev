@@ -115,4 +115,15 @@ public class AccountServiceTests : IDisposable
         Assert.True(account!.CreatedOn >= before);
         Assert.True(account.CreatedOn <= after);
     }
+
+    [Fact]
+    public async Task CreateAccount_AssignsNonEmptyGuid()
+    {
+        await _service.CreateAccountAsync("heidi", "1234");
+        var account = await _service.GetAccountAsync();
+
+        Assert.NotNull(account);
+        Assert.False(string.IsNullOrEmpty(account!.Guid));
+        Assert.True(System.Guid.TryParse(account.Guid, out _));
+    }
 }
