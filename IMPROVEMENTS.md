@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 58 — API: Skip SaveChanges when ChangeTracker has no changes
+
+**What changed:**
+- All 4 sync endpoints: `await db.SaveChangesAsync()` → `if (db.ChangeTracker.HasChanges()) await db.SaveChangesAsync()`
+
+**Why:** When all incoming records are filtered out (different AccountFk, or no records pass the LWW timestamp check), EF Core was still issuing a no-op `SaveChanges` call to the DB. `HasChanges()` is a synchronous O(tracked entities) check that avoids the async DB roundtrip in those cases.
+
+**Impact:** 52 API tests pass. 25 mobile tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 57 — Mobile: JournalEntry Save disabled when Notes empty
 
 **What changed:**
