@@ -99,6 +99,9 @@
                     <MudIconButton Icon="@Icons.Material.Filled.CheckCircle"
                                    Color="Color.Success"
                                    OnClick="() => CompleteGoal(g.Guid)" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                   Color="Color.Error" Size="Size.Small"
+                                   OnClick="() => DeleteGoal(g.Guid)" />
                 </MudCardActions>
             </MudCard>
         </MudItem>
@@ -242,5 +245,19 @@
         await Analytics.TrackAsync("goal_complete", AccountGuid, "home", guid);
         Snackbar.Add("🎉 Goal completed!", Severity.Success);
         await LoadGoals();
+    }
+
+    private async Task DeleteGoal(string guid)
+    {
+        var goal = await Db.Goals.FirstOrDefaultAsync(g => g.Guid == guid && g.AccountFk == AccountGuid);
+        if (goal is null) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        goal.DeletedAt = now;
+        goal.UpdatedOn = now;
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("goal_delete", AccountGuid, "home", guid);
+        Snackbar.Add("Goal deleted.", Severity.Info);
+        await LoadGoals();
+        await LoadStats();
     }
 }
