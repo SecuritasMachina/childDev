@@ -40,6 +40,11 @@ public static class GoalProgressEndpoints
                 logger.LogWarning("sync/goal-progress account={Account} rejected: blank NextStepItems", accountGuid[..8]);
                 return Results.Problem("Record NextStepItems must not be blank.", statusCode: 422);
             }
+            if (req.Records.Any(r => r.NextStepItems?.Length > 2_000))
+            {
+                logger.LogWarning("sync/goal-progress account={Account} rejected: NextStepItems too long", accountGuid[..8]);
+                return Results.Problem("Record NextStepItems must not exceed 2000 characters.", statusCode: 422);
+            }
             var incomingGuids = req.Records.Select(r => r.Guid).ToList();
             var existingMap = await db.GoalProgresses
                 .Where(p => incomingGuids.Contains(p.Guid))

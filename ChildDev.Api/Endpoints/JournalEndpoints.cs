@@ -38,6 +38,11 @@ public static class JournalEndpoints
                 logger.LogWarning("sync/journal account={Account} rejected: blank Notes", accountGuid[..8]);
                 return Results.Problem("Record Notes must not be blank.", statusCode: 422);
             }
+            if (req.Records.Any(r => r.Notes?.Length > 10_000))
+            {
+                logger.LogWarning("sync/journal account={Account} rejected: Notes too long", accountGuid[..8]);
+                return Results.Problem("Record Notes must not exceed 10000 characters.", statusCode: 422);
+            }
 
             var incomingGuids = req.Records.Select(r => r.Guid).ToList();
             var existingMap = await db.Journals
