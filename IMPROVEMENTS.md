@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 60 — Mobile: Trim Activity/Mood/Tags before saving journal entries
+
+**What changed:**
+- `JournalEntryViewModel.cs`: Notes trimmed; Activity/Mood/Tags stored as null when whitespace-only, trimmed otherwise — mirrors the pattern already used in TodoEntryViewModel for Notes
+
+**Why:** Whitespace-only Activity or Mood would be stored and then displayed as an empty-looking chip in JournalListPage (the StringToBoolConverter would still show it). Also, a leading-space "Reading " would sort and display incorrectly.
+
+**Impact:** 25 mobile tests pass (0 warnings). 52 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 59 Brainstorm (fresh — every 3rd)
 
 | # | Description | Dim | Impact | Effort | Risk |
