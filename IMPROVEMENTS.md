@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 171 — API: Auth token AccountGuid contract + Journal delta empty for future LastSyncAt
+
+**What changed:**
+- `AuthEndpointTests.cs`: Added `Token_ValidCredentials_ResponseIncludesAccountGuid` — registers a user, then calls `/api/auth/token`, verifies the `AccountGuid` field is present in the response AND matches the GUID returned at registration. Previously the token test only asserted `Jwt` was non-null.
+- `JournalSyncTests.cs`: Added `Sync_LastSyncAt_LargerThanAllRecords_EmptyDelta` — stores a journal at timestamp T, then syncs with `LastSyncAt = T + 10_000`, asserts the delta is empty. Complements the existing tests for `LastSyncAt = 0` and negative values by covering the upper bound.
+
+**Why:** The `AuthResponse` record has both `Jwt` and `AccountGuid` fields; only `Jwt` was previously tested on the token endpoint. If `AccountGuid` were accidentally removed from the response, mobile devices couldn't match their local account to the server's. The future-`LastSyncAt` test documents the exclusive upper-bound behavior of the delta query (`WHERE UpdatedOn > LastSyncAt`).
+
+**Impact:** 138 API tests pass (was 136). 127 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 170 — API: GoalProgress GoalFk immutable on LWW + Mobile: CompletedCount account isolation
 
 **What changed:**
