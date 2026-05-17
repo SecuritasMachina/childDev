@@ -529,4 +529,31 @@ public class GoalProgressRepositoryTests : IDisposable
 
         Assert.False(info.ContainsKey(goalFk));
     }
+
+    [Fact]
+    public async Task GetLatestProgressInfoAsync_WhenNoEntries_ReturnsEmptyDictionary()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var info = await _repo.GetLatestProgressInfoAsync(accountId);
+        Assert.Empty(info);
+    }
+
+    [Fact]
+    public async Task GetLatestProgressInfoAsync_ExcludesOtherAccounts()
+    {
+        var myAccount = System.Guid.NewGuid().ToString();
+        var otherAccount = System.Guid.NewGuid().ToString();
+        var goalFk = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = otherAccount, GoalFk = goalFk,
+            NextStepItems = "other", UpdatedOn = now
+        });
+
+        var info = await _repo.GetLatestProgressInfoAsync(myAccount);
+
+        Assert.False(info.ContainsKey(goalFk));
+    }
 }

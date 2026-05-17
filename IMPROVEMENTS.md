@@ -4183,3 +4183,15 @@ Both match mobile filter behavior (TodoListViewModel.FilterText, JournalListView
 **Impact:** 228 mobile tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — GetLatestProgressInfoAsync test coverage (iter 327)
+
+**What:** Added two tests to `GoalProgressRepositoryTests`:
+- `GetLatestProgressInfoAsync_WhenNoEntries_ReturnsEmptyDictionary` — baseline coverage for accounts with no progress data
+- `GetLatestProgressInfoAsync_ExcludesOtherAccounts` — multi-tenant isolation boundary check
+
+**Why:** These edge cases drive the staleness sort in `GoalListViewModel`. The empty-dictionary case is the pre-condition for showing a goal as "needs attention."
+
+**Impact:** 230 mobile tests (up from 228). Build clean.
+
+---
