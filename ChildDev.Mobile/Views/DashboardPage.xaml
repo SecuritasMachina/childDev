@@ -33,30 +33,39 @@
             </Border>
 
             <!-- Summary row -->
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                <Border Grid.Column="0" Padding="16" StrokeShape="RoundRectangle 8">
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                <Border Grid.Column="0" Padding="12" StrokeShape="RoundRectangle 8">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding GoToGoalsCommand}" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
-                        <Label Text="{Binding ActiveGoalCount}" FontSize="32" HorizontalOptions="Center" />
-                        <Label Text="Active Goals" HorizontalOptions="Center" />
-                        <Label Text="Set a goal!" FontSize="11" TextColor="Gray"
+                        <Label Text="{Binding ActiveGoalCount}" FontSize="28" HorizontalOptions="Center" />
+                        <Label Text="Goals" FontSize="12" HorizontalOptions="Center" />
+                        <Label Text="Add one!" FontSize="10" TextColor="Gray"
                                HorizontalOptions="Center" IsVisible="{Binding HasNoActiveGoals}" />
                     </VerticalStackLayout>
                 </Border>
-                <Border Grid.Column="1" Padding="16" StrokeShape="RoundRectangle 8">
+                <Border Grid.Column="1" Padding="12" StrokeShape="RoundRectangle 8">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding GoToTodosCommand}" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
-                        <Label Text="{Binding PendingTodoCount}" FontSize="32" HorizontalOptions="Center" />
-                        <Label Text="Pending Todos" HorizontalOptions="Center" />
-                        <Label Text="All caught up!" FontSize="11" TextColor="Gray"
+                        <Label Text="{Binding PendingTodoCount}" FontSize="28" HorizontalOptions="Center" />
+                        <Label Text="Todos" FontSize="12" HorizontalOptions="Center" />
+                        <Label Text="All done!" FontSize="10" TextColor="Gray"
                                HorizontalOptions="Center" IsVisible="{Binding HasNoPendingTodos}" />
                         <Label Text="{Binding OverdueTodoCount, StringFormat='{0} overdue'}"
-                               FontSize="11" TextColor="Red" HorizontalOptions="Center"
+                               FontSize="10" TextColor="Red" HorizontalOptions="Center"
                                IsVisible="{Binding HasOverdueTodos}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="2" Padding="12" StrokeShape="RoundRectangle 8">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoToJournalCommand}" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout>
+                        <Label Text="{Binding JournalThisWeek}" FontSize="28" HorizontalOptions="Center" />
+                        <Label Text="Journal (7d)" FontSize="12" HorizontalOptions="Center" />
                     </VerticalStackLayout>
                 </Border>
             </Grid>

@@ -23,6 +23,7 @@ public partial class DashboardViewModel(
     [ObservableProperty] private bool hasNoPendingTodos;
     [ObservableProperty] private int overdueTodoCount;
     [ObservableProperty] private bool hasOverdueTodos;
+    [ObservableProperty] private int journalThisWeek;
     [ObservableProperty] private string nextGoalMeeting = string.Empty;
     [ObservableProperty] private bool hasNextGoalMeeting;
     [ObservableProperty] private string staleGoalText = string.Empty;
@@ -61,6 +62,10 @@ public partial class DashboardViewModel(
     {
         var journals = await journalRepo.GetRecentAsync(account.Guid, 3);
         RecentJournals = new ObservableCollection<Journal>(journals);
+
+        var weekStartMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
+        var allJournals = await journalRepo.GetAllActiveAsync(account.Guid);
+        JournalThisWeek = allJournals.Count(j => j.EnteredDate >= weekStartMs);
 
         var goals = await goalRepo.GetAllActiveAsync(account.Guid);
         var activeGoals = goals.Where(g => g.CompletionDate is null).ToList();
@@ -172,4 +177,8 @@ public partial class DashboardViewModel(
     [RelayCommand]
     private async Task GoToTodosAsync() =>
         await Shell.Current.GoToAsync("//todos");
+
+    [RelayCommand]
+    private async Task GoToJournalAsync() =>
+        await Shell.Current.GoToAsync("//journal");
 }

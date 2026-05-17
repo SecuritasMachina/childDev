@@ -4220,6 +4220,16 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — Mobile dashboard: journal-this-week stat card (iter 342)
+
+**What:** Added a third stat card ("Journal (7d)") to the mobile dashboard summary row, showing the count of journal entries from the last 7 days. Card taps navigate to `//journal`. Summary grid changed from 2-column to 3-column; card labels and font sizes adjusted for the tighter layout. Added `JournalThisWeek` observable property and `GoToJournalCommand` to `DashboardViewModel`.
+
+**Why:** The web home page has always shown a journal-this-week count alongside Goals and Todos. Mobile showed only 2 stats, leaving caregivers without a quick signal of whether they've been keeping up with observations. The 3-card layout matches the web home exactly.
+
+**Impact:** 235 mobile tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Mobile setup: add Confirm PIN field (iter 341)
 
 **What:** Added `ConfirmPin` property and confirm Entry to `SetupPage.xaml`. `CanCreate` now requires both PIN fields to have 4 characters. On submit, if `Pin != ConfirmPin`, an error message "PINs do not match" is shown and registration is blocked.
