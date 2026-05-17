@@ -1100,6 +1100,32 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_LocalGoal_ExpirationDateIncludedInUploadRequest()
+    {
+        await _accountService.CreateAccountAsync("user45", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var updatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var expirationDate = updatedOn + 2_592_000_000L;
+        await _db.InsertOrReplaceAsync(new Goal
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalText = "expire soon", ExpirationDate = expirationDate,
+            EnteredDate = updatedOn, UpdatedOn = updatedOn
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        await service.RunAsync(account);
+
+        var body = capturingHandler.GetBodyFor("sync/goal");
+        Assert.NotNull(body);
+        Assert.Contains(expirationDate.ToString(), body);
+    }
+
+    [Fact]
     public async Task RunAsync_LocalCompletedGoal_CompletionDateIncludedInUploadRequest()
     {
         await _accountService.CreateAccountAsync("user44", "1234");
