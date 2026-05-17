@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-17 — Fix: silent no-op when saving empty progress note (iter 387)
+
+**File:** `ChildDev.Api/Components/Pages/GoalDetail.razor`
+
+**Change:** `AddProgress` and `SaveProgressEdit` both returned silently (dialog stayed open, nothing happened) when the user submitted a progress note with both the notes text and meeting date cleared. Added a warning snackbar: "Enter notes or a meeting date."
+
+**Why:** The dialog appeared stuck — the user had no indication of why Save didn't work. The validation was already correct (preventing empty progress notes per iter 372's rule that at least one of NextStepItems or NextMeetingDate must be set) but the failure was invisible.
+
+**Impact:** 220 API tests — all passing.
+
+---
+
 ## 2026-05-17 — Fix: activity-only journal entries show blank in Home dashboard (iter 386)
 
 **File:** `ChildDev.Api/Components/Pages/Home.razor`

@@ -296,7 +296,11 @@ else
     private async Task AddProgress()
     {
         var steps = NewNextSteps.Trim();
-        if (string.IsNullOrWhiteSpace(steps) && !NewMeetingDate.HasValue) return;
+        if (string.IsNullOrWhiteSpace(steps) && !NewMeetingDate.HasValue)
+        {
+            Snackbar.Add("Enter notes or a meeting date.", Severity.Warning);
+            return;
+        }
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         Db.GoalProgresses.Add(new GoalProgress
@@ -361,7 +365,11 @@ else
         var progress = await Db.GoalProgresses.FirstOrDefaultAsync(p => p.Guid == EditingProgressGuid && p.AccountFk == AccountGuid);
         if (progress is null) return;
         var steps = EditProgressNextSteps.Trim();
-        if (string.IsNullOrWhiteSpace(steps) && !EditProgressMeetingDate.HasValue) return;
+        if (string.IsNullOrWhiteSpace(steps) && !EditProgressMeetingDate.HasValue)
+        {
+            Snackbar.Add("Enter notes or a meeting date.", Severity.Warning);
+            return;
+        }
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         progress.NextStepItems = string.IsNullOrWhiteSpace(steps) ? null : steps;
         progress.NextMeetingDate = EditProgressMeetingDate.HasValue
