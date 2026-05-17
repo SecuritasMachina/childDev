@@ -73,7 +73,29 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <Button Text="+ New Journal Entry" Command="{Binding AddJournalCommand}" />
+            <!-- Quick journal entry -->
+            <Border Padding="12" StrokeShape="RoundRectangle 8">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Quick Journal Entry" FontSize="14" FontAttributes="Bold" />
+                    <Editor Text="{Binding QuickJournalText}"
+                            Placeholder="What happened today? What did you observe?"
+                            HeightRequest="72"
+                            AutoSize="TextChanges" />
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Button Grid.Column="0"
+                                Text="Save Entry"
+                                Command="{Binding QuickAddJournalCommand}"
+                                IsEnabled="{Binding QuickJournalText, Converter={StaticResource StringToBoolConverter}}" />
+                        <Button Grid.Column="1"
+                                Text="+ Full Entry"
+                                Command="{Binding AddJournalCommand}"
+                                BackgroundColor="Transparent"
+                                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Primary}}" />
+                    </Grid>
+                    <Label Text="✓ Saved!" FontSize="12" TextColor="Green"
+                           IsVisible="{Binding QuickJournalSaved}" />
+                </VerticalStackLayout>
+            </Border>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

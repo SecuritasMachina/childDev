@@ -4073,3 +4073,13 @@ Both match mobile filter behavior (TodoListViewModel.FilterText, JournalListView
 **Impact:** 217 API tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — Mobile dashboard quick-add journal entry (iter 316)
+
+**What:** Added inline quick-journal entry to `DashboardPage.xaml` — an `Editor` field + "Save Entry" button that saves a journal note without navigating away. The "✓ Saved!" confirmation label appears for 1.5 s then hides. The "Full Entry" button still navigates to the full journal form. `RecentJournals` refreshes after each save.
+
+**Why:** The mobile dashboard already had a "+ New Journal Entry" button that navigated away, forcing caregivers out of the dashboard. An inline quick-capture matches the web home page experience and reduces friction for logging observations.
+
+**Impact:** 228 mobile tests pass. Build clean.
+
+---

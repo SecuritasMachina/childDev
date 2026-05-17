@@ -25,6 +25,8 @@ public partial class DashboardViewModel(
     [ObservableProperty] private bool hasNextGoalMeeting;
     [ObservableProperty] private string syncStatus = string.Empty;
     [ObservableProperty] private string lastSyncDisplay = string.Empty;
+    [ObservableProperty] private string quickJournalText = string.Empty;
+    [ObservableProperty] private bool quickJournalSaved;
 
     [RelayCommand]
     private async Task LoadAsync()
@@ -99,6 +101,30 @@ public partial class DashboardViewModel(
             try { await RefreshDataAsync(account); }
             catch { SyncStatus = "Sync OK but dashboard refresh failed."; }
         }
+    }
+
+    [RelayCommand]
+    private async Task QuickAddJournalAsync()
+    {
+        var text = QuickJournalText?.Trim();
+        if (string.IsNullOrWhiteSpace(text)) return;
+        var account = await accountService.GetAccountAsync();
+        if (account is null) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await journalRepo.SaveAsync(new Journal
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = account.Guid,
+            Notes = text,
+            EnteredDate = now,
+            UpdatedOn = now
+        });
+        QuickJournalText = string.Empty;
+        QuickJournalSaved = true;
+        await Task.Delay(1500);
+        QuickJournalSaved = false;
+        var journals = await journalRepo.GetAllActiveAsync(account.Guid);
+        RecentJournals = new ObservableCollection<Journal>(journals.Take(3));
     }
 
     [RelayCommand]
