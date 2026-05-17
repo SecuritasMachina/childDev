@@ -611,4 +611,22 @@ public class GoalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Sync_LastSyncAt_ExactlyEqualToRecordUpdatedOn_ExcludedFromDelta()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gsync_exact_boundary1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid = Guid.NewGuid().ToString();
+
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(guid, accountGuid, "boundary goal", null, null, ts, null, null, ts, null)], 0));
+
+        // LastSyncAt == record.UpdatedOn — strict > means this record must NOT appear in delta
+        var response = await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([], ts));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalDto>>();
+
+        Assert.DoesNotContain(body!.Records, r => r.Guid == guid);
+    }
 }
