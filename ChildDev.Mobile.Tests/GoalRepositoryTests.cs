@@ -239,4 +239,22 @@ public class GoalRepositoryTests : IDisposable
         Assert.Equal("newer goal", results[0].GoalText);
         Assert.Equal("older goal", results[1].GoalText);
     }
+
+    [Fact]
+    public async Task DeleteAsync_WhenGuidNotFound_DoesNotThrow()
+    {
+        var nonExistentGuid = System.Guid.NewGuid().ToString();
+        await _repo.DeleteAsync(nonExistentGuid);
+        var retrieved = await _repo.GetAsync(nonExistentGuid);
+        Assert.Null(retrieved);
+    }
+
+    [Fact]
+    public async Task CompleteAsync_WhenGuidNotFound_DoesNotThrow()
+    {
+        var nonExistentGuid = System.Guid.NewGuid().ToString();
+        await _repo.CompleteAsync(nonExistentGuid);
+        var retrieved = await _repo.GetAsync(nonExistentGuid);
+        Assert.Null(retrieved);
+    }
 }
