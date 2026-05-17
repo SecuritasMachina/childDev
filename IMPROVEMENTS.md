@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 167 — Mobile: Goal completed-section ordering + GoalProgress soft-delete fallback
+
+**What changed:**
+- `GoalRepositoryTests.cs`: Added `GetAllActiveAsync_TwoCompletedGoals_OrderedByEnteredDateDescending` — inserts 2 completed goals with different `EnteredDate`, verifies they're ordered newest-entered-first within the completed section. The SQL `ORDER BY (CompletionDate IS NOT NULL), EnteredDate DESC` applies the same EnteredDate ordering to both active and completed sections, but no test previously verified the completed section's ordering.
+- `GoalProgressRepositoryTests.cs`: Added `GetLatestNextStepsAsync_WhenLatestIsSoftDeleted_FallsBackToPrior` — inserts an older active progress record and a newer soft-deleted one; verifies `GetLatestNextStepsAsync` returns the older active record (not empty). The SQL filters `DeletedAt IS NULL` before grouping, so the "latest among active" semantics are confirmed.
+
+**Why:** The ordering invariant within completed goals was implicit (from the SQL), but untested — a refactor removing `EnteredDate DESC` from the ORDER BY would silently break it. The GoalProgress fallback test documents the intended "latest non-deleted" semantics, which are subtly different from "globally latest."
+
+**Impact:** 120 mobile tests pass (was 118). 135 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 166 — API: LWW tie behavior (server wins) + exact-500 batch boundary
 
 **What changed:**
