@@ -28,6 +28,7 @@ public partial class DashboardViewModel(
     [ObservableProperty] private bool hasNextGoalMeeting;
     [ObservableProperty] private string staleGoalText = string.Empty;
     [ObservableProperty] private bool hasStaleGoal;
+    [ObservableProperty] private string staleGoalGuid = string.Empty;
     [ObservableProperty] private string syncStatus = string.Empty;
     [ObservableProperty] private string lastSyncDisplay = string.Empty;
     [ObservableProperty] private string quickJournalText = string.Empty;
@@ -105,11 +106,13 @@ public partial class DashboardViewModel(
             || (nowMs - progressInfo[staleGoal.Guid].UpdatedOn) > 7L * 86_400_000))
         {
             StaleGoalText = staleGoal.GoalText ?? string.Empty;
+            StaleGoalGuid = staleGoal.Guid;
             HasStaleGoal = !string.IsNullOrWhiteSpace(StaleGoalText);
         }
         else
         {
             StaleGoalText = string.Empty;
+            StaleGoalGuid = string.Empty;
             HasStaleGoal = false;
         }
     }
@@ -155,6 +158,13 @@ public partial class DashboardViewModel(
         QuickJournalSaved = false;
         var journals = await journalRepo.GetRecentAsync(account.Guid, 3);
         RecentJournals = new ObservableCollection<Journal>(journals);
+    }
+
+    [RelayCommand]
+    private async Task GoToStaleGoalAsync()
+    {
+        if (!string.IsNullOrEmpty(StaleGoalGuid))
+            await Shell.Current.GoToAsync($"goals/entry?guid={StaleGoalGuid}");
     }
 
     [RelayCommand]

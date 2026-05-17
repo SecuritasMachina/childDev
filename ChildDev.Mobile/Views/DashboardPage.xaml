@@ -22,6 +22,9 @@
                    IsVisible="{Binding HasNextGoalMeeting}" />
             <Border BackgroundColor="#FFF3CD" Padding="10,6" StrokeShape="RoundRectangle 6"
                     IsVisible="{Binding HasStaleGoal}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding GoToStaleGoalCommand}" />
+                </Border.GestureRecognizers>
                 <Label TextColor="#856404" FontSize="12">
                     <Label.FormattedText>
                         <FormattedString>
