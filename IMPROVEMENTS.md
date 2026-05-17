@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-17 — Fix: today's meeting date not pre-filled in Add Progress dialog (iter 381) + refactor ApplyFilter (iter 382)
+
+**Files:** `ChildDev.Api/Components/Pages/GoalDetail.razor`, `ChildDev.Api/Components/Pages/Todos.razor`
+
+**Iter 381:** `OpenAddProgressDialog` used `> nowMs` (UTC) to check if the goal's `NextMeetingDate` was upcoming. Since `NextMeetingDate` is stored as local midnight, today's meeting was excluded. Changed to `>= todayStartMs`.
+
+**Iter 382:** `ApplyFilter` was recomputing `todayStartMs` locally while the `TodayStartMs` field was already available from `LoadTodos`. Both Overdue and Today filters now use the same field, eliminating redundant computation.
+
+**Impact:** 220 API tests — all passing.
+
+---
+
 ## 2026-05-17 — Fix: goal meeting/expiration dates shown as past/overdue prematurely (iter 380)
 
 **Files:** `ChildDev.Api/Components/Pages/GoalDetail.razor`, `ChildDev.Api/Components/Pages/Home.razor`, `ChildDev.Mobile/ViewModels/DashboardViewModel.cs`
