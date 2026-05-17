@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 54 — Mobile: GoalEntry Save button disabled when GoalText empty
+
+**What changed:**
+- `GoalEntryViewModel.cs`: Added `CanSave()` guard method and `[RelayCommand(CanExecute = nameof(CanSave))]`; `OnGoalTextChanged` calls `SaveCommand.NotifyCanExecuteChanged()` so the toolbar button reacts immediately; removed the now-redundant null guard inside SaveAsync
+
+**Why:** Previously tapping Save with an empty goal silently did nothing — confusing for users. The button now disables reactively as the user types.
+
+**Impact:** 25 mobile tests pass. 52 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 53 Brainstorm (fresh — every 3rd)
 
 | # | Description | Dim | Impact | Effort | Risk |
