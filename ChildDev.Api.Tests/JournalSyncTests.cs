@@ -163,4 +163,35 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.DoesNotContain(body!.Records, r => r.Guid == guid);
     }
+
+    [Fact]
+    public async Task Sync_BatchMixedLWW_PerRecordWinnerApplied()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("jsync_mixed_lww");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var guidA = Guid.NewGuid().ToString();
+        var guidB = Guid.NewGuid().ToString();
+
+        // Establish server state: A at ts+1000, B at ts+2000
+        await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([
+            new JournalDto(guidA, accountGuid, "A server", null, null, null, ts, ts + 1000, null),
+            new JournalDto(guidB, accountGuid, "B server", null, null, null, ts, ts + 2000, null)
+        ], 0));
+
+        // Client sends A at ts+2000 (newer → client wins) and B at ts+1000 (older → server wins)
+        await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([
+            new JournalDto(guidA, accountGuid, "A client newer", null, null, null, ts, ts + 2000, null),
+            new JournalDto(guidB, accountGuid, "B client stale", null, null, null, ts, ts + 1000, null)
+        ], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
+
+        var recordA = body!.Records.First(r => r.Guid == guidA);
+        var recordB = body.Records.First(r => r.Guid == guidB);
+        Assert.Equal("A client newer", recordA.Notes);
+        Assert.Equal("B server", recordB.Notes);
+    }
 }
