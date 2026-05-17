@@ -18,6 +18,10 @@ public partial class TodoEntryViewModel(
     [ObservableProperty] private DateTime dueDate = DateTime.Today.AddDays(1);
     [ObservableProperty] private bool isExisting;
 
+    private bool CanSave() => !string.IsNullOrWhiteSpace(Title);
+
+    partial void OnTitleChanged(string value) => SaveCommand.NotifyCanExecuteChanged();
+
     partial void OnGuidChanged(string value)
     {
         if (!string.IsNullOrEmpty(value))
@@ -38,10 +42,9 @@ public partial class TodoEntryViewModel(
         IsExisting = true;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanSave))]
     private async Task SaveAsync()
     {
-        if (string.IsNullOrWhiteSpace(Title)) return;
         var account = await accountService.GetAccountAsync();
         if (account is null) return;
 
