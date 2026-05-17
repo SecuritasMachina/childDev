@@ -39,8 +39,12 @@
                         </Grid.GestureRecognizers>
                         <VerticalStackLayout>
                             <Label Text="{Binding Notes}" LineBreakMode="TailTruncation" MaxLines="2" />
-                            <Label Text="{Binding Mood}" FontSize="12" TextColor="Gray"
-                                   IsVisible="{Binding Mood, Converter={StaticResource StringToBoolConverter}}" />
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="{Binding Mood}" FontSize="12" TextColor="Gray"
+                                       IsVisible="{Binding Mood, Converter={StaticResource StringToBoolConverter}}" />
+                                <Label Text="{Binding Activity}" FontSize="12" TextColor="CornflowerBlue"
+                                       IsVisible="{Binding Activity, Converter={StaticResource StringToBoolConverter}}" />
+                            </HorizontalStackLayout>
                         </VerticalStackLayout>
                         <Label Grid.Column="1"
                                Text="{Binding EnteredDate, Converter={StaticResource EntryDateConverter}}"
