@@ -778,6 +778,31 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_ServerReturnsGoalProgress_NullNextStepsMeetingDateOnly_StoredLocally()
+    {
+        await _accountService.CreateAccountAsync("user30b", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var goalFk = System.Guid.NewGuid().ToString();
+        var nextMeeting = 9_500_000L;
+        var serverProgress = new GoalProgressSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, goalFk,
+            null, nextMeeting, 1000, null);
+
+        var handler = new FakeGoalProgressSyncHandler(serverProgress);
+        var service = BuildSyncService(handler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var stored = await _db.FindAsync<GoalProgress>(serverProgress.Guid);
+        Assert.NotNull(stored);
+        Assert.Null(stored!.NextStepItems);
+        Assert.Equal(nextMeeting, stored.NextMeetingDate);
+    }
+
+    [Fact]
     public async Task RunAsync_ServerReturnsTodo_DueDateAndNotesStoredLocally()
     {
         await _accountService.CreateAccountAsync("user31", "1234");
