@@ -4123,3 +4123,13 @@ Both match mobile filter behavior (TodoListViewModel.FilterText, JournalListView
 **Impact:** 217 API tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — Web journal entry date picker (iter 321)
+
+**What:** Added `MudDatePicker` to both the Add and Edit journal dialogs on the web journal page. Defaults to today. Edit dialog pre-populates with the existing `EnteredDate`. Saved date is converted to Unix ms and stored in `EnteredDate`.
+
+**Why:** Mobile `JournalEntryPage` has always had a date field, allowing backdated entries. The web had no way to set the date — every entry was stamped with the current moment. This closes the parity gap and allows caregivers logging observations after the fact.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---

@@ -101,7 +101,8 @@ else
                       Lines="4" Class="mb-4" AutoFocus="true" />
         <MudTextField @bind-Value="NewActivity" Label="Activity (optional)" Variant="Variant.Outlined" Class="mb-4" />
         <MudTextField @bind-Value="NewMood" Label="Mood (optional)" Variant="Variant.Outlined" Class="mb-4" />
-        <MudTextField @bind-Value="NewTags" Label="Tags (optional, comma-separated)" Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="NewTags" Label="Tags (optional, comma-separated)" Variant="Variant.Outlined" Class="mb-4" />
+        <MudDatePicker @bind-Date="NewEnteredDate" Label="Entry date" Variant="Variant.Outlined" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => ShowAddDialog = false">Cancel</MudButton>
@@ -121,7 +122,8 @@ else
                       Lines="4" Class="mb-4" AutoFocus="true" />
         <MudTextField @bind-Value="EditActivity" Label="Activity (optional)" Variant="Variant.Outlined" Class="mb-4" />
         <MudTextField @bind-Value="EditMood" Label="Mood (optional)" Variant="Variant.Outlined" Class="mb-4" />
-        <MudTextField @bind-Value="EditTags" Label="Tags (optional, comma-separated)" Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="EditTags" Label="Tags (optional, comma-separated)" Variant="Variant.Outlined" Class="mb-4" />
+        <MudDatePicker @bind-Date="EditEnteredDate" Label="Entry date" Variant="Variant.Outlined" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => ShowEditDialog = false">Cancel</MudButton>
@@ -139,12 +141,14 @@ else
     private string NewActivity = string.Empty;
     private string NewMood = string.Empty;
     private string NewTags = string.Empty;
+    private DateTime? NewEnteredDate = DateTime.Today;
     private bool ShowEditDialog;
     private string? EditingGuid;
     private string EditNotes = string.Empty;
     private string EditActivity = string.Empty;
     private string EditMood = string.Empty;
     private string EditTags = string.Empty;
+    private DateTime? EditEnteredDate;
 
     protected override async Task OnInitializedAsync()
     {
@@ -189,6 +193,9 @@ else
         if (string.IsNullOrWhiteSpace(NewNotes) && string.IsNullOrWhiteSpace(NewActivity)) return;
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var enteredMs = NewEnteredDate.HasValue
+            ? new DateTimeOffset(NewEnteredDate.Value, TimeSpan.Zero).ToUnixTimeMilliseconds()
+            : now;
         Db.Journals.Add(new Journal
         {
             Guid = System.Guid.NewGuid().ToString(),
@@ -197,7 +204,7 @@ else
             Activity = string.IsNullOrWhiteSpace(NewActivity) ? null : NewActivity.Trim(),
             Mood = string.IsNullOrWhiteSpace(NewMood) ? null : NewMood.Trim(),
             Tags = string.IsNullOrWhiteSpace(NewTags) ? null : NewTags.Trim(),
-            EnteredDate = now,
+            EnteredDate = enteredMs,
             UpdatedOn = now
         });
         await Db.SaveChangesAsync();
@@ -207,6 +214,7 @@ else
         NewActivity = string.Empty;
         NewMood = string.Empty;
         NewTags = string.Empty;
+        NewEnteredDate = DateTime.Today;
         ShowAddDialog = false;
         Snackbar.Add("Entry saved!", Severity.Success);
         await LoadEntries();
@@ -219,6 +227,7 @@ else
         EditActivity = j.Activity ?? string.Empty;
         EditMood = j.Mood ?? string.Empty;
         EditTags = j.Tags ?? string.Empty;
+        EditEnteredDate = DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime.Date;
         ShowEditDialog = true;
     }
 
@@ -233,6 +242,8 @@ else
         entry.Activity = string.IsNullOrWhiteSpace(EditActivity) ? null : EditActivity.Trim();
         entry.Mood = string.IsNullOrWhiteSpace(EditMood) ? null : EditMood.Trim();
         entry.Tags = string.IsNullOrWhiteSpace(EditTags) ? null : EditTags.Trim();
+        if (EditEnteredDate.HasValue)
+            entry.EnteredDate = new DateTimeOffset(EditEnteredDate.Value, TimeSpan.Zero).ToUnixTimeMilliseconds();
         entry.UpdatedOn = now;
         await Db.SaveChangesAsync();
         await Analytics.TrackAsync("journal_edit", AccountGuid, "journal");
