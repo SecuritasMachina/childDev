@@ -4220,6 +4220,16 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — Mobile setup: add Confirm PIN field (iter 341)
+
+**What:** Added `ConfirmPin` property and confirm Entry to `SetupPage.xaml`. `CanCreate` now requires both PIN fields to have 4 characters. On submit, if `Pin != ConfirmPin`, an error message "PINs do not match" is shown and registration is blocked.
+
+**Why:** Matches the web register page fix from iter 323. A typo during PIN setup on mobile creates an account the user can never log into. The 4-digit + numeric keyboard constraint reduces but doesn't eliminate the risk.
+
+**Impact:** 235 mobile tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Fix: mobile journal edit ignores DatePicker changes (iter 340)
 
 **What:** Added `journal.EnteredDate = enteredMs;` in `JournalEntryViewModel.SaveAsync()` after loading an existing entry. Previously, `enteredMs` was computed from the `EnteredDate` bound to the DatePicker, but the existing journal's `EnteredDate` was loaded from the DB and the picker change was never written back.

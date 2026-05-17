@@ -15,9 +15,13 @@ public partial class SetupViewModel(AccountService accountService) : ObservableO
     private string pin = string.Empty;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CreateAccountCommand))]
+    private string confirmPin = string.Empty;
+
+    [ObservableProperty]
     private string errorMessage = string.Empty;
 
-    private bool CanCreate => !string.IsNullOrWhiteSpace(NickName) && Pin.Length == 4;
+    private bool CanCreate => !string.IsNullOrWhiteSpace(NickName) && Pin.Length == 4 && ConfirmPin.Length == 4;
 
     [RelayCommand(CanExecute = nameof(CanCreate))]
     private async Task CreateAccountAsync()
@@ -25,6 +29,11 @@ public partial class SetupViewModel(AccountService accountService) : ObservableO
         if (!Pin.All(char.IsDigit))
         {
             ErrorMessage = "PIN must be 4 digits";
+            return;
+        }
+        if (Pin != ConfirmPin)
+        {
+            ErrorMessage = "PINs do not match";
             return;
         }
 
