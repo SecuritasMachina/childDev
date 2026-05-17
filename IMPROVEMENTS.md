@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 202 — Mobile: TodoRepository GetCompletedCount counts all 3 completed, excludes pending
+
+**What changed:**
+- `TodoRepositoryTests.cs`: Added `GetCompletedCountAsync_MultipleCompleted_CountsAll` — inserts 3 completed + 1 pending todo, asserts count = 3.
+
+**Why:** Existing `GetCompletedCount_CountsCompletedExcludesDeleted` verifies count=1. No test verified count > 1. Adding 3-completed test ensures the COUNT query isn't accidentally capped or offset.
+
+**Impact:** 157 mobile tests pass (was 156). 157 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 201 — Mobile: GetAsync returns null when GUID not found (Goal, Journal, Todo)
 
 **What changed:**
