@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 235 — Mobile: Synced soft-deleted journal excluded from GetAllActiveAsync
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_ServerSendsDeletedJournal_ExcludedFromGetAllActiveAsync` (user70) — pre-inserts active journal, confirms it's in the active list, server sends it soft-deleted; asserts it disappears from `GetAllActiveAsync`.
+
+**Why:** Mirrors iteration 234 (todo/pending) for the journal/active path. Completes the deleted-record view-exclusion coverage for the two non-GoalProgress entity types.
+
+**Impact:** 192 mobile tests pass (was 191). 164 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 234 — Mobile: Synced soft-deleted todo excluded from GetPendingAsync
 
 **What changed:**
