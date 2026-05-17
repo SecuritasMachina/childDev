@@ -19,6 +19,8 @@ public partial class DashboardViewModel(
     [ObservableProperty] private int pendingTodoCount;
     [ObservableProperty] private int overdueTodoCount;
     [ObservableProperty] private bool hasOverdueTodos;
+    [ObservableProperty] private string nextGoalMeeting = string.Empty;
+    [ObservableProperty] private bool hasNextGoalMeeting;
     [ObservableProperty] private string syncStatus = string.Empty;
     [ObservableProperty] private string lastSyncDisplay = string.Empty;
 
@@ -49,7 +51,26 @@ public partial class DashboardViewModel(
         RecentJournals = new ObservableCollection<Journal>(journals.Take(3));
 
         var goals = await goalRepo.GetAllActiveAsync(account.Guid);
-        ActiveGoalCount = goals.Count(g => g.CompletionDate is null);
+        var activeGoals = goals.Where(g => g.CompletionDate is null).ToList();
+        ActiveGoalCount = activeGoals.Count;
+        var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var nextGoal = activeGoals
+            .Where(g => g.NextMeetingDate.HasValue && g.NextMeetingDate.Value > nowMs)
+            .OrderBy(g => g.NextMeetingDate!.Value)
+            .FirstOrDefault();
+        if (nextGoal is not null)
+        {
+            var meetingDate = DateTimeOffset.FromUnixTimeMilliseconds(nextGoal.NextMeetingDate!.Value).LocalDateTime;
+            var daysAway = (meetingDate.Date - DateTime.Today).Days;
+            var dateStr = daysAway == 0 ? "today" : daysAway == 1 ? "tomorrow" : meetingDate.ToString("MMM d");
+            NextGoalMeeting = $"Next goal meeting: {dateStr}";
+            HasNextGoalMeeting = true;
+        }
+        else
+        {
+            NextGoalMeeting = string.Empty;
+            HasNextGoalMeeting = false;
+        }
 
         var todos = await todoRepo.GetPendingAsync(account.Guid);
         PendingTodoCount = todos.Count;
