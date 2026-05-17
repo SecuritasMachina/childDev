@@ -130,7 +130,7 @@ public class SyncService(
         response.EnsureSuccessStatusCode();
 
         var result = await response.Content.ReadFromJsonAsync<SyncResponseDto<TDto>>();
-        if (result is null) return;
+        if (result?.Records is null) return;
 
         foreach (var dto in result.Records)
             await upsertLocal(dto);

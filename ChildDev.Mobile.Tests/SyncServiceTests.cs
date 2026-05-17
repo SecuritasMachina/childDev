@@ -70,6 +70,21 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_ServerReturnsNullRecords_DoesNotThrow()
+    {
+        await _accountService.CreateAccountAsync("user2b", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        // Server returns {"Records": null} — should not throw NullReferenceException
+        var service = BuildSyncService(new NullRecordsHandler());
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+    }
+
+    [Fact]
     public async Task RunAsync_ServerReturnsData_UpsertsLocally()
     {
         await _accountService.CreateAccountAsync("user3", "1234");
@@ -340,6 +355,24 @@ public class FakeSyncHandler(JournalSyncDto journal) : HttpMessageHandler
         return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = JsonContent.Create(new { Records = Array.Empty<object>() })
+        });
+    }
+}
+
+// Returns {"Records": null} for entity syncs — tests null safety in SyncEntityAsync
+public class NullRecordsHandler : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        if (request.RequestUri!.PathAndQuery.Contains("health"))
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new { status = "ok" })
+            });
+        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("{\"Records\":null}", System.Text.Encoding.UTF8, "application/json")
         });
     }
 }
