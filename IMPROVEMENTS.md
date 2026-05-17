@@ -1,5 +1,21 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 181 — API: Soft-deleted records can be restored via newer LWW update
+
+**What changed:**
+- `JournalSyncTests.cs`: Added `Sync_SoftDeleted_CanBeRestoredByClient_ViaNewerUpdate`
+- `GoalSyncTests.cs`: Added `Sync_SoftDeleted_CanBeRestoredByClient_ViaNewerUpdate`
+- `GoalProgressSyncTests.cs`: Added `Sync_SoftDeleted_CanBeRestoredByClient_ViaNewerUpdate`
+- `TodoSyncTests.cs`: Added `Sync_SoftDeleted_CanBeRestoredByClient_ViaNewerUpdate`
+
+All 4 tests follow the same pattern: store a soft-deleted record (DeletedAt set), then send same Guid with DeletedAt=null and newer UpdatedOn; assert the delta shows DeletedAt=null.
+
+**Why:** `ApplyDto` for all 4 entities includes `entity.DeletedAt = dto.DeletedAt` unconditionally. So LWW semantics allow "un-deleting" a record by sending null DeletedAt with a newer UpdatedOn. Without a test, a "fix" adding `if (entity.DeletedAt.HasValue) return;` to prevent restoration would silently break the LWW contract. These tests document the intentional restoration behavior across all entities.
+
+**Impact:** 152 API tests pass (was 148). 136 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 180 — API: Nullable date fields can be cleared via newer LWW update
 
 **What changed:**
