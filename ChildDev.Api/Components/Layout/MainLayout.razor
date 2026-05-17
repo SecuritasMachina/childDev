@@ -14,9 +14,12 @@
         <MudSpacer />
         @if (NickName is not null)
         {
-            <MudButton Color="Color.Inherit" Href="/">Goals</MudButton>
-            <MudButton Color="Color.Inherit" Href="/todos">Todos</MudButton>
-            <MudButton Color="Color.Inherit" Href="/journal">Journal</MudButton>
+            <MudButton Color="Color.Inherit" Href="/"
+                       Variant="@(IsActive("/") ? Variant.Outlined : Variant.Text)">Goals</MudButton>
+            <MudButton Color="Color.Inherit" Href="/todos"
+                       Variant="@(IsActive("/todos") ? Variant.Outlined : Variant.Text)">Todos</MudButton>
+            <MudButton Color="Color.Inherit" Href="/journal"
+                       Variant="@(IsActive("/journal") ? Variant.Outlined : Variant.Text)">Journal</MudButton>
             <MudText Typo="Typo.body2" Class="ml-3 mr-2">@NickName</MudText>
             <MudButton Color="Color.Inherit" Href="/logout">Logout</MudButton>
         }
@@ -39,5 +42,13 @@
     protected override void OnInitialized()
     {
         NickName = HttpContextAccessor.HttpContext?.Session.GetString("NickName");
+    }
+
+    private bool IsActive(string path)
+    {
+        var uri = new Uri(Nav.Uri);
+        if (path == "/")
+            return uri.AbsolutePath == "/" || uri.AbsolutePath.StartsWith("/goals/");
+        return uri.AbsolutePath.StartsWith(path, StringComparison.OrdinalIgnoreCase);
     }
 }
