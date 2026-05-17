@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 64 — Mobile: Show account GUID in Settings
+
+**What changed:**
+- `SettingsViewModel.cs`: Added `AccountGuid` observable, set from `account.Guid` in `LoadAsync`.
+- `SettingsPage.xaml`: Added `Label` showing `{Binding AccountGuid, StringFormat='ID: {0}'}` below the account created date.
+
+**Why:** Users need their account GUID for support tickets and cross-device identification. It was previously inaccessible from the UI.
+
+**Impact:** 25 mobile tests pass (0 warnings). 52 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 63 — Mobile: Disable TodoEntry Save when Title is empty
 
 **What changed:**
