@@ -68,6 +68,7 @@ public partial class JournalEntryViewModel(
             ? new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid, EnteredDate = enteredMs }
             : await repo.GetAsync(Guid) ?? new Journal { Guid = Guid, AccountFk = account.Guid, EnteredDate = enteredMs };
 
+        journal.EnteredDate = enteredMs;
         journal.Notes = Notes.Trim();
         journal.Activity = string.IsNullOrWhiteSpace(Activity) ? null : Activity.Trim();
         journal.Mood = string.IsNullOrWhiteSpace(Mood) ? null : Mood.Trim();

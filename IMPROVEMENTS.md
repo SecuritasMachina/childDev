@@ -4220,6 +4220,16 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — Fix: mobile journal edit ignores DatePicker changes (iter 340)
+
+**What:** Added `journal.EnteredDate = enteredMs;` in `JournalEntryViewModel.SaveAsync()` after loading an existing entry. Previously, `enteredMs` was computed from the `EnteredDate` bound to the DatePicker, but the existing journal's `EnteredDate` was loaded from the DB and the picker change was never written back.
+
+**Why:** Opening an existing journal entry and changing the date would save all other fields (notes, activity, mood, tags) but silently discard the date change. The DatePicker appeared functional but had no effect on save. The fix is a single line that applies the picker's value before saving, matching the new-entry code path.
+
+**Impact:** 235 mobile tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Insights: complete event name mapping (iter 339)
 
 **What:** Added missing event name mappings to `FormatEventName` in Insights.razor: `goal_edit`, `goal_reopen`, `progress_edit`, `progress_delete`, `journal_edit`, `journal_delete`, `todo_uncomplete`, `login`, `register`. Events without a mapping fell through to `name.Replace("_", " ")` which produced strings like "goal reopen" instead of "Reopen goal".
