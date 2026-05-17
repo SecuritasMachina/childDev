@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 151 — API: delta ordering by UpdatedOn + Goal batch mixed LWW
+
+**What changed:**
+- `JournalSyncTests.cs`: Added `Sync_Delta_OrderedByUpdatedOnAscending` — inserts 3 journals at T3/T1/T2, asserts delta returns them in T1, T2, T3 order.
+- `GoalSyncTests.cs`: Added `Sync_BatchMixedLWW_PerRecordWinnerApplied` — batch LWW for Goal, completing the Todo/Journal/Goal coverage set.
+
+**Why:** The delta ordering test guards the explicit `OrderBy(j => j.UpdatedOn)` in the query — if changed to `OrderByDescending`, the test fails. Correct ascending order matters for clients that need to process records in chronological order (most-recently-modified last). The Goal batch LWW test completes symmetry with Todo and Journal.
+
+**Impact:** 100 mobile tests pass. 116 API tests pass (was 114).
+
+---
+
 ## 2026-05-17 — Iteration 150 — API Journal batch LWW + Mobile TodoRepo due-date ordering
 
 **What changed:**
