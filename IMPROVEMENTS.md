@@ -106,6 +106,17 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 290 — Web: Edit NextMeetingDate and ExpirationDate from goal detail
+
+**What changed:**
+- `GoalDetail.razor`: Goal edit dialog now includes date pickers for `NextMeetingDate` and `ExpirationDate`. `OpenEditDialog` pre-fills both from current values; `SaveGoalEdit` writes them back with LWW `UpdatedOn`.
+
+**Why:** These fields were previously web-read-only — visible on the home card and detail page, but only settable from the mobile app. Web users had no way to schedule or deadline a goal without a mobile device.
+
+**Impact:** 213 API tests pass. 221 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 289 — Web: Goal creation date and age on detail page
 
 **What changed:**
