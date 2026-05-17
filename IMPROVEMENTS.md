@@ -3807,3 +3807,46 @@ Multiple `azAuthHeader` quoting, line-length, and semicolon issues across `goal.
 | 8 | API: GoalProgress test for UpdatedOn=0 exclusion from delta | Quality | Low | S | Low | Backlog |
 
 ---
+
+## 2026-05-17 — GoalDetail Mark as Complete + completion badge (iter 295)
+
+**Branch:** `improve/goaldetail-mark-complete-295`
+
+**What:** Added "Mark as Complete" button on the GoalDetail page. When a goal is completed:
+- A success alert shows the completion date
+- The edit button is hidden
+- A "Reopen Goal" button appears beneath the alert
+- `goal_complete` analytics event tracked
+
+**Why:** Users could mark goals complete from the dashboard list but had no way to do so from within the detail page — where they most naturally land after reviewing progress.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
+## 2026-05-17 — GoalDetail next meeting date + Reopen Goal button (iter 296)
+
+**Branch:** `improve/api-futurestamp-validation-296`
+
+**What:** Added to GoalDetail:
+- `Goal.NextMeetingDate` displayed as a caption below MeasurableOutcome
+- "Reopen Goal" button for completed goals (clears CompletionDate, tracks `goal_reopen` analytics)
+- Edit button re-appears after reopen
+
+**Why:** NextMeetingDate was only visible in individual progress notes; the goal-level meeting date was invisible on the detail view. Reopen completes the complete/reopen lifecycle without requiring users to go back to the list.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
+## 2026-05-17 — GoalDetail target date with overdue indicator (iter 297)
+
+**Branch:** `improve/mobile-error-boundary-297`
+
+**What:** Added `Goal.ExpirationDate` display on GoalDetail below NextMeetingDate. Shows in red with "— overdue" label when the target date has passed. Hidden for completed goals.
+
+**Why:** The target completion date was already editable from the dialog but never shown at the top of the detail view — users had to open the edit dialog to see it.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
