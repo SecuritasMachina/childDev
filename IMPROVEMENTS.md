@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 228 — API: Soft-delete clears GoalText/Title in delta (Goal + Todo)
+
+**What changed:**
+- `GoalSyncTests.cs`: Added `Sync_SoftDelete_GoalTextNullInDelta`.
+- `TodoSyncTests.cs`: Added `Sync_SoftDelete_TitleNullInDelta`.
+
+**Why:** Completes the 4-entity soft-delete null-field delta coverage started in iter 227. All entity soft-delete delta tests now assert both DeletedAt and the cleared text field.
+
+**Impact:** 184 mobile tests pass. 164 API tests pass (was 162).
+
+---
+
 ## 2026-05-17 — Iteration 227 — API: Soft-delete clears text fields in delta (Journal + GoalProgress)
 
 **What changed:**
