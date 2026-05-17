@@ -51,7 +51,12 @@ public static class GoalEndpoints
                 logger.LogWarning("sync/goal account={Account} rejected: future ExpirationDate", accountGuid[..8]);
                 return Results.Problem("Record ExpirationDate is too far in the future.", statusCode: 422);
             }
-            if (req.Records.Any(r => r.DeletedAt is null && string.IsNullOrWhiteSpace(r.GoalText)))
+            if (req.Records.Any(r => r.NextMeetingDate.HasValue && r.NextMeetingDate.Value > maxFutureTimestampMs))
+            {
+                logger.LogWarning("sync/goal account={Account} rejected: NextMeetingDate too far in future", accountGuid[..8]);
+                return Results.Problem("Record NextMeetingDate is too far in the future.", statusCode: 422);
+            }
+            if (req.Records.Any(r => r.DeletedAt is null && r.CompletionDate is null && string.IsNullOrWhiteSpace(r.GoalText)))
             {
                 logger.LogWarning("sync/goal account={Account} rejected: blank GoalText", accountGuid[..8]);
                 return Results.Problem("Record GoalText must not be blank.", statusCode: 422);
