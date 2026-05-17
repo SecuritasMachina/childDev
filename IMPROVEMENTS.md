@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 111 — Mobile Tests: TodoRepository GetCompletedCount, DueDate ordering, UpsertFromSync
+
+**What changed:**
+- `TodoRepositoryTests.cs`: Added `GetCompletedCount_CountsCompletedExcludesDeleted`, `GetPendingAsync_DueDateTodosOrderedBeforeNullDueDate`, and `UpsertFromSync_OverwritesExistingRecord`.
+
+**Why:** `GetCompletedCountAsync` and `UpsertFromSyncAsync` were uncovered. The `GetPendingAsync` method has custom SQL with `ORDER BY (DueDate IS NULL), DueDate` sorting logic that previously had no test.
+
+**Impact:** 40 mobile tests pass. 91 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 110 — API Tests: Empty batch returns 200 for Goal, GoalProgress, Todo
 
 **What changed:**
