@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 120 — Mobile: Null-safe Records check in SyncEntityAsync
+
+**What changed:**
+- `SyncService.cs`: Changed `if (result is null) return;` to `if (result?.Records is null) return;` in `SyncEntityAsync`.
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsNullRecords_DoesNotThrow` using a `NullRecordsHandler` that returns `{"Records":null}`.
+
+**Why:** If the server returns `{"Records": null}`, `ReadFromJsonAsync` would deserialize `Records` as null. The prior null check only guarded against `result` itself being null, not `result.Records`. The `foreach` would throw `NullReferenceException` on null `Records`.
+
+**Impact:** 44 mobile tests pass. 93 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 119 — Mobile: Settings URL status message distinguishes saved vs cleared
 
 **What changed:**
