@@ -2,6 +2,16 @@
 
 ---
 
+## 2026-05-17 — UX: delete confirmation in TodoEntryViewModel (iter 399)
+
+**File:** `ChildDev.Mobile/ViewModels/TodoEntryViewModel.cs`
+
+**Change:** `DeleteAsync` on the entry page also lacked confirmation — same pattern as iters 397–398. Added `Shell.Current.DisplayAlert` guard.
+
+**Impact:** Build: 0 warnings, 0 errors.
+
+---
+
 ## 2026-05-17 — UX: delete confirmation in JournalEntryViewModel (iter 398)
 
 **File:** `ChildDev.Mobile/ViewModels/JournalEntryViewModel.cs`

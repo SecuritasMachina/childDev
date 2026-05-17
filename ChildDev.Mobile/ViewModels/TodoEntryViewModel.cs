@@ -93,6 +93,8 @@ public partial class TodoEntryViewModel(
     private async Task DeleteAsync()
     {
         if (string.IsNullOrEmpty(Guid)) return;
+        var confirmed = await Shell.Current.DisplayAlert("Delete Todo?", "Remove this todo?", "Delete", "Cancel");
+        if (!confirmed) return;
         await repo.DeleteAsync(Guid);
         await Shell.Current.GoToAsync("..");
     }
