@@ -81,8 +81,12 @@ else if (PendingTodos.Any())
             <MudList T="Todo" Dense="true">
                 @foreach (var t in CompletedTodos)
                 {
+                    var completedOn = DateTimeOffset.FromUnixTimeMilliseconds(t.CompletedAt!.Value).LocalDateTime;
                     <MudListItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
-                        <MudText Typo="Typo.body2" Class="text-decoration-line-through">@t.Title</MudText>
+                        <MudStack Spacing="0">
+                            <MudText Typo="Typo.body2" Class="text-decoration-line-through">@t.Title</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Done @completedOn.ToString("MMM d")</MudText>
+                        </MudStack>
                     </MudListItem>
                 }
             </MudList>
