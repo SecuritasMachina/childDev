@@ -46,7 +46,18 @@
 }
 else if (!Entries.Any())
 {
-    <MudText Typo="Typo.body2" Color="Color.Secondary">No entries matching "@FilterText".</MudText>
+    @if (!string.IsNullOrWhiteSpace(FilterText) && DateFilter != "All")
+    {
+        <MudText Typo="Typo.body2" Color="Color.Secondary">No entries matching "@FilterText" in this date range.</MudText>
+    }
+    else if (!string.IsNullOrWhiteSpace(FilterText))
+    {
+        <MudText Typo="Typo.body2" Color="Color.Secondary">No entries matching "@FilterText".</MudText>
+    }
+    else
+    {
+        <MudText Typo="Typo.body2" Color="Color.Secondary">No entries in this date range.</MudText>
+    }
 }
 else
 {
