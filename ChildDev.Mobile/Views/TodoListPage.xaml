@@ -5,17 +5,21 @@
              xmlns:models="clr-namespace:ChildDev.Mobile.Models"
              x:Class="ChildDev.Mobile.Views.TodoListPage"
              Title="Todos">
-    <Grid RowDefinitions="Auto,Auto,*,Auto">
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
         <Label Grid.Row="0" Text="{Binding StatusMessage}" TextColor="Red"
                FontSize="13" Padding="16,8"
                IsVisible="{Binding StatusMessage, Converter={x:StaticResource StringToBoolConverter}}" />
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Padding="16,8">
+        <Label Grid.Row="1"
+               Text="{Binding OverdueTodoCount, StringFormat='{0} task(s) overdue'}"
+               BackgroundColor="#FFEEEE" TextColor="Red" FontSize="12" Padding="16,6"
+               IsVisible="{Binding HasOverdueTodos}" />
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Padding="16,8">
             <Entry Grid.Column="0" Placeholder="Add a task..." Text="{Binding NewTodoTitle}"
                    ReturnCommand="{Binding AddCommand}" />
             <Button Grid.Column="1" Text="Add" Command="{Binding AddCommand}" Margin="8,0,0,0" />
         </Grid>
 
-        <RefreshView Grid.Row="2" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
+        <RefreshView Grid.Row="3" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
         <CollectionView ItemsSource="{Binding Todos}">
             <CollectionView.EmptyView>
                 <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8" Padding="32">
@@ -66,7 +70,7 @@
         </CollectionView>
         </RefreshView>
 
-        <Label Grid.Row="3"
+        <Label Grid.Row="4"
                Text="{Binding CompletedTodoCount, StringFormat='{0} task(s) completed'}"
                FontSize="12" TextColor="Gray" HorizontalOptions="Center" Padding="0,8"
                IsVisible="{Binding HasCompletedTodos}" />

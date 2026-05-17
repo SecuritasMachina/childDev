@@ -28,6 +28,12 @@ public partial class TodoListViewModel(
     private bool hasCompletedTodos;
 
     [ObservableProperty]
+    private int overdueTodoCount;
+
+    [ObservableProperty]
+    private bool hasOverdueTodos;
+
+    [ObservableProperty]
     private bool isRefreshing;
 
     [RelayCommand]
@@ -42,6 +48,7 @@ public partial class TodoListViewModel(
             Todos = new ObservableCollection<Todo>(items);
             CompletedTodoCount = await repo.GetCompletedCountAsync(account.Guid);
             HasCompletedTodos = CompletedTodoCount > 0;
+            UpdateOverdueCount(items);
         }
         catch
         {
@@ -61,6 +68,7 @@ public partial class TodoListViewModel(
             Todos = new ObservableCollection<Todo>(items);
             CompletedTodoCount = await repo.GetCompletedCountAsync(account.Guid);
             HasCompletedTodos = CompletedTodoCount > 0;
+            UpdateOverdueCount(items);
             StatusMessage = string.Empty;
         }
         catch
@@ -99,6 +107,7 @@ public partial class TodoListViewModel(
         Todos.Remove(todo);
         CompletedTodoCount++;
         HasCompletedTodos = true;
+        UpdateOverdueCount(Todos);
     }
 
     [RelayCommand]
@@ -106,6 +115,14 @@ public partial class TodoListViewModel(
     {
         await repo.DeleteAsync(todo.Guid);
         Todos.Remove(todo);
+        UpdateOverdueCount(Todos);
+    }
+
+    private void UpdateOverdueCount(IEnumerable<Todo> items)
+    {
+        var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        OverdueTodoCount = items.Count(t => t.DueDate.HasValue && t.DueDate.Value < nowMs);
+        HasOverdueTodos = OverdueTodoCount > 0;
     }
 
     [RelayCommand]
