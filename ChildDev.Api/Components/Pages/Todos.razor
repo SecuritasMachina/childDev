@@ -25,17 +25,25 @@
     </MudAlert>
 }
 
-@if (!PendingTodos.Any() && !CompletedTodos.Any())
+@if (!AllPendingTodos.Any() && !CompletedTodos.Any())
 {
     <MudAlert Severity="Severity.Info" Class="mb-4" Icon="@Icons.Material.Filled.CheckCircle">
         No todos yet — add one below to get started!
     </MudAlert>
 }
-else if (PendingTodos.Any())
+else
 {
-    <MudText Typo="Typo.subtitle1" Class="mb-2" Color="Color.Secondary">
-        @PendingTodos.Count pending
-    </MudText>
+    <MudTextField Value="@FilterText" ValueChanged="@((string v) => OnFilterChanged(v))"
+                  Placeholder="Filter tasks…" Variant="Variant.Outlined"
+                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                  Class="mb-3" Clearable="true" Immediate="true"
+                  AdornmentColor="Color.Secondary" />
+    @if (AllPendingTodos.Any())
+    {
+        <MudText Typo="Typo.subtitle1" Class="mb-2" Color="Color.Secondary">
+            @PendingTodos.Count @(!string.IsNullOrWhiteSpace(FilterText) ? $"matching \"{FilterText}\"" : "pending")
+        </MudText>
+    }
 }
 
 <MudList T="Todo" Dense="false">
@@ -143,10 +151,12 @@ else if (PendingTodos.Any())
 
 @code {
     private string? AccountGuid;
-    private List<Todo> PendingTodos = [];
+    private List<Todo> AllPendingTodos = [];
     private List<Todo> CompletedTodos = [];
     private int OverdueCount;
     private long NowMs;
+    private string FilterText = string.Empty;
+    private List<Todo> PendingTodos = [];
     private bool ShowAddDialog;
     private string NewTitle = string.Empty;
     private string? NewNotes;
@@ -174,9 +184,32 @@ else if (PendingTodos.Any())
             .ThenByDescending(t => t.UpdatedOn)
             .ToListAsync();
 
-        PendingTodos = todos.Where(t => t.CompletedAt == null).ToList();
+        AllPendingTodos = todos.Where(t => t.CompletedAt == null).ToList();
         CompletedTodos = todos.Where(t => t.CompletedAt != null).ToList();
-        OverdueCount = PendingTodos.Count(t => t.DueDate.HasValue && t.DueDate.Value < NowMs);
+        OverdueCount = AllPendingTodos.Count(t => t.DueDate.HasValue && t.DueDate.Value < NowMs);
+        ApplyFilter();
+    }
+
+    private void OnFilterChanged(string value)
+    {
+        FilterText = value;
+        ApplyFilter();
+    }
+
+    private void ApplyFilter()
+    {
+        if (string.IsNullOrWhiteSpace(FilterText))
+        {
+            PendingTodos = AllPendingTodos;
+        }
+        else
+        {
+            var q = FilterText.Trim();
+            PendingTodos = AllPendingTodos
+                .Where(t => (t.Title?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                            (t.Notes?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false))
+                .ToList();
+        }
     }
 
     private async Task AddTodo()
