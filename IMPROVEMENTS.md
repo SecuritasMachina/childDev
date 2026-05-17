@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 52 — Mobile: Journal notes character count
+
+**What changed:**
+- `JournalEntryViewModel.cs`: Added `NotesLength` observable; `OnNotesChanged` partial updates it reactively
+- `JournalEntryPage.xaml`: Gray right-aligned "N characters" label below the Notes editor
+
+**Why:** Users writing journal entries had no feedback on entry length; the count helps gauge whether they're writing a brief note or a full reflection.
+
+**Impact:** 25 mobile tests pass. 52 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 51 — API: Validate GoalFk on goal-progress sync endpoint
 
 **What changed:**
