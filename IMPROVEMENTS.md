@@ -1,5 +1,30 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 47 Brainstorm (fresh — every 3rd)
+
+| # | Description | Dim | Impact | Effort | Risk |
+|---|-------------|-----|--------|--------|------|
+| 1 | Bug: JournalRepository.SaveAsync only bumps UpdatedOn when == 0 — edits never sync | Stability | High | XS | Low | **SELECTED** |
+| 2 | GoalEntryViewModel: skip creating GoalProgress if NextStepItems unchanged | Performance | Medium | S | Low | |
+| 3 | API: validate AccountFk is non-null on all sync endpoint inbound records | Stability | Small | XS | Low | |
+| 4 | Mobile: TodoListPage — live text filter on title | UI | Medium | M | Low | |
+| 5 | Mobile: JournalEntryPage — missing character count on Notes field | UI | Small | XS | Low | |
+| 6 | Mobile: DashboardPage — show next upcoming goal meeting date | UI | Medium | S | Low | |
+| 7 | Mobile: GoalListPage — show "No upcoming meeting" vs date countdown | UI | Small | XS | Low | |
+| 8 | API: GoalProgress sync — validate GoalFk is valid GUID | Stability | Small | XS | Low | |
+
+## 2026-05-16 — Iteration 47 — Mobile: Fix JournalRepository sync bug (edits never synced)
+
+**What changed:**
+- `JournalRepository.cs`: Removed `if (UpdatedOn == 0)` guard — `SaveAsync` now always sets `UpdatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()` (matching the pattern already used by Goal and Todo repos)
+- `JournalRepositoryTests.cs`: Added 2 new tests verifying edits bump UpdatedOn and appear in GetModifiedSince; updated existing GetModifiedSince test to use current-time-based timestamps (robust against parallel runs)
+
+**Why:** Journal edits had UpdatedOn != 0, so SaveAsync never bumped it. GetModifiedSinceAsync uses `UpdatedOn > since` to find records needing sync, meaning any journal entry edit was permanently invisible to the sync engine. This is the same pattern Goal and Todo repos already follow correctly.
+
+**Impact:** 25 mobile tests pass. 51 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 46 — Mobile: GoalList shows latest next-step items
 
 **What changed:**
