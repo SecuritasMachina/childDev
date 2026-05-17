@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 73 — Mobile: GoalList footer shows active/completed split
+
+**What changed:**
+- `GoalListViewModel.cs`: `EntryCountDisplay` now shows "N active, M completed" when there are completed goals, or "N goals" when all are active. Uses `g.CompletionDate is null` to split counts from `_allGoals`.
+
+**Why:** The GoalList shows completed goals faded at the bottom (iter 61). The footer count now reflects that split — users can see at a glance how many goals they've completed vs still working on.
+
+**Impact:** 25 mobile tests pass (0 warnings). 56 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 72 — API: Reject Todo sync records with blank Title
 
 **What changed:**
