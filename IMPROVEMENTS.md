@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-17 — UX: GoalDetail not-found state shows back button (iter 408)
+
+**File:** `ChildDev.Api/Components/Pages/GoalDetail.razor`
+
+**Change:** Replaced bare `<MudText Color="Color.Error">Goal not found.</MudText>` with a `MudAlert` + a "Back to Goals" button that links to `/`. Previously the user had no navigation option from the not-found state other than the browser back button or the top nav.
+
+**Why:** Users navigating to a stale link (e.g. bookmarked goal that was later deleted) were left stranded with an error message and no call to action.
+
+**Impact:** Build: 0 warnings, 0 errors.
+
+---
+
 ## 2026-05-17 — Perf: edit operations use ExecuteUpdateAsync (iter 407)
 
 **Files:** `ChildDev.Api/Components/Pages/JournalPage.razor`, `Todos.razor`, `GoalDetail.razor`

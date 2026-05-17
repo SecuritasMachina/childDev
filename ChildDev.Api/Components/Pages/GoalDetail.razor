@@ -15,7 +15,9 @@
 
 @if (Goal is null)
 {
-    <MudText Color="Color.Error">Goal not found.</MudText>
+    <MudAlert Severity="Severity.Error" Class="mb-4">Goal not found or has been deleted.</MudAlert>
+    <MudButton Href="/" Variant="Variant.Outlined" Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.ArrowBack">Back to Goals</MudButton>
     return;
 }
 
