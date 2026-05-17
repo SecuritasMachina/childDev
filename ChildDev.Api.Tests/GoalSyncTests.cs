@@ -629,4 +629,26 @@ public class GoalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.DoesNotContain(body!.Records, r => r.Guid == guid);
     }
+
+    [Fact]
+    public async Task Sync_SameGuidUploadedTwice_DeltaContainsExactlyOneRecord()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gsync_idempotent1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid = Guid.NewGuid().ToString();
+
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(guid, accountGuid, "first upload", null, null, ts, null, null, ts, null)], 0));
+
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(guid, accountGuid, "second upload", null, null, ts, null, null, ts + 1, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalDto>>();
+
+        var matches = body!.Records.Where(r => r.Guid == guid).ToList();
+        Assert.Single(matches);
+        Assert.Equal("second upload", matches[0].GoalText);
+    }
 }
