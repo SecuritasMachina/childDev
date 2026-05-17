@@ -105,7 +105,7 @@
                         @if (g.NextMeetingDate.HasValue)
                         {
                             var mtg = DateTimeOffset.FromUnixTimeMilliseconds(g.NextMeetingDate.Value).LocalDateTime;
-                            var mtgPast = g.NextMeetingDate.Value < DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            var mtgPast = mtg.Date < DateTime.Today;
                             <MudText Typo="Typo.caption" Color="@(mtgPast ? Color.Warning : Color.Info)">
                                 📅 @(mtgPast ? "Missed meeting" : "Next meeting"): @mtg.ToString("MMM d")
                             </MudText>
@@ -115,9 +115,10 @@
                 @{
                     var pCount = ProgressCounts.GetValueOrDefault(g.Guid);
                     var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                    var sevenDaysMs = 7L * 24 * 60 * 60 * 1000;
-                    var isExpired = g.ExpirationDate.HasValue && g.ExpirationDate.Value < nowMs;
-                    var isExpiringSoon = !isExpired && g.ExpirationDate.HasValue && g.ExpirationDate.Value - nowMs <= sevenDaysMs;
+                    var todayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+                    var sevenDaysFromNowMs = todayStartMs + 7L * 86_400_000L;
+                    var isExpired = g.ExpirationDate.HasValue && g.ExpirationDate.Value < todayStartMs;
+                    var isExpiringSoon = !isExpired && g.ExpirationDate.HasValue && g.ExpirationDate.Value < sevenDaysFromNowMs;
                     var lastAt = LastProgressAt.GetValueOrDefault(g.Guid);
                     var daysSinceProgress = pCount > 0 ? (int)((nowMs - lastAt) / 86_400_000L) : -1;
                     var isStale = daysSinceProgress >= 14;

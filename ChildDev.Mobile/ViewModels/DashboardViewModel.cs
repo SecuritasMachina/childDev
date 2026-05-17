@@ -72,8 +72,9 @@ public partial class DashboardViewModel(
         ActiveGoalCount = activeGoals.Count;
         HasNoActiveGoals = activeGoals.Count == 0;
         var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var todayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
         var nextGoal = activeGoals
-            .Where(g => g.NextMeetingDate.HasValue && g.NextMeetingDate.Value > nowMs)
+            .Where(g => g.NextMeetingDate.HasValue && g.NextMeetingDate.Value >= todayStartMs)
             .OrderBy(g => g.NextMeetingDate!.Value)
             .FirstOrDefault();
         if (nextGoal is not null)
@@ -93,7 +94,6 @@ public partial class DashboardViewModel(
         var todos = await todoRepo.GetPendingAsync(account.Guid);
         PendingTodoCount = todos.Count;
         HasNoPendingTodos = todos.Count == 0;
-        var todayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
         OverdueTodoCount = todos.Count(t => t.DueDate.HasValue && t.DueDate.Value < todayStartMs);
         HasOverdueTodos = OverdueTodoCount > 0;
 
