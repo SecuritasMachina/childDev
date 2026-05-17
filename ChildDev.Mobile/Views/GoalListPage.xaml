@@ -9,11 +9,12 @@
         <ToolbarItem Text="+" Command="{Binding AddCommand}" />
     </ContentPage.ToolbarItems>
 
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,Auto,*">
         <Label Grid.Row="0" Text="{Binding StatusMessage}" TextColor="Red"
                FontSize="13" Padding="16,8"
                IsVisible="{Binding StatusMessage, Converter={x:StaticResource StringToBoolConverter}}" />
-        <RefreshView Grid.Row="1" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
+        <SearchBar Grid.Row="1" Placeholder="Search goals..." Text="{Binding FilterText}" Margin="8,0,8,4" />
+        <RefreshView Grid.Row="2" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
         <CollectionView ItemsSource="{Binding Goals}">
         <CollectionView.EmptyView>
             <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8" Padding="32">
