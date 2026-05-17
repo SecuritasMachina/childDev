@@ -221,6 +221,21 @@ public class JournalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetModifiedSinceAsync_ExcludesRecordsWithZeroUpdatedOn()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "zero updatedOn", EnteredDate = now, UpdatedOn = 0 });
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "normal", EnteredDate = now, UpdatedOn = now });
+
+        var results = await _repo.GetModifiedSinceAsync(accountId, 0);
+
+        Assert.Single(results);
+        Assert.Equal("normal", results[0].Notes);
+    }
+
+    [Fact]
     public async Task GetModifiedSinceAsync_IncludesSoftDeletedRecords()
     {
         var accountId = System.Guid.NewGuid().ToString();
