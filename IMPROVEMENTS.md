@@ -3955,3 +3955,78 @@ Search: Reddit (limited results for niche), App Store/Play Store reviews, Capter
 3. **Motivating feedback for kids** — celebration/achievement state when goal completed. Low effort, high psychological impact.
 
 ---
+
+## 2026-05-17 — Mobile completed todos section with swipe-to-uncomplete (iter 305)
+
+**Branch:** `improve/mobile-uncomplete-todos-305`
+
+**What:** Added `GetCompletedAsync` to `TodoRepository`. `TodoListViewModel` now loads completed todos, exposes `UncompleteAsync` and `ToggleCompleted` relay commands, and tracks a `CompletedTodos` observable collection. `TodoListPage.xaml` gained a collapsible "▸ N completed" section at the bottom with swipe-left to restore and swipe-right to delete. New `InverseBoolConverter` registered in App.xaml resources for XAML visibility toggling.
+
+**Why:** Web UI gained uncomplete and completed-list visibility in iter 302–303, but mobile only showed a static count. Parity reduces confusion for caregivers moving between web and mobile.
+
+**Impact:** 226 mobile tests pass (up from 224). Build clean.
+
+---
+
+## 2026-05-17 — GoalDetail weekly progress bar chart (iter 306)
+
+**Branch:** `improve/goal-progress-chart-306`
+
+**What:** Added a `MudChart` bar chart below the "Progress Notes" header on `GoalDetail.razor`. Shows progress note counts per week for the last 8 weeks. Only renders when there are 2+ notes. Data computed client-side from already-loaded `ProgressEntries`.
+
+**Why:** Top research pain point: "no long-term visual progress chart — users want graphs not just text notes." ChildDev had zero charts before this.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
+## 2026-05-17 — Home dashboard quick-add journal entry (iter 307)
+
+**Branch:** `improve/home-quickadd-journal-307`
+
+**What:** Added a "Quick Journal Entry" MudPaper panel at the bottom of the home dashboard. Caregivers can type a freeform observation and click Save without leaving the page. Save button is disabled while the field is blank. Tracks `journal_quickadd` analytics event.
+
+**Why:** Research finding: "Heavy documentation burden for caregivers." Reducing navigation friction from 2 pages to 0 for the most common action (adding a note) directly addresses this.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
+## 2026-05-17 — Navbar active page indicator (iter 308)
+
+**Branch:** `improve/goal-todos-link-308`
+
+**What:** Main nav buttons (Goals, Todos, Journal) now show `Variant.Outlined` when their route matches the current URL. Goals button also activates on `/goals/*` child routes. Computed via `NavigationManager.Uri`.
+
+**Why:** No visual feedback for the active section caused disorientation, especially after navigating deep into a goal and returning.
+
+**Impact:** Build clean. 217 API tests pass.
+
+---
+
+## 2026-05-17 — Celebration dialog on home dashboard goal completion (iter 309)
+
+**Branch:** `improve/home-goal-complete-celebration-309`
+
+**What:** Completing a goal from the home dashboard now shows the same celebration dialog added to GoalDetail in iter 304. The completed goal's text is captured and displayed in the dialog.
+
+**Why:** The celebration dialog was only on GoalDetail — completing a goal from the home cards gave no visual reward, just a snackbar. This inconsistency undercut the motivational design.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
+## 2026-05-17 — Navbar active state + Home celebration + Todos filter (iters 308–310)
+
+### Iter 308 — Navbar active page indicator
+Nav buttons show `Variant.Outlined` when active. Goals button activates on `/goals/*` routes.
+
+### Iter 309 — Goal completion celebration on home dashboard
+Completing a goal from the home cards now shows the celebration dialog (consistent with GoalDetail).
+
+### Iter 310 — Search filter on web Todos page
+MudTextField filter bar added above the pending todos list. Filters by title and notes in real-time. Shows "N matching 'query'" count when active. Parity with mobile FilterText feature.
+
+**Impact:** All 217 API + 226 mobile tests pass. Build clean.
+
+---
