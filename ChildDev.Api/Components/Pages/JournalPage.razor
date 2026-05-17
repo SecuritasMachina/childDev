@@ -55,15 +55,20 @@ else
                             <MudText Typo="Typo.body2">@(j.Notes.Length > 200 ? j.Notes[..200] + "…" : j.Notes)</MudText>
                         </MudCardContent>
                     }
-                    @if (!string.IsNullOrWhiteSpace(j.Tags))
-                    {
-                        <MudCardActions>
+                    <MudCardActions>
+                        @if (!string.IsNullOrWhiteSpace(j.Tags))
+                        {
                             @foreach (var tag in j.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                             {
                                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@tag</MudChip>
                             }
-                        </MudCardActions>
-                    }
+                        }
+                        <MudSpacer />
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                       OnClick="() => OpenEditEntry(j)" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                                       Color="Color.Error" OnClick="() => DeleteEntry(j.Guid)" />
+                    </MudCardActions>
                 </MudCard>
             </MudItem>
         }
@@ -90,6 +95,26 @@ else
     </DialogActions>
 </MudDialog>
 
+<MudDialog @bind-Visible="ShowEditDialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-2" />
+            Edit Entry
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="EditNotes" Label="Notes" Variant="Variant.Outlined"
+                      Lines="4" Class="mb-4" AutoFocus="true" />
+        <MudTextField @bind-Value="EditActivity" Label="Activity (optional)" Variant="Variant.Outlined" Class="mb-4" />
+        <MudTextField @bind-Value="EditMood" Label="Mood (optional)" Variant="Variant.Outlined" Class="mb-4" />
+        <MudTextField @bind-Value="EditTags" Label="Tags (optional, comma-separated)" Variant="Variant.Outlined" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => ShowEditDialog = false">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEditEntry">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     private string? AccountGuid;
     private List<Journal> Entries = [];
@@ -98,6 +123,12 @@ else
     private string NewActivity = string.Empty;
     private string NewMood = string.Empty;
     private string NewTags = string.Empty;
+    private bool ShowEditDialog;
+    private string? EditingGuid;
+    private string EditNotes = string.Empty;
+    private string EditActivity = string.Empty;
+    private string EditMood = string.Empty;
+    private string EditTags = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -140,6 +171,48 @@ else
         NewTags = string.Empty;
         ShowAddDialog = false;
         Snackbar.Add("Entry saved!", Severity.Success);
+        await LoadEntries();
+    }
+
+    private void OpenEditEntry(Journal j)
+    {
+        EditingGuid = j.Guid;
+        EditNotes = j.Notes ?? string.Empty;
+        EditActivity = j.Activity ?? string.Empty;
+        EditMood = j.Mood ?? string.Empty;
+        EditTags = j.Tags ?? string.Empty;
+        ShowEditDialog = true;
+    }
+
+    private async Task SaveEditEntry()
+    {
+        if (string.IsNullOrWhiteSpace(EditNotes) && string.IsNullOrWhiteSpace(EditActivity)) return;
+        if (EditingGuid is null) return;
+        var entry = await Db.Journals.FirstOrDefaultAsync(j => j.Guid == EditingGuid && j.AccountFk == AccountGuid);
+        if (entry is null) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        entry.Notes = string.IsNullOrWhiteSpace(EditNotes) ? null : EditNotes.Trim();
+        entry.Activity = string.IsNullOrWhiteSpace(EditActivity) ? null : EditActivity.Trim();
+        entry.Mood = string.IsNullOrWhiteSpace(EditMood) ? null : EditMood.Trim();
+        entry.Tags = string.IsNullOrWhiteSpace(EditTags) ? null : EditTags.Trim();
+        entry.UpdatedOn = now;
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("journal_edit", AccountGuid, "journal");
+        ShowEditDialog = false;
+        Snackbar.Add("Entry updated!", Severity.Success);
+        await LoadEntries();
+    }
+
+    private async Task DeleteEntry(string guid)
+    {
+        var entry = await Db.Journals.FirstOrDefaultAsync(j => j.Guid == guid && j.AccountFk == AccountGuid);
+        if (entry is null) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        entry.DeletedAt = now;
+        entry.UpdatedOn = now;
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("journal_delete", AccountGuid, "journal");
+        Snackbar.Add("Entry deleted.", Severity.Info);
         await LoadEntries();
     }
 }
