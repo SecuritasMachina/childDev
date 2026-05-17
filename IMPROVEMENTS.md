@@ -1,5 +1,31 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 68 Brainstorm (fresh — every 3rd)
+
+| # | Description | Dim | Impact | Effort | Risk |
+|---|-------------|-----|--------|--------|------|
+| 1 | API: Validate Notes not blank in Journal sync; GoalText not blank in Goal sync | Quality | Medium | XS | Low | **SELECTED** |
+| 2 | Mobile: GoalList + TodoList entry count footer | UI | Small | XS | Low | |
+| 3 | API: X-Request-ID middleware for correlation logging | Observ. | Medium | S | Low | |
+| 4 | Mobile: JournalEntry — word count instead of character count | UI | Small | XS | Low | |
+| 5 | Mobile: GoalEntry — verify EnteredDate picker updates on save | Bug? | Small | XS | Low | |
+| 6 | API: GoalProgress — validate NextMeetingDate range | Quality | Small | XS | Low | |
+| 7 | Mobile: SyncService — expose sync duration for dashboard display | UI | Small | S | Low | |
+| 8 | API: Reject Todo records where Title is null/empty | Quality | Small | XS | Low | |
+
+## 2026-05-16 — Iteration 68 — API: Reject blank Notes (Journal) and blank GoalText (Goal)
+
+**What changed:**
+- `JournalEndpoints.cs`: Added validation — any non-deleted record with blank/whitespace-only `Notes` returns HTTP 422. Soft-deletes (DeletedAt not null) are exempt since they carry no meaningful content.
+- `GoalEndpoints.cs`: Same pattern for `GoalText`.
+- `SyncInputValidationTests.cs`: Added `Sync_Journal_BlankNotes_Returns422` and `Sync_Goal_BlankGoalText_Returns422` fact tests.
+
+**Why:** Client already guards empty input, but a buggy client or direct API call could store degenerate records with null/blank required fields, polluting the sync delta returned to all devices.
+
+**Impact:** 25 mobile tests pass (0 warnings). 55 API tests pass (was 53).
+
+---
+
 ## 2026-05-16 — Iteration 67 — Mobile: Zero-state hints in Dashboard goal/todo tiles
 
 **What changed:**
