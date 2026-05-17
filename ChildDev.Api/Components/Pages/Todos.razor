@@ -222,7 +222,7 @@ else
 
     private void ApplyFilter()
     {
-        var todayStartMs = new DateTimeOffset(DateTime.Today, TimeSpan.Zero).ToUnixTimeMilliseconds();
+        var todayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
         var todayEndMs = todayStartMs + 86_400_000L;
 
         IEnumerable<Todo> filtered = AllPendingTodos;
@@ -258,7 +258,7 @@ else
             Title = title,
             Notes = string.IsNullOrWhiteSpace(NewNotes) ? null : NewNotes.Trim(),
             DueDate = NewDueDate.HasValue
-                ? new DateTimeOffset(NewDueDate.Value, TimeSpan.Zero).ToUnixTimeMilliseconds()
+                ? new DateTimeOffset(DateTime.SpecifyKind(NewDueDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
                 : null,
             UpdatedOn = now
         });
@@ -334,7 +334,7 @@ else
         todo.Title = title;
         todo.Notes = string.IsNullOrWhiteSpace(EditNotes) ? null : EditNotes.Trim();
         todo.DueDate = EditDueDate.HasValue
-            ? new DateTimeOffset(EditDueDate.Value, TimeSpan.Zero).ToUnixTimeMilliseconds()
+            ? new DateTimeOffset(DateTime.SpecifyKind(EditDueDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
             : null;
         todo.UpdatedOn = now;
         await Db.SaveChangesAsync();

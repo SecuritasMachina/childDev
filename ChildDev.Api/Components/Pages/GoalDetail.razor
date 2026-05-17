@@ -294,7 +294,7 @@ else
             GoalFk = GoalGuid,
             NextStepItems = string.IsNullOrWhiteSpace(steps) ? null : steps,
             NextMeetingDate = NewMeetingDate.HasValue
-                ? new DateTimeOffset(NewMeetingDate.Value, TimeSpan.Zero).ToUnixTimeMilliseconds()
+                ? new DateTimeOffset(DateTime.SpecifyKind(NewMeetingDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
                 : null,
             UpdatedOn = now
         });
@@ -353,7 +353,7 @@ else
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         progress.NextStepItems = string.IsNullOrWhiteSpace(steps) ? null : steps;
         progress.NextMeetingDate = EditProgressMeetingDate.HasValue
-            ? new DateTimeOffset(EditProgressMeetingDate.Value, TimeSpan.Zero).ToUnixTimeMilliseconds()
+            ? new DateTimeOffset(DateTime.SpecifyKind(EditProgressMeetingDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
             : null;
         progress.UpdatedOn = now;
         await Db.SaveChangesAsync();
@@ -406,10 +406,10 @@ else
         Goal.GoalText = text;
         Goal.MeasurableOutcome = string.IsNullOrWhiteSpace(EditMeasurableOutcome) ? null : EditMeasurableOutcome.Trim();
         Goal.NextMeetingDate = EditNextMeetingDate.HasValue
-            ? new DateTimeOffset(EditNextMeetingDate.Value, TimeSpan.Zero).ToUnixTimeMilliseconds()
+            ? new DateTimeOffset(DateTime.SpecifyKind(EditNextMeetingDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
             : null;
         Goal.ExpirationDate = EditExpirationDate.HasValue
-            ? new DateTimeOffset(EditExpirationDate.Value, TimeSpan.Zero).ToUnixTimeMilliseconds()
+            ? new DateTimeOffset(DateTime.SpecifyKind(EditExpirationDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
             : null;
         Goal.UpdatedOn = now;
         await Db.SaveChangesAsync();
