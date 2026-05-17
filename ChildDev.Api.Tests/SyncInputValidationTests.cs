@@ -133,6 +133,21 @@ public class SyncInputValidationTests(ApiFactory factory) : IClassFixture<ApiFac
     }
 
     [Fact]
+    public async Task Sync_Todo_BlankTitle_Returns422()
+    {
+        var jwt = await RegisterJwtAsync("todotitleval");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var guid = Guid.NewGuid();
+        var body = new StringContent(
+            $"{{\"Records\":[{{\"Guid\":\"{guid}\",\"AccountFk\":\"a1\",\"Title\":\" \",\"UpdatedOn\":0,\"DeletedAt\":null,\"CompletedAt\":null}}],\"LastSyncAt\":0}}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync("/api/sync/todo", body);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Sync_Todo_FutureDueDate_Returns422()
     {
         var jwt = await RegisterJwtAsync("tododuedateval");

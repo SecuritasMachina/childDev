@@ -36,6 +36,11 @@ public static class TodoEndpoints
                 logger.LogWarning("sync/todo account={Account} rejected: DueDate too far in future", accountGuid[..8]);
                 return Results.Problem("Record DueDate is too far in the future.", statusCode: 422);
             }
+            if (req.Records.Any(r => r.DeletedAt is null && r.CompletedAt is null && string.IsNullOrWhiteSpace(r.Title)))
+            {
+                logger.LogWarning("sync/todo account={Account} rejected: blank Title", accountGuid[..8]);
+                return Results.Problem("Record Title must not be blank.", statusCode: 422);
+            }
             var incomingGuids = req.Records.Select(r => r.Guid).ToList();
             var existingMap = await db.Todos
                 .Where(t => incomingGuids.Contains(t.Guid))
