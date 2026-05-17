@@ -4220,6 +4220,16 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — UI: show 'Missed meeting' in warning color for past meeting dates (iter 351)
+
+**What:** Goal cards on the Home page and the GoalDetail header now show "Missed meeting" in amber/warning color when the `NextMeetingDate` has already passed, instead of always showing "Next meeting" in the same style regardless of whether the date is past or future.
+
+**Why:** A goal with a missed meeting looks identical to one with an upcoming meeting — both showed the same blue "📅 Next meeting" label. The visual distinction makes it clear which goals need a rescheduled meeting.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Fix: web login always failing due to double-hashed PIN (iter 350)
 
 **What:** `Register.razor` was hashing the PIN twice: `BCrypt(BCrypt(Pin))`. `Login.razor` hashed once and called `BCrypt.Verify(BCrypt(Pin), stored)`. Because BCrypt uses random salts, `BCrypt(Pin)` at login ≠ `BCrypt(Pin)` at register — so the verification always failed. Fixed Register to store `BCrypt.HashPassword(Pin)` (single hash) and Login to verify `Pin` directly against the stored hash. Matches the mobile `AccountService` pattern.
