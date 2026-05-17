@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 222 — Mobile: GoalProgressRepository DeleteForGoalAsync records appear in GetModifiedSince
+
+**What changed:**
+- `GoalProgressRepositoryTests.cs`: Added `DeleteForGoalAsync_RecordsAppearInGetModifiedSince` — inserts two GoalProgress records with oldTs, calls DeleteForGoalAsync, asserts both appear in GetModifiedSinceAsync with DeletedAt set.
+
+**Why:** When a user deletes a goal, the goal's progress records are soft-deleted via `DeleteForGoalAsync`. These must then appear in `GetModifiedSinceAsync` so they are uploaded to the server as deleted records. If `DeleteForGoalAsync` failed to bump UpdatedOn past the last sync timestamp, the deletions would be silently dropped and the server would retain stale GoalProgress records.
+
+**Impact:** 175 mobile tests pass (was 174). 160 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 221 — Mobile: GoalRepository and TodoRepository CompleteAsync appear in GetModifiedSince
 
 **What changed:**
