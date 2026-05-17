@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 247 — API: Goal sync endpoint validation tests
+
+**What changed:**
+- `GoalSyncTests.cs`: Added 5 validation tests — `Sync_DuplicateGuidsInBatch_Returns422`, `Sync_FutureUpdatedOn_Returns422`, `Sync_TooManyRecords_Returns400`, `Sync_BlankGoalText_Returns422`, `Sync_FutureExpirationDate_Returns422`.
+
+**Why:** Completes the 4-entity validation test coverage. `FutureExpirationDate` is unique to Goal. All 4 sync endpoints now have validated input validation coverage.
+
+**Impact:** 201 mobile tests pass. 192 API tests pass (was 187).
+
+---
+
 ## 2026-05-17 — Iteration 246 — API: Todo sync endpoint validation tests
 
 **What changed:**
