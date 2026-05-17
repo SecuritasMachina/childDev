@@ -1,5 +1,19 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 162 — API fix: Goal endpoint NextMeetingDate validation + completed-goal blank text
+
+**What changed:**
+- `GoalEndpoints.cs`: Added `NextMeetingDate > 10 years` guard (matching the existing GoalProgress rule). Previously a goal with NextMeetingDate set 100 years in the future would be silently accepted.
+- `GoalEndpoints.cs`: Fixed blank GoalText check: now `r.DeletedAt is null && r.CompletionDate is null && string.IsNullOrWhiteSpace(r.GoalText)` — previously completed goals with blank GoalText were rejected (inconsistent with Todo where completed todos accept blank title).
+- `SyncInputValidationTests.cs`: Added `Sync_Goal_FutureNextMeetingDate_Returns422`
+- `SyncInputValidationTests.cs`: Added `Sync_Goal_CompletedWithBlankGoalText_IsAccepted`
+
+**Why:** Two production bugs. NextMeetingDate had a guard in GoalProgress (iter unknown) but was accidentally omitted from Goal. The completed-goal check was too strict compared to Todo — when a goal is marked complete, the goal text may be intentionally cleared on the device, and the server should accept it.
+
+**Impact:** 110 mobile tests pass. 130 API tests pass (was 128).
+
+---
+
 ## 2026-05-17 — Iteration 161 — Mobile: SyncService inbound soft-delete propagation for Todo + GoalProgress
 
 **What changed:**
