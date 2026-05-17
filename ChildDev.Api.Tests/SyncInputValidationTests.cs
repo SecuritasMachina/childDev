@@ -166,6 +166,43 @@ public class SyncInputValidationTests(ApiFactory factory) : IClassFixture<ApiFac
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
 
+    [Theory]
+    [InlineData("Activity", 256)]
+    [InlineData("Mood", 51)]
+    [InlineData("Tags", 501)]
+    public async Task Sync_Journal_AuxFieldTooLong_Returns422(string field, int length)
+    {
+        var jwt = await RegisterJwtAsync($"journalaux_{field}");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var longValue = new string('x', length);
+        var guid = Guid.NewGuid();
+        var body = new StringContent(
+            $"{{\"Records\":[{{\"Guid\":\"{guid}\",\"AccountFk\":\"a1\",\"Notes\":\"x\",\"{field}\":\"{longValue}\",\"EnteredDate\":0,\"UpdatedOn\":0,\"DeletedAt\":null}}],\"LastSyncAt\":0}}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync("/api/sync/journal", body);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("Title", 501)]
+    [InlineData("Notes", 2001)]
+    public async Task Sync_Todo_FieldTooLong_Returns422(string field, int length)
+    {
+        var jwt = await RegisterJwtAsync($"todofield_{field}");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var longValue = new string('x', length);
+        var guid = Guid.NewGuid();
+        var body = new StringContent(
+            $"{{\"Records\":[{{\"Guid\":\"{guid}\",\"AccountFk\":\"a1\",\"Title\":\"x\",\"{field}\":\"{longValue}\",\"UpdatedOn\":0,\"DeletedAt\":null}}],\"LastSyncAt\":0}}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync("/api/sync/todo", body);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
     [Fact]
     public async Task Sync_Goal_MeasurableOutcomeTooLong_Returns422()
     {
