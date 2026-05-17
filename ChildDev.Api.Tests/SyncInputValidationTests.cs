@@ -51,4 +51,24 @@ public class SyncInputValidationTests(ApiFactory factory) : IClassFixture<ApiFac
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
+
+    [Theory]
+    [InlineData("/api/sync/journal")]
+    [InlineData("/api/sync/goal")]
+    [InlineData("/api/sync/goal-progress")]
+    [InlineData("/api/sync/todo")]
+    public async Task Sync_TooManyRecords_Returns400(string endpoint)
+    {
+        var jwt = await RegisterJwtAsync($"maxrec_{endpoint.Replace("/", "_")}");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        // Build a JSON body with 501 minimal records
+        var records = string.Join(",", Enumerable.Range(0, 501)
+            .Select(i => $"{{\"Guid\":\"{i:D36}\",\"AccountFk\":\"a\",\"UpdatedOn\":0,\"EnteredDate\":0,\"GoalFk\":\"f\",\"DeletedAt\":null}}"));
+        var body = new StringContent($"{{\"Records\":[{records}],\"LastSyncAt\":0}}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync(endpoint, body);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }
