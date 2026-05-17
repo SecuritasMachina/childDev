@@ -96,5 +96,6 @@ public partial class JournalListViewModel(
         await repo.DeleteAsync(journal.Guid);
         _allJournals.Remove(journal);
         Journals.Remove(journal);
+        EntryCountDisplay = $"{_allJournals.Count} {(_allJournals.Count == 1 ? "entry" : "entries")}";
     }
 }
