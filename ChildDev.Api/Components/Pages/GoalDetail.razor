@@ -28,8 +28,16 @@
 
 @if (Goal.MeasurableOutcome is not null)
 {
-    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">📏 @Goal.MeasurableOutcome</MudText>
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-1">📏 @Goal.MeasurableOutcome</MudText>
 }
+@{
+    var goalDate = DateTimeOffset.FromUnixTimeMilliseconds(Goal.EnteredDate).LocalDateTime;
+    var daysSince = (int)(DateTime.Now - goalDate).TotalDays;
+    var durationText = daysSince == 0 ? "today" : daysSince == 1 ? "1 day ago" : $"{daysSince} days ago";
+}
+<MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-4">
+    Set on @goalDate.ToString("MMM d, yyyy") — @durationText
+</MudText>
 
 <MudText Typo="Typo.subtitle1" Class="mb-2">
     Progress Notes
