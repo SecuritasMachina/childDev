@@ -1,5 +1,18 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 86 — API: Validate CompletionDate (Goal) and CompletedAt (Todo) not in far future
+
+**What changed:**
+- `GoalEndpoints.cs`: Added check rejecting `CompletionDate > now + 10 years` (HTTP 422).
+- `TodoEndpoints.cs`: Added check rejecting `CompletedAt > now + 10 years` (HTTP 422). Renamed local variable `maxDueDateMs` → `maxFutureTimestampMs` for clarity since it's now shared by both checks.
+- `SyncInputValidationTests.cs`: Added `Sync_Goal_FutureCompletionDate_Returns422` and `Sync_Todo_FutureCompletedAt_Returns422` Fact tests.
+
+**Why:** `EnteredDate` and `DueDate` were already capped (iters 84, 65). Completion timestamps were the remaining uncapped date fields that a corrupt client could set to year 9999.
+
+**Impact:** 25 mobile tests pass. 65 API tests pass (up from 63).
+
+---
+
 ## 2026-05-16 — Iteration 85 — Mobile: Extract UpdateEntryCountDisplay helper in JournalListViewModel
 
 **What changed:**
