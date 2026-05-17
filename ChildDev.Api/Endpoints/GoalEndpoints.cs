@@ -11,6 +11,7 @@ public static class GoalEndpoints
 {
     public static void MapGoalEndpoints(this WebApplication app)
     {
+        var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("sync.goal");
         app.MapPost("/api/sync/goal", async (
             SyncRequest<GoalDto> req, ClaimsPrincipal user, AppDbContext db, JwtService jwt) =>
         {
@@ -37,6 +38,8 @@ public static class GoalEndpoints
                 .Where(g => g.AccountFk == accountGuid && g.UpdatedOn > req.LastSyncAt)
                 .OrderBy(g => g.UpdatedOn)
                 .Select(g => EntityToDto(g)).ToListAsync();
+            logger.LogDebug("sync/goal account={Account} incoming={Incoming} delta={Delta}",
+                accountGuid[..8], req.Records.Count, delta.Count);
             return Results.Ok(new SyncResponse<GoalDto>(delta));
         }).RequireAuthorization();
     }

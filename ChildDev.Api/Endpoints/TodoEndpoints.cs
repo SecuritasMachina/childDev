@@ -11,6 +11,7 @@ public static class TodoEndpoints
 {
     public static void MapTodoEndpoints(this WebApplication app)
     {
+        var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("sync.todo");
         app.MapPost("/api/sync/todo", async (
             SyncRequest<TodoDto> req, ClaimsPrincipal user, AppDbContext db, JwtService jwt) =>
         {
@@ -37,6 +38,8 @@ public static class TodoEndpoints
                 .Where(t => t.AccountFk == accountGuid && t.UpdatedOn > req.LastSyncAt)
                 .OrderBy(t => t.UpdatedOn)
                 .Select(t => EntityToDto(t)).ToListAsync();
+            logger.LogDebug("sync/todo account={Account} incoming={Incoming} delta={Delta}",
+                accountGuid[..8], req.Records.Count, delta.Count);
             return Results.Ok(new SyncResponse<TodoDto>(delta));
         }).RequireAuthorization();
     }

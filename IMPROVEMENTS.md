@@ -12,7 +12,7 @@
 | 6 | API: CORS policy — restrict to expected origins | Security | Low | S | Low | **DONE** |
 | 7 | JournalListPage: activity chip/badge alongside mood | UI | Low | S | Low | Backlog |
 | 8 | TodoEntryPage: due date picker UI (DatePicker element) | Func | Medium | S | Low | Backlog |
-| 9 | API: structured logging for sync (record counts, account) | Ops | Low | S | Low | Backlog |
+| 9 | API: structured logging for sync (record counts, account) | Ops | Low | S | Low | **DONE** |
 | 10 | GoalEntryPage: clear ExpirationDate (nullable DatePicker) | Func | Low | S | Low | Backlog |
 
 ---
