@@ -106,6 +106,17 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 270 — Mobile: Upload multi-record parity for Todo, Goal, GoalProgress
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_TwoLocalTodosModified_BothIncludedInUpload` (user86), `RunAsync_TwoLocalGoalsModified_BothIncludedInUpload` (user87), `RunAsync_TwoLocalGoalProgressesModified_BothIncludedInUpload` (user88).
+
+**Why:** Journal had upload multi-record coverage (iter 253). Todo, Goal, and GoalProgress lacked equivalent tests — if the sync loop silently dropped records beyond the first, only this pattern would catch it. Completes the 4-entity upload multi-record set.
+
+**Impact:** 213 mobile tests pass (was 210 before this session). 200 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 269 — Web: Goal edit dialog on goal detail page
 
 **What changed:**
