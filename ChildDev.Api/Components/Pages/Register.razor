@@ -1,0 +1,83 @@
+@page "/register"
+@inject AppDbContext Db
+@inject NavigationManager Nav
+@inject IHttpContextAccessor HttpContextAccessor
+@inject WebAnalyticsService Analytics
+
+<PageTitle>Register – ChildDev</PageTitle>
+
+<MudGrid Justify="Justify.Center" Class="mt-8">
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h5" Align="Align.Center">
+                        <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="mr-2" />
+                        Start Achieving Goals
+                    </MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (Error is not null)
+                {
+                    <MudAlert Severity="Severity.Error" Class="mb-4">@Error</MudAlert>
+                }
+                <MudTextField @bind-Value="NickName" Label="Nickname" Variant="Variant.Outlined"
+                              Class="mb-4" HelperText="Choose a name (1–50 characters)" />
+                <MudTextField @bind-Value="Pin" Label="PIN" Variant="Variant.Outlined"
+                              InputType="InputType.Password" Class="mb-4"
+                              HelperText="Remember this PIN to log back in" />
+            </MudCardContent>
+            <MudCardActions Class="px-4 pb-4 flex-column">
+                <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true"
+                           OnClick="DoRegister">Create Account</MudButton>
+                <MudText Typo="Typo.body2" Class="mt-3" Align="Align.Center">
+                    Already have an account? <MudLink Href="/login">Login</MudLink>
+                </MudText>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private string NickName = string.Empty;
+    private string Pin = string.Empty;
+    private string? Error;
+
+    protected override void OnInitialized()
+    {
+        if (HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid") is not null)
+            Nav.NavigateTo("/");
+    }
+
+    private async Task DoRegister()
+    {
+        var nick = NickName.Trim();
+        if (string.IsNullOrWhiteSpace(nick) || nick.Length > 50)
+        {
+            Error = "Nickname must be 1–50 characters.";
+            return;
+        }
+        if (await Db.Accounts.AnyAsync(a => a.NickName == nick))
+        {
+            Error = "Nickname already taken.";
+            return;
+        }
+
+        var pinHash = BCrypt.Net.BCrypt.HashPassword(Pin);
+        var account = new Account
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            NickName = nick,
+            PinHash = BCrypt.Net.BCrypt.HashPassword(pinHash),
+            CreatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+        };
+        Db.Accounts.Add(account);
+        await Db.SaveChangesAsync();
+
+        HttpContextAccessor.HttpContext!.Session.SetString("AccountGuid", account.Guid);
+        HttpContextAccessor.HttpContext!.Session.SetString("NickName", account.NickName);
+        await Analytics.TrackAsync("register", account.Guid, "register");
+        Nav.NavigateTo("/");
+    }
+}
