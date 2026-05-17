@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 240 — Mobile: JournalRepository.GetAsync returns soft-deleted records
+
+**What changed:**
+- `JournalRepositoryTests.cs`: Added `GetAsync_WhenDeleted_StillReturnsRecord` — saves a journal, deletes it, then calls `GetAsync(guid)` and asserts the record is returned with `DeletedAt` set.
+
+**Why:** `GetAsync` uses `db.FindAsync<Journal>(guid)` which finds by PK without filtering. If a refactor added a `DeletedAt IS NULL` filter (thinking it improves safety), sync logic relying on `GetAsync` to retrieve any record by GUID would silently break.
+
+**Impact:** 195 mobile tests pass (was 194). 168 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 239 — API: Journal/Goal/Todo delta responses include AccountFk
 
 **What changed:**
