@@ -86,6 +86,17 @@ public class AuthEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Register_TooLongPinHash_Returns400()
+    {
+        var response = await _client.PostAsJsonAsync("/api/auth/register", new
+        {
+            NickName = "validuser3",
+            PinHash = new string('x', 201)
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Register_EmptyPinHash_Returns400()
     {
         var response = await _client.PostAsJsonAsync("/api/auth/register", new
