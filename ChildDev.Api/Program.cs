@@ -43,6 +43,15 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 var app = builder.Build();
+
+app.Use(async (ctx, next) =>
+{
+    var requestId = ctx.Request.Headers["X-Request-ID"].FirstOrDefault()
+        ?? Guid.NewGuid().ToString("N")[..12];
+    ctx.Response.Headers["X-Request-ID"] = requestId;
+    await next();
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 
