@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 199 — Mobile: GetLatestNextStepsAsync returns latest for each of two distinct goals
+
+**What changed:**
+- `GoalProgressRepositoryTests.cs`: Added `GetLatestNextStepsAsync_TwoGoals_ReturnsLatestForEach` — inserts 2 progress items for goalA and 1 for goalB, asserts the result map contains both Guids with their respective latest entries.
+
+**Why:** `GetLatestNextStepsAsync_ReturnsLatestPerGoal` only tests with a single goalFk. Adding two goals verifies the GROUP BY GoalFk behavior — that the latest is independently selected per goal, not just for the first goal encountered.
+
+**Impact:** 152 mobile tests pass (was 151). 157 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 198 — Mobile: AccountService UpdateLastSync second call overwrites first
 
 **What changed:**
