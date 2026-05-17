@@ -1495,6 +1495,51 @@ public class SyncServiceTests : IDisposable
         Assert.NotNull(stored);
         Assert.Equal(serverUpdatedOn, stored!.UpdatedOn);
     }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsGoal_UpdatedOnStoredLocally()
+    {
+        await _accountService.CreateAccountAsync("user60", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var serverUpdatedOn = 9_300_000L;
+        var serverGoal = new GoalSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, "server goal",
+            null, null, serverUpdatedOn, null, null, serverUpdatedOn, null);
+
+        var service = BuildSyncService(new FakeGoalSyncHandler(serverGoal));
+        await service.RunAsync(account);
+
+        var stored = await _db.FindAsync<Goal>(serverGoal.Guid);
+        Assert.NotNull(stored);
+        Assert.Equal(serverUpdatedOn, stored!.UpdatedOn);
+    }
+
+    [Fact]
+    public async Task RunAsync_LocalJournal_AccountFkIncludedInUploadRequest()
+    {
+        await _accountService.CreateAccountAsync("user61", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var updatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new Journal
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Notes = "test note", EnteredDate = updatedOn, UpdatedOn = updatedOn
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        await service.RunAsync(account);
+
+        var journalBody = capturingHandler.GetBodyFor("sync/journal");
+        Assert.NotNull(journalBody);
+        Assert.Contains(account.Guid, journalBody);
+    }
 }
 
 // Test helpers
