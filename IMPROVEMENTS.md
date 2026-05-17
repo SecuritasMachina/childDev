@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 123 — Mobile Tests: AccountService server credential tests
+
+**What changed:**
+- `AccountServiceTests.cs`: Added `SaveServerCredentials_PersistsJwtAndUrl` and `SaveServerUrl_UpdatesUrlWithoutAffectingJwt`.
+
+**Why:** `SaveServerCredentialsAsync` and `SaveServerUrlAsync` were the only untested public methods in `AccountService`. These are called from `SettingsViewModel` when users configure their server connection — a regression in either (e.g., null overwrite of ServerJwt when saving only the URL) would silently break sync without any test catching it.
+
+**Impact:** 46 mobile tests pass. 100 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 122 — API Tests: Field-length validation tests for sync endpoints
 
 **What changed:**
