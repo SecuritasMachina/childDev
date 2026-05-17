@@ -35,6 +35,11 @@ public static class GoalProgressEndpoints
                 logger.LogWarning("sync/goal-progress account={Account} rejected: invalid GoalFk", accountGuid[..8]);
                 return Results.Problem("Record GoalFk is not a valid GUID.", statusCode: 422);
             }
+            if (req.Records.Any(r => r.DeletedAt is null && string.IsNullOrWhiteSpace(r.NextStepItems)))
+            {
+                logger.LogWarning("sync/goal-progress account={Account} rejected: blank NextStepItems", accountGuid[..8]);
+                return Results.Problem("Record NextStepItems must not be blank.", statusCode: 422);
+            }
             var incomingGuids = req.Records.Select(r => r.Guid).ToList();
             var existingMap = await db.GoalProgresses
                 .Where(p => incomingGuids.Contains(p.Guid))
