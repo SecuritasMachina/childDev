@@ -4678,6 +4678,16 @@ Updated `SettingsPage.xaml` with a conditional section:
 
 ---
 
+## 2026-05-17 — UX: Enter key on Login Nickname field (iter 374)
+
+**File:** `ChildDev.Api/Components/Pages/Login.razor`
+
+**Change:** Added `@onkeyup` Enter handler to the Nickname field so pressing Enter there submits the login form. The PIN field already had this; Nickname was inconsistent.
+
+**Impact:** 220 API tests — all passing.
+
+---
+
 ## 2026-05-17 — Fix: GoalProgress sync rejects meeting-date-only records (iter 372)
 
 **Files:** `ChildDev.Api/Endpoints/GoalProgressEndpoints.cs`, `ChildDev.Api.Tests/GoalProgressSyncTests.cs`
