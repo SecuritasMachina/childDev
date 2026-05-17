@@ -92,14 +92,28 @@
                     var sevenDaysMs = 7L * 24 * 60 * 60 * 1000;
                     var isExpired = g.ExpirationDate.HasValue && g.ExpirationDate.Value < nowMs;
                     var isExpiringSoon = !isExpired && g.ExpirationDate.HasValue && g.ExpirationDate.Value - nowMs <= sevenDaysMs;
+                    var lastAt = LastProgressAt.GetValueOrDefault(g.Guid);
+                    var daysSinceProgress = pCount > 0 ? (int)((nowMs - lastAt) / 86_400_000L) : -1;
+                    var isStale = daysSinceProgress >= 14;
                 }
                 @if (pCount > 0 || isExpired || isExpiringSoon)
                 {
                     <MudCardContent Class="pt-0">
                         @if (pCount > 0)
                         {
-                            <MudChip T="string" Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Class="mr-1">
-                                @pCount progress update@(pCount == 1 ? "" : "s")
+                            <MudChip T="string" Icon="@Icons.Material.Filled.CheckCircle" Color="@(isStale ? Color.Warning : Color.Success)" Size="Size.Small" Class="mr-1">
+                                @if (daysSinceProgress == 0)
+                                {
+                                    @("Updated today")
+                                }
+                                else if (daysSinceProgress == 1)
+                                {
+                                    @("Updated yesterday")
+                                }
+                                else
+                                {
+                                    @($"Updated {daysSinceProgress}d ago")
+                                }
                             </MudChip>
                         }
                         @if (isExpired)
@@ -180,6 +194,7 @@
     private List<Goal> ActiveGoals = [];
     private List<Goal> CompletedGoals = [];
     private Dictionary<string, int> ProgressCounts = new();
+    private Dictionary<string, long> LastProgressAt = new();
     private bool ShowAddDialog;
     private string NewGoalText = string.Empty;
     private string? NewMeasurableOutcome;
@@ -222,11 +237,13 @@
         CompletedGoals = goals.Where(g => g.CompletionDate != null).ToList();
 
         var guids = ActiveGoals.Select(g => g.Guid).ToList();
-        ProgressCounts = await Db.GoalProgresses
+        var progressGroups = await Db.GoalProgresses
             .Where(p => guids.Contains(p.GoalFk) && p.DeletedAt == null)
             .GroupBy(p => p.GoalFk)
-            .Select(grp => new { GoalFk = grp.Key, Count = grp.Count() })
-            .ToDictionaryAsync(x => x.GoalFk, x => x.Count);
+            .Select(grp => new { GoalFk = grp.Key, Count = grp.Count(), LastAt = grp.Max(p => p.UpdatedOn) })
+            .ToListAsync();
+        ProgressCounts = progressGroups.ToDictionary(x => x.GoalFk, x => x.Count);
+        LastProgressAt = progressGroups.ToDictionary(x => x.GoalFk, x => x.LastAt);
     }
 
     private async Task AddGoal()
