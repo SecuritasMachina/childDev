@@ -3927,3 +3927,31 @@ Multiple `azAuthHeader` quoting, line-length, and semicolon issues across `goal.
 **Impact:** 224 mobile tests pass (up from 221). Build clean.
 
 ---
+
+---
+
+## 2026-05-17 — Step 0a: Unsolved Problems Research (Invocation 3)
+
+**Domain:** Child development goal tracking for kids + caregivers. Comparable tools: CDC Milestone Tracker, AbleSpace (IEP), reward-chart apps (Habitz, S'moresUp), pediatric therapy EMRs.
+
+Search: Reddit (limited results for niche), App Store/Play Store reviews, Capterra/G2, academic JMIR review (2023), pediatric therapy software blogs.
+
+| Pain point | Source | Frequency | In scope? |
+|---|---|---|---|
+| No long-term visual progress chart — users want graphs not just text notes | Multiple app reviews (Reward Chart app, academic review) | Medium | **Yes** — ChildDev has progress notes but zero visualization |
+| Data lost when switching phones (no account sync) | CDC Milestone Tracker App Store reviews, April 2024 | High | **Addressed** — ChildDev has LWW sync |
+| Paywalls block basic features | Kinedu, general child app reviews | High | **N/A** — ChildDev appears fully open |
+| Heavy documentation burden for caregivers | Pediatric therapy software blogs, sprypt.com 2025 | High | **Partial** — quick-capture forms exist, could be faster |
+| Editing locked after creation | Reward chart app reviews 2024 | Medium | **Addressed** — iter 298 fixed this |
+| No customizable task weights/priority | Reward chart app reviews | Low | **Partial** — todos have no priority field |
+| Progress not motivating for kids — too abstract | Academic JMIR review 2023 | High | **Partial** — no visual/celebratory feedback |
+| Caregiver portal / parent visibility into therapist notes | Pediatric therapy EMR blogs | Medium | **Partial** — ChildDev is caregiver-first |
+| Report generation for IEP meetings | AbleSpace reviews | Low | **No** — out of scope for current stage |
+| Overly sensitive milestone alerts causing alarm | CDC tracker reviews | Medium | **N/A** — ChildDev is goal-based not milestone-screener |
+
+**Top actionable signals:**
+1. **Visual progress chart** — mentioned across reward apps, academic reviews. ChildDev has zero charts. High impact, medium effort.
+2. **Quick-capture UX** — data entry friction. Could reduce taps to add a progress note.
+3. **Motivating feedback for kids** — celebration/achievement state when goal completed. Low effort, high psychological impact.
+
+---
