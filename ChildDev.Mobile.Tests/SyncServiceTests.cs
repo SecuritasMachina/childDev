@@ -1613,6 +1613,21 @@ public class SyncServiceTests : IDisposable
         Assert.NotNull(progressBody);
         Assert.Contains(account.Guid, progressBody);
     }
+
+    [Fact]
+    public async Task RunAsync_EntitySyncNetworkErrorOnBothAttempts_ReturnsFailed()
+    {
+        await _accountService.CreateAccountAsync("user65", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        // Health succeeds but all entity sync attempts (initial + retry) throw — outer catch → Failed
+        var service = BuildSyncService(new AlwaysNetworkErrorEntityHandler());
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Failed, result);
+    }
 }
 
 // Test helpers
@@ -1860,5 +1875,20 @@ public class CapturingHandler : HttpMessageHandler
         {
             Content = JsonContent.Create(new { Records = Array.Empty<object>() })
         };
+    }
+}
+
+// Health passes; every entity sync call throws HttpRequestException (both initial and retry fail)
+public class AlwaysNetworkErrorEntityHandler : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        if (request.RequestUri!.PathAndQuery.Contains("health"))
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new { status = "ok" })
+            });
+        throw new HttpRequestException("Simulated persistent network error");
     }
 }
