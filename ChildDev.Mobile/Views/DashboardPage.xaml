@@ -13,6 +13,8 @@
 
             <Label Text="{Binding SyncStatus}" FontSize="12" TextColor="Gray"
                    IsVisible="{Binding SyncStatus, Converter={StaticResource StringToBoolConverter}}" />
+            <Label Text="{Binding LastSyncDisplay}" FontSize="11" TextColor="Gray"
+                   IsVisible="{Binding LastSyncDisplay, Converter={StaticResource StringToBoolConverter}}" />
 
             <!-- Summary row -->
             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">

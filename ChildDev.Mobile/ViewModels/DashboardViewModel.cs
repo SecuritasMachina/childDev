@@ -20,6 +20,7 @@ public partial class DashboardViewModel(
     [ObservableProperty] private int overdueTodoCount;
     [ObservableProperty] private bool hasOverdueTodos;
     [ObservableProperty] private string syncStatus = string.Empty;
+    [ObservableProperty] private string lastSyncDisplay = string.Empty;
 
     [RelayCommand]
     private async Task LoadAsync()
@@ -28,6 +29,10 @@ public partial class DashboardViewModel(
         {
             var account = await accountService.GetAccountAsync();
             if (account is null) return;
+
+            LastSyncDisplay = account.LastSyncAt == 0
+                ? "Never synced"
+                : $"Last synced: {DateTimeOffset.FromUnixTimeMilliseconds(account.LastSyncAt).LocalDateTime:g}";
 
             await RefreshDataAsync(account);
             _ = RunSyncAsync(account);
@@ -66,6 +71,7 @@ public partial class DashboardViewModel(
         };
         if (result == SyncResult.Success)
         {
+            LastSyncDisplay = $"Last synced: {DateTime.Now:g}";
             try { await RefreshDataAsync(account); }
             catch { SyncStatus = "Sync OK but dashboard refresh failed."; }
         }
