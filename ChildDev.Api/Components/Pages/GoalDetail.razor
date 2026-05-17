@@ -132,7 +132,7 @@ else
 <MudStack Row="true" Spacing="2" Class="mt-2">
     <MudButton Variant="Variant.Outlined" Color="Color.Primary"
                StartIcon="@Icons.Material.Filled.Add"
-               OnClick="() => ShowAddDialog = true">Add Progress Note</MudButton>
+               OnClick="OpenAddProgressDialog">Add Progress Note</MudButton>
     @if (Goal.CompletionDate is null)
     {
         <MudButton Variant="Variant.Outlined" Color="Color.Success"
@@ -281,6 +281,16 @@ else
 
         ProgressChartSeries = [new ChartSeries { Name = "Notes", Data = counts }];
         ProgressChartLabels = labels;
+    }
+
+    private void OpenAddProgressDialog()
+    {
+        NewNextSteps = string.Empty;
+        var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        NewMeetingDate = Goal?.NextMeetingDate.HasValue == true && Goal.NextMeetingDate.Value > nowMs
+            ? DateTimeOffset.FromUnixTimeMilliseconds(Goal.NextMeetingDate.Value).LocalDateTime
+            : null;
+        ShowAddDialog = true;
     }
 
     private async Task AddProgress()

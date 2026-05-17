@@ -4652,3 +4652,15 @@ Updated `SettingsPage.xaml` with a conditional section:
 
 **Impact:** 244 mobile tests (was 238), 218 API tests — all passing.
 
+---
+
+## 2026-05-17 — UX: pre-populate meeting date in Add Progress dialog (iter 370)
+
+**File:** `ChildDev.Api/Components/Pages/GoalDetail.razor`
+
+**Change:** Replaced inline `OnClick="() => ShowAddDialog = true"` on the "Add Progress Note" button with a call to a new `OpenAddProgressDialog()` method. The method pre-fills `NewMeetingDate` with the goal's current `NextMeetingDate` when it is set and in the future, then opens the dialog. Also resets `NewNextSteps` to ensure no stale state from a prior cancelled dialog.
+
+**Why:** When a goal has a scheduled meeting, users adding a progress note almost always want to record that meeting date. The picker defaulting to null forced redundant date entry every session. Pre-populating with the upcoming meeting date eliminates the friction for the common case while still allowing the user to change or clear it.
+
+**Impact:** 218 API tests — all passing.
+
