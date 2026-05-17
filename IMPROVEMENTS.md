@@ -106,6 +106,17 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 266 — Web: Dashboard stats summary panel
+
+**What changed:**
+- `Home.razor`: Added 3-column `MudPaper` stats row at the top — active goals count, pending todos count (with red overdue chip when any are overdue), journal entries in the past 7 days. `LoadStats()` runs alongside `LoadGoals()` on init.
+
+**Why:** At-a-glance status reduces navigation burden; the overdue chip directly addresses the "data-entry friction / quick status" unsolved pain point from the brainstorm.
+
+**Impact:** 200 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Iteration 265 — Web: Analytics tracking + Todos page
 
 **What changed:**
