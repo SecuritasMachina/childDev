@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 182 — API: Mixed-AccountFk batch stores valid record and skips intruder
+
+**What changed:**
+- `JournalSyncTests.cs`: Added `Sync_BatchWithMixedAccountFk_ValidRecordStoredInvalidSkipped` — sends a batch of 2 records, one with correct AccountFk and one with a different user's AccountFk; asserts the valid record appears in the delta and the intruder does not.
+
+**Why:** The existing `Sync_RecordWithWrongAccountFk_IsRejected` test sends ONLY an invalid record. That test verifies the invalid record is rejected, but doesn't confirm that valid records in the same batch are still processed. The new test confirms per-record filtering: the mismatch check skips individual records (not the whole batch). This matters because an earlier implementation that rejected the whole batch on any mismatch would pass the existing test but fail this one.
+
+**Impact:** 153 API tests pass (was 152). 136 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 181 — API: Soft-deleted records can be restored via newer LWW update
 
 **What changed:**
