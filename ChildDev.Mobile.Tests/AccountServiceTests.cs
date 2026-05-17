@@ -200,4 +200,28 @@ public class AccountServiceTests : IDisposable
         Assert.Equal("new-jwt", after.ServerJwt);
         Assert.Equal("https://server.example.com", after.ServerUrl);
     }
+
+    [Fact]
+    public async Task SaveServerCredentials_PreservesLastSyncAt()
+    {
+        await _service.CreateAccountAsync("sam", "1234");
+        await _service.UpdateLastSyncAsync(7_000_000L);
+
+        await _service.SaveServerCredentialsAsync("my-jwt", "https://sync.example.com");
+
+        var after = await _service.GetAccountAsync();
+        Assert.Equal(7_000_000L, after!.LastSyncAt);
+    }
+
+    [Fact]
+    public async Task SaveServerUrl_PreservesLastSyncAt()
+    {
+        await _service.CreateAccountAsync("taylor", "1234");
+        await _service.UpdateLastSyncAsync(8_000_000L);
+
+        await _service.SaveServerUrlAsync("https://new-server.example.com");
+
+        var after = await _service.GetAccountAsync();
+        Assert.Equal(8_000_000L, after!.LastSyncAt);
+    }
 }
