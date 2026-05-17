@@ -128,7 +128,7 @@ public partial class TodoListViewModel(
         Todos.Remove(todo);
         CompletedTodoCount++;
         HasCompletedTodos = true;
-        UpdateOverdueCount(Todos);
+        UpdateOverdueCount(_allTodos);
     }
 
     [RelayCommand]
@@ -137,7 +137,7 @@ public partial class TodoListViewModel(
         await repo.DeleteAsync(todo.Guid);
         _allTodos.Remove(todo);
         Todos.Remove(todo);
-        UpdateOverdueCount(Todos);
+        UpdateOverdueCount(_allTodos);
     }
 
     private void UpdateOverdueCount(IEnumerable<Todo> items)
