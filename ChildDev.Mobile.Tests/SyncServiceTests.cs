@@ -2244,6 +2244,36 @@ public class SyncServiceTests : IDisposable
         Assert.Contains(guid1, body);
         Assert.Contains(guid2, body);
     }
+
+    [Fact]
+    public async Task RunAsync_LocalGoalProgress_NullNextStepsMeetingDateOnly_IncludedInUploadRequest()
+    {
+        await _accountService.CreateAccountAsync("user89", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var updatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var nextMeeting = updatedOn + 3_000_000L;
+        var progressGuid = System.Guid.NewGuid().ToString();
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = progressGuid, AccountFk = account.Guid,
+            GoalFk = System.Guid.NewGuid().ToString(),
+            NextStepItems = null,
+            NextMeetingDate = nextMeeting, UpdatedOn = updatedOn
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var body = capturingHandler.GetBodyFor("sync/goal-progress");
+        Assert.NotNull(body);
+        Assert.Contains(progressGuid, body);
+        Assert.Contains(nextMeeting.ToString(), body);
+    }
 }
 
 // Test helpers
