@@ -1,0 +1,61 @@
+@page
+@model ChildDev.Api.Pages.Goals.GoalsIndexModel
+@{
+    ViewData["Title"] = "Goals";
+}
+<h2 class="mb-4">Goals</h2>
+
+<div class="card mb-4">
+    <div class="card-header"><strong>Add New Goal</strong></div>
+    <div class="card-body">
+        <form method="post" asp-page-handler="Add">
+            <div class="mb-3">
+                <label class="form-label">Goal Description</label>
+                <textarea asp-for="NewGoalText" class="form-control" rows="2" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Measurable Outcome <span class="text-muted">(optional)</span></label>
+                <input asp-for="NewMeasurableOutcome" class="form-control" placeholder="e.g. Read 10 books" />
+            </div>
+            <button type="submit" class="btn btn-success">Add Goal</button>
+        </form>
+    </div>
+</div>
+
+@if (Model.ActiveGoals.Any())
+{
+    <h5 class="mt-4">Active Goals</h5>
+    <div class="list-group mb-4">
+        @foreach (var g in Model.ActiveGoals)
+        {
+            <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div>@g.GoalText</div>
+                        @if (g.MeasurableOutcome is not null)
+                        {
+                            <small class="text-muted">Outcome: @g.MeasurableOutcome</small>
+                        }
+                    </div>
+                    <form method="post" asp-page-handler="Complete" class="ms-3">
+                        <input type="hidden" name="guid" value="@g.Guid" />
+                        <button type="submit" class="btn btn-sm btn-outline-success">✓ Complete</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@if (Model.CompletedGoals.Any())
+{
+    <h5 class="mt-4 text-muted">Completed Goals</h5>
+    <div class="list-group">
+        @foreach (var g in Model.CompletedGoals)
+        {
+            <div class="list-group-item list-group-item-light text-muted">
+                <s>@g.GoalText</s>
+            </div>
+        }
+    </div>
+}

@@ -53,6 +53,14 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
           .AllowAnyMethod()));
 
 builder.Services.AddAuthorization();
+builder.Services.AddRazorPages();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(8);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -75,6 +83,7 @@ app.Use(async (ctx, next) =>
         await next();
 });
 
+app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -91,6 +100,7 @@ app.MapGet("/api/health", async (AppDbContext db) =>
     }
 });
 
+app.MapRazorPages();
 app.MapAuthEndpoints();
 app.MapJournalEndpoints();
 app.MapGoalEndpoints();

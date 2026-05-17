@@ -1,0 +1,50 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+@if (Model.AccountGuid is null)
+{
+    <div class="text-center mt-5">
+        <h2>Welcome to ChildDev</h2>
+        <p class="lead mt-3">Track goals, todos, and journal entries for children's development.</p>
+        <a href="/Login" class="btn btn-primary me-2">Login</a>
+        <a href="/Register" class="btn btn-outline-primary">Register</a>
+    </div>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <strong>Active Goals</strong>
+                    <a href="/Goals" class="btn btn-sm btn-outline-primary">Manage</a>
+                </div>
+                <ul class="list-group list-group-flush">
+                    @if (!Model.Goals.Any())
+                    {
+                        <li class="list-group-item text-muted">No active goals yet.</li>
+                    }
+                    @foreach (var g in Model.Goals)
+                    {
+                        <li class="list-group-item">@g.GoalText</li>
+                    }
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header"><strong>Quick Add Goal</strong></div>
+                <div class="card-body">
+                    <form method="post" asp-page-handler="AddGoal">
+                        <div class="mb-3">
+                            <input asp-for="NewGoalText" class="form-control" placeholder="Goal description…" required />
+                        </div>
+                        <button type="submit" class="btn btn-success">Add Goal</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
