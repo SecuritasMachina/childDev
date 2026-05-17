@@ -86,6 +86,28 @@ public class AuthEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Register_EmptyPinHash_Returns400()
+    {
+        var response = await _client.PostAsJsonAsync("/api/auth/register", new
+        {
+            NickName = "validuser",
+            PinHash = ""
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Register_WhitespacePinHash_Returns400()
+    {
+        var response = await _client.PostAsJsonAsync("/api/auth/register", new
+        {
+            NickName = "validuser2",
+            PinHash = "   "
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Token_UnknownUser_Returns401()
     {
         var response = await _client.PostAsJsonAsync("/api/auth/token",
