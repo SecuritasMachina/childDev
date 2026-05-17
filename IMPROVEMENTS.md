@@ -106,6 +106,17 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 275 — API: Delta account isolation tests for all 4 entities
+
+**What changed:**
+- `GoalSyncTests.cs`, `JournalSyncTests.cs`, `TodoSyncTests.cs`, `GoalProgressSyncTests.cs`: Added `Sync_DeltaDoesNotContainOtherAccountsRecords` to each. Pattern: account A uploads a record → account B fetches delta → assert B cannot see A's record.
+
+**Why:** The upload isolation (wrong AccountFk rejection) was tested for all 4 entities, but delta isolation — ensuring the `WHERE AccountFk = @accountGuid` filter in GET queries actually works — was never verified. A missing or incorrect filter would expose all accounts' data. All 4 tests passed, confirming the filter is correct.
+
+**Impact:** 204 API tests pass (was 200). 213 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 274 — Web: Soft-delete goal from home page
 
 **What changed:**
