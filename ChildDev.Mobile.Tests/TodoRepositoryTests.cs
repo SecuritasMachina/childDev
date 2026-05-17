@@ -543,4 +543,21 @@ public class TodoRepositoryTests : IDisposable
         Assert.Equal(guid, modified[0].Guid);
         Assert.NotNull(modified[0].DeletedAt);
     }
+
+    [Fact]
+    public async Task GetAsync_WhenDeleted_StillReturnsRecord()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _repo.SaveAsync(new Todo
+        {
+            Guid = guid, AccountFk = "account1", Title = "to be deleted", UpdatedOn = now
+        });
+        await _repo.DeleteAsync(guid);
+
+        var retrieved = await _repo.GetAsync(guid);
+        Assert.NotNull(retrieved);
+        Assert.NotNull(retrieved!.DeletedAt);
+    }
 }

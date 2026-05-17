@@ -499,4 +499,22 @@ public class GoalRepositoryTests : IDisposable
         Assert.Equal(goal.NextMeetingDate, retrieved.NextMeetingDate);
         Assert.Equal(goal.ExpirationDate, retrieved.ExpirationDate);
     }
+
+    [Fact]
+    public async Task GetAsync_WhenDeleted_StillReturnsRecord()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _repo.SaveAsync(new Goal
+        {
+            Guid = guid, AccountFk = "account1", GoalText = "to be deleted",
+            EnteredDate = now, UpdatedOn = now
+        });
+        await _repo.DeleteAsync(guid);
+
+        var retrieved = await _repo.GetAsync(guid);
+        Assert.NotNull(retrieved);
+        Assert.NotNull(retrieved!.DeletedAt);
+    }
 }
