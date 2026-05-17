@@ -44,6 +44,20 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_ServerUrlSetButJwtMissing_ReturnsNoServer()
+    {
+        await _accountService.CreateAccountAsync("user17", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        // ServerJwt intentionally left null/empty
+
+        var service = BuildSyncService(new NotCalledHandler());
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.NoServer, result);
+    }
+
+    [Fact]
     public async Task RunAsync_NoServer_ReturnsNoServer()
     {
         await _accountService.CreateAccountAsync("user1", "1234");
