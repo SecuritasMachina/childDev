@@ -411,8 +411,6 @@ else
     private async Task SaveProgressEdit()
     {
         if (EditingProgressGuid is null) return;
-        var progress = await Db.GoalProgresses.FirstOrDefaultAsync(p => p.Guid == EditingProgressGuid && p.AccountFk == AccountGuid);
-        if (progress is null) return;
         var steps = EditProgressNextSteps.Trim();
         if (string.IsNullOrWhiteSpace(steps) && !EditProgressMeetingDate.HasValue)
         {
@@ -420,12 +418,17 @@ else
             return;
         }
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        progress.NextStepItems = string.IsNullOrWhiteSpace(steps) ? null : steps;
-        progress.NextMeetingDate = EditProgressMeetingDate.HasValue
+        var nextSteps = string.IsNullOrWhiteSpace(steps) ? null : steps;
+        long? meetingDate = EditProgressMeetingDate.HasValue
             ? new DateTimeOffset(DateTime.SpecifyKind(EditProgressMeetingDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
             : null;
-        progress.UpdatedOn = now;
-        await Db.SaveChangesAsync();
+        var rows = await Db.GoalProgresses
+            .Where(p => p.Guid == EditingProgressGuid && p.AccountFk == AccountGuid)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(p => p.NextStepItems, nextSteps)
+                .SetProperty(p => p.NextMeetingDate, meetingDate)
+                .SetProperty(p => p.UpdatedOn, now));
+        if (rows == 0) return;
         await Analytics.TrackAsync("progress_edit", AccountGuid, "goal_detail", GoalGuid);
         ShowEditProgressDialog = false;
         Snackbar.Add("Progress note updated.", Severity.Success);

@@ -368,16 +368,19 @@ else
     {
         var title = EditTitle.Trim();
         if (string.IsNullOrWhiteSpace(title) || EditingGuid is null) return;
-        var todo = await Db.Todos.FirstOrDefaultAsync(t => t.Guid == EditingGuid && t.AccountFk == AccountGuid);
-        if (todo is null) return;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        todo.Title = title;
-        todo.Notes = string.IsNullOrWhiteSpace(EditNotes) ? null : EditNotes.Trim();
-        todo.DueDate = EditDueDate.HasValue
+        var notes = string.IsNullOrWhiteSpace(EditNotes) ? null : EditNotes.Trim();
+        long? dueDate = EditDueDate.HasValue
             ? new DateTimeOffset(DateTime.SpecifyKind(EditDueDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
             : null;
-        todo.UpdatedOn = now;
-        await Db.SaveChangesAsync();
+        var rows = await Db.Todos
+            .Where(t => t.Guid == EditingGuid && t.AccountFk == AccountGuid)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.Title, title)
+                .SetProperty(t => t.Notes, notes)
+                .SetProperty(t => t.DueDate, dueDate)
+                .SetProperty(t => t.UpdatedOn, now));
+        if (rows == 0) return;
         await Analytics.TrackAsync("todo_edit", AccountGuid, "todos");
         ShowEditDialog = false;
         Snackbar.Add("Todo updated!", Severity.Success);

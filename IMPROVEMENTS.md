@@ -2,6 +2,21 @@
 
 ---
 
+## 2026-05-17 — Perf: edit operations use ExecuteUpdateAsync (iter 407)
+
+**Files:** `ChildDev.Api/Components/Pages/JournalPage.razor`, `Todos.razor`, `GoalDetail.razor`
+
+**Change:** Replaced `FirstOrDefaultAsync` + entity mutation + `SaveChangesAsync` with `ExecuteUpdateAsync` for edit (multi-field update) operations:
+- `JournalPage.razor`: `SaveEditEntry` — Notes, Activity, Mood, Tags, EnteredDate, UpdatedOn
+- `Todos.razor`: `SaveTodoEdit` — Title, Notes, DueDate (nullable long), UpdatedOn
+- `GoalDetail.razor`: `SaveProgressEdit` — NextStepItems (nullable), NextMeetingDate (nullable long), UpdatedOn
+
+**Why:** These edit operations all loaded a full entity just to overwrite it. `ExecuteUpdateAsync` generates one `UPDATE … WHERE` statement per call. The `if (rows == 0) return` guard replaces the `if (entity is null) return` check.
+
+**Impact:** 220 API tests — all passing.
+
+---
+
 ## 2026-05-17 — Perf: Settings mutations use ExecuteUpdateAsync and projection SELECT (iter 406)
 
 **File:** `ChildDev.Api/Components/Pages/Settings.razor`

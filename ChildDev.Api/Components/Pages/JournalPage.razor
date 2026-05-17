@@ -303,17 +303,24 @@ else
     {
         if (string.IsNullOrWhiteSpace(EditNotes) && string.IsNullOrWhiteSpace(EditActivity)) return;
         if (EditingGuid is null) return;
-        var entry = await Db.Journals.FirstOrDefaultAsync(j => j.Guid == EditingGuid && j.AccountFk == AccountGuid);
-        if (entry is null) return;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        entry.Notes = string.IsNullOrWhiteSpace(EditNotes) ? null : EditNotes.Trim();
-        entry.Activity = string.IsNullOrWhiteSpace(EditActivity) ? null : EditActivity.Trim();
-        entry.Mood = string.IsNullOrWhiteSpace(EditMood) ? null : EditMood.Trim();
-        entry.Tags = string.IsNullOrWhiteSpace(EditTags) ? null : EditTags.Trim();
-        if (EditEnteredDate.HasValue)
-            entry.EnteredDate = new DateTimeOffset(DateTime.SpecifyKind(EditEnteredDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds();
-        entry.UpdatedOn = now;
-        await Db.SaveChangesAsync();
+        var notes = string.IsNullOrWhiteSpace(EditNotes) ? null : EditNotes.Trim();
+        var activity = string.IsNullOrWhiteSpace(EditActivity) ? null : EditActivity.Trim();
+        var mood = string.IsNullOrWhiteSpace(EditMood) ? null : EditMood.Trim();
+        var tags = string.IsNullOrWhiteSpace(EditTags) ? null : EditTags.Trim();
+        var enteredMs = EditEnteredDate.HasValue
+            ? new DateTimeOffset(DateTime.SpecifyKind(EditEnteredDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
+            : now;
+        var rows = await Db.Journals
+            .Where(j => j.Guid == EditingGuid && j.AccountFk == AccountGuid)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(j => j.Notes, notes)
+                .SetProperty(j => j.Activity, activity)
+                .SetProperty(j => j.Mood, mood)
+                .SetProperty(j => j.Tags, tags)
+                .SetProperty(j => j.EnteredDate, enteredMs)
+                .SetProperty(j => j.UpdatedOn, now));
+        if (rows == 0) return;
         await Analytics.TrackAsync("journal_edit", AccountGuid, "journal");
         ShowEditDialog = false;
         Snackbar.Add("Entry updated!", Severity.Success);
