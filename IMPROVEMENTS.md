@@ -106,6 +106,18 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 286 — Mobile: New-record UpsertFromSyncAsync uses server EnteredDate
+
+**What changed:**
+- `GoalRepositoryTests.cs`: Added `UpsertFromSyncAsync_NewRecord_UsesServerEnteredDate`.
+- `JournalRepositoryTests.cs`: Added `UpsertFromSyncAsync_NewRecord_UsesServerEnteredDate`.
+
+**Why:** The EnteredDate preservation fix (iterations 279/282) only preserves the local value when a local record already exists. When there's no local record, the server value should be stored as-is. This test is the necessary complement — verifying the new-record path works correctly after the fix.
+
+**Impact:** 213 API tests pass. 218 mobile tests pass (was 216).
+
+---
+
 ## 2026-05-17 — Iteration 285 — Web: Goal progress recency chip on home cards
 
 **What changed:**
