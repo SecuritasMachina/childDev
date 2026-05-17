@@ -32,13 +32,22 @@
 @if (Goal.CompletionDate.HasValue)
 {
     var completedDate = DateTimeOffset.FromUnixTimeMilliseconds(Goal.CompletionDate.Value).LocalDateTime;
-    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Class="mb-3">
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Class="mb-1">
         Completed on @completedDate.ToString("MMM d, yyyy")
     </MudAlert>
+    <MudButton Size="Size.Small" Color="Color.Default" StartIcon="@Icons.Material.Filled.Undo"
+               OnClick="ReopenGoal" Class="mb-3">Reopen Goal</MudButton>
 }
 @if (Goal.MeasurableOutcome is not null)
 {
     <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-1">📏 @Goal.MeasurableOutcome</MudText>
+}
+@if (Goal.NextMeetingDate.HasValue)
+{
+    var mtgDate = DateTimeOffset.FromUnixTimeMilliseconds(Goal.NextMeetingDate.Value).LocalDateTime;
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-1">
+        <MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Small" /> Next meeting: @mtgDate.ToString("MMM d, yyyy")
+    </MudText>
 }
 @{
     var goalDate = DateTimeOffset.FromUnixTimeMilliseconds(Goal.EnteredDate).LocalDateTime;
@@ -232,6 +241,17 @@ else
         await Db.SaveChangesAsync();
         await Analytics.TrackAsync("goal_complete", AccountGuid, "goal_detail", GoalGuid);
         Snackbar.Add("Goal completed!", Severity.Success);
+    }
+
+    private async Task ReopenGoal()
+    {
+        if (Goal is null || !Goal.CompletionDate.HasValue) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        Goal.CompletionDate = null;
+        Goal.UpdatedOn = now;
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("goal_reopen", AccountGuid, "goal_detail", GoalGuid);
+        Snackbar.Add("Goal reopened.", Severity.Info);
     }
 
     private void OpenEditDialog()
