@@ -106,6 +106,17 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 272 — Web: Todo edit dialog
+
+**What changed:**
+- `Todos.razor`: Added edit pencil icon to each pending todo row. Opens dialog pre-filled with Title, Notes, DueDate. Saves changes with `UpdatedOn` LWW timestamp. Tracks `todo_edit` analytics event.
+
+**Why:** Users could add and complete todos but not correct them from the web. Mirrors the goal edit capability added in iter 269.
+
+**Impact:** 200 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Iteration 271 — Web: Login and register analytics events
 
 **What changed:**
