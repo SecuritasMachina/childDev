@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 66 — Mobile: Show total entry count in JournalList footer
+
+**What changed:**
+- `JournalListViewModel.cs`: Added `EntryCountDisplay` observable (e.g., "42 entries"), set in both `LoadAsync` and `RefreshAsync`.
+- `JournalListPage.xaml`: Added `CollectionView.Footer` with a centered gray label bound to `EntryCountDisplay`, hidden when empty via `StringToBoolConverter`.
+
+**Why:** Users have no way to know how many journal entries they have without scrolling to the bottom. A footer count gives immediate feedback, especially after sync.
+
+**Impact:** 25 mobile tests pass (0 warnings). 53 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 65 — API: Validate Todo DueDate not more than 10 years in future
 
 **What changed:**
