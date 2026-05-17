@@ -51,6 +51,11 @@ public static class GoalProgressEndpoints
                 logger.LogWarning("sync/goal-progress account={Account} rejected: NextStepItems too long", accountGuid[..8]);
                 return Results.Problem("Record NextStepItems must not exceed 2000 characters.", statusCode: 422);
             }
+            var mismatchCount = req.Records.Count(r => r.AccountFk != accountGuid);
+            if (mismatchCount > 0)
+                logger.LogWarning("sync/goal-progress account={Account} skipped {Skipped} records with mismatched AccountFk",
+                    accountGuid[..8], mismatchCount);
+
             var incomingGuids = req.Records.Select(r => r.Guid).ToList();
             var existingMap = await db.GoalProgresses
                 .Where(p => incomingGuids.Contains(p.Guid))
