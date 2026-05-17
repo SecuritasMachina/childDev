@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 148 — Mobile Tests: GetModifiedSinceAsync includes soft-deleted records (Goal + GoalProgress)
+
+**What changed:**
+- `GoalRepositoryTests.cs`: Added `GetModifiedSinceAsync_IncludesSoftDeletedRecords`.
+- `GoalProgressRepositoryTests.cs`: Added `GetModifiedSinceAsync_IncludesSoftDeletedRecords`.
+
+**Why:** Completes the soft-delete upload coverage started in iteration 147 (Journal + Todo). All four entity repositories now explicitly verify that `GetModifiedSinceAsync` returns records with `DeletedAt` set, not just active records.
+
+**Impact:** 99 mobile tests pass (was 97). 111 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 147 — Mobile Tests: GetModifiedSinceAsync includes soft-deleted records (Journal + Todo)
 
 **What changed:**
