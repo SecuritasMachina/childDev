@@ -28,7 +28,14 @@ public partial class SetupViewModel(AccountService accountService) : ObservableO
             return;
         }
 
-        await accountService.CreateAccountAsync(NickName.Trim(), Pin);
-        await Shell.Current.GoToAsync("//dashboard");
+        try
+        {
+            await accountService.CreateAccountAsync(NickName.Trim(), Pin);
+            await Shell.Current.GoToAsync("//dashboard");
+        }
+        catch
+        {
+            ErrorMessage = "Could not create account. Please try again.";
+        }
     }
 }
