@@ -229,15 +229,14 @@ else
 
     private void ApplyFilter()
     {
-        var todayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
-        var todayEndMs = todayStartMs + 86_400_000L;
+        var todayEndMs = TodayStartMs + 86_400_000L;
 
         IEnumerable<Todo> filtered = AllPendingTodos;
 
         filtered = StatusFilter switch
         {
             "Overdue" => filtered.Where(t => t.DueDate.HasValue && t.DueDate.Value < TodayStartMs),
-            "Today" => filtered.Where(t => t.DueDate.HasValue && t.DueDate.Value >= todayStartMs && t.DueDate.Value < todayEndMs),
+            "Today" => filtered.Where(t => t.DueDate.HasValue && t.DueDate.Value >= TodayStartMs && t.DueDate.Value < todayEndMs),
             "NoDate" => filtered.Where(t => !t.DueDate.HasValue),
             _ => filtered
         };
