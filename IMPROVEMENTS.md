@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 205 — Mobile: SyncService stores Goal EnteredDate received from server
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsGoal_EnteredDateStoredLocally` — server returns a goal delta with `EnteredDate=3_000_000`, asserts the upserted local Goal has the same EnteredDate.
+
+**Why:** Goal's EnteredDate is immutable (locked at creation). `RunAsync_ServerReturnsGoal_OptionalFieldsStoredLocally` verifies NextMeetingDate, ExpirationDate, MeasurableOutcome but not EnteredDate. If `EnteredDate = dto.EnteredDate` were removed from the upsert lambda, goals would silently lose their creation date on sync. Mirrors iter 204 for Journal.
+
+**Impact:** 159 mobile tests pass (was 158). 157 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 204 — API: JournalSync optional fields round-trip (Activity, Mood, Tags)
 
 **What changed:**
