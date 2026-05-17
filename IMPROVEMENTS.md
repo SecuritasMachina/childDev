@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 196 — Mobile: TodoRepository excludes synced soft-deleted record from GetAllActive and GetPending
+
+**What changed:**
+- `TodoRepositoryTests.cs`: Added `GetAllActiveAsync_UpsertedSoftDeletedRecord_IsExcluded` and `GetPendingAsync_UpsertedSoftDeletedRecord_IsExcluded` — both verify that a todo arriving via sync with DeletedAt set is excluded from the respective query results.
+
+**Why:** Todo has two retrieval queries that exclude soft-deleted records: `GetAllActiveAsync` and `GetPendingAsync`. Testing both ensures that the SQL `WHERE DeletedAt IS NULL` filter is correct for both query paths when data arrives via sync. Added 2 tests in one iteration due to their shared setup and close relationship.
+
+**Impact:** 149 mobile tests pass (was 147). 157 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 195 — Mobile: JournalRepository excludes synced soft-deleted record from GetAllActive
 
 **What changed:**
