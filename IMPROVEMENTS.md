@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 197 — Mobile: GoalRepository excludes completed-then-deleted goal from GetAllActive
+
+**What changed:**
+- `GoalRepositoryTests.cs`: Added `GetAllActiveAsync_CompletedThenDeletedGoal_IsExcluded` — inserts a goal with both CompletionDate and DeletedAt set, asserts `GetAllActiveAsync` returns empty (DeletedAt takes precedence).
+
+**Why:** Existing exclusion tests cover: soft-deleted only (via DeleteAsync path, iter 194 via UpsertFromSync). None test the compound case where both CompletionDate AND DeletedAt are set. This exercises the `WHERE DeletedAt IS NULL` filter when a goal has been completed AND deleted, confirming DeletedAt wins.
+
+**Impact:** 150 mobile tests pass (was 149). 157 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 196 — Mobile: TodoRepository excludes synced soft-deleted record from GetAllActive and GetPending
 
 **What changed:**
