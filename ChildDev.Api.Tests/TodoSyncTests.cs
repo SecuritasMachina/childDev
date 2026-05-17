@@ -577,4 +577,22 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Single(matches);
         Assert.Equal("second upload", matches[0].Title);
     }
+
+    [Fact]
+    public async Task Sync_LastSyncAt_ExactlyEqualToRecordUpdatedOn_ExcludedFromDelta()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_exact_boundary1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid = Guid.NewGuid().ToString();
+
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, "boundary task", null, null, null, ts, null)], 0));
+
+        // LastSyncAt == record.UpdatedOn — strict > means this record must NOT appear in delta
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], ts));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+
+        Assert.DoesNotContain(body!.Records, r => r.Guid == guid);
+    }
 }
