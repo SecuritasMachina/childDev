@@ -356,4 +356,27 @@ public class GoalProgressRepositoryTests : IDisposable
         Assert.True(latest.ContainsKey(goalFk));
         Assert.Equal("prior steps", latest[goalFk]);
     }
+
+    [Fact]
+    public async Task SaveAsync_PersistsAllOptionalFields()
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var meetingDate = now + 86400000L;
+        var progress = new GoalProgress
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = "account1",
+            GoalFk = System.Guid.NewGuid().ToString(),
+            NextStepItems = "Step 1: plan, Step 2: execute",
+            NextMeetingDate = meetingDate,
+            UpdatedOn = now
+        };
+
+        await _repo.SaveAsync(progress);
+        var retrieved = await _db.FindAsync<GoalProgress>(progress.Guid);
+
+        Assert.NotNull(retrieved);
+        Assert.Equal("Step 1: plan, Step 2: execute", retrieved!.NextStepItems);
+        Assert.Equal(meetingDate, retrieved.NextMeetingDate);
+    }
 }

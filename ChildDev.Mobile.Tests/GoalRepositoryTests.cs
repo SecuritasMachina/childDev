@@ -339,4 +339,29 @@ public class GoalRepositoryTests : IDisposable
         Assert.Equal("newer completed", results[0].GoalText);
         Assert.Equal("older completed", results[1].GoalText);
     }
+
+    [Fact]
+    public async Task SaveAsync_PersistsAllOptionalFields()
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = "account1",
+            GoalText = "Run a marathon",
+            MeasurableOutcome = "Complete 26.2 miles",
+            NextMeetingDate = now + 86400000L,
+            ExpirationDate = now + 2592000000L,
+            EnteredDate = now,
+            UpdatedOn = now
+        };
+
+        await _repo.SaveAsync(goal);
+        var retrieved = await _repo.GetAsync(goal.Guid);
+
+        Assert.NotNull(retrieved);
+        Assert.Equal("Complete 26.2 miles", retrieved!.MeasurableOutcome);
+        Assert.Equal(goal.NextMeetingDate, retrieved.NextMeetingDate);
+        Assert.Equal(goal.ExpirationDate, retrieved.ExpirationDate);
+    }
 }
