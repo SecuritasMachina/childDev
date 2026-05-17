@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 100 — API Tests: 401 for unauthenticated sync access
+
+**What changed:**
+- `SyncInputValidationTests.cs`: Added `Sync_NoAuth_Returns401` Theory covering all four sync endpoints.
+
+**Why:** The `[RequireAuthorization]` attribute on all sync endpoints was untested. Adding coverage ensures the protection is verified and regressions will be caught.
+
+**Impact:** 25 mobile tests pass. 80 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 99 — Mobile: Show filtered count in EntryCountDisplay when search is active
 
 **What changed:**
