@@ -3792,3 +3792,18 @@ All 4 sync endpoints: if any record has `UpdatedOn > now + 300_000ms` (5 min), r
 ## Pre-existing lint errors (not introduced by this session)
 
 Multiple `azAuthHeader` quoting, line-length, and semicolon issues across `goal.service.ts`, `journal.service.ts`, and `todo.service.ts`. These pre-date this session and are cosmetic — tracked for a future focused lint-cleanup pass.
+
+## 2026-05-17 — Iteration 294 Brainstorm (fresh)
+
+| # | Description | Dim | Impact | Effort | Risk | Status |
+|---|---|---|---|---|---|---|
+| 1 | GoalDetail: "Mark as Complete" button + completed badge | Func | High | S | Low | **DONE (iter 295)** |
+| 2 | API: reject UpdatedOn > now + 24h (clock-skew protection) | Stability | Medium | S | Low | **DONE (iter 296)** |
+| 3 | Mobile: error boundary in LoadCommand (catch + alert) | Stability | Medium | M | Low | **DONE (iter 297)** |
+| 4 | Web: GoalDetail show completion date when completed | UI | Low | S | Low | Backlog |
+| 5 | API tests: validate future-timestamp rejection | Quality | Medium | S | Low | Backlog |
+| 6 | Mobile: GoalListPage completed goals collapsed section | UI | Low | M | Low | Backlog |
+| 7 | Web: Home dashboard quick-add journal entry | Func | Medium | M | Medium | Backlog |
+| 8 | API: GoalProgress test for UpdatedOn=0 exclusion from delta | Quality | Low | S | Low | Backlog |
+
+---
