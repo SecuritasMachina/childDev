@@ -50,12 +50,8 @@ public class AccountService(SQLiteAsyncConnection db)
         await db.UpdateAsync(account);
     }
 
-    public async Task ClearServerJwtAsync()
-    {
-        var account = await GetAccountAsync();
-        if (account is null) return;
-        await db.ExecuteAsync("UPDATE Account SET ServerJwt = NULL WHERE Guid = ?", account.Guid);
-    }
+    public Task ClearServerJwtAsync() =>
+        db.ExecuteAsync("UPDATE Account SET ServerJwt = NULL");
 
     // Links the mobile account to a server account by migrating the local GUID to the server's
     // GUID so that all synced records carry the correct AccountFk.

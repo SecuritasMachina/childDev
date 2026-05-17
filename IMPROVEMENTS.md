@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-17 — Perf: eliminate redundant SELECT in ClearServerJwtAsync (iter 393)
+
+**File:** `ChildDev.Mobile/Services/AccountService.cs`
+
+**Change:** Replaced `GetAccountAsync()` + `ExecuteAsync("... WHERE Guid = ?", account.Guid)` with a single `ExecuteAsync("UPDATE Account SET ServerJwt = NULL")`. Same reasoning as iter 390 for `UpdateLastSyncAsync` — single-account table, no WHERE needed.
+
+**Why:** Continuation of the AccountService SELECT-before-targeted-UPDATE cleanup. The SELECT was only used to obtain the Guid for the WHERE clause, which is unnecessary when the table always has at most one row.
+
+**Impact:** 242 mobile tests — all passing.
+
+---
+
 ## 2026-05-17 — Perf: replace N UpdateAsync calls with single SQL UPDATE in DeleteForGoalAsync (iter 392)
 
 **File:** `ChildDev.Mobile/Data/GoalProgressRepository.cs`
