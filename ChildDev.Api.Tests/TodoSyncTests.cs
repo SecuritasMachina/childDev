@@ -328,4 +328,27 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.Empty(body!.Records);
     }
+
+    [Fact]
+    public async Task Sync_DueDate_CanBeClearedByClient_ViaNewerUpdate()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_due_clear");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Store a todo with DueDate set
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, "Task", null, ts + 86400000L, null, ts, null)], 0));
+
+        // Client sends same Guid with DueDate = null and newer UpdatedOn — LWW removes the due date
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, "Task", null, null, null, ts + 1000, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+
+        var stored = body!.Records.Single(r => r.Guid == guid);
+        Assert.Null(stored.DueDate);
+    }
 }
