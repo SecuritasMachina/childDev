@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 224 — Mobile: Verify UpdatedOn from server is stored locally
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsJournal_UpdatedOnStoredLocally`, `RunAsync_ServerReturnsTodo_UpdatedOnStoredLocally`, `RunAsync_ServerReturnsGoalProgress_UpdatedOnStoredLocally`.
+
+**Why:** All existing upsert tests assert content fields (GoalText, Notes, etc.) but none asserted `UpdatedOn` is preserved. If `UpdatedOn` were lost, every record received from the server would re-appear in `GetModifiedSinceAsync` on the next sync — causing redundant re-uploads of all server-originated data forever. Three tests (user57-59) catch this regression path.
+
+**Impact:** 179 mobile tests pass (was 176). 160 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 223 — Mobile: SyncService health check timeout returns NoServer
 
 **What changed:**
