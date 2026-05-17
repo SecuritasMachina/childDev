@@ -30,10 +30,10 @@ public class GoalRepository(SQLiteAsyncConnection db)
     }
 
     public Task<List<Goal>> GetAllActiveAsync(string accountFk) =>
-        db.Table<Goal>()
-          .Where(g => g.AccountFk == accountFk && g.DeletedAt == null)
-          .OrderByDescending(g => g.EnteredDate)
-          .ToListAsync();
+        db.QueryAsync<Goal>(
+            "SELECT * FROM Goal WHERE AccountFk = ? AND DeletedAt IS NULL " +
+            "ORDER BY (CompletionDate IS NOT NULL), EnteredDate DESC",
+            accountFk);
 
     public async Task<Goal?> GetAsync(string guid) =>
         await db.FindAsync<Goal>(guid);
