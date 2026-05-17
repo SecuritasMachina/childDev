@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 101 — API Tests: GoalProgress server-wins LWW + Journal soft-delete roundtrip
+
+**What changed:**
+- `GoalProgressSyncTests.cs`: Added `Sync_ServerWinsWhenNewerUpdatedOn` — verifies a stale client record does not overwrite a newer server record (the missing symmetric LWW case).
+- `JournalSyncTests.cs`: Added `Sync_SoftDelete_DeletedAtPropagatedInDelta` — verifies that a record synced with `DeletedAt` set is stored and returned in the delta with the correct `DeletedAt` value.
+
+**Why:** GoalProgressSyncTests had the client-wins LWW case but not the server-wins mirror. Soft-delete propagation is a core sync behavior used by all four entities but had no test coverage.
+
+**Impact:** 25 mobile tests pass. 82 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 100 — API Tests: 401 for unauthenticated sync access
 
 **What changed:**
