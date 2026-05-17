@@ -30,6 +30,11 @@ public static class GoalEndpoints
                 logger.LogWarning("sync/goal account={Account} rejected: invalid Guid", accountGuid[..8]);
                 return Results.Problem("Record Guid is not a valid GUID.", statusCode: 422);
             }
+            if (req.Records.Any(r => r.DeletedAt is null && string.IsNullOrWhiteSpace(r.GoalText)))
+            {
+                logger.LogWarning("sync/goal account={Account} rejected: blank GoalText", accountGuid[..8]);
+                return Results.Problem("Record GoalText must not be blank.", statusCode: 422);
+            }
             var incomingGuids = req.Records.Select(r => r.Guid).ToList();
             var existingMap = await db.Goals
                 .Where(g => incomingGuids.Contains(g.Guid))

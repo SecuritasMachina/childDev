@@ -33,6 +33,11 @@ public static class JournalEndpoints
                 logger.LogWarning("sync/journal account={Account} rejected: invalid Guid", accountGuid[..8]);
                 return Results.Problem("Record Guid is not a valid GUID.", statusCode: 422);
             }
+            if (req.Records.Any(r => r.DeletedAt is null && string.IsNullOrWhiteSpace(r.Notes)))
+            {
+                logger.LogWarning("sync/journal account={Account} rejected: blank Notes", accountGuid[..8]);
+                return Results.Problem("Record Notes must not be blank.", statusCode: 422);
+            }
 
             var incomingGuids = req.Records.Select(r => r.Guid).ToList();
             var existingMap = await db.Journals
