@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 55 — Mobile: Trim NextStepItems on load and save
+
+**What changed:**
+- `GoalEntryViewModel.cs`: Trim `NextStepItems` on load (so `_loadedNextStepItems` holds a clean value); trim at save time before comparison and storage; whitespace-only changes no longer trigger a new GoalProgress row
+
+**Why:** Whitespace-only edits would pass the `!= _loadedNextStepItems` check and create a new GoalProgress row with the same effective content. Trimming at both load and save points makes the dedup logic reliable.
+
+**Impact:** 25 mobile tests pass. 52 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 54 — Mobile: GoalEntry Save button disabled when GoalText empty
 
 **What changed:**
