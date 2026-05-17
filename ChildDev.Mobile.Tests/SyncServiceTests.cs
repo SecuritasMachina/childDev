@@ -1418,6 +1418,20 @@ public class SyncServiceTests : IDisposable
         Assert.Contains(todoGuid, todoBody);
         Assert.Contains(completedAt.ToString(), todoBody);
     }
+
+    [Fact]
+    public async Task RunAsync_HealthCheckTimeout_ReturnsNoServer()
+    {
+        await _accountService.CreateAccountAsync("user56", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var service = BuildSyncService(new SlowHealthHandler());
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.NoServer, result);
+    }
 }
 
 // Test helpers
@@ -1612,6 +1626,17 @@ public class FakeGoalProgressSyncHandler(GoalProgressSyncDto progress) : HttpMes
 }
 
 // Returns {"Records": null} for entity syncs — tests null safety in SyncEntityAsync
+// Delays health response past the 5-second CancellationTokenSource timeout in SyncService
+public class SlowHealthHandler : HttpMessageHandler
+{
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
+        return new HttpResponseMessage(HttpStatusCode.OK);
+    }
+}
+
 public class NullRecordsHandler : HttpMessageHandler
 {
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
