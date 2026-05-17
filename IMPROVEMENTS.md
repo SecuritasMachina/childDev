@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 254 — Mobile: SyncService upserts all goals when server returns multiple
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsTwoGoals_BothUpsertedLocally` (user83) and `MultiGoalSyncHandler` helper — server returns 2 goals, asserts both are in the local repository after sync.
+
+**Why:** Iteration 250 covered the same pattern for journals. The Goal sync path in `SyncEntityAsync` is structurally identical but uses a different DTO/mapper. The multi-record server response for goals specifically was untested; a Goal-specific regression in the foreach would only be caught by this test.
+
+**Impact:** 208 mobile tests pass (was 207). 193 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 253 — Mobile: SyncService uploads all modified journals when multiple exist
 
 **What changed:**
