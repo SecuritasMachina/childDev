@@ -91,7 +91,7 @@ else
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
                                OnClick="() => OpenEditTodo(t)" />
                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
-                               Color="Color.Error" OnClick="() => DeleteTodo(t.Guid)" />
+                               Color="Color.Error" OnClick="() => _confirmDeleteGuid = t.Guid" />
             </MudStack>
         </MudListItem>
     }
@@ -119,7 +119,7 @@ else
                             <MudIconButton Icon="@Icons.Material.Filled.Undo" Size="Size.Small"
                                            Color="Color.Default" OnClick="() => UncompleteTodo(t.Guid)" />
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
-                                           Color="Color.Error" OnClick="() => DeleteTodo(t.Guid)" />
+                                           Color="Color.Error" OnClick="() => _confirmDeleteGuid = t.Guid" />
                         </MudStack>
                     </MudListItem>
                 }
@@ -127,6 +127,23 @@ else
         </MudExpansionPanel>
     </MudExpansionPanels>
 }
+
+@* Delete Todo Confirmation *@
+<MudDialog Visible="@(_confirmDeleteGuid is not null)" VisibleChanged="@((bool v) => { if (!v) _confirmDeleteGuid = null; })">
+    <TitleContent>
+        <MudText Typo="Typo.h6" Color="Color.Error">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Class="mr-2" />
+            Delete Todo?
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText>Remove this todo?</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _confirmDeleteGuid = null">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmDeleteTodo">Delete</MudButton>
+    </DialogActions>
+</MudDialog>
 
 <MudDialog @bind-Visible="ShowAddDialog">
     <TitleContent>
@@ -189,6 +206,7 @@ else
     private string EditTitle = string.Empty;
     private string? EditNotes;
     private DateTime? EditDueDate;
+    private string? _confirmDeleteGuid;
 
     protected override async Task OnInitializedAsync()
     {
@@ -316,8 +334,11 @@ else
         await LoadTodos();
     }
 
-    private async Task DeleteTodo(string guid)
+    private async Task ConfirmDeleteTodo()
     {
+        var guid = _confirmDeleteGuid;
+        _confirmDeleteGuid = null;
+        if (guid is null) return;
         var todo = await Db.Todos.FirstOrDefaultAsync(t => t.Guid == guid && t.AccountFk == AccountGuid);
         if (todo is null) return;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();

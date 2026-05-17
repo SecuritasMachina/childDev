@@ -100,13 +100,30 @@ else
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
                                        OnClick="() => OpenEditEntry(j)" />
                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
-                                       Color="Color.Error" OnClick="() => DeleteEntry(j.Guid)" />
+                                       Color="Color.Error" OnClick="() => _confirmDeleteGuid = j.Guid" />
                     </MudCardActions>
                 </MudCard>
             </MudItem>
         }
     </MudGrid>
 }
+
+@* Delete Entry Confirmation *@
+<MudDialog Visible="@(_confirmDeleteGuid is not null)" VisibleChanged="@((bool v) => { if (!v) _confirmDeleteGuid = null; })">
+    <TitleContent>
+        <MudText Typo="Typo.h6" Color="Color.Error">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Class="mr-2" />
+            Delete Entry?
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText>Remove this journal entry?</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _confirmDeleteGuid = null">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmDeleteEntry">Delete</MudButton>
+    </DialogActions>
+</MudDialog>
 
 <MudDialog @bind-Visible="ShowAddDialog">
     <TitleContent>
@@ -171,6 +188,7 @@ else
     private string EditMood = string.Empty;
     private string EditTags = string.Empty;
     private DateTime? EditEnteredDate;
+    private string? _confirmDeleteGuid;
 
     protected override async Task OnInitializedAsync()
     {
@@ -302,8 +320,11 @@ else
         await LoadEntries();
     }
 
-    private async Task DeleteEntry(string guid)
+    private async Task ConfirmDeleteEntry()
     {
+        var guid = _confirmDeleteGuid;
+        _confirmDeleteGuid = null;
+        if (guid is null) return;
         var entry = await Db.Journals.FirstOrDefaultAsync(j => j.Guid == guid && j.AccountFk == AccountGuid);
         if (entry is null) return;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();

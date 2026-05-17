@@ -28,7 +28,7 @@
                        OnClick="OpenEditDialog" />
     }
     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
-                   OnClick="DeleteGoal" />
+                   OnClick="() => _confirmDeleteGoal = true" />
 </MudStack>
 
 @if (Goal.CompletionDate.HasValue)
@@ -120,7 +120,7 @@ else
                             <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
                                            Color="Color.Default" OnClick="() => OpenEditProgress(p)" />
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
-                                           Color="Color.Error" OnClick="() => DeleteProgress(p.Guid)" />
+                                           Color="Color.Error" OnClick="() => _confirmDeleteProgressGuid = p.Guid" />
                         </MudStack>
                     </MudPaper>
                 </ItemContent>
@@ -157,6 +157,40 @@ else
     <DialogActions>
         <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true"
                    OnClick="() => ShowCelebration = false">Awesome! 🙌</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* Delete Goal Confirmation *@
+<MudDialog @bind-Visible="_confirmDeleteGoal">
+    <TitleContent>
+        <MudText Typo="Typo.h6" Color="Color.Error">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Class="mr-2" />
+            Delete Goal?
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText>This will permanently remove the goal and all its progress notes. This action cannot be undone.</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _confirmDeleteGoal = false">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="DeleteGoal">Delete</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* Delete Progress Confirmation *@
+<MudDialog Visible="@(_confirmDeleteProgressGuid is not null)" VisibleChanged="@((bool v) => { if (!v) _confirmDeleteProgressGuid = null; })">
+    <TitleContent>
+        <MudText Typo="Typo.h6" Color="Color.Error">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Class="mr-2" />
+            Delete Progress Note?
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText>Remove this progress note?</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _confirmDeleteProgressGuid = null">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmDeleteProgress">Delete</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -243,6 +277,8 @@ else
     private string? EditMeasurableOutcome;
     private DateTime? EditNextMeetingDate;
     private DateTime? EditExpirationDate;
+    private bool _confirmDeleteGoal;
+    private string? _confirmDeleteProgressGuid;
 
     protected override async Task OnInitializedAsync()
     {
@@ -342,6 +378,7 @@ else
 
     private async Task DeleteGoal()
     {
+        _confirmDeleteGoal = false;
         if (Goal is null) return;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         Goal.DeletedAt = now;
@@ -350,6 +387,14 @@ else
         await Analytics.TrackAsync("goal_delete", AccountGuid, "goal_detail", GoalGuid);
         Snackbar.Add("Goal deleted.", Severity.Info);
         Nav.NavigateTo("/");
+    }
+
+    private async Task ConfirmDeleteProgress()
+    {
+        var guid = _confirmDeleteProgressGuid;
+        _confirmDeleteProgressGuid = null;
+        if (guid is null) return;
+        await DeleteProgress(guid);
     }
 
     private void OpenEditProgress(GoalProgress p)

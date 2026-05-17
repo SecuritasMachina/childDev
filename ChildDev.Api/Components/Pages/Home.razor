@@ -166,7 +166,7 @@
                                    OnClick="() => CompleteGoal(g.Guid)" />
                     <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                    Color="Color.Error" Size="Size.Small"
-                                   OnClick="() => DeleteGoal(g.Guid)" />
+                                   OnClick="() => _confirmDeleteGoalGuid = g.Guid" />
                 </MudCardActions>
             </MudCard>
         </MudItem>
@@ -305,6 +305,23 @@
     </DialogActions>
 </MudDialog>
 
+@* Delete Goal Confirmation *@
+<MudDialog Visible="@(_confirmDeleteGoalGuid is not null)" VisibleChanged="@((bool v) => { if (!v) _confirmDeleteGoalGuid = null; })">
+    <TitleContent>
+        <MudText Typo="Typo.h6" Color="Color.Error">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Class="mr-2" />
+            Delete Goal?
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText>This will permanently remove the goal. This action cannot be undone.</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _confirmDeleteGoalGuid = null">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmDeleteGoal">Delete</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @* Add Goal Dialog *@
 <MudDialog @bind-Visible="ShowAddDialog">
     <TitleContent>
@@ -348,6 +365,7 @@
     private string? QuickNoteGoalGuid;
     private string? QuickNoteGoalText;
     private string QuickNoteText = string.Empty;
+    private string? _confirmDeleteGoalGuid;
 
     protected override async Task OnInitializedAsync()
     {
@@ -474,8 +492,11 @@
         await LoadGoals();
     }
 
-    private async Task DeleteGoal(string guid)
+    private async Task ConfirmDeleteGoal()
     {
+        var guid = _confirmDeleteGoalGuid;
+        _confirmDeleteGoalGuid = null;
+        if (guid is null) return;
         var goal = await Db.Goals.FirstOrDefaultAsync(g => g.Guid == guid && g.AccountFk == AccountGuid);
         if (goal is null) return;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();

@@ -2,6 +2,20 @@
 
 ---
 
+## 2026-05-17 — UX: add confirmation dialogs for all destructive delete actions in web UI (iter 395)
+
+**Files:** `ChildDev.Api/Components/Pages/Home.razor`, `GoalDetail.razor`, `JournalPage.razor`, `Todos.razor`
+
+**Change:** All four web pages previously executed deletes immediately on button click with no confirmation. Added inline confirm dialogs using the existing `@bind-Visible` pattern. A `_confirmDeleteGuid` (or `_confirmDeleteGoal`) state variable captures the pending item; a compact MudDialog asks "Delete X?" with Cancel / Delete buttons. The actual delete runs only on confirmation.
+
+**Coverage:** Goal delete from home card, goal delete from goal detail header, progress note delete, journal entry delete, todo delete (pending list + completed list).
+
+**Why:** Accidental deletion of goals, progress notes, journal entries, or todos is hard to notice since soft-deletes are synced and mobile shows the same data. A one-click delete with no undo prompt creates unnecessary data-loss risk, especially for kids or caregivers who may be less careful. The confirm step costs one extra click on intentional deletes and prevents accidents.
+
+**Impact:** Zero logic changes — only the code path to reach the delete handlers changed. Build: 0 warnings, 0 errors.
+
+---
+
 ## 2026-05-17 — Perf: replace read-modify-write with targeted UPDATEs in AccountService (iter 394)
 
 **File:** `ChildDev.Mobile/Services/AccountService.cs`
