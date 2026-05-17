@@ -19,6 +19,7 @@ public partial class TodoEntryViewModel(
     [ObservableProperty] private bool hasDueDate;
     [ObservableProperty] private DateTime dueDate = DateTime.Today.AddDays(1);
     [ObservableProperty] private bool isExisting;
+    [ObservableProperty] private bool isCompleted;
 
     private bool CanSave() => !string.IsNullOrWhiteSpace(Title);
 
@@ -48,6 +49,7 @@ public partial class TodoEntryViewModel(
             HasDueDate = true;
         }
         IsExisting = true;
+        IsCompleted = item.CompletedAt.HasValue;
     }
 
     [RelayCommand(CanExecute = nameof(CanSave))]
@@ -76,6 +78,14 @@ public partial class TodoEntryViewModel(
     {
         if (string.IsNullOrEmpty(Guid)) return;
         await repo.CompleteAsync(Guid);
+        await Shell.Current.GoToAsync("..");
+    }
+
+    [RelayCommand]
+    private async Task RestoreAsync()
+    {
+        if (string.IsNullOrEmpty(Guid)) return;
+        await repo.UncompleteAsync(Guid);
         await Shell.Current.GoToAsync("..");
     }
 

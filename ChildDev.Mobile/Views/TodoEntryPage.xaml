@@ -24,7 +24,19 @@
             <DatePicker Date="{Binding DueDate}" IsVisible="{Binding HasDueDate}" />
             <Button Text="Mark as Done" Command="{Binding MarkDoneCommand}"
                     BackgroundColor="Green" TextColor="White"
-                    IsVisible="{Binding IsExisting}" Margin="0,8,0,0" />
+                    Margin="0,8,0,0">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button" Binding="{Binding IsExisting}" Value="False">
+                        <Setter Property="IsVisible" Value="False" />
+                    </DataTrigger>
+                    <DataTrigger TargetType="Button" Binding="{Binding IsCompleted}" Value="True">
+                        <Setter Property="IsVisible" Value="False" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+            <Button Text="Restore Task" Command="{Binding RestoreCommand}"
+                    BackgroundColor="CornflowerBlue" TextColor="White"
+                    IsVisible="{Binding IsCompleted}" Margin="0,4,0,0" />
             <Button Text="Delete Task" Command="{Binding DeleteCommand}"
                     BackgroundColor="Red" TextColor="White"
                     IsVisible="{Binding IsExisting}" Margin="0,4,0,0" />
