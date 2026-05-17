@@ -1868,6 +1868,29 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_ServerReturnsTwoJournals_BothUpsertedLocally()
+    {
+        await _accountService.CreateAccountAsync("user80", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var journal1 = new JournalSyncDto(System.Guid.NewGuid().ToString(), account.Guid, "first note",
+            null, null, null, 1000, 1000, null);
+        var journal2 = new JournalSyncDto(System.Guid.NewGuid().ToString(), account.Guid, "second note",
+            null, null, null, 2000, 2000, null);
+
+        var service = BuildSyncService(new MultiJournalSyncHandler(journal1, journal2));
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var journals = await _journalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Equal(2, journals.Count);
+        Assert.Contains(journals, j => j.Notes == "first note");
+        Assert.Contains(journals, j => j.Notes == "second note");
+    }
+
+    [Fact]
     public async Task RunAsync_PartialFailure_ReleasesLockSoSubsequentSyncCanRun()
     {
         await _accountService.CreateAccountAsync("user79", "1234");
@@ -2276,6 +2299,29 @@ public class AlwaysNetworkErrorEntityHandler : HttpMessageHandler
                 Content = JsonContent.Create(new { status = "ok" })
             });
         throw new HttpRequestException("Simulated persistent network error");
+    }
+}
+
+// Returns two journal records in the sync response; all other endpoints return empty
+public class MultiJournalSyncHandler(JournalSyncDto journal1, JournalSyncDto journal2) : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        if (request.RequestUri!.PathAndQuery.Contains("health"))
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new { status = "ok" })
+            });
+        if (request.RequestUri.PathAndQuery.Contains("sync/journal"))
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new SyncResponseDto<JournalSyncDto>([journal1, journal2]))
+            });
+        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new { Records = Array.Empty<object>() })
+        });
     }
 }
 
