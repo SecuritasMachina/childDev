@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 183 — Mobile: SyncService overwrites existing local journal with server version
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsExistingJournal_OverwritesLocalVersion` — pre-inserts a journal locally with Notes="local version", then syncs with a server that returns the same Guid with Notes="server version" and a newer UpdatedOn; asserts the local journal is updated to "server version".
+
+**Why:** All prior `RunAsync_ServerReturns*_UpsertsLocally` tests create NEW records (Guids that don't exist locally). None tested the overwrite path where the Guid already exists locally with an older version. The `UpsertFromSyncAsync` method calls `InsertOrReplaceAsync` which overwrites on Guid collision, but without a test, a change to check `if (!local.Guid.exists)` before writing would silently break inbound sync updates.
+
+**Impact:** 137 mobile tests pass (was 136). 153 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 182 — API: Mixed-AccountFk batch stores valid record and skips intruder
 
 **What changed:**
