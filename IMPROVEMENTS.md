@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 119 — Mobile: Settings URL status message distinguishes saved vs cleared
+
+**What changed:**
+- `SettingsViewModel.cs`: `SaveServerUrlAsync` now shows `"Server URL cleared."` when URL is empty, `"Server URL saved."` otherwise.
+
+**Why:** Saving an empty URL previously showed `"Server URL saved."`, which is misleading — the user may have intentionally cleared the URL to disconnect from the server, and the feedback should reflect that.
+
+**Impact:** 43 mobile tests pass. 93 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 118 — Mobile Tests: Strengthen soft-delete assertions in Journal and Goal repos
 
 **What changed:**
