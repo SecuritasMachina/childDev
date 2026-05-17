@@ -288,4 +288,21 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var stored = body!.Records.Single(r => r.Guid == guid);
         Assert.Equal("Server version", stored.Title);
     }
+
+    [Fact]
+    public async Task Sync_LastSyncAt_LargerThanAllRecords_EmptyDelta()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_future_lastsync");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(Guid.NewGuid().ToString(), accountGuid, "old todo", null, null, null, ts, null)], 0));
+
+        var futureSync = ts + 10_000L;
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], futureSync));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+
+        Assert.Empty(body!.Records);
+    }
 }

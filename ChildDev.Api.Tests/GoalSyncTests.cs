@@ -294,4 +294,21 @@ public class GoalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var stored = body!.Records.Single(r => r.Guid == guid);
         Assert.Equal("Server version", stored.GoalText);
     }
+
+    [Fact]
+    public async Task Sync_LastSyncAt_LargerThanAllRecords_EmptyDelta()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gsync_future_lastsync");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(Guid.NewGuid().ToString(), accountGuid, "old goal", null, null, ts, null, null, ts, null)], 0));
+
+        var futureSync = ts + 10_000L;
+        var response = await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([], futureSync));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalDto>>();
+
+        Assert.Empty(body!.Records);
+    }
 }
