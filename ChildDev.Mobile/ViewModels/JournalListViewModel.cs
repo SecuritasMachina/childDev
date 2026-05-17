@@ -9,13 +9,17 @@ namespace ChildDev.Mobile.ViewModels;
 
 public partial class JournalListViewModel(
     JournalRepository repo,
-    AccountService accountService) : ObservableObject
+    AccountService accountService,
+    SyncService syncService) : ObservableObject
 {
     [ObservableProperty]
     private ObservableCollection<Journal> journals = [];
 
     [ObservableProperty]
     private string statusMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool isRefreshing;
 
     [RelayCommand]
     private async Task LoadAsync()
@@ -31,6 +35,28 @@ public partial class JournalListViewModel(
         catch
         {
             StatusMessage = "Could not load entries. Please restart the app.";
+        }
+    }
+
+    [RelayCommand]
+    private async Task RefreshAsync()
+    {
+        try
+        {
+            var account = await accountService.GetAccountAsync();
+            if (account is null) { IsRefreshing = false; return; }
+            await syncService.RunAsync(account);
+            var items = await repo.GetAllActiveAsync(account.Guid);
+            Journals = new ObservableCollection<Journal>(items);
+            StatusMessage = string.Empty;
+        }
+        catch
+        {
+            StatusMessage = "Could not refresh entries.";
+        }
+        finally
+        {
+            IsRefreshing = false;
         }
     }
 
