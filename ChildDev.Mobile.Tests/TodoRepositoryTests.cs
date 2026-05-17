@@ -597,6 +597,36 @@ public class TodoRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetCompletedAsync_ReturnsOnlyCompletedNonDeleted()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "pending", UpdatedOn = now });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "done", CompletedAt = now - 1000, UpdatedOn = now - 1000 });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "deleted done", CompletedAt = now - 500, DeletedAt = now - 500, UpdatedOn = now - 500 });
+
+        var completed = await _repo.GetCompletedAsync(accountId);
+
+        Assert.Single(completed);
+        Assert.Equal("done", completed[0].Title);
+    }
+
+    [Fact]
+    public async Task GetCompletedAsync_OrderedByCompletedAtDescending()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "older", CompletedAt = now - 5000, UpdatedOn = now - 5000 });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "newer", CompletedAt = now - 1000, UpdatedOn = now - 1000 });
+
+        var completed = await _repo.GetCompletedAsync(accountId);
+
+        Assert.Equal(2, completed.Count);
+        Assert.Equal("newer", completed[0].Title);
+        Assert.Equal("older", completed[1].Title);
+    }
+
+    [Fact]
     public async Task UncompleteAsync_ClearsCompletedAt_AndBumpsUpdatedOn()
     {
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
