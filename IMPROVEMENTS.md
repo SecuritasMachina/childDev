@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 105 — Mobile Tests: Todo soft-delete + GetModifiedSince coverage
+
+**What changed:**
+- `TodoRepositoryTests.cs`: Added `Delete_SoftDeletes_ExcludedFromPending` and `GetModifiedSince_ReturnsOnlyNewerRecords`.
+
+**Why:** TodoRepositoryTests only had Save and Complete tests. Soft-delete and GetModifiedSince are core behaviors used by sync, matching what JournalRepositoryTests already covers.
+
+**Impact:** 27 mobile tests pass. 86 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 104 — Mobile: Fix local-to-UTC timestamp conversion in entry ViewModels
 
 **What changed:**
