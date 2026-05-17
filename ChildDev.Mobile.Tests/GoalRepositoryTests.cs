@@ -73,4 +73,39 @@ public class GoalRepositoryTests : IDisposable
         var all = await _repo.GetAllActiveAsync("account1");
         Assert.Empty(all);
     }
+
+    [Fact]
+    public async Task CompleteAsync_SetsCompletionDate()
+    {
+        var goal = new Goal
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = "account1",
+            GoalText = "Complete me",
+            EnteredDate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            UpdatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+        };
+
+        await _repo.SaveAsync(goal);
+        await _repo.CompleteAsync(goal.Guid);
+
+        var retrieved = await _repo.GetAsync(goal.Guid);
+        Assert.NotNull(retrieved);
+        Assert.NotNull(retrieved.CompletionDate);
+    }
+
+    [Fact]
+    public async Task GetModifiedSince_ReturnsOnlyNewerRecords()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var tOld = DateTimeOffset.UtcNow.AddSeconds(-10).ToUnixTimeMilliseconds();
+        var tNew = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalText = "old", EnteredDate = tOld, UpdatedOn = tOld });
+        await _db.InsertOrReplaceAsync(new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalText = "new", EnteredDate = tNew, UpdatedOn = tNew });
+
+        var modified = await _repo.GetModifiedSinceAsync(accountId, tOld);
+        Assert.Single(modified);
+        Assert.Equal("new", modified[0].GoalText);
+    }
 }
