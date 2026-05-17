@@ -101,4 +101,20 @@ public class SyncInputValidationTests(ApiFactory factory) : IClassFixture<ApiFac
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Sync_Todo_FutureDueDate_Returns422()
+    {
+        var jwt = await RegisterJwtAsync("tododuedateval");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var farFutureMs = DateTimeOffset.UtcNow.AddYears(11).ToUnixTimeMilliseconds();
+        var guid = Guid.NewGuid();
+        var body = new StringContent(
+            $"{{\"Records\":[{{\"Guid\":\"{guid}\",\"AccountFk\":\"a1\",\"Title\":\"test\",\"DueDate\":{farFutureMs},\"UpdatedOn\":0,\"DeletedAt\":null}}],\"LastSyncAt\":0}}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync("/api/sync/todo", body);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
 }
