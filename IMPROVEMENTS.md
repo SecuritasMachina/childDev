@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 153 — GoalRepo active ordering + Journal optional fields round-trip
+
+**What changed:**
+- `GoalRepositoryTests.cs`: Added `GetAllActiveAsync_MultipleActiveGoals_OrderedByEnteredDateDescending` — 3 active goals in shuffled insertion order, asserts newest-first return. Tests the secondary sort key in the raw SQL query.
+- `JournalSyncTests.cs`: Added `Sync_OptionalFieldsRoundTrip` — syncs a journal with Activity, Mood, and Tags all set, verifies all three are included in the delta response.
+
+**Why:** The Goal ordering test validates the `EnteredDate DESC` sort within the active group — the existing ordering test only checked that active goals come before completed, not the ordering within active goals. The Journal optional-fields test guards the `EntityToDto` mapper — if Activity, Mood, or Tags were omitted from the projection, they would silently disappear on mobile after sync.
+
+**Impact:** 101 mobile tests pass (was 100). 119 API tests pass (was 118).
+
+---
+
 ## 2026-05-17 — Iteration 152 — API: Goal CompletionDate propagation + GoalProgress batch mixed LWW
 
 **What changed:**
