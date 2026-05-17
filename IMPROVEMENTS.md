@@ -3891,3 +3891,39 @@ Multiple `azAuthHeader` quoting, line-length, and semicolon issues across `goal.
 | 8 | Web: Home dashboard — show last sync time | UI | Low | S | Low | Backlog |
 
 ---
+
+## 2026-05-17 — GoalDetail delete goal button (iter 301)
+
+**Branch:** `improve/goaldetail-delete-goal-301`
+
+**What:** Added a delete (trash) icon button in the GoalDetail header. Soft-deletes the goal with LWW UpdatedOn invariant, tracks `goal_delete` analytics, navigates back to home.
+
+**Why:** Previously there was no way to delete a goal from within the detail page. Users had to go back to the home list to delete.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
+## 2026-05-17 — Todos uncomplete + delete from completed section (iter 302)
+
+**Branch:** `improve/todos-uncomplete-302`
+
+**What:** Added Undo and Delete icon buttons to each row in the completed todos expansion panel. Uncomplete clears `CompletedAt`, bumps `UpdatedOn`, and tracks `todo_uncomplete` analytics.
+
+**Why:** Once a todo was completed there was no way to reverse it — users had to delete and re-create. Common case: accidentally marked done.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
+## 2026-05-17 — TodoRepository.UncompleteAsync + 3 mobile tests (iter 303)
+
+**Branch:** `improve/mobile-todo-uncomplete-303`
+
+**What:** Added `UncompleteAsync(guid)` to `TodoRepository` — clears `CompletedAt`, bumps `UpdatedOn`. Three tests: field cleared and UpdatedOn bumped, restored todo appears in GetPendingAsync, already-pending is a no-op.
+
+**Why:** Web UI gained uncomplete capability in iter 302; mobile repository needed the matching method for eventual mobile UX parity and sync correctness.
+
+**Impact:** 224 mobile tests pass (up from 221). Build clean.
+
+---
