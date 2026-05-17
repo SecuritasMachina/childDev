@@ -4220,6 +4220,16 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — Web home: onboarding alert for users with no goals (iter 337)
+
+**What:** When a logged-in user has no active goals and no search filter applied, a MudAlert info banner appears above the goals grid explaining the app's core concept ("Goals are the heart of ChildDev...") and nudging them to add the first goal.
+
+**Why:** New users and returning users who have completed all goals see an empty grid with just the dashed "Add New Goal" card. The blank state gives no context about what to do or why. A brief, contextual prompt fills this gap without being intrusive — it only shows when there are literally zero active goals.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Fix stale NowMs in Todos overdue filter (iter 336)
 
 **What:** `NowMs` is now refreshed at the start of `LoadTodos()` instead of only in `OnInitializedAsync`.

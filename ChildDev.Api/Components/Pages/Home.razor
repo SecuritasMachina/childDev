@@ -78,6 +78,13 @@
     <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">No goals matching "@FilterText".</MudText>
 }
 
+@if (!AllActiveGoals.Any() && string.IsNullOrWhiteSpace(FilterText))
+{
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Lightbulb" Class="mb-4">
+        <strong>Get started:</strong> Add your first goal below. Goals are the heart of ChildDev — everything else (progress notes, todos, and journal entries) ties back to helping you reach them.
+    </MudAlert>
+}
+
 <MudGrid>
     @foreach (var g in ActiveGoals)
     {
