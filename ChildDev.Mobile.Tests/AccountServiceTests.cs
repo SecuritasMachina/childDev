@@ -144,6 +144,18 @@ public class AccountServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task SaveServerCredentials_WhenCalledTwice_SecondCredentialsPersisted()
+    {
+        await _service.CreateAccountAsync("jill", "1234");
+        await _service.SaveServerCredentialsAsync("jwt-v1", "https://server1.example.com");
+        await _service.SaveServerCredentialsAsync("jwt-v2", "https://server2.example.com");
+
+        var account = await _service.GetAccountAsync();
+        Assert.Equal("jwt-v2", account!.ServerJwt);
+        Assert.Equal("https://server2.example.com", account.ServerUrl);
+    }
+
+    [Fact]
     public async Task UpdateLastSync_WhenCalledTwice_SecondTimestampPersisted()
     {
         await _service.CreateAccountAsync("ivan", "1234");
