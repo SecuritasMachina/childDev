@@ -2,6 +2,21 @@
 
 ---
 
+## 2026-05-17 — Fix: disabled Save buttons when required fields are blank (iter 388)
+
+**Files:** `ChildDev.Api/Components/Pages/Todos.razor`, `ChildDev.Api/Components/Pages/Home.razor`, `ChildDev.Api/Components/Pages/JournalPage.razor`
+
+**Change:** Added `Disabled` bindings to dialog Save buttons so they are visually grayed out and unclickable when the required fields are empty:
+- Add Todo / Edit Todo: disabled when title is blank
+- Add Goal: disabled when goal text is blank
+- Add/Edit Journal Entry: disabled when both Notes and Activity are blank
+
+**Why:** These dialogs all had silent return-on-blank validation — clicking Save with empty required fields did nothing, leaving the dialog open. Disabling the button is clearer UX than a silent no-op or a snackbar warning.
+
+**Impact:** 220 API tests — all passing.
+
+---
+
 ## 2026-05-17 — Fix: silent no-op when saving empty progress note (iter 387)
 
 **File:** `ChildDev.Api/Components/Pages/GoalDetail.razor`

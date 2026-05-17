@@ -144,7 +144,8 @@ else
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => ShowAddDialog = false">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddTodo">Add Todo</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddTodo"
+                   Disabled="@string.IsNullOrWhiteSpace(NewTitle)">Add Todo</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -164,7 +165,8 @@ else
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => ShowEditDialog = false">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveTodoEdit">Save</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveTodoEdit"
+                   Disabled="@string.IsNullOrWhiteSpace(EditTitle)">Save</MudButton>
     </DialogActions>
 </MudDialog>
 

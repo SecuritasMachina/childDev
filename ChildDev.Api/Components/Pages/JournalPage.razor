@@ -125,7 +125,8 @@ else
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => ShowAddDialog = false">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddEntry">Save Entry</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddEntry"
+                   Disabled="@(string.IsNullOrWhiteSpace(NewNotes) && string.IsNullOrWhiteSpace(NewActivity))">Save Entry</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -146,7 +147,8 @@ else
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => ShowEditDialog = false">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEditEntry">Save</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEditEntry"
+                   Disabled="@(string.IsNullOrWhiteSpace(EditNotes) && string.IsNullOrWhiteSpace(EditActivity))">Save</MudButton>
     </DialogActions>
 </MudDialog>
 

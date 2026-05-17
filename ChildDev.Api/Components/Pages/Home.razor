@@ -320,7 +320,8 @@
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => ShowAddDialog = false">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddGoal">Add Goal</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddGoal"
+                   Disabled="@string.IsNullOrWhiteSpace(NewGoalText)">Add Goal</MudButton>
     </DialogActions>
 </MudDialog>
 
