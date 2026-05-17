@@ -122,36 +122,37 @@
                     var daysSinceProgress = pCount > 0 ? (int)((nowMs - lastAt) / 86_400_000L) : -1;
                     var isStale = daysSinceProgress >= 14;
                 }
-                @if (pCount > 0 || isExpired || isExpiringSoon)
-                {
-                    <MudCardContent Class="pt-0">
-                        @if (pCount > 0)
-                        {
-                            <MudChip T="string" Icon="@Icons.Material.Filled.CheckCircle" Color="@(isStale ? Color.Warning : Color.Success)" Size="Size.Small" Class="mr-1">
-                                @if (daysSinceProgress == 0)
-                                {
-                                    @("Updated today")
-                                }
-                                else if (daysSinceProgress == 1)
-                                {
-                                    @("Updated yesterday")
-                                }
-                                else
-                                {
-                                    @($"Updated {daysSinceProgress}d ago")
-                                }
-                            </MudChip>
-                        }
-                        @if (isExpired)
-                        {
-                            <MudChip T="string" Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Small">Overdue</MudChip>
-                        }
-                        else if (isExpiringSoon)
-                        {
-                            <MudChip T="string" Icon="@Icons.Material.Filled.Schedule" Color="Color.Warning" Size="Size.Small">Due soon</MudChip>
-                        }
-                    </MudCardContent>
-                }
+                <MudCardContent Class="pt-0">
+                    @if (pCount == 0 && !isExpired && !isExpiringSoon)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">No notes yet</MudText>
+                    }
+                    @if (pCount > 0)
+                    {
+                        <MudChip T="string" Icon="@Icons.Material.Filled.CheckCircle" Color="@(isStale ? Color.Warning : Color.Success)" Size="Size.Small" Class="mr-1">
+                            @if (daysSinceProgress == 0)
+                            {
+                                @("Updated today")
+                            }
+                            else if (daysSinceProgress == 1)
+                            {
+                                @("Updated yesterday")
+                            }
+                            else
+                            {
+                                @($"Updated {daysSinceProgress}d ago")
+                            }
+                        </MudChip>
+                    }
+                    @if (isExpired)
+                    {
+                        <MudChip T="string" Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Small">Overdue</MudChip>
+                    }
+                    else if (isExpiringSoon)
+                    {
+                        <MudChip T="string" Icon="@Icons.Material.Filled.Schedule" Color="Color.Warning" Size="Size.Small">Due soon</MudChip>
+                    }
+                </MudCardContent>
                 <MudCardActions>
                     <MudButton Variant="Variant.Text" Color="Color.Primary"
                                Href="@($"/goals/{g.Guid}")">View</MudButton>
