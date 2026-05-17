@@ -24,6 +24,9 @@ public partial class JournalListViewModel(
     [ObservableProperty]
     private string filterText = string.Empty;
 
+    [ObservableProperty]
+    private string entryCountDisplay = string.Empty;
+
     private List<Journal> _allJournals = [];
 
     partial void OnFilterTextChanged(string value) =>
@@ -47,6 +50,7 @@ public partial class JournalListViewModel(
             var items = await repo.GetAllActiveAsync(account.Guid);
             _allJournals = items;
             Journals = new ObservableCollection<Journal>(items);
+            EntryCountDisplay = $"{items.Count} {(items.Count == 1 ? "entry" : "entries")}";
         }
         catch
         {
@@ -65,6 +69,7 @@ public partial class JournalListViewModel(
             var items = await repo.GetAllActiveAsync(account.Guid);
             _allJournals = items;
             Journals = new ObservableCollection<Journal>(items);
+            EntryCountDisplay = $"{items.Count} {(items.Count == 1 ? "entry" : "entries")}";
             StatusMessage = string.Empty;
         }
         catch
