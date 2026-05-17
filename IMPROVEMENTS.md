@@ -4220,6 +4220,16 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — Fix MUD0002 build warnings (iter 332)
+
+**What:** Replaced `FullWidth="true"` direct attribute on `MudDialog` in `Home.razor` and `GoalDetail.razor` with `Options="@(new DialogOptions { MaxWidth = ..., FullWidth = true })"`. MudBlazor 7 removed `FullWidth` as a first-class parameter on `MudDialog` — it must be passed through `DialogOptions`.
+
+**Why:** MUD0002 is a code analyzer warning surfaced by the MudBlazor v7 Roslyn analyzer. Zero warnings makes CI cleaner and avoids silent behavior differences from misconfigured dialogs.
+
+**Impact:** 217 API tests pass. Build now reports 0 warnings (was 4).
+
+---
+
 ## 2026-05-17 — Mobile dashboard personalized greeting (iter 331)
 
 **What:** Added a `Greeting` observable property to `DashboardViewModel`. On load, it reads the account's `NickName` and generates a time-of-day greeting ("Good morning/afternoon/evening, [Name]!"). The `DashboardPage` shows it as a bold heading at the top, hidden when empty.
