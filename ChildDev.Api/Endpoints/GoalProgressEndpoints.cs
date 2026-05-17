@@ -46,10 +46,10 @@ public static class GoalProgressEndpoints
                 logger.LogWarning("sync/goal-progress account={Account} rejected: NextMeetingDate too far in future", accountGuid[..8]);
                 return Results.Problem("Record NextMeetingDate is too far in the future.", statusCode: 422);
             }
-            if (req.Records.Any(r => r.DeletedAt is null && string.IsNullOrWhiteSpace(r.NextStepItems)))
+            if (req.Records.Any(r => r.DeletedAt is null && string.IsNullOrWhiteSpace(r.NextStepItems) && !r.NextMeetingDate.HasValue))
             {
-                logger.LogWarning("sync/goal-progress account={Account} rejected: blank NextStepItems", accountGuid[..8]);
-                return Results.Problem("Record NextStepItems must not be blank.", statusCode: 422);
+                logger.LogWarning("sync/goal-progress account={Account} rejected: blank NextStepItems and no NextMeetingDate", accountGuid[..8]);
+                return Results.Problem("Record must have NextStepItems or NextMeetingDate.", statusCode: 422);
             }
             if (req.Records.Any(r => r.NextStepItems?.Length > 2_000))
             {

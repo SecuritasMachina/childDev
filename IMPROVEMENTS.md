@@ -4666,6 +4666,18 @@ Updated `SettingsPage.xaml` with a conditional section:
 
 ---
 
+## 2026-05-17 — Fix: GoalProgress sync rejects meeting-date-only records (iter 372)
+
+**Files:** `ChildDev.Api/Endpoints/GoalProgressEndpoints.cs`, `ChildDev.Api.Tests/GoalProgressSyncTests.cs`
+
+**Change:** Updated sync endpoint validation to allow GoalProgress records that have a `NextMeetingDate` but null `NextStepItems`. Previously validation required `NextStepItems` to be non-blank for any non-deleted record. Added tests `Sync_MeetingDateOnlyNullNextSteps_Accepted` and `Sync_NullNextStepsAndNoMeetingDate_Returns422`.
+
+**Why:** The web UI allows creating progress notes with only a meeting date (no notes text). These records sync down to mobile fine, but when mobile sends them back up in the next sync cycle, the server rejected the whole batch with 422. Meeting-date-only progress notes are a valid use case (scheduling a future check-in without adding notes yet), so the sync endpoint should accept them.
+
+**Impact:** 220 API tests (was 218) — all passing.
+
+---
+
 ## 2026-05-17 — Fix: stale dialog state when reopening Add dialogs (iter 371)
 
 **Files:** `ChildDev.Api/Components/Pages/JournalPage.razor`, `ChildDev.Api/Components/Pages/Todos.razor`

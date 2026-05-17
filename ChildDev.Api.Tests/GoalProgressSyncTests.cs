@@ -695,4 +695,45 @@ public class GoalProgressSyncTests(ApiFactory factory) : IClassFixture<ApiFactor
         Assert.Equal(nonExistentGoalGuid, stored.GoalFk);
         Assert.Equal("orphan step", stored.NextStepItems);
     }
+
+    [Fact]
+    public async Task Sync_MeetingDateOnlyNullNextSteps_Accepted()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_mtgonly");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var goalGuid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var meetingMs = ts + 7 * 24 * 60 * 60 * 1000L;
+
+        var upload = await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([
+                new GoalProgressDto(guid, accountGuid, goalGuid, null, meetingMs, ts, null)
+            ], 0));
+
+        Assert.Equal(HttpStatusCode.OK, upload.StatusCode);
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalProgressDto>>();
+        var stored = body!.Records.FirstOrDefault(r => r.Guid == guid);
+        Assert.NotNull(stored);
+        Assert.Null(stored.NextStepItems);
+        Assert.Equal(meetingMs, stored.NextMeetingDate);
+    }
+
+    [Fact]
+    public async Task Sync_NullNextStepsAndNoMeetingDate_Returns422()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_blanknull");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var goalGuid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([
+                new GoalProgressDto(guid, accountGuid, goalGuid, null, null, ts, null)
+            ], 0));
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
 }
