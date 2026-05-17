@@ -89,4 +89,48 @@ public class TodoRepositoryTests : IDisposable
         Assert.Single(modified);
         Assert.Equal("new", modified[0].Title);
     }
+
+    [Fact]
+    public async Task GetCompletedCount_CountsCompletedExcludesDeleted()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "pending", UpdatedOn = now });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "completed", UpdatedOn = now, CompletedAt = now });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "completed+deleted", UpdatedOn = now, CompletedAt = now, DeletedAt = now });
+
+        var count = await _repo.GetCompletedCountAsync(accountId);
+        Assert.Equal(1, count);
+    }
+
+    [Fact]
+    public async Task GetPendingAsync_DueDateTodosOrderedBeforeNullDueDate()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var tomorrow = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "no due date", UpdatedOn = now });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "has due date", UpdatedOn = now, DueDate = tomorrow });
+
+        var pending = await _repo.GetPendingAsync(accountId);
+        Assert.Equal(2, pending.Count);
+        Assert.Equal("has due date", pending[0].Title);
+        Assert.Equal("no due date", pending[1].Title);
+    }
+
+    [Fact]
+    public async Task UpsertFromSync_OverwritesExistingRecord()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _repo.SaveAsync(new Todo { Guid = guid, AccountFk = "account1", Title = "original", UpdatedOn = now });
+        await _repo.UpsertFromSyncAsync(new Todo { Guid = guid, AccountFk = "account1", Title = "synced", UpdatedOn = now + 1000 });
+
+        var retrieved = await _repo.GetAsync(guid);
+        Assert.NotNull(retrieved);
+        Assert.Equal("synced", retrieved.Title);
+    }
 }
