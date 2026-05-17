@@ -1615,6 +1615,42 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_ServerSendsDeletedGoalProgress_ExcludedFromGetForGoalAsync()
+    {
+        await _accountService.CreateAccountAsync("user72", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var progressGuid = System.Guid.NewGuid().ToString();
+        var goalFk = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Pre-insert active progress for the goal
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = progressGuid, AccountFk = account.Guid, GoalFk = goalFk,
+            NextStepItems = "Active steps", UpdatedOn = now
+        });
+
+        // Confirm it's visible before sync
+        var progressBefore = await _goalProgressRepo.GetForGoalAsync(goalFk);
+        Assert.Contains(progressBefore, p => p.Guid == progressGuid);
+
+        // Server sends same Guid soft-deleted with newer UpdatedOn
+        var deletedAt = now + 1000;
+        var serverProgress = new GoalProgressSyncDto(progressGuid, account.Guid, goalFk,
+            null, null, deletedAt, deletedAt);
+
+        var service = BuildSyncService(new FakeGoalProgressSyncHandler(serverProgress));
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var progressAfter = await _goalProgressRepo.GetForGoalAsync(goalFk);
+        Assert.DoesNotContain(progressAfter, p => p.Guid == progressGuid);
+    }
+
+    [Fact]
     public async Task RunAsync_ServerSendsDeletedGoal_ExcludedFromGetAllActiveAsync()
     {
         await _accountService.CreateAccountAsync("user71", "1234");
