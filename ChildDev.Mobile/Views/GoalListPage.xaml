@@ -33,6 +33,13 @@
                         </SwipeItems>
                     </SwipeView.RightItems>
                     <Grid Padding="16,12" ColumnDefinitions="*,Auto">
+                        <Grid.Triggers>
+                            <DataTrigger TargetType="Grid"
+                                         Binding="{Binding CompletionDate, Converter={x:StaticResource NotNullConverter}}"
+                                         Value="True">
+                                <Setter Property="Opacity" Value="0.5" />
+                            </DataTrigger>
+                        </Grid.Triggers>
                         <Grid.GestureRecognizers>
                             <TapGestureRecognizer
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GoalListViewModel}}, Path=OpenCommand}"
