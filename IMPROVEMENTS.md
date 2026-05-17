@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 233 — Mobile: Server-sent null CompletionDate restores goal to active
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_ServerSendsGoalWithNullCompletionDate_GoalAppearsActiveLocally` (user68) — inserts a locally-completed goal, then server sends the same goal with `CompletionDate = null` and newer `UpdatedOn`; asserts the goal appears in `GetAllActiveAsync` and has null `CompletionDate`.
+
+**Why:** `GetAllActiveAsync` orders by `(CompletionDate IS NOT NULL)` to separate active from completed goals. `UpsertFromSyncAsync` uses `InsertOrReplaceAsync` which must clear `CompletionDate` when null. Without this test, a regression in the field mapping (e.g., accidentally preserving local `CompletionDate` on upsert) would cause the goal to stay in the "completed" section even after the server un-completes it.
+
+**Impact:** 190 mobile tests pass (was 189). 164 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 232 — Mobile: Bearer JWT verified in HTTP request headers
 
 **What changed:**
