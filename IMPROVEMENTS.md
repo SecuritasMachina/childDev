@@ -4220,6 +4220,26 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — Fix: mobile goal entry always sets NextMeetingDate (iter 346)
+
+**What:** Added `HasNextMeetingDate` toggle switch to `GoalEntryPage.xaml` (same pattern as the `HasExpirationDate` toggle). New goals default to no meeting date. Existing goals restore the toggle if the stored value is non-null. `GoalEntryViewModel.SaveAsync` now writes `null` when the toggle is off instead of always writing a date 7 days from today.
+
+**Why:** Every goal created on mobile got a `NextMeetingDate` set to T+7 days regardless of intent, causing a spurious meeting badge in the GoalListPage and DashboardViewModel's "Next goal meeting" banner. The web GoalDetail correctly treats meeting date as optional; this brings mobile into parity.
+
+**Impact:** 238 mobile tests pass. Build clean.
+
+---
+
+## 2026-05-17 — Analytics: track journal_filter and todo_filter events (iter 345)
+
+**What:** Added `_ = Analytics.TrackAsync("journal_filter", ...)` to `JournalPage.OnDateFilterChanged` and `_ = Analytics.TrackAsync("todo_filter", ...)` to `Todos.OnStatusFilterChanged`. Both event names existed in `Insights.FormatEventName` but were never fired.
+
+**Why:** Insights was mapping these event keys but seeing zero counts in the breakdown. Knowing how often users filter journal/todos (and which filters are popular) lets us optimize the default view or promote popular filters.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Fix missing todo_edit and logout event names in Insights (iter 344)
 
 **What:** Added `"todo_edit" => "Edit todo"` and `"logout" => "Logout"` to `FormatEventName` in `Insights.razor`. Both events are tracked but were falling through to the raw-name fallback (`name.Replace("_", " ")`), showing "todo edit" and "logout" instead of clean labels.
