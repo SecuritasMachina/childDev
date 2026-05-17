@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 103 — API Tests: Todo + GoalProgress soft-delete roundtrip
+
+**What changed:**
+- `TodoSyncTests.cs`: Added `Sync_SoftDelete_DeletedAtPropagatedInDelta`.
+- `GoalProgressSyncTests.cs`: Added `Sync_SoftDelete_DeletedAtPropagatedInDelta`.
+
+**Why:** All four entity sync test classes now have soft-delete coverage. Journal and Goal were covered in iters 101-102; this completes the set.
+
+**Impact:** 25 mobile tests pass. 86 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 102 — API Tests: Token unknown user 401 + Goal soft-delete roundtrip
 
 **What changed:**
