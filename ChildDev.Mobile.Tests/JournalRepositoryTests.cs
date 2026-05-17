@@ -185,4 +185,20 @@ public class JournalRepositoryTests : IDisposable
         Assert.Equal("newer entry", results[0].Notes);
         Assert.Equal("older entry", results[1].Notes);
     }
+
+    [Fact]
+    public async Task GetModifiedSinceAsync_ExcludesOtherAccounts()
+    {
+        var account1 = System.Guid.NewGuid().ToString();
+        var account2 = System.Guid.NewGuid().ToString();
+        var tNew = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account1, Notes = "mine", EnteredDate = tNew, UpdatedOn = tNew });
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account2, Notes = "theirs", EnteredDate = tNew, UpdatedOn = tNew });
+
+        var results = await _repo.GetModifiedSinceAsync(account1, 0);
+
+        Assert.Single(results);
+        Assert.Equal("mine", results[0].Notes);
+    }
 }

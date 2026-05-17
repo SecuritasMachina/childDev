@@ -206,4 +206,20 @@ public class GoalRepositoryTests : IDisposable
         Assert.Single(modified);
         Assert.Equal("edited", modified[0].GoalText);
     }
+
+    [Fact]
+    public async Task GetModifiedSinceAsync_ExcludesOtherAccounts()
+    {
+        var account1 = System.Guid.NewGuid().ToString();
+        var account2 = System.Guid.NewGuid().ToString();
+        var tNew = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account1, GoalText = "mine", EnteredDate = tNew, UpdatedOn = tNew });
+        await _db.InsertOrReplaceAsync(new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account2, GoalText = "theirs", EnteredDate = tNew, UpdatedOn = tNew });
+
+        var results = await _repo.GetModifiedSinceAsync(account1, 0);
+
+        Assert.Single(results);
+        Assert.Equal("mine", results[0].GoalText);
+    }
 }
