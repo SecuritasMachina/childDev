@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 124 — Mobile Tests: CompleteAsync UpdatedOn sync invariant
+
+**What changed:**
+- `TodoRepositoryTests.cs`: Added `CompleteAsync_SetsUpdatedOnToCompletedAt` — verifies `UpdatedOn == CompletedAt` after completion.
+- `GoalRepositoryTests.cs`: Added `CompleteAsync_SetsUpdatedOnToCompletionDate` — verifies `UpdatedOn == CompletionDate` after completion.
+
+**Why:** Both `TodoRepository.CompleteAsync` and `GoalRepository.CompleteAsync` must set `UpdatedOn = CompletedAt/CompletionDate` so the mutation is picked up by `GetModifiedSinceAsync` on the next sync cycle. The existing `CompleteAsync_SetsCompletionDate` and `Complete_SetCompletedAt_ExcludedFromPending` tests only verified behavioral effects (excluded from pending, completion field not null), not the sync invariant. A refactor forgetting `UpdatedOn` would silently leave completions unsynced.
+
+**Impact:** 48 mobile tests pass. 100 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 123 — Mobile Tests: AccountService server credential tests
 
 **What changed:**
