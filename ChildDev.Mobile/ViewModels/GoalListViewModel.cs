@@ -108,9 +108,15 @@ public partial class GoalListViewModel(
     private async Task<List<Goal>> LoadGoalsWithStepsAsync(string accountGuid)
     {
         var goals = await repo.GetAllActiveAsync(accountGuid);
-        var steps = await progressRepo.GetLatestNextStepsAsync(accountGuid);
+        var info = await progressRepo.GetLatestProgressInfoAsync(accountGuid);
         foreach (var g in goals)
-            g.LatestNextStepItems = steps.GetValueOrDefault(g.Guid);
+        {
+            if (info.TryGetValue(g.Guid, out var p))
+            {
+                g.LatestNextStepItems = p.Steps;
+                g.LatestProgressAt = p.UpdatedOn;
+            }
+        }
         return goals;
     }
 

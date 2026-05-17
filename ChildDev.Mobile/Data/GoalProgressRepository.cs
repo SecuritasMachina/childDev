@@ -27,6 +27,16 @@ public class GoalProgressRepository(SQLiteAsyncConnection db)
         return rows.ToDictionary(p => p.GoalFk, p => p.NextStepItems);
     }
 
+    public async Task<Dictionary<string, (string? Steps, long UpdatedOn)>> GetLatestProgressInfoAsync(string accountFk)
+    {
+        var rows = await db.QueryAsync<GoalProgress>(
+            "SELECT GoalFk, NextStepItems, MAX(UpdatedOn) AS UpdatedOn FROM GoalProgress " +
+            "WHERE AccountFk = ? AND DeletedAt IS NULL " +
+            "GROUP BY GoalFk",
+            accountFk);
+        return rows.ToDictionary(p => p.GoalFk, p => (p.NextStepItems, p.UpdatedOn));
+    }
+
     public Task<List<GoalProgress>> GetModifiedSinceAsync(string accountFk, long since) =>
         db.Table<GoalProgress>()
           .Where(p => p.AccountFk == accountFk && p.UpdatedOn > since)
