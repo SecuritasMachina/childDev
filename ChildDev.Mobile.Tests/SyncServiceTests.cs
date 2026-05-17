@@ -1851,6 +1851,99 @@ public class SyncServiceTests : IDisposable
 
         Assert.Equal(SyncResult.Failed, result);
     }
+
+    [Fact]
+    public async Task RunAsync_LocalSoftDeletedJournal_DeletedAtSerializedInUploadBody()
+    {
+        await _accountService.CreateAccountAsync("user73", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var deletedAt = 99_000_001L;
+        await _db.InsertOrReplaceAsync(new Journal
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Notes = "deleted note", EnteredDate = deletedAt, UpdatedOn = deletedAt, DeletedAt = deletedAt
+        });
+
+        var capturingHandler = new CapturingHandler();
+        await BuildSyncService(capturingHandler).RunAsync(account);
+
+        var body = capturingHandler.GetBodyFor("sync/journal");
+        Assert.NotNull(body);
+        Assert.Contains(deletedAt.ToString(), body);
+    }
+
+    [Fact]
+    public async Task RunAsync_LocalSoftDeletedGoal_DeletedAtSerializedInUploadBody()
+    {
+        await _accountService.CreateAccountAsync("user74", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var deletedAt = 99_000_002L;
+        await _db.InsertOrReplaceAsync(new Goal
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalText = "deleted goal", EnteredDate = deletedAt, UpdatedOn = deletedAt, DeletedAt = deletedAt
+        });
+
+        var capturingHandler = new CapturingHandler();
+        await BuildSyncService(capturingHandler).RunAsync(account);
+
+        var body = capturingHandler.GetBodyFor("sync/goal");
+        Assert.NotNull(body);
+        Assert.Contains(deletedAt.ToString(), body);
+    }
+
+    [Fact]
+    public async Task RunAsync_LocalSoftDeletedGoalProgress_DeletedAtSerializedInUploadBody()
+    {
+        await _accountService.CreateAccountAsync("user75", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var deletedAt = 99_000_003L;
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalFk = System.Guid.NewGuid().ToString(), NextStepItems = "deleted step",
+            UpdatedOn = deletedAt, DeletedAt = deletedAt
+        });
+
+        var capturingHandler = new CapturingHandler();
+        await BuildSyncService(capturingHandler).RunAsync(account);
+
+        var body = capturingHandler.GetBodyFor("sync/goal-progress");
+        Assert.NotNull(body);
+        Assert.Contains(deletedAt.ToString(), body);
+    }
+
+    [Fact]
+    public async Task RunAsync_LocalSoftDeletedTodo_DeletedAtSerializedInUploadBody()
+    {
+        await _accountService.CreateAccountAsync("user76", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var deletedAt = 99_000_004L;
+        await _db.InsertOrReplaceAsync(new Todo
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Title = "deleted todo", UpdatedOn = deletedAt, DeletedAt = deletedAt
+        });
+
+        var capturingHandler = new CapturingHandler();
+        await BuildSyncService(capturingHandler).RunAsync(account);
+
+        var body = capturingHandler.GetBodyFor("sync/todo");
+        Assert.NotNull(body);
+        Assert.Contains(deletedAt.ToString(), body);
+    }
 }
 
 // Test helpers
