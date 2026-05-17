@@ -117,7 +117,11 @@ public partial class GoalListViewModel(
                 g.LatestProgressAt = p.UpdatedOn;
             }
         }
-        return goals;
+        // Goals with no progress first (needs attention), then oldest-update-first
+        return goals
+            .OrderBy(g => g.LatestProgressAt.HasValue ? 1 : 0)
+            .ThenBy(g => g.LatestProgressAt ?? 0)
+            .ToList();
     }
 
     [RelayCommand]

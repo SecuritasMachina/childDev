@@ -4083,3 +4083,13 @@ Both match mobile filter behavior (TodoListViewModel.FilterText, JournalListView
 **Impact:** 228 mobile tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — Mobile goal list staleness sort (iter 317)
+
+**What:** `LoadGoalsWithStepsAsync` in `GoalListViewModel` now sorts goals the same way the web home page does: goals with no progress entries appear first (needs attention), then by `LatestProgressAt` ascending (oldest update first).
+
+**Why:** The web home dashboard had this sort since iter 313. The mobile goal list was showing goals in DB insertion order, so stale goals were buried. Parity across platforms.
+
+**Impact:** 228 mobile tests pass. Build clean.
+
+---
