@@ -311,4 +311,30 @@ public class GoalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.Empty(body!.Records);
     }
+
+    [Fact]
+    public async Task Sync_EnteredDate_NotUpdatedOnLWWOverwrite()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gsync_entered_date");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var originalEnteredDate = 1_000_000L;
+        var t1 = 1_000_000L;
+        var t2 = 2_000_000L;
+
+        // Store goal with EnteredDate = originalEnteredDate, UpdatedOn = t1
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(guid, accountGuid, "goal text", null, null, originalEnteredDate, null, null, t1, null)], 0));
+
+        // Client sends same Guid with a different EnteredDate and newer UpdatedOn — ApplyDto must not update EnteredDate
+        var differentEnteredDate = 9_999_999L;
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(guid, accountGuid, "goal text", null, null, differentEnteredDate, null, null, t2, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalDto>>();
+
+        var stored = body!.Records.Single(r => r.Guid == guid);
+        Assert.Equal(originalEnteredDate, stored.EnteredDate);
+    }
 }
