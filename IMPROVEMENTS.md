@@ -4220,6 +4220,16 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — Mobile dashboard personalized greeting (iter 331)
+
+**What:** Added a `Greeting` observable property to `DashboardViewModel`. On load, it reads the account's `NickName` and generates a time-of-day greeting ("Good morning/afternoon/evening, [Name]!"). The `DashboardPage` shows it as a bold heading at the top, hidden when empty.
+
+**Why:** The dashboard opened with sync status and counts but nothing personal. Caregivers log observations on behalf of specific children — a warm greeting sets the tone and confirms who's logged in.
+
+**Impact:** 232 mobile tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Journal date-range filter chips (iter 330)
 
 **What:** Added "All / This Week / This Month" filter chips to the web Journal page toolbar. The `DateFilter` field and `OnDateFilterChanged()` method were added to the `@code` block; `ApplyFilter()` was updated to apply the date range before the text search, making both filters composable.

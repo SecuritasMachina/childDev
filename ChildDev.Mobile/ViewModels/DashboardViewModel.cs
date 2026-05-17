@@ -15,6 +15,7 @@ public partial class DashboardViewModel(
     AccountService accountService,
     SyncService syncService) : ObservableObject
 {
+    [ObservableProperty] private string greeting = string.Empty;
     [ObservableProperty] private ObservableCollection<Journal> recentJournals = [];
     [ObservableProperty] private int activeGoalCount;
     [ObservableProperty] private bool hasNoActiveGoals;
@@ -42,6 +43,10 @@ public partial class DashboardViewModel(
             LastSyncDisplay = account.LastSyncAt == 0
                 ? "Never synced"
                 : $"Last synced: {DateTimeOffset.FromUnixTimeMilliseconds(account.LastSyncAt).LocalDateTime:g}";
+
+            var hour = DateTime.Now.Hour;
+            var timeOfDay = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+            Greeting = $"{timeOfDay}, {account.NickName}!";
 
             await RefreshDataAsync(account);
             _ = RunSyncAsync(account);
