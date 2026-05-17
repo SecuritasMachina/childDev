@@ -4220,6 +4220,26 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — UX: make 'Needs attention' stale goal banner tappable on dashboard (iter 354)
+
+**What:** Added `StaleGoalGuid` observable property and `GoToStaleGoalCommand` to `DashboardViewModel`. Added `TapGestureRecognizer` to the stale goal `Border` in `DashboardPage.xaml`. Tapping navigates to `goals/entry?guid=<staleGoalGuid>`.
+
+**Why:** The banner showed the goal name with "⚠ Needs attention:" but tapping it did nothing. The natural expectation is that tapping a notification opens the relevant item. Users would have to manually find the goal in the Goals list.
+
+**Impact:** 238 mobile tests pass. Build clean.
+
+---
+
+## 2026-05-17 — Fix: web Register PIN minimum length validation (iter 353)
+
+**What:** Added `if (Pin.Length < 4)` check in `Register.razor.DoRegister()`. Updated PIN field helper text from "Remember this PIN" to "At least 4 characters — remember this to log back in".
+
+**Why:** Mobile `SetupViewModel.CanCreate` enforced `Pin.Length == 4`. Web had no minimum, allowing empty or very short PINs that would be trivially guessable.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Mobile: show past meeting dates in orange on goal list (iter 352)
 
 **What:** Added `MeetingDateColorConverter` (orange for past, gray for future) to `DueDateConverter.cs`. Updated `MeetingDateConverter` to prefix with "Missed:" for past dates instead of "Meet:". `GoalListPage.xaml` now uses the color converter on the meeting date label. Registered `MeetingDateColorConverter` in `App.xaml`.
