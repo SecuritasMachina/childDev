@@ -250,6 +250,27 @@ public class GoalProgressRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task DeleteForGoalAsync_AlreadyDeletedRecordsAreNotRetouched()
+    {
+        var goalFk = System.Guid.NewGuid().ToString();
+        var guid = System.Guid.NewGuid().ToString();
+        var originalDeletedAt = 1000L;
+
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = guid, AccountFk = "account1", GoalFk = goalFk,
+            NextStepItems = "already gone", UpdatedOn = originalDeletedAt, DeletedAt = originalDeletedAt
+        });
+
+        await _repo.DeleteForGoalAsync(goalFk);
+
+        var retrieved = await _db.FindAsync<GoalProgress>(guid);
+        Assert.NotNull(retrieved);
+        Assert.Equal(originalDeletedAt, retrieved!.UpdatedOn);
+        Assert.Equal(originalDeletedAt, retrieved.DeletedAt!.Value);
+    }
+
+    [Fact]
     public async Task DeleteForGoalAsync_WhenNoActiveProgress_DoesNothing()
     {
         var emptyGoalFk = System.Guid.NewGuid().ToString();
