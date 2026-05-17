@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 102 — API Tests: Token unknown user 401 + Goal soft-delete roundtrip
+
+**What changed:**
+- `AuthEndpointTests.cs`: Added `Token_UnknownUser_Returns401` — verifies the token endpoint returns 401 when the nickname is not registered.
+- `GoalSyncTests.cs`: Added `Sync_SoftDelete_DeletedAtPropagatedInDelta` — mirrors the Journal soft-delete roundtrip test added in iter 101.
+
+**Why:** Auth tests only covered wrong-pin for a known user, not an entirely unknown user. Goal soft-delete was untested (Journal, Todo, and GoalProgress now all have it).
+
+**Impact:** 25 mobile tests pass. 84 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 101 — API Tests: GoalProgress server-wins LWW + Journal soft-delete roundtrip
 
 **What changed:**
