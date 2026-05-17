@@ -20,6 +20,15 @@ public class TodoRepository(SQLiteAsyncConnection db)
         await db.UpdateAsync(item);
     }
 
+    public async Task UncompleteAsync(string guid)
+    {
+        var item = await db.FindAsync<Todo>(guid);
+        if (item is null || item.CompletedAt is null) return;
+        item.CompletedAt = null;
+        item.UpdatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await db.UpdateAsync(item);
+    }
+
     public async Task DeleteAsync(string guid)
     {
         var item = await db.FindAsync<Todo>(guid);

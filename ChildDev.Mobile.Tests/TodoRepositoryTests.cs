@@ -595,4 +595,60 @@ public class TodoRepositoryTests : IDisposable
         var pending = await _repo.GetPendingAsync("account1");
         Assert.Contains(pending, t => t.Guid == guid);
     }
+
+    [Fact]
+    public async Task UncompleteAsync_ClearsCompletedAt_AndBumpsUpdatedOn()
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid = System.Guid.NewGuid().ToString();
+        await _db.InsertOrReplaceAsync(new Todo
+        {
+            Guid = guid, AccountFk = "account1", Title = "done task",
+            CompletedAt = now - 1000, UpdatedOn = now - 1000
+        });
+
+        await _repo.UncompleteAsync(guid);
+
+        var retrieved = await _repo.GetAsync(guid);
+        Assert.NotNull(retrieved);
+        Assert.Null(retrieved!.CompletedAt);
+        Assert.True(retrieved.UpdatedOn > now - 1000);
+    }
+
+    [Fact]
+    public async Task UncompleteAsync_RestoredTodo_AppearsInGetPending()
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var accountId = System.Guid.NewGuid().ToString();
+        var guid = System.Guid.NewGuid().ToString();
+        await _db.InsertOrReplaceAsync(new Todo
+        {
+            Guid = guid, AccountFk = accountId, Title = "done task",
+            CompletedAt = now - 1000, UpdatedOn = now - 1000
+        });
+
+        await _repo.UncompleteAsync(guid);
+
+        var pending = await _repo.GetPendingAsync(accountId);
+        Assert.Single(pending);
+        Assert.Equal(guid, pending[0].Guid);
+    }
+
+    [Fact]
+    public async Task UncompleteAsync_AlreadyPending_IsNoOp()
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid = System.Guid.NewGuid().ToString();
+        await _db.InsertOrReplaceAsync(new Todo
+        {
+            Guid = guid, AccountFk = "account1", Title = "pending task",
+            CompletedAt = null, UpdatedOn = now
+        });
+
+        await _repo.UncompleteAsync(guid);
+
+        var retrieved = await _repo.GetAsync(guid);
+        Assert.NotNull(retrieved);
+        Assert.Null(retrieved!.CompletedAt);
+    }
 }
