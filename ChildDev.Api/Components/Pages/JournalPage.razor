@@ -18,13 +18,27 @@
     Journal
 </MudText>
 
-<MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mb-4"
-           StartIcon="@Icons.Material.Filled.Add"
-           OnClick="() => ShowAddDialog = true">New Entry</MudButton>
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4" Spacing="3">
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.Add"
+               OnClick="() => ShowAddDialog = true">New Entry</MudButton>
+    @if (AllEntries.Any())
+    {
+        <MudTextField Value="@FilterText" ValueChanged="@((string v) => OnFilterChanged(v))"
+                      Placeholder="Search entries…" Variant="Variant.Outlined" Margin="Margin.Dense"
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                      Clearable="true" Immediate="true" Style="min-width:220px"
+                      AdornmentColor="Color.Secondary" />
+    }
+</MudStack>
 
-@if (!Entries.Any())
+@if (!AllEntries.Any())
 {
     <MudText Typo="Typo.body2" Color="Color.Secondary">No journal entries yet. Write the first one!</MudText>
+}
+else if (!Entries.Any())
+{
+    <MudText Typo="Typo.body2" Color="Color.Secondary">No entries matching "@FilterText".</MudText>
 }
 else
 {
@@ -117,7 +131,9 @@ else
 
 @code {
     private string? AccountGuid;
+    private List<Journal> AllEntries = [];
     private List<Journal> Entries = [];
+    private string FilterText = string.Empty;
     private bool ShowAddDialog;
     private string NewNotes = string.Empty;
     private string NewActivity = string.Empty;
@@ -140,10 +156,32 @@ else
 
     private async Task LoadEntries()
     {
-        Entries = await Db.Journals
+        AllEntries = await Db.Journals
             .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null)
             .OrderByDescending(j => j.EnteredDate)
             .ToListAsync();
+        ApplyFilter();
+    }
+
+    private void OnFilterChanged(string value)
+    {
+        FilterText = value;
+        ApplyFilter();
+    }
+
+    private void ApplyFilter()
+    {
+        if (string.IsNullOrWhiteSpace(FilterText))
+        {
+            Entries = AllEntries;
+            return;
+        }
+        var q = FilterText.Trim();
+        Entries = AllEntries.Where(j =>
+            (j.Notes?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (j.Activity?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (j.Mood?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (j.Tags?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false)).ToList();
     }
 
     private async Task AddEntry()
