@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 263 — API: GoalProgress delta strict-greater-than LastSyncAt boundary test
+
+**What changed:**
+- `GoalProgressSyncTests.cs`: Added `Sync_LastSyncAt_ExactlyEqualToRecordUpdatedOn_ExcludedFromDelta` (gpsync_exact_boundary1) — uploads a goal-progress record with `UpdatedOn = ts`, syncs with `LastSyncAt = ts`, asserts the record does NOT appear in the delta.
+
+**Why:** Completes the strict-`>` boundary coverage set for all 4 entities (Goal ✓ iter 257, Journal ✓ 261, Todo ✓ 262, GoalProgress ✓ 263). GoalProgressEndpoints has its own filter query; boundary regression would go undetected without this test.
+
+**Impact:** 200 API tests pass (was 199). 210 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 262 — API: Todo delta strict-greater-than LastSyncAt boundary test
 
 **What changed:**
