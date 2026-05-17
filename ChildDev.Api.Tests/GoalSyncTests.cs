@@ -684,4 +684,35 @@ public class GoalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Sync_MixedBatch_NewAndExistingBothPersisted()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gsync_mixedbatch1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var existingGuid = Guid.NewGuid().ToString();
+        var newGuid = Guid.NewGuid().ToString();
+
+        // Upload the existing record first
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(existingGuid, accountGuid, "original text", null, null, ts, null, null, ts, null)], 0));
+
+        // Now upload a batch with an update to the existing + a new record
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([
+                new GoalDto(existingGuid, accountGuid, "updated text", null, null, ts, null, null, ts + 1, null),
+                new GoalDto(newGuid, accountGuid, "brand new goal", null, null, ts, null, null, ts, null)
+            ], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalDto>>();
+
+        var existing = body!.Records.FirstOrDefault(r => r.Guid == existingGuid);
+        var newRecord = body.Records.FirstOrDefault(r => r.Guid == newGuid);
+        Assert.NotNull(existing);
+        Assert.Equal("updated text", existing.GoalText);
+        Assert.NotNull(newRecord);
+        Assert.Equal("brand new goal", newRecord.GoalText);
+    }
 }
