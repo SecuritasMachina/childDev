@@ -34,6 +34,11 @@ public class JournalRepository(SQLiteAsyncConnection db)
           .Where(j => j.AccountFk == accountFk && j.UpdatedOn > since)
           .ToListAsync();
 
-    public Task UpsertFromSyncAsync(Journal journal) =>
-        db.InsertOrReplaceAsync(journal);
+    public async Task UpsertFromSyncAsync(Journal journal)
+    {
+        var existing = await db.FindAsync<Journal>(journal.Guid);
+        if (existing is not null)
+            journal.EnteredDate = existing.EnteredDate;
+        await db.InsertOrReplaceAsync(journal);
+    }
 }
