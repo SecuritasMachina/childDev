@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 262 — API: Todo delta strict-greater-than LastSyncAt boundary test
+
+**What changed:**
+- `TodoSyncTests.cs`: Added `Sync_LastSyncAt_ExactlyEqualToRecordUpdatedOn_ExcludedFromDelta` (tsync_exact_boundary1) — uploads a todo with `UpdatedOn = ts`, syncs with `LastSyncAt = ts`, asserts the record does NOT appear in the delta.
+
+**Why:** Completing the strict-`>` boundary test coverage set (Goal ✓ iter 257, Journal ✓ 261, Todo ✓ 262, GoalProgress remaining). Todo uses its own filter in TodoEndpoints; a copy-paste error introducing `>=` would only be caught by this test.
+
+**Impact:** 199 API tests pass (was 198). 210 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 261 — API: Journal delta strict-greater-than LastSyncAt boundary test
 
 **What changed:**
