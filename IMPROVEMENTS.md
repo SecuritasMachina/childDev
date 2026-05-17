@@ -106,6 +106,18 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 271 — Web: Login and register analytics events
+
+**What changed:**
+- `Login.razor`: Inject `WebAnalyticsService`, track `login` event with `account.Guid` after successful auth.
+- `Register.razor`: Inject `WebAnalyticsService`, track `register` event after account creation.
+
+**Why:** Analytics coverage was missing session-start events. Login/register are the first touchpoint for any user session — without these, analytics can't distinguish new users from returning ones.
+
+**Impact:** 200 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Iteration 270 — Mobile: Upload multi-record parity for Todo, Goal, GoalProgress
 
 **What changed:**
