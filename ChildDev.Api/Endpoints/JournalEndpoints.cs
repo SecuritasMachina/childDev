@@ -20,11 +20,11 @@ public static class JournalEndpoints
         {
             var accountGuid = jwt.ExtractAccountGuid(user);
             if (accountGuid is null) return Results.Unauthorized();
-            if (req.Records is null) return Results.BadRequest("Records must not be null.");
-            if (req.Records.Count > 500) return Results.BadRequest("Records must not exceed 500 per sync.");
+            if (req.Records is null) return Results.Problem("Records must not be null.", statusCode: 400);
+            if (req.Records.Count > 500) return Results.Problem("Records must not exceed 500 per sync.", statusCode: 400);
             var maxFutureMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + 300_000;
             if (req.Records.Any(r => r.UpdatedOn > maxFutureMs))
-                return Results.UnprocessableEntity("Record UpdatedOn is too far in the future.");
+                return Results.Problem("Record UpdatedOn is too far in the future.", statusCode: 422);
 
             var incomingGuids = req.Records.Select(r => r.Guid).ToList();
             var existingMap = await db.Journals
