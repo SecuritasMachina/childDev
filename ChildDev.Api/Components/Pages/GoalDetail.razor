@@ -365,12 +365,13 @@ else
 
     private async Task DeleteProgress(string guid)
     {
-        var progress = await Db.GoalProgresses.FirstOrDefaultAsync(p => p.Guid == guid && p.AccountFk == AccountGuid);
-        if (progress is null) return;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        progress.DeletedAt = now;
-        progress.UpdatedOn = now;
-        await Db.SaveChangesAsync();
+        var rows = await Db.GoalProgresses
+            .Where(p => p.Guid == guid && p.AccountFk == AccountGuid && p.DeletedAt == null)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(p => p.DeletedAt, now)
+                .SetProperty(p => p.UpdatedOn, now));
+        if (rows == 0) return;
         await Analytics.TrackAsync("progress_delete", AccountGuid, "goal_detail", GoalGuid);
         Snackbar.Add("Progress note removed.", Severity.Info);
         await LoadProgress();

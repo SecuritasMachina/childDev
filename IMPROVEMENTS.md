@@ -2,6 +2,24 @@
 
 ---
 
+## 2026-05-17 — Perf: delete/complete mutations use ExecuteUpdateAsync (iter 405)
+
+**Files:** `ChildDev.Api/Components/Pages/Todos.razor`, `Home.razor`, `JournalPage.razor`, `GoalDetail.razor`
+
+**Change:** Replaced `FirstOrDefaultAsync` + entity mutation + `SaveChangesAsync` with `ExecuteUpdateAsync` for delete and complete/uncomplete operations that don't need the entity data:
+- `Todos.razor`: `CompleteTodo`, `UncompleteTodo`, `ConfirmDeleteTodo`
+- `Home.razor`: `ConfirmDeleteGoal`
+- `JournalPage.razor`: `ConfirmDeleteEntry`
+- `GoalDetail.razor`: `DeleteProgress`
+
+Also removed the empty `UnitTest1.cs` placeholder test from `ChildDev.Mobile.Tests`.
+
+**Why:** The old pattern did SELECT + UPDATE in two round-trips, loading the full entity into EF's change tracker before saving. `ExecuteUpdateAsync` generates a single `UPDATE … WHERE` statement, skipping the entity load entirely. Added `AND DeletedAt IS NULL` / `AND CompletedAt IS NULL` guards to the WHERE clause so already-deleted/completed rows are no-ops (same behavior as the old null checks).
+
+**Impact:** 220 API + 242 mobile tests — all passing.
+
+---
+
 ## 2026-05-17 — UX: Disabled bindings on Login and Register submit buttons (iter 404)
 
 **Files:** `ChildDev.Api/Components/Pages/Login.razor`, `Register.razor`

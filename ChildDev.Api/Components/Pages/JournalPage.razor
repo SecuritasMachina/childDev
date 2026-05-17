@@ -325,12 +325,13 @@ else
         var guid = _confirmDeleteGuid;
         _confirmDeleteGuid = null;
         if (guid is null) return;
-        var entry = await Db.Journals.FirstOrDefaultAsync(j => j.Guid == guid && j.AccountFk == AccountGuid);
-        if (entry is null) return;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        entry.DeletedAt = now;
-        entry.UpdatedOn = now;
-        await Db.SaveChangesAsync();
+        var rows = await Db.Journals
+            .Where(j => j.Guid == guid && j.AccountFk == AccountGuid && j.DeletedAt == null)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(j => j.DeletedAt, now)
+                .SetProperty(j => j.UpdatedOn, now));
+        if (rows == 0) return;
         await Analytics.TrackAsync("journal_delete", AccountGuid, "journal");
         Snackbar.Add("Entry deleted.", Severity.Info);
         await LoadEntries();

@@ -497,12 +497,13 @@
         var guid = _confirmDeleteGoalGuid;
         _confirmDeleteGoalGuid = null;
         if (guid is null) return;
-        var goal = await Db.Goals.FirstOrDefaultAsync(g => g.Guid == guid && g.AccountFk == AccountGuid);
-        if (goal is null) return;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        goal.DeletedAt = now;
-        goal.UpdatedOn = now;
-        await Db.SaveChangesAsync();
+        var rows = await Db.Goals
+            .Where(g => g.Guid == guid && g.AccountFk == AccountGuid && g.DeletedAt == null)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(g => g.DeletedAt, now)
+                .SetProperty(g => g.UpdatedOn, now));
+        if (rows == 0) return;
         await Analytics.TrackAsync("goal_delete", AccountGuid, "home", guid);
         Snackbar.Add("Goal deleted.", Severity.Info);
         await LoadGoals();

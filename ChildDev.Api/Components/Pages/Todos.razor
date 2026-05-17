@@ -310,12 +310,13 @@ else
 
     private async Task CompleteTodo(string guid)
     {
-        var todo = await Db.Todos.FirstOrDefaultAsync(t => t.Guid == guid && t.AccountFk == AccountGuid);
-        if (todo is null) return;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        todo.CompletedAt = now;
-        todo.UpdatedOn = now;
-        await Db.SaveChangesAsync();
+        var rows = await Db.Todos
+            .Where(t => t.Guid == guid && t.AccountFk == AccountGuid && t.CompletedAt == null)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.CompletedAt, now)
+                .SetProperty(t => t.UpdatedOn, now));
+        if (rows == 0) return;
         await Analytics.TrackAsync("todo_complete", AccountGuid, "todos");
         Snackbar.Add("Todo completed!", Severity.Success);
         await LoadTodos();
@@ -323,12 +324,13 @@ else
 
     private async Task UncompleteTodo(string guid)
     {
-        var todo = await Db.Todos.FirstOrDefaultAsync(t => t.Guid == guid && t.AccountFk == AccountGuid);
-        if (todo is null) return;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        todo.CompletedAt = null;
-        todo.UpdatedOn = now;
-        await Db.SaveChangesAsync();
+        var rows = await Db.Todos
+            .Where(t => t.Guid == guid && t.AccountFk == AccountGuid && t.CompletedAt != null)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.CompletedAt, (long?)null)
+                .SetProperty(t => t.UpdatedOn, now));
+        if (rows == 0) return;
         await Analytics.TrackAsync("todo_uncomplete", AccountGuid, "todos");
         Snackbar.Add("Todo moved back to pending.", Severity.Info);
         await LoadTodos();
@@ -339,12 +341,13 @@ else
         var guid = _confirmDeleteGuid;
         _confirmDeleteGuid = null;
         if (guid is null) return;
-        var todo = await Db.Todos.FirstOrDefaultAsync(t => t.Guid == guid && t.AccountFk == AccountGuid);
-        if (todo is null) return;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        todo.DeletedAt = now;
-        todo.UpdatedOn = now;
-        await Db.SaveChangesAsync();
+        var rows = await Db.Todos
+            .Where(t => t.Guid == guid && t.AccountFk == AccountGuid && t.DeletedAt == null)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.DeletedAt, now)
+                .SetProperty(t => t.UpdatedOn, now));
+        if (rows == 0) return;
         await Analytics.TrackAsync("todo_delete", AccountGuid, "todos");
         Snackbar.Add("Todo deleted.", Severity.Info);
         await LoadTodos();
