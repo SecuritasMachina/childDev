@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 155 — Mobile: UpsertFromSyncAsync timestamp invariant for Todo + GoalProgress
+
+**What changed:**
+- `TodoRepositoryTests.cs`: Added `UpsertFromSyncAsync_PreservesServerTimestamp` — upserts a record with a fixed server timestamp and asserts `UpdatedOn` is NOT overridden (unlike `SaveAsync`).
+- `GoalProgressRepositoryTests.cs`: Added `UpsertFromSyncAsync_PreservesServerTimestamp` — same test for GoalProgress.
+
+**Why:** `UpsertFromSyncAsync` uses direct `InsertOrReplace` to preserve the server's `UpdatedOn` — the LWW invariant for inbound sync. `SaveAsync` always overwrites `UpdatedOn` to `UtcNow`. The existing `UpsertFromSync_OverwritesExistingRecord` tests only checked that data content was updated, not that the timestamp was preserved. Goal and Journal already had this test (iters 142-143); this completes parity for all 4 entity repos.
+
+**Impact:** 103 mobile tests pass (was 101). 121 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 154 — API: Goal + GoalProgress optional fields round-trip
 
 **What changed:**
