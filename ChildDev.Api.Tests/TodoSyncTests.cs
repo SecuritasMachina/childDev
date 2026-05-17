@@ -422,4 +422,27 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var stored = body!.Records.Single(r => r.Guid == guid);
         Assert.Null(stored.DueDate);
     }
+
+    [Fact]
+    public async Task Sync_SoftDelete_TitleNullInDelta()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_soft_title");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, "todo to delete", null, null, null, ts, null)], 0));
+
+        var deletedAt = ts + 1000;
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, null, null, null, null, ts + 1000, deletedAt)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+
+        var deleted = body!.Records.Single(r => r.Guid == guid);
+        Assert.Equal(deletedAt, deleted.DeletedAt);
+        Assert.Null(deleted.Title);
+    }
 }
