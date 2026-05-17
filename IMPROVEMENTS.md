@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 149 — API Tests: batch mixed LWW per-record + negative LastSyncAt
+
+**What changed:**
+- `TodoSyncTests.cs`: Added `Sync_BatchMixedLWW_PerRecordWinnerApplied` — sends two records in one batch: A is newer on client (client wins), B is older than server (server wins). Verifies LWW is applied per-record, not per-batch.
+- `TodoSyncTests.cs`: Added `Sync_LastSyncAt_NegativeValue_ReturnsAllRecords` — uses `LastSyncAt = -1` (a valid "never synced" sentinel) and asserts all records appear in the delta response.
+
+**Why:** The LWW batch test is the most critical correctness test for the sync protocol — it verifies that records in the same batch can have different "winners" independently. If the server applied all-or-nothing logic, conflict resolution would break. The negative LastSyncAt test ensures the `UpdatedOn > req.LastSyncAt` filter works for the negative case (all positive timestamps are greater than -1).
+
+**Impact:** 99 mobile tests pass. 113 API tests pass (was 111).
+
+---
+
 ## 2026-05-17 — Iteration 148 — Mobile Tests: GetModifiedSinceAsync includes soft-deleted records (Goal + GoalProgress)
 
 **What changed:**
