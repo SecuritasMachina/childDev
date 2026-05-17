@@ -401,6 +401,29 @@ public class GoalProgressRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetLatestNextStepsAsync_TwoGoals_ReturnsLatestForEach()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var goalA = System.Guid.NewGuid().ToString();
+        var goalB = System.Guid.NewGuid().ToString();
+        var tOld = DateTimeOffset.UtcNow.AddSeconds(-5).ToUnixTimeMilliseconds();
+        var tNew = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Goal A: 2 progress items, newer is the latest
+        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalFk = goalA, NextStepItems = "A-old", UpdatedOn = tOld });
+        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalFk = goalA, NextStepItems = "A-new", UpdatedOn = tNew });
+
+        // Goal B: 1 progress item
+        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalFk = goalB, NextStepItems = "B-only", UpdatedOn = tNew });
+
+        var latest = await _repo.GetLatestNextStepsAsync(accountId);
+
+        Assert.Equal(2, latest.Count);
+        Assert.Equal("A-new", latest[goalA]);
+        Assert.Equal("B-only", latest[goalB]);
+    }
+
+    [Fact]
     public async Task SaveAsync_PersistsAllOptionalFields()
     {
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
