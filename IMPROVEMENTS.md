@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-17 — Perf: index GoalFk on GoalProgress table (iter 401)
+
+**File:** `ChildDev.Mobile/Models/GoalProgress.cs`
+
+**Change:** Added `[Indexed]` to `GoalFk`. `GetForGoalAsync` and `DeleteForGoalAsync` both query `WHERE GoalFk = ?`; without an index, SQLite performs a full table scan for each lookup.
+
+**Why:** As a user accumulates progress entries across multiple goals over time, the GoalProgress table grows. The `GoalFk` column is filtered in the two most frequently called GoalProgress queries. The `[Indexed]` attribute causes sqlite-net to emit `CREATE INDEX` during table creation, converting these from O(n) scans to O(log n) lookups. The `AccountFk` and `UpdatedOn` indexes inherited from `SyncBase` cover the sync queries already.
+
+**Impact:** 242 mobile tests — all passing. SQLite-net's `CreateTableAsync` emits `CREATE INDEX IF NOT EXISTS` for `[Indexed]` columns on both new and existing tables, so existing user databases get the index on next app launch. No migration needed.
+
+---
+
 ## 2026-05-17 — Perf: replace read-modify-write with targeted SQL UPDATE in GoalRepository, JournalRepository, TodoRepository (iter 400)
 
 **Files:** `ChildDev.Mobile/Data/GoalRepository.cs`, `JournalRepository.cs`, `TodoRepository.cs`
