@@ -1,5 +1,18 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 159 — API: negative LastSyncAt returns all records for Journal, Goal, GoalProgress
+
+**What changed:**
+- `JournalSyncTests.cs`: Added `Sync_LastSyncAt_NegativeValue_ReturnsAllRecords`
+- `GoalSyncTests.cs`: Added `Sync_LastSyncAt_NegativeValue_ReturnsAllRecords`
+- `GoalProgressSyncTests.cs`: Added `Sync_LastSyncAt_NegativeValue_ReturnsAllRecords`
+
+**Why:** `TodoSyncTests` (iter 149) already had this test — verifies that `WHERE UpdatedOn > -1` returns all records, covering the "never synced before" sentinel. Journal, Goal, and GoalProgress had no such guard, leaving their delta filter's negative-value behavior untested.
+
+**Impact:** 106 mobile tests pass. 128 API tests pass (was 125).
+
+---
+
 ## 2026-05-17 — Iteration 158 — Mobile: SyncService soft-delete upload coverage for Goal, Todo, GoalProgress
 
 **What changed:**
