@@ -93,7 +93,8 @@ public partial class SettingsViewModel(AccountService accountService, IHttpClien
             }
             response.EnsureSuccessStatusCode();
 
-            var auth = await response.Content.ReadFromJsonAsync<AuthResponse>();
+            var auth = await response.Content.ReadFromJsonAsync<AuthResponse>(
+                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             if (auth is null) { StatusMessage = "Invalid server response."; return; }
 
             await accountService.LinkToServerAsync(auth.Jwt, url, auth.AccountGuid);
