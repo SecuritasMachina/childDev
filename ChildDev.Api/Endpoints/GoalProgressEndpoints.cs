@@ -35,6 +35,11 @@ public static class GoalProgressEndpoints
                 logger.LogWarning("sync/goal-progress account={Account} rejected: invalid GoalFk", accountGuid[..8]);
                 return Results.Problem("Record GoalFk is not a valid GUID.", statusCode: 422);
             }
+            if (req.Records.Select(r => r.Guid).Distinct().Count() != req.Records.Count)
+            {
+                logger.LogWarning("sync/goal-progress account={Account} rejected: duplicate Guid", accountGuid[..8]);
+                return Results.Problem("Records must not contain duplicate Guids.", statusCode: 422);
+            }
             var maxFutureTimestampMs = DateTimeOffset.UtcNow.AddYears(10).ToUnixTimeMilliseconds();
             if (req.Records.Any(r => r.NextMeetingDate.HasValue && r.NextMeetingDate.Value > maxFutureTimestampMs))
             {
