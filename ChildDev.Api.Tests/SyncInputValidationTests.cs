@@ -68,6 +68,20 @@ public class SyncInputValidationTests(ApiFactory factory) : IClassFixture<ApiFac
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Sync_GoalProgress_InvalidGoalFk_Returns422()
+    {
+        var jwt = await RegisterJwtAsync("goalfkval");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var body = new StringContent(
+            "{\"Records\":[{\"Guid\":\"" + Guid.NewGuid() + "\",\"AccountFk\":\"a1\",\"GoalFk\":\"not-a-guid\",\"UpdatedOn\":0,\"DeletedAt\":null}],\"LastSyncAt\":0}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync("/api/sync/goal-progress", body);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
     [Theory]
     [InlineData("/api/sync/journal")]
     [InlineData("/api/sync/goal")]
