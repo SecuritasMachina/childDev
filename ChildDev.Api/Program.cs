@@ -70,7 +70,9 @@ app.Use(async (ctx, next) =>
     var requestId = ctx.Request.Headers["X-Request-ID"].FirstOrDefault()
         ?? Guid.NewGuid().ToString("N")[..12];
     ctx.Response.Headers["X-Request-ID"] = requestId;
-    await next();
+    var logger = ctx.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("request");
+    using (logger.BeginScope(new Dictionary<string, object> { ["RequestId"] = requestId }))
+        await next();
 });
 
 app.UseAuthentication();
