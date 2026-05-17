@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 176 — API: Goal EnteredDate is immutable on LWW overwrite
+
+**What changed:**
+- `GoalSyncTests.cs`: Added `Sync_EnteredDate_NotUpdatedOnLWWOverwrite` — stores a goal with EnteredDate=T1, then sends same Guid with EnteredDate=T2 and a newer UpdatedOn; asserts the delta still shows EnteredDate=T1.
+
+**Why:** `GoalEndpoints.ApplyDto` deliberately excludes `EnteredDate` from LWW updates (once set at creation, a goal's creation date never changes). Contrast with `JournalEndpoints.ApplyDto`, which does allow `EnteredDate` updates (users can correct the date of a journal entry). Without a test, a maintenance change that accidentally added `e.EnteredDate = dto.EnteredDate` to Goal's `ApplyDto` would silently allow goal creation-date mutation. The GoalFk immutability test (iter 170) established the pattern; this closes the equivalent gap for EnteredDate.
+
+**Impact:** 142 API tests pass (was 141). 136 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 175 — Mobile: UpsertFromSyncAsync persists all optional fields for all 4 repos
 
 **What changed:**
