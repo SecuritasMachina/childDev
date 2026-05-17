@@ -167,6 +167,39 @@ public class SyncInputValidationTests(ApiFactory factory) : IClassFixture<ApiFac
     }
 
     [Fact]
+    public async Task Sync_Goal_MeasurableOutcomeTooLong_Returns422()
+    {
+        var jwt = await RegisterJwtAsync("goalmotoolong");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var longValue = new string('x', 2001);
+        var guid = Guid.NewGuid();
+        var body = new StringContent(
+            $"{{\"Records\":[{{\"Guid\":\"{guid}\",\"AccountFk\":\"a1\",\"GoalText\":\"valid\",\"MeasurableOutcome\":\"{longValue}\",\"EnteredDate\":0,\"UpdatedOn\":0,\"DeletedAt\":null}}],\"LastSyncAt\":0}}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync("/api/sync/goal", body);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_GoalProgress_NextStepItemsTooLong_Returns422()
+    {
+        var jwt = await RegisterJwtAsync("gpnextsteptoolong");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var longValue = new string('x', 2001);
+        var guid = Guid.NewGuid();
+        var goalFk = Guid.NewGuid();
+        var body = new StringContent(
+            $"{{\"Records\":[{{\"Guid\":\"{guid}\",\"AccountFk\":\"a1\",\"GoalFk\":\"{goalFk}\",\"NextStepItems\":\"{longValue}\",\"UpdatedOn\":0,\"DeletedAt\":null}}],\"LastSyncAt\":0}}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync("/api/sync/goal-progress", body);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Sync_Todo_BlankTitle_Returns422()
     {
         var jwt = await RegisterJwtAsync("todotitleval");

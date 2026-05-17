@@ -35,10 +35,15 @@ public static class GoalEndpoints
                 logger.LogWarning("sync/goal account={Account} rejected: blank GoalText", accountGuid[..8]);
                 return Results.Problem("Record GoalText must not be blank.", statusCode: 422);
             }
-            if (req.Records.Any(r => r.GoalText?.Length > 2_000 || r.MeasurableOutcome?.Length > 2_000))
+            if (req.Records.Any(r => r.GoalText?.Length > 2_000))
             {
-                logger.LogWarning("sync/goal account={Account} rejected: GoalText/MeasurableOutcome too long", accountGuid[..8]);
-                return Results.Problem("Record GoalText and MeasurableOutcome must not exceed 2000 characters.", statusCode: 422);
+                logger.LogWarning("sync/goal account={Account} rejected: GoalText too long", accountGuid[..8]);
+                return Results.Problem("Record GoalText must not exceed 2000 characters.", statusCode: 422);
+            }
+            if (req.Records.Any(r => r.MeasurableOutcome?.Length > 2_000))
+            {
+                logger.LogWarning("sync/goal account={Account} rejected: MeasurableOutcome too long", accountGuid[..8]);
+                return Results.Problem("Record MeasurableOutcome must not exceed 2000 characters.", statusCode: 422);
             }
             var incomingGuids = req.Records.Select(r => r.Guid).ToList();
             var existingMap = await db.Goals
