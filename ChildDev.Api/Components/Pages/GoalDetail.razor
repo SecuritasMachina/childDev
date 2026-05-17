@@ -103,6 +103,8 @@ else
                                 }
                                 <MudText Typo="Typo.caption" Color="Color.Secondary">@enteredDate.ToString("MMM d, yyyy h:mm tt")</MudText>
                             </MudStack>
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                           Color="Color.Default" OnClick="() => OpenEditProgress(p)" />
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
                                            Color="Color.Error" OnClick="() => DeleteProgress(p.Guid)" />
                         </MudStack>
@@ -143,6 +145,24 @@ else
     </DialogActions>
 </MudDialog>
 
+<MudDialog @bind-Visible="ShowEditProgressDialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-2" />
+            Edit Progress Note
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="EditProgressNextSteps" Label="Progress / next steps" Variant="Variant.Outlined"
+                      Lines="3" Class="mb-4" AutoFocus="true" />
+        <MudDatePicker @bind-Date="EditProgressMeetingDate" Label="Next meeting date (optional)" Variant="Variant.Outlined" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => ShowEditProgressDialog = false">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveProgressEdit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
 <MudDialog @bind-Visible="ShowEditDialog">
     <TitleContent>
         <MudText Typo="Typo.h6">
@@ -175,6 +195,10 @@ else
     private bool ShowAddDialog;
     private string NewNextSteps = string.Empty;
     private DateTime? NewMeetingDate;
+    private bool ShowEditProgressDialog;
+    private string? EditingProgressGuid;
+    private string EditProgressNextSteps = string.Empty;
+    private DateTime? EditProgressMeetingDate;
     private bool ShowEditDialog;
     private string EditGoalText = string.Empty;
     private string? EditMeasurableOutcome;
@@ -238,6 +262,36 @@ else
         await Db.SaveChangesAsync();
         await Analytics.TrackAsync("progress_delete", AccountGuid, "goal_detail", GoalGuid);
         Snackbar.Add("Progress note removed.", Severity.Info);
+        await LoadProgress();
+    }
+
+    private void OpenEditProgress(GoalProgress p)
+    {
+        EditingProgressGuid = p.Guid;
+        EditProgressNextSteps = p.NextStepItems ?? string.Empty;
+        EditProgressMeetingDate = p.NextMeetingDate.HasValue
+            ? DateTimeOffset.FromUnixTimeMilliseconds(p.NextMeetingDate.Value).LocalDateTime
+            : null;
+        ShowEditProgressDialog = true;
+    }
+
+    private async Task SaveProgressEdit()
+    {
+        if (EditingProgressGuid is null) return;
+        var progress = await Db.GoalProgresses.FirstOrDefaultAsync(p => p.Guid == EditingProgressGuid && p.AccountFk == AccountGuid);
+        if (progress is null) return;
+        var steps = EditProgressNextSteps.Trim();
+        if (string.IsNullOrWhiteSpace(steps) && !EditProgressMeetingDate.HasValue) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        progress.NextStepItems = string.IsNullOrWhiteSpace(steps) ? null : steps;
+        progress.NextMeetingDate = EditProgressMeetingDate.HasValue
+            ? new DateTimeOffset(EditProgressMeetingDate.Value, TimeSpan.Zero).ToUnixTimeMilliseconds()
+            : null;
+        progress.UpdatedOn = now;
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("progress_edit", AccountGuid, "goal_detail", GoalGuid);
+        ShowEditProgressDialog = false;
+        Snackbar.Add("Progress note updated.", Severity.Success);
         await LoadProgress();
     }
 
