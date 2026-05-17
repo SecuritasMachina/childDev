@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 131 — Mobile Tests: SyncService sends locally modified Goal and Todo
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_LocalGoalModifiedSinceLastSync_IncludedInRequest` and `RunAsync_LocalTodoModifiedSinceLastSync_IncludedInRequest` — both follow the CapturingHandler pattern from iterations 109 and 130.
+
+**Why:** Iterations 109 and 130 covered Journal and GoalProgress. Goal and Todo had no analogous coverage. All 4 entity sync paths now have explicit tests verifying that locally modified records are included in the outbound request body — closing the last gap in sync pipeline coverage.
+
+**Impact:** 52 mobile tests pass. 106 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 130 — Mobile Tests: SyncService sends locally modified GoalProgress
 
 **What changed:**
