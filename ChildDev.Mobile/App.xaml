@@ -11,6 +11,7 @@
             </ResourceDictionary.MergedDictionaries>
 
             <converters:StringToBoolConverter x:Key="StringToBoolConverter" />
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
             <converters:NotNullConverter x:Key="NotNullConverter" />
             <converters:DueDateLabelConverter x:Key="DueDateLabelConverter" />
             <converters:DueDateColorConverter x:Key="DueDateColorConverter" />

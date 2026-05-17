@@ -58,6 +58,12 @@ public class TodoRepository(SQLiteAsyncConnection db)
           .Where(t => t.AccountFk == accountFk && t.DeletedAt == null && t.CompletedAt != null)
           .CountAsync();
 
+    public Task<List<Todo>> GetCompletedAsync(string accountFk) =>
+        db.Table<Todo>()
+          .Where(t => t.AccountFk == accountFk && t.DeletedAt == null && t.CompletedAt != null)
+          .OrderByDescending(t => t.CompletedAt)
+          .ToListAsync();
+
     public Task<List<Todo>> GetModifiedSinceAsync(string accountFk, long since) =>
         db.Table<Todo>()
           .Where(t => t.AccountFk == accountFk && t.UpdatedOn > since)

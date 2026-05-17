@@ -28,6 +28,12 @@ public partial class TodoListViewModel(
     private bool hasCompletedTodos;
 
     [ObservableProperty]
+    private ObservableCollection<Todo> completedTodos = [];
+
+    [ObservableProperty]
+    private bool showCompletedTodos;
+
+    [ObservableProperty]
     private int overdueTodoCount;
 
     [ObservableProperty]
@@ -77,8 +83,10 @@ public partial class TodoListViewModel(
             var items = await repo.GetPendingAsync(account.Guid);
             _allTodos = items;
             Todos = new ObservableCollection<Todo>(items);
-            CompletedTodoCount = await repo.GetCompletedCountAsync(account.Guid);
+            var completed = await repo.GetCompletedAsync(account.Guid);
+            CompletedTodoCount = completed.Count;
             HasCompletedTodos = CompletedTodoCount > 0;
+            CompletedTodos = new ObservableCollection<Todo>(completed);
             UpdateOverdueCount(items);
         }
         catch
@@ -98,8 +106,10 @@ public partial class TodoListViewModel(
             var items = await repo.GetPendingAsync(account.Guid);
             _allTodos = items;
             Todos = new ObservableCollection<Todo>(items);
-            CompletedTodoCount = await repo.GetCompletedCountAsync(account.Guid);
+            var completed = await repo.GetCompletedAsync(account.Guid);
+            CompletedTodoCount = completed.Count;
             HasCompletedTodos = CompletedTodoCount > 0;
+            CompletedTodos = new ObservableCollection<Todo>(completed);
             UpdateOverdueCount(items);
             StatusMessage = string.Empty;
         }
@@ -142,10 +152,29 @@ public partial class TodoListViewModel(
         await repo.CompleteAsync(todo.Guid);
         _allTodos.Remove(todo);
         Todos.Remove(todo);
-        CompletedTodoCount++;
-        HasCompletedTodos = true;
+        var refreshed = await repo.GetCompletedAsync((await accountService.GetAccountAsync())!.Guid);
+        CompletedTodoCount = refreshed.Count;
+        HasCompletedTodos = CompletedTodoCount > 0;
+        CompletedTodos = new ObservableCollection<Todo>(refreshed);
         UpdateOverdueCount(_allTodos);
     }
+
+    [RelayCommand]
+    private async Task UncompleteAsync(Todo todo)
+    {
+        await repo.UncompleteAsync(todo.Guid);
+        CompletedTodos.Remove(todo);
+        CompletedTodoCount = CompletedTodos.Count;
+        HasCompletedTodos = CompletedTodoCount > 0;
+        if (CompletedTodoCount == 0) ShowCompletedTodos = false;
+        var pending = await repo.GetPendingAsync((await accountService.GetAccountAsync())!.Guid);
+        _allTodos = pending;
+        Todos = new ObservableCollection<Todo>(pending);
+        UpdateOverdueCount(_allTodos);
+    }
+
+    [RelayCommand]
+    private void ToggleCompleted() => ShowCompletedTodos = !ShowCompletedTodos;
 
     [RelayCommand]
     private async Task DeleteAsync(Todo todo)
@@ -153,6 +182,10 @@ public partial class TodoListViewModel(
         await repo.DeleteAsync(todo.Guid);
         _allTodos.Remove(todo);
         Todos.Remove(todo);
+        CompletedTodos.Remove(todo);
+        CompletedTodoCount = CompletedTodos.Count;
+        HasCompletedTodos = CompletedTodoCount > 0;
+        if (CompletedTodoCount == 0) ShowCompletedTodos = false;
         UpdateOverdueCount(_allTodos);
     }
 
