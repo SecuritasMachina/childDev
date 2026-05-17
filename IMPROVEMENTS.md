@@ -2,6 +2,20 @@
 
 ---
 
+## 2026-05-17 — Perf: Settings mutations use ExecuteUpdateAsync and projection SELECT (iter 406)
+
+**File:** `ChildDev.Api/Components/Pages/Settings.razor`
+
+**Change:**
+- `ChangeNickName`: replaced `FirstOrDefaultAsync` + entity update + `SaveChangesAsync` with `ExecuteUpdateAsync`. Zero rows returned means account doesn't exist — no need for null check.
+- `ChangePin`: replaced `FirstOrDefaultAsync` (loads full Account) with a `Select(a => a.PinHash)` projection that fetches only the hash for BCrypt.Verify, then uses `ExecuteUpdateAsync` to write the new hash.
+
+**Why:** BCrypt dominates ChangePin latency, but avoiding loading the full entity is still a cleaner pattern. For ChangeNickName the entity load was purely overhead — no entity data is needed after the duplicate check.
+
+**Impact:** 220 API tests — all passing.
+
+---
+
 ## 2026-05-17 — Perf: delete/complete mutations use ExecuteUpdateAsync (iter 405)
 
 **Files:** `ChildDev.Api/Components/Pages/Todos.razor`, `Home.razor`, `JournalPage.razor`, `GoalDetail.razor`

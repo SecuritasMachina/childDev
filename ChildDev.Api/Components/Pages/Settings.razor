@@ -131,10 +131,10 @@
             return;
         }
 
-        var account = await Db.Accounts.FirstOrDefaultAsync(a => a.Guid == AccountGuid);
-        if (account is null) return;
-        account.NickName = nick;
-        await Db.SaveChangesAsync();
+        var rows = await Db.Accounts
+            .Where(a => a.Guid == AccountGuid)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.NickName, nick));
+        if (rows == 0) return;
         HttpContextAccessor.HttpContext!.Session.SetString("NickName", nick);
         CurrentNickName = nick;
         await Analytics.TrackAsync("settings_change_nickname", AccountGuid, "settings");
@@ -157,16 +157,21 @@
             return;
         }
 
-        var account = await Db.Accounts.FirstOrDefaultAsync(a => a.Guid == AccountGuid);
-        if (account is null) return;
-        if (!BCrypt.Net.BCrypt.Verify(CurrentPin, account.PinHash))
+        var pinHash = await Db.Accounts
+            .Where(a => a.Guid == AccountGuid)
+            .Select(a => a.PinHash)
+            .FirstOrDefaultAsync();
+        if (pinHash is null) return;
+        if (!BCrypt.Net.BCrypt.Verify(CurrentPin, pinHash))
         {
             PinError = "Current PIN is incorrect.";
             return;
         }
 
-        account.PinHash = BCrypt.Net.BCrypt.HashPassword(NewPin);
-        await Db.SaveChangesAsync();
+        var newHash = BCrypt.Net.BCrypt.HashPassword(NewPin);
+        await Db.Accounts
+            .Where(a => a.Guid == AccountGuid)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.PinHash, newHash));
         CurrentPin = string.Empty;
         NewPin = string.Empty;
         ConfirmNewPin = string.Empty;
