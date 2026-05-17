@@ -21,6 +21,21 @@ public partial class JournalListViewModel(
     [ObservableProperty]
     private bool isRefreshing;
 
+    [ObservableProperty]
+    private string filterText = string.Empty;
+
+    private List<Journal> _allJournals = [];
+
+    partial void OnFilterTextChanged(string value) =>
+        Journals = new ObservableCollection<Journal>(
+            string.IsNullOrWhiteSpace(value)
+                ? _allJournals
+                : _allJournals.Where(j =>
+                    (j.Notes != null && j.Notes.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
+                    (j.Activity != null && j.Activity.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
+                    (j.Mood != null && j.Mood.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
+                    (j.Tags != null && j.Tags.Contains(value, StringComparison.OrdinalIgnoreCase))));
+
     [RelayCommand]
     private async Task LoadAsync()
     {
@@ -30,6 +45,7 @@ public partial class JournalListViewModel(
             var account = await accountService.GetAccountAsync();
             if (account is null) return;
             var items = await repo.GetAllActiveAsync(account.Guid);
+            _allJournals = items;
             Journals = new ObservableCollection<Journal>(items);
         }
         catch
@@ -47,6 +63,7 @@ public partial class JournalListViewModel(
             if (account is null) { IsRefreshing = false; return; }
             await syncService.RunAsync(account);
             var items = await repo.GetAllActiveAsync(account.Guid);
+            _allJournals = items;
             Journals = new ObservableCollection<Journal>(items);
             StatusMessage = string.Empty;
         }
@@ -72,6 +89,7 @@ public partial class JournalListViewModel(
     private async Task DeleteAsync(Journal journal)
     {
         await repo.DeleteAsync(journal.Guid);
+        _allJournals.Remove(journal);
         Journals.Remove(journal);
     }
 }
