@@ -1,5 +1,18 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 76 — Mobile: Use 5s deadline for SyncService health check pre-flight
+
+**What changed:**
+- `SyncService.cs`: Health check pre-flight now uses a 5-second `CancellationTokenSource` deadline (`GetAsync("health", healthCts.Token)`) instead of the 15-second client timeout. If the server doesn't respond within 5 seconds it's unreachable. Entity sync calls keep the 15-second client timeout.
+
+**Why:** `HttpClient.Timeout` cannot be changed after the first request (throws `InvalidOperationException`). Using a per-call `CancellationTokenSource` correctly limits the health check to 5s without affecting the entity sync timeout. A slow server that times out in 5s for `/health` but responds in 8s for a sync payload would previously timeout on health — this is correct behavior.
+
+**Notes:** First attempt used `client.Timeout = 5s → 15s` which caused 4 test failures. Reverted and used CancellationTokenSource instead.
+
+**Impact:** 25 mobile tests pass (0 warnings). 56 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 75 — Mobile: TodoList footer includes overdue count when nonzero
 
 **What changed:**
