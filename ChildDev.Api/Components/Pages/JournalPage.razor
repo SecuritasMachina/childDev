@@ -221,7 +221,7 @@ else
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var enteredMs = NewEnteredDate.HasValue
-            ? new DateTimeOffset(NewEnteredDate.Value, TimeSpan.Zero).ToUnixTimeMilliseconds()
+            ? new DateTimeOffset(DateTime.SpecifyKind(NewEnteredDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
             : now;
         Db.Journals.Add(new Journal
         {
@@ -270,7 +270,7 @@ else
         entry.Mood = string.IsNullOrWhiteSpace(EditMood) ? null : EditMood.Trim();
         entry.Tags = string.IsNullOrWhiteSpace(EditTags) ? null : EditTags.Trim();
         if (EditEnteredDate.HasValue)
-            entry.EnteredDate = new DateTimeOffset(EditEnteredDate.Value, TimeSpan.Zero).ToUnixTimeMilliseconds();
+            entry.EnteredDate = new DateTimeOffset(DateTime.SpecifyKind(EditEnteredDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds();
         entry.UpdatedOn = now;
         await Db.SaveChangesAsync();
         await Analytics.TrackAsync("journal_edit", AccountGuid, "journal");
