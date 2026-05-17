@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 117 — Mobile: Error handling in SetupViewModel.CreateAccountAsync
+
+**What changed:**
+- `SetupViewModel.cs`: Wrapped `CreateAccountAsync` + navigation in a try-catch that sets `ErrorMessage` on failure.
+
+**Why:** If SQLite threw during account creation, the exception would propagate to the MAUI command handler with no user-visible error. The `ErrorMessage` binding was already in the ViewModel and view but unreachable from this code path.
+
+**Impact:** 43 mobile tests pass. 93 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 116 — API: Trim NickName in token endpoint to match register behavior
 
 **What changed:**
