@@ -373,4 +373,18 @@ public class SyncInputValidationTests(ApiFactory factory) : IClassFixture<ApiFac
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
+
+    [Theory]
+    [InlineData("/api/sync/journal")]
+    [InlineData("/api/sync/goal")]
+    [InlineData("/api/sync/goal-progress")]
+    [InlineData("/api/sync/todo")]
+    public async Task Sync_NoAuth_Returns401(string endpoint)
+    {
+        var client = factory.CreateClient();
+        var body = new StringContent("{\"Records\":[],\"LastSyncAt\":0}", Encoding.UTF8, "application/json");
+        var response = await client.PostAsync(endpoint, body);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
 }
