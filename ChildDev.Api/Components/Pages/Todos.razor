@@ -216,6 +216,8 @@ else
     {
         StatusFilter = value ?? "All";
         ApplyFilter();
+        if (AccountGuid is not null && StatusFilter != "All")
+            _ = Analytics.TrackAsync("todo_filter", AccountGuid, "todos", StatusFilter);
     }
 
     private void ApplyFilter()

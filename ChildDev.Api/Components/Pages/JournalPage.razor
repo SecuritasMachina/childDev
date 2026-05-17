@@ -186,6 +186,8 @@ else
     {
         DateFilter = value ?? "All";
         ApplyFilter();
+        if (AccountGuid is not null && DateFilter != "All")
+            _ = Analytics.TrackAsync("journal_filter", AccountGuid, "journal", DateFilter);
     }
 
     private void ApplyFilter()
