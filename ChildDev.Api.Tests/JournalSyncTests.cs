@@ -371,4 +371,29 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var stored = body!.Records.Single(r => r.Guid == guid);
         Assert.Equal(correctedEnteredDate, stored.EnteredDate);
     }
+
+    [Fact]
+    public async Task Sync_AuxFields_CanBeClearedByClient_ViaNewerUpdate()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("jsync_aux_clear");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Store journal with Activity, Mood, Tags set
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", "Running", "Calm", "health", ts, ts, null)], 0));
+
+        // Client sends newer UpdatedOn with aux fields = null — LWW must clear all three
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, ts, ts + 1000, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
+
+        var stored = body!.Records.Single(r => r.Guid == guid);
+        Assert.Null(stored.Activity);
+        Assert.Null(stored.Mood);
+        Assert.Null(stored.Tags);
+    }
 }

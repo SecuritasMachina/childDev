@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 208 — API: JournalSync aux fields (Activity, Mood, Tags) can be cleared via LWW
+
+**What changed:**
+- `JournalSyncTests.cs`: Added `Sync_AuxFields_CanBeClearedByClient_ViaNewerUpdate` — stores a journal with Activity, Mood, Tags set; sends a newer-UpdatedOn update with all three as null; asserts all three are null in the delta.
+
+**Why:** `Sync_OptionalFieldsRoundTrip` (initial insert) and `Sync_EnteredDate_UpdatedByClient_OnLWWOverwrite` (LWW update) don't clear Activity/Mood/Tags. If any of those three were accidentally removed from Journal's `ApplyDto`, the field would never be updatable to null, silently retaining stale data.
+
+**Impact:** 160 API tests pass (was 159). 159 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 207 — API: TodoSync Notes can be cleared via LWW update
 
 **What changed:**
