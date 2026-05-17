@@ -1,5 +1,18 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 144 — Mobile Tests: LWW timestamp preservation + delta round-trip
+
+**What changed:**
+- `JournalRepositoryTests.cs`: Added `UpsertFromSyncAsync_PreservesServerTimestamp` — asserts that `UpsertFromSyncAsync` (which calls `InsertOrReplaceAsync` directly) stores the server-supplied `UpdatedOn` without overriding it, unlike `SaveAsync`.
+- `GoalRepositoryTests.cs`: Added same `UpsertFromSyncAsync_PreservesServerTimestamp` test.
+- `SyncServiceTests.cs`: Added `RunAsync_SecondSync_SendsLastSyncAtFromPriorSync` — runs two consecutive successful syncs and verifies the second sync's request body contains the `LastSyncAt` that was persisted by the first sync, proving the delta window round-trips correctly.
+
+**Why:** `UpsertFromSyncAsync` bypasses `SaveAsync`'s `UpdatedOn` override — that's intentional for LWW. If someone accidentally changed it to call `SaveAsync`, the server's timestamp would be replaced with the local clock, breaking last-write-wins. The delta round-trip test guards the path where `LastSyncAt` is persisted and then read back: if `UpdateLastSyncAsync` stored incorrectly or `RunAsync` read the wrong field, the delta window would be wrong (either replaying all records or missing changes).
+
+**Impact:** 90 mobile tests pass (was 87). 111 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 143 — Mobile Tests: GoalProgressRepo empty DeleteForGoal + SyncService lock release
 
 **What changed:**
