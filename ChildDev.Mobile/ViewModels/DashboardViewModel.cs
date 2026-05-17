@@ -10,6 +10,7 @@ namespace ChildDev.Mobile.ViewModels;
 public partial class DashboardViewModel(
     JournalRepository journalRepo,
     GoalRepository goalRepo,
+    GoalProgressRepository progressRepo,
     TodoRepository todoRepo,
     AccountService accountService,
     SyncService syncService) : ObservableObject
@@ -23,6 +24,8 @@ public partial class DashboardViewModel(
     [ObservableProperty] private bool hasOverdueTodos;
     [ObservableProperty] private string nextGoalMeeting = string.Empty;
     [ObservableProperty] private bool hasNextGoalMeeting;
+    [ObservableProperty] private string staleGoalText = string.Empty;
+    [ObservableProperty] private bool hasStaleGoal;
     [ObservableProperty] private string syncStatus = string.Empty;
     [ObservableProperty] private string lastSyncDisplay = string.Empty;
     [ObservableProperty] private string quickJournalText = string.Empty;
@@ -82,6 +85,24 @@ public partial class DashboardViewModel(
         HasNoPendingTodos = todos.Count == 0;
         OverdueTodoCount = todos.Count(t => t.DueDate.HasValue && t.DueDate.Value < nowMs);
         HasOverdueTodos = OverdueTodoCount > 0;
+
+        // Find the active goal with no progress or oldest progress
+        var progressInfo = await progressRepo.GetLatestProgressInfoAsync(account.Guid);
+        var staleGoal = activeGoals
+            .OrderBy(g => progressInfo.ContainsKey(g.Guid) ? 1 : 0)
+            .ThenBy(g => progressInfo.TryGetValue(g.Guid, out var p) ? p.UpdatedOn : 0)
+            .FirstOrDefault();
+        if (staleGoal is not null && (!progressInfo.ContainsKey(staleGoal.Guid)
+            || (nowMs - progressInfo[staleGoal.Guid].UpdatedOn) > 7L * 86_400_000))
+        {
+            StaleGoalText = staleGoal.GoalText ?? string.Empty;
+            HasStaleGoal = !string.IsNullOrWhiteSpace(StaleGoalText);
+        }
+        else
+        {
+            StaleGoalText = string.Empty;
+            HasStaleGoal = false;
+        }
     }
 
     private async Task RunSyncAsync(Account account)

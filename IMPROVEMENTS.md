@@ -4153,3 +4153,13 @@ Both match mobile filter behavior (TodoListViewModel.FilterText, JournalListView
 **Impact:** 217 API tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — Mobile dashboard "needs attention" goal banner (iter 324)
+
+**What:** Added `StaleGoalText` / `HasStaleGoal` to `DashboardViewModel`. In `RefreshDataAsync`, the most stale active goal (no progress or >7 days since last note) is selected and shown as a yellow warning banner on `DashboardPage`. `GoalProgressRepository` injected into the ViewModel.
+
+**Why:** The mobile dashboard showed sync status and summary counts but gave no clue about which specific goal was being neglected. The banner surfaces the highest-priority goal directly, matching the intent of the web home's staleness sort.
+
+**Impact:** 228 mobile tests pass. Build clean.
+
+---

@@ -18,6 +18,17 @@
                    IsVisible="{Binding LastSyncDisplay, Converter={StaticResource StringToBoolConverter}}" />
             <Label Text="{Binding NextGoalMeeting}" FontSize="13" TextColor="CornflowerBlue"
                    IsVisible="{Binding HasNextGoalMeeting}" />
+            <Border BackgroundColor="#FFF3CD" Padding="10,6" StrokeShape="RoundRectangle 6"
+                    IsVisible="{Binding HasStaleGoal}">
+                <Label TextColor="#856404" FontSize="12">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="⚠ Needs attention: " FontAttributes="Bold" />
+                            <Span Text="{Binding StaleGoalText}" />
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+            </Border>
 
             <!-- Summary row -->
             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
