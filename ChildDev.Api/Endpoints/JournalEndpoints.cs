@@ -46,7 +46,7 @@ public static class JournalEndpoints
                 else if (dto.UpdatedOn > entity.UpdatedOn)
                     ApplyDto(entity, dto);
             }
-            await db.SaveChangesAsync();
+            if (db.ChangeTracker.HasChanges()) await db.SaveChangesAsync();
 
             var delta = await db.Journals
                 .Where(j => j.AccountFk == accountGuid && j.UpdatedOn > req.LastSyncAt)

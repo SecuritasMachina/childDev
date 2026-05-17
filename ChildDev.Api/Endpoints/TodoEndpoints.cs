@@ -41,7 +41,7 @@ public static class TodoEndpoints
                     db.Todos.Add(DtoToEntity(dto));
                 else if (dto.UpdatedOn > entity.UpdatedOn) ApplyDto(entity, dto);
             }
-            await db.SaveChangesAsync();
+            if (db.ChangeTracker.HasChanges()) await db.SaveChangesAsync();
             var delta = await db.Todos
                 .Where(t => t.AccountFk == accountGuid && t.UpdatedOn > req.LastSyncAt)
                 .OrderBy(t => t.UpdatedOn)
