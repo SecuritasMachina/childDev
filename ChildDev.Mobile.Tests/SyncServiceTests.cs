@@ -189,6 +189,36 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_LocalJournalModifiedSinceLastSync_IncludedInRequest()
+    {
+        await _accountService.CreateAccountAsync("user8", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        // Insert a journal directly (bypassing SaveAsync so UpdatedOn stays fixed)
+        var journalGuid = System.Guid.NewGuid().ToString();
+        var updatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new Journal
+        {
+            Guid = journalGuid,
+            AccountFk = account.Guid,
+            Notes = "local note",
+            EnteredDate = updatedOn,
+            UpdatedOn = updatedOn
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var journalBody = capturingHandler.GetBodyFor("sync/journal");
+        Assert.NotNull(journalBody);
+        Assert.Contains(journalGuid, journalBody);
+    }
+
+    [Fact]
     public async Task RunAsync_PartialFailure_DoesNotUpdateLastSyncAt()
     {
         await _accountService.CreateAccountAsync("user6", "1234");
@@ -311,5 +341,33 @@ public class FakeSyncHandler(JournalSyncDto journal) : HttpMessageHandler
         {
             Content = JsonContent.Create(new { Records = Array.Empty<object>() })
         });
+    }
+}
+
+// Captures request bodies for later inspection; always returns 200 with empty delta
+public class CapturingHandler : HttpMessageHandler
+{
+    private readonly Dictionary<string, string> _bodies = new();
+
+    public string? GetBodyFor(string pathSegment) =>
+        _bodies.FirstOrDefault(kv => kv.Key.Contains(pathSegment)).Value;
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        if (request.Content is not null)
+        {
+            var body = await request.Content.ReadAsStringAsync(cancellationToken);
+            _bodies[request.RequestUri!.PathAndQuery] = body;
+        }
+        if (request.RequestUri!.PathAndQuery.Contains("health"))
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new { status = "ok" })
+            };
+        return new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new { Records = Array.Empty<object>() })
+        };
     }
 }
