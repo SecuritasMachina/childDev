@@ -540,4 +540,75 @@ public class GoalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.NotNull(deleted.DeletedAt);
         Assert.Equal(deleted.DeletedAt!.Value, deleted.UpdatedOn);
     }
+
+    [Fact]
+    public async Task Sync_DuplicateGuidsInBatch_Returns422()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gsync_dupguid1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var dup = new GoalDto(guid, accountGuid, "goal text", null, null, ts, null, null, ts, null);
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([dup, dup], 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_FutureUpdatedOn_Returns422()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gsync_future1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var futureTs = DateTimeOffset.UtcNow.AddHours(2).ToUnixTimeMilliseconds();
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(Guid.NewGuid().ToString(), accountGuid, "goal text", null, null, ts, null, null, futureTs, null)], 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_TooManyRecords_Returns400()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gsync_toomany1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var records = Enumerable.Range(0, 501)
+            .Select(_ => new GoalDto(Guid.NewGuid().ToString(), accountGuid, "goal text", null, null, ts, null, null, ts, null))
+            .ToList();
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>(records, 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_BlankGoalText_Returns422()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gsync_blankgoal1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(Guid.NewGuid().ToString(), accountGuid, "   ", null, null, ts, null, null, ts, null)], 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_FutureExpirationDate_Returns422()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gsync_futureexp1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var farFuture = DateTimeOffset.UtcNow.AddYears(15).ToUnixTimeMilliseconds();
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(Guid.NewGuid().ToString(), accountGuid, "goal text", null, farFuture, ts, null, null, ts, null)], 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
 }
