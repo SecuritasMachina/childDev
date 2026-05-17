@@ -32,7 +32,7 @@ public partial class SettingsViewModel(AccountService accountService, IHttpClien
     {
         var url = ServerUrl.Trim().TrimEnd('/');
         await accountService.SaveServerUrlAsync(url);
-        StatusMessage = "Server URL saved.";
+        StatusMessage = string.IsNullOrEmpty(url) ? "Server URL cleared." : "Server URL saved.";
     }
 
     [RelayCommand]
