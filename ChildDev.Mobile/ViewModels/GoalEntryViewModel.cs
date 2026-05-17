@@ -24,6 +24,7 @@ public partial class GoalEntryViewModel(
 
     [ObservableProperty] private int goalTextLength;
     [ObservableProperty] private int measurableOutcomeLength;
+    [ObservableProperty] private int nextStepItemsLength;
 
     private string _loadedNextStepItems = string.Empty;
 
@@ -37,6 +38,9 @@ public partial class GoalEntryViewModel(
 
     partial void OnMeasurableOutcomeChanged(string value) =>
         MeasurableOutcomeLength = value?.Length ?? 0;
+
+    partial void OnNextStepItemsChanged(string value) =>
+        NextStepItemsLength = value?.Length ?? 0;
 
     partial void OnGuidChanged(string value)
     {

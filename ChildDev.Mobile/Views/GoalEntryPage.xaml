@@ -21,6 +21,8 @@
                    FontSize="11" TextColor="Gray" HorizontalOptions="End" />
             <Label Text="Next Steps" />
             <Editor Text="{Binding NextStepItems}" HeightRequest="80" AutoSize="TextChanges" />
+            <Label Text="{Binding NextStepItemsLength, StringFormat='{0} characters'}"
+                   FontSize="11" TextColor="Gray" HorizontalOptions="End" />
             <Label Text="Next Meeting Date" />
             <DatePicker Date="{Binding NextMeetingDate}" />
             <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
