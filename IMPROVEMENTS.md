@@ -1,5 +1,18 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 114 — Mobile: Cascade soft-delete GoalProgress when Goal is deleted
+
+**What changed:**
+- `GoalProgressRepository.cs`: Added `DeleteForGoalAsync(string goalFk)` — soft-deletes all active GoalProgress records for a given goal.
+- `GoalEntryViewModel.cs`: `DeleteAsync` now calls `progressRepo.DeleteForGoalAsync(Guid)` after soft-deleting the goal.
+- `GoalProgressRepositoryTests.cs`: Added `DeleteForGoal_SoftDeletesAllProgressForThatGoal`.
+
+**Why:** Deleting a goal left all associated GoalProgress records with `DeletedAt = null`, causing them to be synced indefinitely as active records. Cascading the delete keeps the sync payload clean and prevents orphaned records.
+
+**Impact:** 43 mobile tests pass. 92 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 113 — API: PinHash max-length (200 chars) validation on register
 
 **What changed:**
