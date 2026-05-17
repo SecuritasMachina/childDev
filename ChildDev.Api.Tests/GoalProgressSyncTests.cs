@@ -541,6 +541,28 @@ public class GoalProgressSyncTests(ApiFactory factory) : IClassFixture<ApiFactor
     }
 
     [Fact]
+    public async Task Sync_SoftDeletedRecord_BlankNextStepItems_Accepted()
+    {
+        // The validation requires NextStepItems only for non-deleted records (DeletedAt is null).
+        // A soft-deleted record with blank NextStepItems must be accepted and stored.
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_softdel_blank");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var goalGuid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var upload = await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(guid, accountGuid, goalGuid, null, null, ts, ts)], 0));
+        Assert.Equal(HttpStatusCode.OK, upload.StatusCode);
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalProgressDto>>();
+        var stored = body!.Records.FirstOrDefault(r => r.Guid == guid);
+        Assert.NotNull(stored);
+        Assert.Equal(ts, stored!.DeletedAt);
+    }
+
+    [Fact]
     public async Task Sync_SameGuidUploadedTwice_DeltaContainsExactlyOneRecord()
     {
         var (jwt, accountGuid) = await RegisterAsync("gpsync_idempotent1");
