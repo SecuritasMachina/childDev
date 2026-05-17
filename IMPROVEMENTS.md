@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 79 — Mobile: Show GoalText character count in GoalEntry
+
+**What changed:**
+- `GoalEntryViewModel.cs`: Added `GoalTextLength` observable; `OnGoalTextChanged` now also sets `GoalTextLength = value?.Length ?? 0` (moved from single-line to block since we have two updates). Consistent with the Notes character count pattern in JournalEntryViewModel (which later switched to word count; goal text is shorter so character count is more appropriate).
+- `GoalEntryPage.xaml`: Added small gray label `{Binding GoalTextLength, StringFormat='{0} characters'}` below the GoalText Editor.
+
+**Why:** GoalText has a 2000-char server limit (iter 78). The counter gives users feedback before hitting the limit.
+
+**Impact:** 25 mobile tests pass (0 warnings). 59 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 78 — API: Enforce maximum content field length
 
 **What changed:**
