@@ -72,12 +72,11 @@
             return;
         }
 
-        var pinHash = BCrypt.Net.BCrypt.HashPassword(Pin);
         var account = new Account
         {
             Guid = System.Guid.NewGuid().ToString(),
             NickName = nick,
-            PinHash = BCrypt.Net.BCrypt.HashPassword(pinHash),
+            PinHash = BCrypt.Net.BCrypt.HashPassword(Pin),
             CreatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
         };
         Db.Accounts.Add(account);

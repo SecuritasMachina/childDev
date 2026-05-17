@@ -54,8 +54,7 @@
     {
         var nick = NickName.Trim();
         var account = await Db.Accounts.FirstOrDefaultAsync(a => a.NickName == nick);
-        var pinHash = BCrypt.Net.BCrypt.HashPassword(Pin);
-        if (account is null || !BCrypt.Net.BCrypt.Verify(pinHash, account.PinHash))
+        if (account is null || !BCrypt.Net.BCrypt.Verify(Pin, account.PinHash))
         {
             Error = "Invalid nickname or PIN.";
             return;
