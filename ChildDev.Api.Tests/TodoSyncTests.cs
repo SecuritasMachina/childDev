@@ -629,4 +629,33 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Sync_MixedBatch_NewAndExistingBothPersisted()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_mixedbatch1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var existingGuid = Guid.NewGuid().ToString();
+        var newGuid = Guid.NewGuid().ToString();
+
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(existingGuid, accountGuid, "original task", null, null, null, ts, null)], 0));
+
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([
+                new TodoDto(existingGuid, accountGuid, "updated task", null, null, null, ts + 1, null),
+                new TodoDto(newGuid, accountGuid, "brand new task", null, null, null, ts, null)
+            ], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+
+        var existing = body!.Records.FirstOrDefault(r => r.Guid == existingGuid);
+        var newRecord = body.Records.FirstOrDefault(r => r.Guid == newGuid);
+        Assert.NotNull(existing);
+        Assert.Equal("updated task", existing.Title);
+        Assert.NotNull(newRecord);
+        Assert.Equal("brand new task", newRecord.Title);
+    }
 }

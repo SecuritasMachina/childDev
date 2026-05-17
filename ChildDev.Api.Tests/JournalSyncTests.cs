@@ -603,4 +603,33 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Sync_MixedBatch_NewAndExistingBothPersisted()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("jsync_mixedbatch1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var existingGuid = Guid.NewGuid().ToString();
+        var newGuid = Guid.NewGuid().ToString();
+
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(existingGuid, accountGuid, "original note", null, null, null, ts, ts, null)], 0));
+
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([
+                new JournalDto(existingGuid, accountGuid, "updated note", null, null, null, ts, ts + 1, null),
+                new JournalDto(newGuid, accountGuid, "brand new note", null, null, null, ts, ts, null)
+            ], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
+
+        var existing = body!.Records.FirstOrDefault(r => r.Guid == existingGuid);
+        var newRecord = body.Records.FirstOrDefault(r => r.Guid == newGuid);
+        Assert.NotNull(existing);
+        Assert.Equal("updated note", existing.Notes);
+        Assert.NotNull(newRecord);
+        Assert.Equal("brand new note", newRecord.Notes);
+    }
 }

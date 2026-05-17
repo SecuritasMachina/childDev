@@ -617,4 +617,34 @@ public class GoalProgressSyncTests(ApiFactory factory) : IClassFixture<ApiFactor
 
         Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Sync_MixedBatch_NewAndExistingBothPersisted()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_mixedbatch1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goalGuid = Guid.NewGuid().ToString();
+        var existingGuid = Guid.NewGuid().ToString();
+        var newGuid = Guid.NewGuid().ToString();
+
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(existingGuid, accountGuid, goalGuid, "original step", null, ts, null)], 0));
+
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([
+                new GoalProgressDto(existingGuid, accountGuid, goalGuid, "updated step", null, ts + 1, null),
+                new GoalProgressDto(newGuid, accountGuid, goalGuid, "brand new step", null, ts, null)
+            ], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalProgressDto>>();
+
+        var existing = body!.Records.FirstOrDefault(r => r.Guid == existingGuid);
+        var newRecord = body.Records.FirstOrDefault(r => r.Guid == newGuid);
+        Assert.NotNull(existing);
+        Assert.Equal("updated step", existing.NextStepItems);
+        Assert.NotNull(newRecord);
+        Assert.Equal("brand new step", newRecord.NextStepItems);
+    }
 }
