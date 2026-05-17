@@ -29,31 +29,35 @@
 
 <MudGrid Class="mb-6">
     <MudItem xs="12" sm="4">
-        <MudPaper Elevation="2" Class="pa-4 text-center">
+        <MudPaper Elevation="2" Class="pa-4 text-center" Style="cursor:default;">
             <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Primary" Style="font-size:2rem;" />
             <MudText Typo="Typo.h4" Class="mt-1">@AllActiveGoals.Count</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary">Active Goal@(AllActiveGoals.Count == 1 ? "" : "s")</MudText>
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="4">
-        <MudPaper Elevation="2" Class="pa-4 text-center">
-            <MudIcon Icon="@Icons.Material.Filled.CheckBox" Color="@(OverdueTodoCount > 0 ? Color.Error : Color.Primary)" Style="font-size:2rem;" />
-            <MudText Typo="Typo.h4" Class="mt-1">
-                @PendingTodoCount
-                @if (OverdueTodoCount > 0)
-                {
-                    <MudChip T="string" Color="Color.Error" Size="Size.Small" Class="ml-1">@OverdueTodoCount overdue</MudChip>
-                }
-            </MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">Pending Todo@(PendingTodoCount == 1 ? "" : "s")</MudText>
-        </MudPaper>
+        <MudLink Href="/todos" Underline="Underline.None" Style="display:block;">
+            <MudPaper Elevation="2" Class="pa-4 text-center" Style="cursor:pointer;">
+                <MudIcon Icon="@Icons.Material.Filled.CheckBox" Color="@(OverdueTodoCount > 0 ? Color.Error : Color.Primary)" Style="font-size:2rem;" />
+                <MudText Typo="Typo.h4" Class="mt-1">
+                    @PendingTodoCount
+                    @if (OverdueTodoCount > 0)
+                    {
+                        <MudChip T="string" Color="Color.Error" Size="Size.Small" Class="ml-1">@OverdueTodoCount overdue</MudChip>
+                    }
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Pending Todo@(PendingTodoCount == 1 ? "" : "s")</MudText>
+            </MudPaper>
+        </MudLink>
     </MudItem>
     <MudItem xs="12" sm="4">
-        <MudPaper Elevation="2" Class="pa-4 text-center">
-            <MudIcon Icon="@Icons.Material.Filled.Book" Color="Color.Primary" Style="font-size:2rem;" />
-            <MudText Typo="Typo.h4" Class="mt-1">@JournalThisWeek</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">Journal Entr@(JournalThisWeek == 1 ? "y" : "ies") This Week</MudText>
-        </MudPaper>
+        <MudLink Href="/journal" Underline="Underline.None" Style="display:block;">
+            <MudPaper Elevation="2" Class="pa-4 text-center" Style="cursor:pointer;">
+                <MudIcon Icon="@Icons.Material.Filled.Book" Color="Color.Primary" Style="font-size:2rem;" />
+                <MudText Typo="Typo.h4" Class="mt-1">@JournalThisWeek</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Journal Entr@(JournalThisWeek == 1 ? "y" : "ies") This Week</MudText>
+            </MudPaper>
+        </MudLink>
     </MudItem>
 </MudGrid>
 

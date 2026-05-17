@@ -4163,3 +4163,13 @@ Both match mobile filter behavior (TodoListViewModel.FilterText, JournalListView
 **Impact:** 228 mobile tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — Home dashboard stat cards clickable (iter 325)
+
+**What:** Wrapped the Todos stat card in a `MudLink Href="/todos"` and the Journal stat card in a `MudLink Href="/journal"`. Both now navigate on click. Goals card stays non-linked since goals are displayed directly below it.
+
+**Why:** The stat cards felt like navigation items (they show counts, have icons), but clicking them did nothing. Making them navigable follows standard dashboard UX expectations.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
