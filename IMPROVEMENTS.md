@@ -1,5 +1,29 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 62 Brainstorm (fresh — every 3rd)
+
+| # | Description | Dim | Impact | Effort | Risk |
+|---|-------------|-----|--------|--------|------|
+| 1 | Mobile: Fix duplicate `var nowMs` in DashboardViewModel — CS0128 latent bug | Bug | High | XS | Low | **SELECTED** |
+| 2 | Mobile: TodoEntry — Save guard (disable Save when Title empty) | UX | Medium | XS | Low | |
+| 3 | Mobile: Settings — show account GUID for support identification | UI | Small | XS | Low | |
+| 4 | API: Todo sync endpoint — validate DueDate range | Quality | Small | S | Low | |
+| 5 | Mobile: JournalList — show total entry count in footer | UI | Small | XS | Low | |
+| 6 | Mobile: Dashboard — zero-state labels when no active goals / no pending todos | UI | Small | S | Low | |
+| 7 | API: Request correlation ID header in sync endpoint logs | Observ. | Medium | S | Low | |
+| 8 | Mobile: SyncService — atomic LastSyncAt write | Quality | Small | XS | Low | |
+
+## 2026-05-16 — Iteration 62 — Mobile: Fix CS0128 latent bug in DashboardViewModel
+
+**What changed:**
+- `DashboardViewModel.cs`: Removed duplicate `var nowMs` declaration in `RefreshDataAsync` (line 77). The first declaration (line 56) is already in scope when the todos block runs. `DashboardViewModel` is excluded from `SkipMauiTargets=true` builds, so the error only surfaces when building the full MAUI targets.
+
+**Why:** CS0128 ("A local variable named 'nowMs' is already defined in this scope") would fail any full MAUI build. The test suite uses `SkipMauiTargets=true` which excludes DashboardViewModel from compilation, masking the bug.
+
+**Impact:** 25 mobile tests pass (0 warnings). 52 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 61 — Mobile: Fade completed goals in GoalList with 0.5 opacity
 
 **What changed:**
