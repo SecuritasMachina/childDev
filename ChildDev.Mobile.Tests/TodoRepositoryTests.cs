@@ -156,4 +156,20 @@ public class TodoRepositoryTests : IDisposable
         Assert.NotNull(retrieved);
         Assert.Equal("synced", retrieved.Title);
     }
+
+    [Fact]
+    public async Task GetPendingAsync_ExcludesOtherAccounts()
+    {
+        var account1 = System.Guid.NewGuid().ToString();
+        var account2 = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = account1, Title = "my task", UpdatedOn = now });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = account2, Title = "their task", UpdatedOn = now });
+
+        var results = await _repo.GetPendingAsync(account1);
+
+        Assert.Single(results);
+        Assert.Equal("my task", results[0].Title);
+    }
 }

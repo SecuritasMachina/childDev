@@ -146,6 +146,22 @@ public class JournalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetAllActiveAsync_ExcludesOtherAccounts()
+    {
+        var account1 = System.Guid.NewGuid().ToString();
+        var account2 = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account1, Notes = "mine", EnteredDate = now, UpdatedOn = now });
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account2, Notes = "theirs", EnteredDate = now, UpdatedOn = now });
+
+        var results = await _repo.GetAllActiveAsync(account1);
+
+        Assert.Single(results);
+        Assert.Equal("mine", results[0].Notes);
+    }
+
+    [Fact]
     public async Task GetAllActiveAsync_OrdersByEnteredDateDescending()
     {
         var accountId = System.Guid.NewGuid().ToString();

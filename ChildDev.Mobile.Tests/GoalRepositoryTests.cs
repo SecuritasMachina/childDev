@@ -39,6 +39,22 @@ public class GoalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetAllActiveAsync_ExcludesOtherAccounts()
+    {
+        var account1 = System.Guid.NewGuid().ToString();
+        var account2 = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account1, GoalText = "my goal", EnteredDate = now, UpdatedOn = now });
+        await _db.InsertOrReplaceAsync(new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account2, GoalText = "their goal", EnteredDate = now, UpdatedOn = now });
+
+        var results = await _repo.GetAllActiveAsync(account1);
+
+        Assert.Single(results);
+        Assert.Equal("my goal", results[0].GoalText);
+    }
+
+    [Fact]
     public async Task GetAllActiveAsync_ActiveBeforeCompleted()
     {
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
