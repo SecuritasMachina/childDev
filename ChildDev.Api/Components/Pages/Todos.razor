@@ -57,6 +57,8 @@
                 </MudStack>
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
                                OnClick="() => OpenEditTodo(t)" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                               Color="Color.Error" OnClick="() => DeleteTodo(t.Guid)" />
             </MudStack>
         </MudListItem>
     }
@@ -199,6 +201,19 @@
         await Db.SaveChangesAsync();
         await Analytics.TrackAsync("todo_complete", AccountGuid, "todos");
         Snackbar.Add("Todo completed!", Severity.Success);
+        await LoadTodos();
+    }
+
+    private async Task DeleteTodo(string guid)
+    {
+        var todo = await Db.Todos.FirstOrDefaultAsync(t => t.Guid == guid && t.AccountFk == AccountGuid);
+        if (todo is null) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        todo.DeletedAt = now;
+        todo.UpdatedOn = now;
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("todo_delete", AccountGuid, "todos");
+        Snackbar.Add("Todo deleted.", Severity.Info);
         await LoadTodos();
     }
 
