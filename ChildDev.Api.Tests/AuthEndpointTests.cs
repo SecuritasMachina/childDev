@@ -84,4 +84,12 @@ public class AuthEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>
         });
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Token_UnknownUser_Returns401()
+    {
+        var response = await _client.PostAsJsonAsync("/api/auth/token",
+            new { NickName = "nobody_registered_this_nick", PinHash = "anyhash" });
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
 }
