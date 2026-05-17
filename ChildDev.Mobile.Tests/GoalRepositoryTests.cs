@@ -108,4 +108,18 @@ public class GoalRepositoryTests : IDisposable
         Assert.Single(modified);
         Assert.Equal("new", modified[0].GoalText);
     }
+
+    [Fact]
+    public async Task UpsertFromSync_OverwritesExistingGoal()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _repo.SaveAsync(new Goal { Guid = guid, AccountFk = "account1", GoalText = "original", EnteredDate = now, UpdatedOn = now });
+        await _repo.UpsertFromSyncAsync(new Goal { Guid = guid, AccountFk = "account1", GoalText = "synced", EnteredDate = now, UpdatedOn = now + 1000 });
+
+        var retrieved = await _repo.GetAsync(guid);
+        Assert.NotNull(retrieved);
+        Assert.Equal("synced", retrieved.GoalText);
+    }
 }
