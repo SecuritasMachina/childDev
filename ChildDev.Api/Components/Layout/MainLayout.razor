@@ -1,0 +1,42 @@
+@inherits LayoutComponentBase
+@inject NavigationManager Nav
+@inject IHttpContextAccessor HttpContextAccessor
+
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1" Color="Color.Primary">
+        <MudIconButton Icon="@Icons.Material.Filled.Star" Color="Color.Inherit" Edge="Edge.Start" Href="/" />
+        <MudText Typo="Typo.h6" Class="ml-2">ChildDev Goals</MudText>
+        <MudSpacer />
+        @if (NickName is not null)
+        {
+            <MudButton Color="Color.Inherit" Href="/">Goals</MudButton>
+            <MudButton Color="Color.Inherit" Href="/todos">Todos</MudButton>
+            <MudText Typo="Typo.body2" Class="ml-3 mr-2">@NickName</MudText>
+            <MudButton Color="Color.Inherit" Href="/logout">Logout</MudButton>
+        }
+        else
+        {
+            <MudButton Color="Color.Inherit" Href="/login">Login</MudButton>
+            <MudButton Color="Color.Inherit" Href="/register">Register</MudButton>
+        }
+    </MudAppBar>
+    <MudMainContent Class="pt-4">
+        <MudContainer MaxWidth="MaxWidth.Large">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private string? NickName;
+
+    protected override void OnInitialized()
+    {
+        NickName = HttpContextAccessor.HttpContext?.Session.GetString("NickName");
+    }
+}

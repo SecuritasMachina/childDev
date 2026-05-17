@@ -54,6 +54,7 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
 
 builder.Services.AddAuthorization();
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+builder.Services.AddScoped<WebAnalyticsService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>

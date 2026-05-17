@@ -1,0 +1,177 @@
+@page "/todos"
+@inject AppDbContext Db
+@inject NavigationManager Nav
+@inject IHttpContextAccessor HttpContextAccessor
+@inject ISnackbar Snackbar
+@inject WebAnalyticsService Analytics
+
+<PageTitle>Todos – ChildDev</PageTitle>
+
+@if (AccountGuid is null)
+{
+    Nav.NavigateTo("/login");
+    return;
+}
+
+<MudText Typo="Typo.h5" Class="mb-4">
+    <MudIcon Icon="@Icons.Material.Filled.CheckBox" Class="mr-2" />
+    Todos
+</MudText>
+
+@if (OverdueCount > 0)
+{
+    <MudAlert Severity="Severity.Warning" Class="mb-4">
+        @OverdueCount overdue todo@(OverdueCount == 1 ? "" : "s") — get caught up!
+    </MudAlert>
+}
+
+@if (PendingTodos.Any())
+{
+    <MudText Typo="Typo.subtitle1" Class="mb-2" Color="Color.Secondary">
+        @PendingTodos.Count pending
+    </MudText>
+}
+
+<MudList T="Todo" Dense="false">
+    @foreach (var t in PendingTodos)
+    {
+        var isOverdue = t.DueDate.HasValue && t.DueDate.Value < NowMs;
+        <MudListItem>
+            <MudStack Row="true" AlignItems="AlignItems.Center">
+                <MudIconButton Icon="@Icons.Material.Filled.RadioButtonUnchecked"
+                               Color="Color.Primary" Size="Size.Small"
+                               OnClick="() => CompleteTodo(t.Guid)" />
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.body1" Color="@(isOverdue ? Color.Error : Color.Default)">@t.Title</MudText>
+                    @if (t.DueDate.HasValue)
+                    {
+                        var due = DateTimeOffset.FromUnixTimeMilliseconds(t.DueDate.Value).LocalDateTime;
+                        <MudText Typo="Typo.caption" Color="@(isOverdue ? Color.Error : Color.Secondary)">
+                            Due @due.ToString("MMM d")@(isOverdue ? " — overdue" : "")
+                        </MudText>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(t.Notes))
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@t.Notes</MudText>
+                    }
+                </MudStack>
+            </MudStack>
+        </MudListItem>
+    }
+</MudList>
+
+<MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-2"
+           StartIcon="@Icons.Material.Filled.Add"
+           OnClick="() => ShowAddDialog = true">Add Todo</MudButton>
+
+@if (CompletedTodos.Any())
+{
+    <MudExpansionPanels Class="mt-6">
+        <MudExpansionPanel Text="@($"Completed ({CompletedTodos.Count})")">
+            <MudList T="Todo" Dense="true">
+                @foreach (var t in CompletedTodos)
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                        <MudText Typo="Typo.body2" Class="text-decoration-line-through">@t.Title</MudText>
+                    </MudListItem>
+                }
+            </MudList>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+}
+
+<MudDialog @bind-Visible="ShowAddDialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.AddTask" Class="mr-2" />
+            New Todo
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="NewTitle" Label="What needs to be done?" Variant="Variant.Outlined"
+                      Class="mb-4" AutoFocus="true" />
+        <MudTextField @bind-Value="NewNotes" Label="Notes (optional)" Variant="Variant.Outlined"
+                      Lines="2" Class="mb-4" />
+        <MudDatePicker @bind-Date="NewDueDate" Label="Due date (optional)" Variant="Variant.Outlined" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => ShowAddDialog = false">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddTodo">Add Todo</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private string? AccountGuid;
+    private List<Todo> PendingTodos = [];
+    private List<Todo> CompletedTodos = [];
+    private int OverdueCount;
+    private long NowMs;
+    private bool ShowAddDialog;
+    private string NewTitle = string.Empty;
+    private string? NewNotes;
+    private DateTime? NewDueDate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
+        if (AccountGuid is null) return;
+        NowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await LoadTodos();
+        await Analytics.TrackAsync("page_view", AccountGuid, "todos");
+    }
+
+    private async Task LoadTodos()
+    {
+        var todos = await Db.Todos
+            .Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null)
+            .OrderBy(t => t.DueDate ?? long.MaxValue)
+            .ThenByDescending(t => t.UpdatedOn)
+            .ToListAsync();
+
+        PendingTodos = todos.Where(t => t.CompletedAt == null).ToList();
+        CompletedTodos = todos.Where(t => t.CompletedAt != null).ToList();
+        OverdueCount = PendingTodos.Count(t => t.DueDate.HasValue && t.DueDate.Value < NowMs);
+    }
+
+    private async Task AddTodo()
+    {
+        var title = NewTitle.Trim();
+        if (string.IsNullOrWhiteSpace(title)) return;
+
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        Db.Todos.Add(new Todo
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = AccountGuid!,
+            Title = title,
+            Notes = string.IsNullOrWhiteSpace(NewNotes) ? null : NewNotes.Trim(),
+            DueDate = NewDueDate.HasValue
+                ? new DateTimeOffset(NewDueDate.Value, TimeSpan.Zero).ToUnixTimeMilliseconds()
+                : null,
+            UpdatedOn = now
+        });
+        await Db.SaveChangesAsync();
+
+        await Analytics.TrackAsync("todo_add", AccountGuid, "todos", title.Length > 50 ? title[..50] : title);
+
+        NewTitle = string.Empty;
+        NewNotes = null;
+        NewDueDate = null;
+        ShowAddDialog = false;
+        Snackbar.Add("Todo added!", Severity.Success);
+        await LoadTodos();
+    }
+
+    private async Task CompleteTodo(string guid)
+    {
+        var todo = await Db.Todos.FirstOrDefaultAsync(t => t.Guid == guid && t.AccountFk == AccountGuid);
+        if (todo is null) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        todo.CompletedAt = now;
+        todo.UpdatedOn = now;
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("todo_complete", AccountGuid, "todos");
+        Snackbar.Add("Todo completed!", Severity.Success);
+        await LoadTodos();
+    }
+}

@@ -3,6 +3,7 @@
 @inject NavigationManager Nav
 @inject IHttpContextAccessor HttpContextAccessor
 @inject ISnackbar Snackbar
+@inject WebAnalyticsService Analytics
 
 <PageTitle>My Goals – ChildDev</PageTitle>
 
@@ -142,6 +143,7 @@
         AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
         if (AccountGuid is null) return;
         await LoadGoals();
+        await Analytics.TrackAsync("page_view", AccountGuid, "home");
     }
 
     private async Task LoadGoals()
@@ -182,6 +184,7 @@
         NewGoalText = string.Empty;
         NewMeasurableOutcome = null;
         ShowAddDialog = false;
+        await Analytics.TrackAsync("goal_add", AccountGuid, "home");
         Snackbar.Add("Goal added!", Severity.Success);
         await LoadGoals();
     }
@@ -194,6 +197,7 @@
         goal.CompletionDate = now;
         goal.UpdatedOn = now;
         await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("goal_complete", AccountGuid, "home", guid);
         Snackbar.Add("🎉 Goal completed!", Severity.Success);
         await LoadGoals();
     }

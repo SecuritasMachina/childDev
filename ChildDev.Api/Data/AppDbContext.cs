@@ -10,6 +10,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<GoalProgress> GoalProgresses => Set<GoalProgress>();
     public DbSet<Todo> Todos => Set<Todo>();
+    public DbSet<AnalyticsEvent> AnalyticsEvents => Set<AnalyticsEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
