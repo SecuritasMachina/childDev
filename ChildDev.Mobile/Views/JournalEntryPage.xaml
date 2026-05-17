@@ -18,10 +18,16 @@
                    FontSize="11" TextColor="Gray" HorizontalOptions="End" />
             <Label Text="Activity" />
             <Entry Text="{Binding Activity}" Placeholder="e.g. Reading, Drawing" />
+            <Label Text="{Binding ActivityLength, StringFormat='{0} characters'}"
+                   FontSize="11" TextColor="Gray" HorizontalOptions="End" />
             <Label Text="Mood" />
             <Entry Text="{Binding Mood}" Placeholder="e.g. Happy, Focused" />
+            <Label Text="{Binding MoodLength, StringFormat='{0} characters'}"
+                   FontSize="11" TextColor="Gray" HorizontalOptions="End" />
             <Label Text="Tags" />
             <Entry Text="{Binding Tags}" Placeholder="comma-separated" />
+            <Label Text="{Binding TagsLength, StringFormat='{0} characters'}"
+                   FontSize="11" TextColor="Gray" HorizontalOptions="End" />
             <Button Text="Delete Entry" Command="{Binding DeleteCommand}"
                     BackgroundColor="Red" TextColor="White"
                     IsVisible="{Binding IsExisting}" Margin="0,8,0,0" />
