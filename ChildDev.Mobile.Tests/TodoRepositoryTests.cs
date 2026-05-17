@@ -367,6 +367,21 @@ public class TodoRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetCompletedCountAsync_MultipleCompleted_CountsAll()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "done1", UpdatedOn = now, CompletedAt = now });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "done2", UpdatedOn = now, CompletedAt = now });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "done3", UpdatedOn = now, CompletedAt = now });
+        await _db.InsertOrReplaceAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Title = "pending", UpdatedOn = now });
+
+        var count = await _repo.GetCompletedCountAsync(accountId);
+        Assert.Equal(3, count);
+    }
+
+    [Fact]
     public async Task GetCompletedCountAsync_ExcludesOtherAccounts()
     {
         var account1 = System.Guid.NewGuid().ToString();
