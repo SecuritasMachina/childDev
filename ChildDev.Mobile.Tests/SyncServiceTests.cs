@@ -933,6 +933,38 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_ServerReturnsExistingJournal_OverwritesLocalVersion()
+    {
+        await _accountService.CreateAccountAsync("user39", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var journalGuid = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Pre-insert a journal locally with an older timestamp
+        await _db.InsertOrReplaceAsync(new Journal
+        {
+            Guid = journalGuid, AccountFk = account.Guid, Notes = "local version",
+            EnteredDate = now, UpdatedOn = now
+        });
+
+        // Server returns same Guid with newer UpdatedOn and updated Notes
+        var serverJournal = new JournalSyncDto(journalGuid, account.Guid, "server version",
+            null, null, null, now, now + 1000, null);
+
+        var handler = new FakeSyncHandler(serverJournal);
+        var service = BuildSyncService(handler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var retrieved = await _journalRepo.GetAsync(journalGuid);
+        Assert.NotNull(retrieved);
+        Assert.Equal("server version", retrieved!.Notes);
+    }
+
+    [Fact]
     public async Task RunAsync_NoLocalChanges_SendsEmptyBatchToAllEndpoints()
     {
         await _accountService.CreateAccountAsync("user38", "1234");
