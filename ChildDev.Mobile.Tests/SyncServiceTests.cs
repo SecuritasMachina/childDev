@@ -2095,6 +2095,30 @@ public class SyncServiceTests : IDisposable
         Assert.Contains(todos, t => t.Title == "first task");
         Assert.Contains(todos, t => t.Title == "second task");
     }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsTwoGoalProgress_BothUpsertedLocally()
+    {
+        await _accountService.CreateAccountAsync("user85", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var goalGuid = System.Guid.NewGuid().ToString();
+        var progress1 = new GoalProgressSyncDto(System.Guid.NewGuid().ToString(), account.Guid,
+            goalGuid, "step one", null, 1000, null);
+        var progress2 = new GoalProgressSyncDto(System.Guid.NewGuid().ToString(), account.Guid,
+            goalGuid, "step two", null, 2000, null);
+
+        var service = BuildSyncService(new MultiGoalProgressSyncHandler(progress1, progress2));
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var records = await _goalProgressRepo.GetForGoalAsync(goalGuid);
+        Assert.Equal(2, records.Count);
+        Assert.Contains(records, p => p.NextStepItems == "step one");
+        Assert.Contains(records, p => p.NextStepItems == "step two");
+    }
 }
 
 // Test helpers
@@ -2441,6 +2465,28 @@ public class MultiTodoSyncHandler(TodoSyncDto todo1, TodoSyncDto todo2) : HttpMe
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = JsonContent.Create(new SyncResponseDto<TodoSyncDto>([todo1, todo2]))
+            });
+        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new { Records = Array.Empty<object>() })
+        });
+    }
+}
+
+public class MultiGoalProgressSyncHandler(GoalProgressSyncDto p1, GoalProgressSyncDto p2) : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        if (request.RequestUri!.PathAndQuery.Contains("health"))
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new { status = "ok" })
+            });
+        if (request.RequestUri.PathAndQuery.Contains("sync/goal-progress"))
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new SyncResponseDto<GoalProgressSyncDto>([p1, p2]))
             });
         return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
         {
