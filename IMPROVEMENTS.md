@@ -106,6 +106,18 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 279 — Mobile: Preserve EnteredDate through Goal sync upsert
+
+**What changed:**
+- `GoalRepository.cs`: `UpsertFromSyncAsync` now loads the existing record first and preserves its `EnteredDate` before calling `InsertOrReplaceAsync`. New goals from server (no local record) still use the server's `EnteredDate`.
+- `GoalRepositoryTests.cs`: Added `UpsertFromSyncAsync_PreservesOriginalEnteredDate_WhenServerSendsDifferentValue` — sets a local goal with `originalEnteredDate = now - 1 day`, upserts with `EnteredDate = now`, asserts original value is kept.
+
+**Why:** `EnteredDate` represents when the user created the goal on their device. `InsertOrReplaceAsync` blindly replaced the entire row, so any server-sent `EnteredDate` (which can differ due to clock skew or server normalization) would silently overwrite the local creation date. This was a real bug confirmed by the failing test.
+
+**Impact:** 212 API tests pass. 214 mobile tests pass (was 213).
+
+---
+
 ## 2026-05-17 — Iteration 278 — API: Mixed batch (new + existing) upsert tests
 
 **What changed:**
