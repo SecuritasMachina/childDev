@@ -429,4 +429,29 @@ public class GoalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var stored = body!.Records.Single(r => r.Guid == guid);
         Assert.Equal(originalEnteredDate, stored.EnteredDate);
     }
+
+    [Fact]
+    public async Task Sync_BatchWithMixedAccountFk_ValidRecordStoredInvalidSkipped()
+    {
+        var (jwt1, accountGuid1) = await RegisterAsync("gsync_mixed_fk1");
+        var (_, accountGuid2) = await RegisterAsync("gsync_mixed_fk2");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt1);
+
+        var validGuid = Guid.NewGuid().ToString();
+        var intruderGuid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Batch contains one valid record (correct AccountFk) and one intruder (wrong AccountFk)
+        await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([
+            new GoalDto(validGuid, accountGuid1, "my goal", null, null, ts, null, null, ts, null),
+            new GoalDto(intruderGuid, accountGuid2, "intruder", null, null, ts, null, null, ts, null)
+        ], 0));
+
+        // Account1 delta: valid record stored, intruder skipped
+        var response = await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalDto>>();
+
+        Assert.Contains(body!.Records, r => r.Guid == validGuid);
+        Assert.DoesNotContain(body.Records, r => r.Guid == intruderGuid);
+    }
 }
