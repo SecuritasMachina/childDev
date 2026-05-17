@@ -65,8 +65,8 @@ public partial class GoalEntryViewModel(
             ? new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid, EnteredDate = ts }
             : await repo.GetAsync(Guid) ?? new Goal { Guid = Guid, AccountFk = account.Guid, EnteredDate = ts };
 
-        goal.GoalText = GoalText;
-        goal.MeasurableOutcome = MeasurableOutcome;
+        goal.GoalText = GoalText.Trim();
+        goal.MeasurableOutcome = string.IsNullOrWhiteSpace(MeasurableOutcome) ? null : MeasurableOutcome.Trim();
         goal.NextMeetingDate = new DateTimeOffset(NextMeetingDate, TimeSpan.Zero).ToUnixTimeMilliseconds();
         goal.ExpirationDate = HasExpirationDate
             ? new DateTimeOffset(ExpirationDate, TimeSpan.Zero).ToUnixTimeMilliseconds()
