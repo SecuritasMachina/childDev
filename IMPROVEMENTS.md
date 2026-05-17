@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 157 — API: Goal + GoalProgress delta ordering by UpdatedOn
+
+**What changed:**
+- `GoalSyncTests.cs`: Added `Sync_Delta_OrderedByUpdatedOnAscending` — inserts 3 goals at T3/T1/T2, asserts delta returns T1→T2→T3.
+- `GoalProgressSyncTests.cs`: Added `Sync_Delta_OrderedByUpdatedOnAscending` — same for GoalProgress.
+
+**Why:** All 4 entity sync endpoints use `ORDER BY UpdatedOn ASC` in the delta query. Journal (iter 151) and Todo (iter 156) already have this test. Goal and GoalProgress did not, leaving their sort order unguarded.
+
+**Impact:** 103 mobile tests pass. 125 API tests pass (was 123).
+
+---
+
 ## 2026-05-17 — Iteration 156 — API: Todo optional fields round-trip + delta ordering
 
 **What changed:**
