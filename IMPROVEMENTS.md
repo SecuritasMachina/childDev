@@ -106,6 +106,17 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 292 — API: GoalProgress soft-delete with blank NextStepItems accepted
+
+**What changed:**
+- `GoalProgressSyncTests.cs`: Added `Sync_SoftDeletedRecord_BlankNextStepItems_Accepted` — uploads a GoalProgress with `DeletedAt = UpdatedOn` and `NextStepItems = null`, asserts HTTP 200 and stored record with correct `DeletedAt`.
+
+**Why:** The validation gate permits blank `NextStepItems` when `DeletedAt` is set (tombstone records), but this path was untested. Tombstones don't need content — only the GUID and timestamps matter for propagating a deletion.
+
+**Impact:** 214 API tests pass (was 213). 221 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 291 — Web: Soft-delete progress notes from goal detail
 
 **What changed:**
