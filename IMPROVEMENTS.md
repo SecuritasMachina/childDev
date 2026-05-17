@@ -2,6 +2,26 @@
 
 ---
 
+## 2026-05-17 — Fix: goal meeting/expiration dates shown as past/overdue prematurely (iter 380)
+
+**Files:** `ChildDev.Api/Components/Pages/GoalDetail.razor`, `ChildDev.Api/Components/Pages/Home.razor`, `ChildDev.Mobile/ViewModels/DashboardViewModel.cs`
+
+**Change:** Same class of bug as iter 378. Dates stored as local-midnight ms were compared against current UTC time. GoalDetail and Home.razor now compare local date vs `DateTime.Today`. DashboardViewModel upcoming meetings filter changed from `> nowMs` to `>= todayStartMs` so today's meetings appear as "Next goal meeting: today".
+
+**Impact:** 220 API + 245 mobile tests — all passing.
+
+---
+
+## 2026-05-17 — Test: meeting-date-only GoalProgress mobile sync (iter 379)
+
+**File:** `ChildDev.Mobile.Tests/SyncServiceTests.cs`
+
+**Change:** Added `RunAsync_ServerReturnsGoalProgress_NullNextStepsMeetingDateOnly_StoredLocally` — verifies GoalProgress with null NextStepItems and a NextMeetingDate syncs correctly from server to mobile local DB.
+
+**Impact:** 245 mobile tests (was 244) — all passing.
+
+---
+
 ## 2026-05-17 — Fix: todos due today incorrectly shown as overdue (iter 378)
 
 **Files:** `ChildDev.Api/Components/Pages/Home.razor`, `ChildDev.Api/Components/Pages/Todos.razor`, `ChildDev.Mobile/ViewModels/DashboardViewModel.cs`, `ChildDev.Mobile/ViewModels/TodoListViewModel.cs`
