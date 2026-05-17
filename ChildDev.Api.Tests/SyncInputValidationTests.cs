@@ -580,4 +580,36 @@ public class SyncInputValidationTests(ApiFactory factory) : IClassFixture<ApiFac
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Sync_Goal_CompletedWithBlankGoalText_IsAccepted()
+    {
+        var jwt = await RegisterJwtAsync("goalcompletedtext");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var guid = Guid.NewGuid();
+        var completionDate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var body = new StringContent(
+            $"{{\"Records\":[{{\"Guid\":\"{guid}\",\"AccountFk\":\"a1\",\"GoalText\":null,\"EnteredDate\":0,\"CompletionDate\":{completionDate},\"UpdatedOn\":{completionDate},\"DeletedAt\":null}}],\"LastSyncAt\":0}}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync("/api/sync/goal", body);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_Goal_FutureNextMeetingDate_Returns422()
+    {
+        var jwt = await RegisterJwtAsync("goalfuturemeeting");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var guid = Guid.NewGuid();
+        var farFutureMs = DateTimeOffset.UtcNow.AddYears(11).ToUnixTimeMilliseconds();
+        var body = new StringContent(
+            $"{{\"Records\":[{{\"Guid\":\"{guid}\",\"AccountFk\":\"a1\",\"GoalText\":\"test\",\"NextMeetingDate\":{farFutureMs},\"EnteredDate\":0,\"UpdatedOn\":0,\"DeletedAt\":null}}],\"LastSyncAt\":0}}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync("/api/sync/goal", body);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
 }
