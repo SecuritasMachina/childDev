@@ -106,6 +106,17 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 269 — Web: Goal edit dialog on goal detail page
+
+**What changed:**
+- `GoalDetail.razor`: Added edit pencil icon to goal header. Opens a dialog pre-filled with `GoalText` and `MeasurableOutcome`. On save, updates the EF entity with new `UpdatedOn` timestamp (LWW-compatible). Tracks `goal_edit` analytics event.
+
+**Why:** Users needed to correct goal text without the mobile app. Edits use the same `UpdatedOn` LWW field, so mobile sync picks up web edits correctly.
+
+**Impact:** 200 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Iteration 268 — Web: Journal page (/journal)
 
 **What changed:**
