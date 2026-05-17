@@ -35,6 +35,12 @@ public static class GoalProgressEndpoints
                 logger.LogWarning("sync/goal-progress account={Account} rejected: invalid GoalFk", accountGuid[..8]);
                 return Results.Problem("Record GoalFk is not a valid GUID.", statusCode: 422);
             }
+            var maxFutureTimestampMs = DateTimeOffset.UtcNow.AddYears(10).ToUnixTimeMilliseconds();
+            if (req.Records.Any(r => r.NextMeetingDate.HasValue && r.NextMeetingDate.Value > maxFutureTimestampMs))
+            {
+                logger.LogWarning("sync/goal-progress account={Account} rejected: NextMeetingDate too far in future", accountGuid[..8]);
+                return Results.Problem("Record NextMeetingDate is too far in the future.", statusCode: 422);
+            }
             if (req.Records.Any(r => r.DeletedAt is null && string.IsNullOrWhiteSpace(r.NextStepItems)))
             {
                 logger.LogWarning("sync/goal-progress account={Account} rejected: blank NextStepItems", accountGuid[..8]);
