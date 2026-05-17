@@ -193,6 +193,7 @@ else
 
     private async Task LoadTodos()
     {
+        NowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var todos = await Db.Todos
             .Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null)
             .OrderBy(t => t.DueDate ?? long.MaxValue)

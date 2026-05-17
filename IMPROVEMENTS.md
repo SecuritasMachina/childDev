@@ -4220,6 +4220,16 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — Fix stale NowMs in Todos overdue filter (iter 336)
+
+**What:** `NowMs` is now refreshed at the start of `LoadTodos()` instead of only in `OnInitializedAsync`.
+
+**Why:** `NowMs` was set once at page load. If the user left the browser open overnight, todos whose due dates crossed midnight would not show as overdue — the Overdue filter and overdue badge used the stale timestamp. Refreshing `NowMs` on every `LoadTodos()` call (which happens after every add/complete/delete) keeps the overdue state accurate for the session.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Fix timezone bug in analytics and progress charts (iter 335)
 
 **What:** Replaced `new DateTimeOffset(d, TimeSpan.Zero)` with `new DateTimeOffset(DateTime.SpecifyKind(d, DateTimeKind.Local))` in `BuildDailyChart` (Insights.razor) and `BuildProgressChart` (GoalDetail.razor).
