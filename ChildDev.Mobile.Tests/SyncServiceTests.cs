@@ -1153,6 +1153,30 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_LocalTodo_TitleIncludedInUploadRequest()
+    {
+        await _accountService.CreateAccountAsync("user54", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var updatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new Todo
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Title = "Call the dentist", UpdatedOn = updatedOn
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        await service.RunAsync(account);
+
+        var body = capturingHandler.GetBodyFor("sync/todo");
+        Assert.NotNull(body);
+        Assert.Contains("Call the dentist", body);
+    }
+
+    [Fact]
     public async Task RunAsync_LocalJournal_EnteredDateIncludedInUploadRequest()
     {
         await _accountService.CreateAccountAsync("user53", "1234");

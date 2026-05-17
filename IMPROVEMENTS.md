@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 215 — Mobile: SyncService includes Todo Title in upload request
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_LocalTodo_TitleIncludedInUploadRequest` — inserts a todo with Title="Call the dentist", runs sync, asserts the captured sync/todo body contains that text.
+
+**Why:** `RunAsync_LocalTodo_DueDateIncludedInUploadRequest` only checks DueDate; `RunAsync_LocalTodo_NotesIncludedInUploadRequest` only checks Notes. The `t.Title` field in the toDto lambda was never explicitly verified in the upload body. Title is the required display name of a todo item.
+
+**Impact:** 166 mobile tests pass (was 165). 160 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 214 — Mobile: SyncService includes Journal EnteredDate in upload request
 
 **What changed:**
