@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 130 — Mobile Tests: SyncService sends locally modified GoalProgress
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_LocalGoalProgressModifiedSinceLastSync_IncludedInRequest` — inserts a GoalProgress record directly via `_db.InsertOrReplaceAsync`, runs sync with a `CapturingHandler`, and verifies the `sync/goal-progress` request body contains the record's GUID.
+
+**Why:** Iteration 109 added the analogous test for Journal. GoalProgress is the most complex entity (it references goals, participates in cascade delete, and has its own `GetModifiedSinceAsync`). Without this test, a regression removing GoalProgress from the SyncService entity loop (or breaking its `GetModifiedSinceAsync` call) would be invisible.
+
+**Impact:** 50 mobile tests pass. 106 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 129 — Mobile Tests: GoalProgress DeleteForGoalAsync UpdatedOn sync invariant
 
 **What changed:**
