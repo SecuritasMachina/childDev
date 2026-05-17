@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 251 — API: Journal sync idempotent upsert — same GUID twice yields one record
+
+**What changed:**
+- `JournalSyncTests.cs`: Added `Sync_SameGuidUploadedTwice_DeltaContainsExactlyOneRecord` (jsync_idempotent1) — uploads a journal GUID in one sync call, uploads it again with a newer `UpdatedOn` in a second call, then fetches the delta and asserts exactly one record for that GUID with the newer notes content.
+
+**Why:** The server uses EF Core `FindAsync` + `AddOrUpdate`/`Update` to implement LWW upsert, which should prevent duplicate rows. But no test verified that two uploads of the same GUID result in exactly one stored record rather than two rows. If the upsert logic were accidentally changed to always `Add`, the delta would return two copies.
+
+**Impact:** 193 API tests pass (was 192). 205 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 250 — Mobile: SyncService upserts all records when server returns multiple
 
 **What changed:**
