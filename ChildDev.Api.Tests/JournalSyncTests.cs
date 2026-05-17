@@ -297,4 +297,30 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var stored = body!.Records.Single(r => r.Guid == guid);
         Assert.Equal("Server version", stored.Notes);
     }
+
+    [Fact]
+    public async Task Sync_EnteredDate_UpdatedByClient_OnLWWOverwrite()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("jsync_entered_date");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var originalEnteredDate = 1_000_000L;
+        var t1 = 1_000_000L;
+        var t2 = 2_000_000L;
+
+        // Store journal with EnteredDate = originalEnteredDate, UpdatedOn = t1
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, originalEnteredDate, t1, null)], 0));
+
+        // Client sends newer UpdatedOn with a corrected EnteredDate — journal entry date IS mutable
+        var correctedEnteredDate = 5_000_000L;
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, correctedEnteredDate, t2, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
+
+        var stored = body!.Records.Single(r => r.Guid == guid);
+        Assert.Equal(correctedEnteredDate, stored.EnteredDate);
+    }
 }
