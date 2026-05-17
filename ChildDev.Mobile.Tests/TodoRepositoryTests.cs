@@ -144,6 +144,23 @@ public class TodoRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetModifiedSinceAsync_IncludesSoftDeletedRecords()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Todo
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId,
+            Title = "deleted task", UpdatedOn = now, DeletedAt = now
+        });
+
+        var modified = await _repo.GetModifiedSinceAsync(accountId, 0);
+        Assert.Single(modified);
+        Assert.NotNull(modified[0].DeletedAt);
+    }
+
+    [Fact]
     public async Task UpsertFromSync_OverwritesExistingRecord()
     {
         var guid = System.Guid.NewGuid().ToString();
