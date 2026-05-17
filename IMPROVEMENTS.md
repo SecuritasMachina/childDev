@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-17 — Fix: mobile Add Todo button disabled when title is blank (iter 389)
+
+**File:** `ChildDev.Mobile/ViewModels/TodoListViewModel.cs`
+
+**Change:** Added `CanAdd()` method and `OnNewTodoTitleChanged` partial to propagate the can-execute state, and attached it as `CanExecute = nameof(CanAdd)` on the `AddCommand`. The Add button in the quick-add row on the Todo list page is now automatically disabled by the MVVM framework when the title field is empty.
+
+**Why:** `AddAsync` already had a `if (string.IsNullOrWhiteSpace) return` guard, but the underlying command had no `CanExecute`, so the button remained visually enabled. Consistent with the `GoalEntryViewModel`, `JournalEntryViewModel`, and `TodoEntryViewModel` which all use `CanExecute` for their Save commands.
+
+**Impact:** 242 mobile tests — all passing.
+
+---
+
 ## 2026-05-17 — Fix: disabled Save buttons when required fields are blank (iter 388)
 
 **Files:** `ChildDev.Api/Components/Pages/Todos.razor`, `ChildDev.Api/Components/Pages/Home.razor`, `ChildDev.Api/Components/Pages/JournalPage.razor`

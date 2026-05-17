@@ -53,6 +53,10 @@ public partial class TodoListViewModel(
 
     private List<Todo> _allTodos = [];
 
+    private bool CanAdd() => !string.IsNullOrWhiteSpace(NewTodoTitle);
+
+    partial void OnNewTodoTitleChanged(string value) => AddCommand.NotifyCanExecuteChanged();
+
     partial void OnFilterTextChanged(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -124,7 +128,7 @@ public partial class TodoListViewModel(
         }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanAdd))]
     private async Task AddAsync()
     {
         if (string.IsNullOrWhiteSpace(NewTodoTitle)) return;
