@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 145 — Mobile Tests: GoalProgressRepo skip already-deleted + SyncService partial-creds guard
+
+**What changed:**
+- `GoalProgressRepositoryTests.cs`: Added `DeleteForGoalAsync_AlreadyDeletedRecordsAreNotRetouched` — inserts a record with `DeletedAt=1000`, calls `DeleteForGoalAsync`, asserts `UpdatedOn` and `DeletedAt` remain at 1000. The method queries `WHERE DeletedAt IS NULL`, so already-deleted records must not be touched (bumping their `UpdatedOn` would corrupt the LWW invariant).
+- `SyncServiceTests.cs`: Added `RunAsync_ServerUrlSetButJwtMissing_ReturnsNoServer` — sets `ServerUrl` but leaves `ServerJwt` null, verifies the OR guard (`IsNullOrEmpty(ServerUrl) || IsNullOrEmpty(ServerJwt)`) returns `NoServer`.
+
+**Why:** `DeleteForGoalAsync` loops only over active items (`DeletedAt IS NULL`). If that filter were inadvertently removed, already-deleted progress items would have their `UpdatedOn` bumped to "now", drifting out of the sync window and potentially causing the server to re-deliver them. The partial-credentials test covers the second branch of the guard — the existing `NoServer` test uses an account with both credentials missing.
+
+**Impact:** 92 mobile tests pass (was 90). 111 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 144 — Mobile Tests: LWW timestamp preservation + delta round-trip
 
 **What changed:**
