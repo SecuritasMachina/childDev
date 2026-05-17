@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 213 — Mobile: SyncService includes Goal EnteredDate in upload request
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_LocalGoal_EnteredDateIncludedInUploadRequest` — inserts a goal with EnteredDate=1_000_000 and UpdatedOn=2_000_000 (deliberately different), asserts the captured sync/goal body contains 1_000_000.
+
+**Why:** Goal's `g.EnteredDate` in the toDto lambda was never explicitly tested for upload. Previous tests using the same value for both EnteredDate and UpdatedOn cannot distinguish the two timestamps. If `g.EnteredDate` were accidentally dropped, EnteredDate would default to 0 in the JSON — silently losing the goal's creation date. Using distinct values makes the assertion unambiguous.
+
+**Impact:** 164 mobile tests pass (was 163). 160 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 212 — Mobile: SyncService includes Journal Notes in upload request
 
 **What changed:**
