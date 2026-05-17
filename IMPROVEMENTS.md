@@ -1,5 +1,18 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 135 — API + Mobile Tests: Todo completed blank title; GoalProgress ordering; server Goal upsert
+
+**What changed:**
+- `SyncInputValidationTests.cs`: Added `Sync_Todo_CompletedWithBlankTitle_IsAccepted` — verifies that a completed todo (`CompletedAt` set, `DeletedAt` null) with a blank title returns 200 OK, covering the `r.CompletedAt is null` branch in the Todo blank-title guard.
+- `GoalProgressRepositoryTests.cs`: Added `GetForGoalAsync_OrdersByUpdatedOnDescending` — verifies that `GetForGoalAsync` returns records newest-first.
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsGoal_UpsertsLocally` with `FakeGoalSyncHandler` — verifies that Goal records returned by the server are upserted into the local SQLite store after sync.
+
+**Why:** The Todo endpoint has a unique validation path where completed todos (regardless of title) are exempt from the blank-title check — previously only the `DeletedAt` exemption was tested. GoalProgress ordering was implemented but untested (like Journal's descending-date order). The SyncService inbound-upsert path was only covered for Journal; Goal, Todo, and GoalProgress lacked parallel tests.
+
+**Impact:** 63 mobile tests pass (was 61). 107 API tests pass (was 106).
+
+---
+
 ## 2026-05-16 — Iteration 134 — Mobile Tests: SaveAsync edit bumps UpdatedOn + GoalProgress account isolation
 
 **What changed:**
