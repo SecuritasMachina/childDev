@@ -24,6 +24,10 @@ public partial class GoalEntryViewModel(
 
     private string _loadedNextStepItems = string.Empty;
 
+    private bool CanSave() => !string.IsNullOrWhiteSpace(GoalText);
+
+    partial void OnGoalTextChanged(string value) => SaveCommand.NotifyCanExecuteChanged();
+
     partial void OnGuidChanged(string value)
     {
         if (!string.IsNullOrEmpty(value))
@@ -50,10 +54,9 @@ public partial class GoalEntryViewModel(
         IsExisting = true;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanSave))]
     private async Task SaveAsync()
     {
-        if (string.IsNullOrWhiteSpace(GoalText)) return;
         var account = await accountService.GetAccountAsync();
         if (account is null) return;
 
