@@ -4469,3 +4469,23 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 **Impact:** 217 API tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — Feat: web Settings page for account management (iter 355)
+
+**What:** Created `Settings.razor` at `/settings` with three sections: (1) read-only account info (nickname, account ID, member-since date), (2) change-nickname form with duplicate-check validation, and (3) change-PIN form requiring current PIN verification. Added "Settings" link (with gear icon + username) to the navbar in `MainLayout.razor`, replacing the plain nickname text. Analytics tracking on page view, nickname change, and PIN change.
+
+**Why:** The web UI had no way to update account credentials — users could register and log in but were stuck with whatever nickname/PIN they picked. The mobile SettingsPage has existed since early iterations. This brings web to parity.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
+## 2026-05-17 — Analytics: add settings event names to Insights (iter 356)
+
+**What:** Added `settings_change_nickname` → "Change nickname" and `settings_change_pin` → "Change PIN" to `FormatEventName` in `Insights.razor`. Added `settings` → "Settings" to `FormatPageName`.
+
+**Why:** New events from iter 355 would have appeared as raw snake_case strings in the Insights feature-usage list without these mappings.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
