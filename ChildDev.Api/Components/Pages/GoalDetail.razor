@@ -112,7 +112,11 @@ else
         <MudTextField @bind-Value="EditGoalText" Label="Goal" Variant="Variant.Outlined"
                       Lines="2" Class="mb-4" AutoFocus="true" />
         <MudTextField @bind-Value="EditMeasurableOutcome" Label="How will you measure success? (optional)"
-                      Variant="Variant.Outlined" />
+                      Variant="Variant.Outlined" Class="mb-4" />
+        <MudDatePicker @bind-Date="EditNextMeetingDate" Label="Next meeting date (optional)"
+                       Variant="Variant.Outlined" Class="mb-4" />
+        <MudDatePicker @bind-Date="EditExpirationDate" Label="Target completion date (optional)"
+                       Variant="Variant.Outlined" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => ShowEditDialog = false">Cancel</MudButton>
@@ -132,6 +136,8 @@ else
     private bool ShowEditDialog;
     private string EditGoalText = string.Empty;
     private string? EditMeasurableOutcome;
+    private DateTime? EditNextMeetingDate;
+    private DateTime? EditExpirationDate;
 
     protected override async Task OnInitializedAsync()
     {
@@ -184,6 +190,12 @@ else
     {
         EditGoalText = Goal?.GoalText ?? string.Empty;
         EditMeasurableOutcome = Goal?.MeasurableOutcome;
+        EditNextMeetingDate = Goal?.NextMeetingDate.HasValue == true
+            ? DateTimeOffset.FromUnixTimeMilliseconds(Goal.NextMeetingDate!.Value).LocalDateTime
+            : null;
+        EditExpirationDate = Goal?.ExpirationDate.HasValue == true
+            ? DateTimeOffset.FromUnixTimeMilliseconds(Goal.ExpirationDate!.Value).LocalDateTime
+            : null;
         ShowEditDialog = true;
     }
 
@@ -194,6 +206,12 @@ else
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         Goal.GoalText = text;
         Goal.MeasurableOutcome = string.IsNullOrWhiteSpace(EditMeasurableOutcome) ? null : EditMeasurableOutcome.Trim();
+        Goal.NextMeetingDate = EditNextMeetingDate.HasValue
+            ? new DateTimeOffset(EditNextMeetingDate.Value, TimeSpan.Zero).ToUnixTimeMilliseconds()
+            : null;
+        Goal.ExpirationDate = EditExpirationDate.HasValue
+            ? new DateTimeOffset(EditExpirationDate.Value, TimeSpan.Zero).ToUnixTimeMilliseconds()
+            : null;
         Goal.UpdatedOn = now;
         await Db.SaveChangesAsync();
         await Analytics.TrackAsync("goal_edit", AccountGuid, "goal_detail", GoalGuid);
