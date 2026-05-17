@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 141 — Mobile Tests: TodoRepository ordering + zero count; AccountService GUID assignment
+
+**What changed:**
+- `TodoRepositoryTests.cs`: Added `GetAllActiveAsync_OrdersByUpdatedOnDescending` and `GetCompletedCountAsync_WhenNone_ReturnsZero`.
+- `AccountServiceTests.cs`: Added `CreateAccount_AssignsNonEmptyGuid` — verifies `CreateAccountAsync` assigns a valid GUID.
+
+**Why:** `GetAllActiveAsync` orders by `UpdatedOn DESC` but that ordering was untested. `GetCompletedCountAsync` with zero completed items returned 0 but that edge case was never verified. `CreateAccountAsync` assigns a GUID via `Guid.NewGuid().ToString()` but no test verified the account gets a non-empty, parseable GUID — a regression silently assigning empty string would break sync (AccountFk foreign keys would be empty).
+
+**Impact:** 80 mobile tests pass (was 77). 111 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 140 — API delta isolation tests for Goal, Todo, GoalProgress
 
 **What changed:**
