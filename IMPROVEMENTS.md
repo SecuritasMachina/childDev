@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 194 — Mobile: GoalRepository excludes synced soft-deleted record from GetAllActive
+
+**What changed:**
+- `GoalRepositoryTests.cs`: Added `GetAllActiveAsync_UpsertedSoftDeletedRecord_IsExcluded` — uses `UpsertFromSyncAsync` to insert a goal with DeletedAt set, then asserts `GetAllActiveAsync` returns empty.
+
+**Why:** `Delete_SoftDeletes_ExcludedFromActive` only tests the `DeleteAsync` path. A goal arriving via sync with DeletedAt already set (e.g., deleted on another device) exercises the same `WHERE DeletedAt IS NULL` SQL filter but through the `UpsertFromSyncAsync` path. Separate test ensures both insertion paths respect the filter.
+
+**Impact:** 146 mobile tests pass (was 145). 157 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 193 — Mobile: SyncService includes Goal ExpirationDate in upload request
 
 **What changed:**
