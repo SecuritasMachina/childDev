@@ -17,3 +17,35 @@ build_property.SupportLocalizedComponentNames =
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
 build_property.MSBuildProjectDirectory = /mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api
 build_property._RazorSourceGeneratorDebug = 
+
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Pages/Goals/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvR29hbHMvSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Pages/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Pages/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTG9naW4uY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Pages/Logout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTG9nb3V0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Pages/Register.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUmVnaXN0ZXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Pages/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvU2hhcmVkL19MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Pages/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Pages/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
