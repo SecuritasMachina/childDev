@@ -310,6 +310,43 @@ public class AccountServiceLinkTests : IDisposable
     }
 
     [Fact]
+    public async Task LinkToServer_DifferentGuid_MigratesTodoAccountFk()
+    {
+        await _service.CreateAccountAsync("frank", "1234");
+        var old = await _service.GetAccountAsync();
+        var oldGuid = old!.Guid;
+        var newGuid = System.Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertAsync(new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = oldGuid, Title = "task", UpdatedOn = ts });
+
+        await _service.LinkToServerAsync("jwt", "https://server.com", newGuid);
+
+        var todos = await _db.Table<Todo>().Where(t => t.AccountFk == newGuid).ToListAsync();
+        Assert.Single(todos);
+        var orphaned = await _db.Table<Todo>().Where(t => t.AccountFk == oldGuid).ToListAsync();
+        Assert.Empty(orphaned);
+    }
+
+    [Fact]
+    public async Task LinkToServer_DifferentGuid_MigratesGoalProgressAccountFk()
+    {
+        await _service.CreateAccountAsync("grace", "1234");
+        var old = await _service.GetAccountAsync();
+        var oldGuid = old!.Guid;
+        var newGuid = System.Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goalFk = System.Guid.NewGuid().ToString();
+        await _db.InsertAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = oldGuid, GoalFk = goalFk, NextStepItems = "step", UpdatedOn = ts });
+
+        await _service.LinkToServerAsync("jwt", "https://server.com", newGuid);
+
+        var items = await _db.Table<GoalProgress>().Where(p => p.AccountFk == newGuid).ToListAsync();
+        Assert.Single(items);
+        var orphaned = await _db.Table<GoalProgress>().Where(p => p.AccountFk == oldGuid).ToListAsync();
+        Assert.Empty(orphaned);
+    }
+
+    [Fact]
     public async Task ClearServerJwt_RemovesJwtOnly()
     {
         await _service.CreateAccountAsync("eve", "1234");

@@ -2,6 +2,20 @@
 
 ---
 
+## 2026-05-17 — Tests: AccountService LinkToServer coverage for Todo + GoalProgress (iter 409)
+
+**File:** `ChildDev.Mobile.Tests/AccountServiceTests.cs`
+
+**Change:** Added two missing test cases to `AccountServiceLinkTests`:
+- `LinkToServer_DifferentGuid_MigratesTodoAccountFk` — verifies all Todo rows have `AccountFk` updated to the new GUID
+- `LinkToServer_DifferentGuid_MigratesGoalProgressAccountFk` — verifies all GoalProgress rows have `AccountFk` updated to the new GUID
+
+**Why:** `AccountService.LinkToServerAsync` migrates `AccountFk` across four entity tables (Journal, Goal, GoalProgress, Todo) when the server-side GUID differs from the local one. Tests existed for Journal and Goal, but Todo and GoalProgress migrations were untested — a coverage gap on the migration path.
+
+**Impact:** 243 mobile tests — all passing.
+
+---
+
 ## 2026-05-17 — UX: GoalDetail not-found state shows back button (iter 408)
 
 **File:** `ChildDev.Api/Components/Pages/GoalDetail.razor`
