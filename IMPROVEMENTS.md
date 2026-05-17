@@ -2,6 +2,20 @@
 
 ---
 
+## 2026-05-17 — Tests: completed-record blank-field exemption coverage (iter 411)
+
+**Files:** `ChildDev.Api.Tests/GoalSyncTests.cs`, `ChildDev.Api.Tests/TodoSyncTests.cs`
+
+**Change:** Added two tests covering a validation exemption that existed but was only partially tested:
+- `Sync_CompletedGoal_BlankGoalText_Accepted` — a goal with `CompletionDate` set and null `GoalText` must be accepted (exempted from blank-GoalText check)
+- `Sync_CompletedTodo_BlankTitle_Accepted` — a todo with `CompletedAt` set and null `Title` must be accepted (exempted from blank-Title check)
+
+**Why:** Both endpoints exempt soft-deleted AND completed records from required-field checks (`DeletedAt is null && CompletionDate/CompletedAt is null`). The soft-deleted exemption was tested but the completed exemption was not, leaving the second half of the condition uncovered.
+
+**Impact:** 222 API tests — all passing.
+
+---
+
 ## 2026-05-17 — Perf: CompleteGoal uses ExecuteUpdateAsync + in-memory GoalText (iter 410)
 
 **File:** `ChildDev.Api/Components/Pages/Home.razor`

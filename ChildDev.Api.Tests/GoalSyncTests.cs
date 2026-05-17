@@ -736,4 +736,25 @@ public class GoalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.NotNull(stored);
         Assert.Equal(ts, stored!.DeletedAt);
     }
+
+    [Fact]
+    public async Task Sync_CompletedGoal_BlankGoalText_Accepted()
+    {
+        // Validation exempts completed goals (CompletionDate set) from the blank-GoalText check,
+        // matching the same exemption for soft-deleted records.
+        var (jwt, accountGuid) = await RegisterAsync("gsync_completed_blank");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var upload = await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(guid, accountGuid, null, null, null, ts, null, ts, ts, null)], 0));
+        Assert.Equal(HttpStatusCode.OK, upload.StatusCode);
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalDto>>();
+        var stored = body!.Records.FirstOrDefault(r => r.Guid == guid);
+        Assert.NotNull(stored);
+        Assert.Equal(ts, stored!.CompletionDate);
+    }
 }

@@ -679,4 +679,25 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.NotNull(stored);
         Assert.Equal(ts, stored!.DeletedAt);
     }
+
+    [Fact]
+    public async Task Sync_CompletedTodo_BlankTitle_Accepted()
+    {
+        // Validation exempts completed todos (CompletedAt set) from the blank-Title check,
+        // matching the same exemption for soft-deleted records.
+        var (jwt, accountGuid) = await RegisterAsync("tsync_completed_blank");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var upload = await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, null, null, null, ts, ts, null)], 0));
+        Assert.Equal(HttpStatusCode.OK, upload.StatusCode);
+
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+        var stored = body!.Records.FirstOrDefault(r => r.Guid == guid);
+        Assert.NotNull(stored);
+        Assert.Equal(ts, stored!.CompletedAt);
+    }
 }
