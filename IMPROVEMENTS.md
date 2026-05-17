@@ -9,7 +9,7 @@
 | 3 | API: X-Request-ID echo header for traceability | Perf | Low | S | Low | **DONE** |
 | 4 | SyncService: retry once on transient HTTP failure | Stability | Low | M | Medium | **DONE** |
 | 5 | GoalListPage: show NextMeetingDate per goal | UI | Medium | S | Low | **DONE** |
-| 6 | API: CORS policy — restrict to expected origins | Security | Low | S | Low | Backlog |
+| 6 | API: CORS policy — restrict to expected origins | Security | Low | S | Low | **DONE** |
 | 7 | JournalListPage: activity chip/badge alongside mood | UI | Low | S | Low | Backlog |
 | 8 | TodoEntryPage: due date picker UI (DatePicker element) | Func | Medium | S | Low | Backlog |
 | 9 | API: structured logging for sync (record counts, account) | Ops | Low | S | Low | Backlog |
