@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 88 — Mobile: Show Notes character count in TodoEntry
+
+**What changed:**
+- `TodoEntryViewModel.cs`: Added `[ObservableProperty] private int notesLength` and `partial void OnNotesChanged` setting it.
+- `TodoEntryPage.xaml`: Added small gray label below Notes Editor showing `{Binding NotesLength, StringFormat='{0} characters'}`.
+
+**Why:** Completes the entry-form character/word count pattern (GoalEntry char count iter 79, JournalEntry word count iter 70). TodoEntry Notes was the remaining entry form without feedback.
+
+**Impact:** 25 mobile tests pass. 66 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 87 — API: Validate GoalProgress.NextMeetingDate not in far future
 
 **What changed:**
