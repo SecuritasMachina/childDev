@@ -62,7 +62,6 @@ public partial class TodoListViewModel(
             var items = await repo.GetPendingAsync(account.Guid);
             _allTodos = items;
             Todos = new ObservableCollection<Todo>(items);
-            EntryCountDisplay = $"{items.Count} {(items.Count == 1 ? "task" : "tasks")} pending";
             CompletedTodoCount = await repo.GetCompletedCountAsync(account.Guid);
             HasCompletedTodos = CompletedTodoCount > 0;
             UpdateOverdueCount(items);
@@ -84,7 +83,6 @@ public partial class TodoListViewModel(
             var items = await repo.GetPendingAsync(account.Guid);
             _allTodos = items;
             Todos = new ObservableCollection<Todo>(items);
-            EntryCountDisplay = $"{items.Count} {(items.Count == 1 ? "task" : "tasks")} pending";
             CompletedTodoCount = await repo.GetCompletedCountAsync(account.Guid);
             HasCompletedTodos = CompletedTodoCount > 0;
             UpdateOverdueCount(items);
@@ -144,9 +142,13 @@ public partial class TodoListViewModel(
 
     private void UpdateOverdueCount(IEnumerable<Todo> items)
     {
+        var list = items as IList<Todo> ?? items.ToList();
         var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        OverdueTodoCount = items.Count(t => t.DueDate.HasValue && t.DueDate.Value < nowMs);
+        OverdueTodoCount = list.Count(t => t.DueDate.HasValue && t.DueDate.Value < nowMs);
         HasOverdueTodos = OverdueTodoCount > 0;
+        EntryCountDisplay = OverdueTodoCount > 0
+            ? $"{list.Count} pending, {OverdueTodoCount} overdue"
+            : $"{list.Count} {(list.Count == 1 ? "task" : "tasks")} pending";
     }
 
     [RelayCommand]
