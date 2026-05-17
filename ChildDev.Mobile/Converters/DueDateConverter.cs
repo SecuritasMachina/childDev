@@ -25,6 +25,19 @@ public class NotNullConverter : IValueConverter
 }
 
 
+public class MeetingDateConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is not long ms) return null;
+        var dt = DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime;
+        return dt.Year == DateTime.Today.Year ? $"Meet: {dt:ddd, MMM d}" : $"Meet: {dt:ddd, MMM d yyyy}";
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotImplementedException();
+}
+
 public class DueDateLabelConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
