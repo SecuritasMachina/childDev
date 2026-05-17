@@ -507,4 +507,22 @@ public class TodoRepositoryTests : IDisposable
         var pending = await _repo.GetPendingAsync(accountId);
         Assert.Empty(pending);
     }
+
+    [Fact]
+    public async Task DeleteAsync_TodoAppearsInGetModifiedSince()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var oldTs = DateTimeOffset.UtcNow.AddSeconds(-10).ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new Todo
+        {
+            Guid = guid, AccountFk = "account1", Title = "to delete", UpdatedOn = oldTs
+        });
+
+        await _repo.DeleteAsync(guid);
+
+        var modified = await _repo.GetModifiedSinceAsync("account1", oldTs);
+        Assert.Single(modified);
+        Assert.Equal(guid, modified[0].Guid);
+        Assert.NotNull(modified[0].DeletedAt);
+    }
 }

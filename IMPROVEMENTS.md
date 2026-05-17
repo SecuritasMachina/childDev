@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 220 — Mobile: TodoRepository and JournalRepository DeleteAsync appear in GetModifiedSince
+
+**What changed:**
+- `TodoRepositoryTests.cs`: Added `DeleteAsync_TodoAppearsInGetModifiedSince`.
+- `JournalRepositoryTests.cs`: Added `DeleteAsync_JournalAppearsInGetModifiedSince`.
+
+**Why:** Mirrors iter 219 for Goal. Both tests verify the sync-upload path: after calling DeleteAsync, the soft-deleted record must appear in GetModifiedSinceAsync so it is included in the next upload batch. These are two structurally identical tests, batched together.
+
+**Impact:** 172 mobile tests pass (was 170). 160 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 219 — Mobile: GoalRepository DeleteAsync makes goal visible in GetModifiedSince
 
 **What changed:**
