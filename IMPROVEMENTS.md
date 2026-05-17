@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 80 — Bug fix: TodoListViewModel UpdateOverdueCount used filtered collection
+
+**What changed:**
+- `TodoListViewModel.cs`: `CompleteAsync` and `DeleteAsync` now pass `_allTodos` (not `Todos`) to `UpdateOverdueCount`. The filtered `Todos` ObservableCollection only contains the visible subset, so when a filter was active the overdue count and `EntryCountDisplay` reflected only matching items.
+
+**Why:** When a text filter was active, completing or deleting a todo would update EntryCountDisplay based on the filtered item count, not the real total pending count. The fix brings the count back in line with what LoadAsync/RefreshAsync produce.
+
+**Impact:** 25 mobile tests pass (0 warnings). 59 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 79 — Mobile: Show GoalText character count in GoalEntry
 
 **What changed:**
