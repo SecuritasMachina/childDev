@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 260 — API: Goal sync idempotent upsert — completes 4-entity idempotency set
+
+**What changed:**
+- `GoalSyncTests.cs`: Added `Sync_SameGuidUploadedTwice_DeltaContainsExactlyOneRecord` (gsync_idempotent1) — uploads a goal GUID twice (second with newer UpdatedOn and different GoalText), fetches delta, asserts exactly one record with second GoalText.
+
+**Why:** Completes the 4-entity idempotency coverage set (Journal ✓ iter 251, Todo ✓ 258, GoalProgress ✓ 259, Goal ✓ 260). Goal has entity-specific optional fields (ExpirationDate, MeasurableOutcome, etc.) that pass through the same upsert path.
+
+**Impact:** 197 API tests pass (was 196). 210 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 259 — API: GoalProgress sync idempotent upsert — same GUID twice yields one record
 
 **What changed:**
