@@ -1,5 +1,18 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 174 — API: LastSyncAt upper-bound empty delta for Goal, GoalProgress, Todo
+
+**What changed:**
+- `GoalSyncTests.cs`: Added `Sync_LastSyncAt_LargerThanAllRecords_EmptyDelta` — stores a goal at timestamp T, syncs with `LastSyncAt = T + 10_000`, asserts empty delta.
+- `GoalProgressSyncTests.cs`: Added `Sync_LastSyncAt_LargerThanAllRecords_EmptyDelta` — same pattern for GoalProgress.
+- `TodoSyncTests.cs`: Added `Sync_LastSyncAt_LargerThanAllRecords_EmptyDelta` — same pattern for Todo.
+
+**Why:** Journal got this test in iter 171. Goal/GoalProgress/Todo all had `Sync_LastSyncAt_NegativeValue_ReturnsAllRecords` (lower-bound) but not the complementary upper-bound test. Now all 4 entities consistently document both ends of the delta filter range (`WHERE UpdatedOn > LastSyncAt`).
+
+**Impact:** 141 API tests pass (was 138). 132 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 173 — Mobile: Goal, Todo, GoalProgress SaveAsync optional fields persistence
 
 **What changed:**
