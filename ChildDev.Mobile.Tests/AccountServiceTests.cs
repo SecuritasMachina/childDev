@@ -117,6 +117,22 @@ public class AccountServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task SaveServerCredentials_WhenNoAccount_DoesNotThrow()
+    {
+        await _service.SaveServerCredentialsAsync("some-jwt", "https://server.example.com");
+        var account = await _service.GetAccountAsync();
+        Assert.Null(account);
+    }
+
+    [Fact]
+    public async Task SaveServerUrl_WhenNoAccount_DoesNotThrow()
+    {
+        await _service.SaveServerUrlAsync("https://server.example.com");
+        var account = await _service.GetAccountAsync();
+        Assert.Null(account);
+    }
+
+    [Fact]
     public async Task CreateAccount_AssignsNonEmptyGuid()
     {
         await _service.CreateAccountAsync("heidi", "1234");

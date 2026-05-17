@@ -266,6 +266,37 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_LocalSoftDeletedJournal_IncludedInUploadRequest()
+    {
+        await _accountService.CreateAccountAsync("user18", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        // Insert a soft-deleted journal directly (GetModifiedSinceAsync must return it)
+        var journalGuid = System.Guid.NewGuid().ToString();
+        var deletedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new Journal
+        {
+            Guid = journalGuid,
+            AccountFk = account.Guid,
+            Notes = "deleted note",
+            EnteredDate = deletedAt,
+            UpdatedOn = deletedAt,
+            DeletedAt = deletedAt
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var journalBody = capturingHandler.GetBodyFor("sync/journal");
+        Assert.NotNull(journalBody);
+        Assert.Contains(journalGuid, journalBody);
+    }
+
+    [Fact]
     public async Task RunAsync_LocalGoalModifiedSinceLastSync_IncludedInRequest()
     {
         await _accountService.CreateAccountAsync("user10", "1234");
