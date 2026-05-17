@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 229 — Mobile: SaveServerCredentials/Url preserve LastSyncAt
+
+**What changed:**
+- `AccountServiceTests.cs`: Added `SaveServerCredentials_PreservesLastSyncAt` (user "sam") and `SaveServerUrl_PreservesLastSyncAt` (user "taylor").
+
+**Why:** If credential or URL updates ever reset LastSyncAt (e.g., by using a partial-update approach that initializes a new Account object instead of loading the existing one), the next sync would re-download the full dataset. The existing preservation tests only checked NickName/CreatedOn/JWT/URL; LastSyncAt was unguarded.
+
+**Impact:** 186 mobile tests pass (was 184). 164 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 228 — API: Soft-delete clears GoalText/Title in delta (Goal + Todo)
 
 **What changed:**
