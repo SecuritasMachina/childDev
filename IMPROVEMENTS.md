@@ -4220,6 +4220,26 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 
 ---
 
+## 2026-05-17 — Fix missing todo_edit and logout event names in Insights (iter 344)
+
+**What:** Added `"todo_edit" => "Edit todo"` and `"logout" => "Logout"` to `FormatEventName` in `Insights.razor`. Both events are tracked but were falling through to the raw-name fallback (`name.Replace("_", " ")`), showing "todo edit" and "logout" instead of clean labels.
+
+**Why:** Completes the event name mapping added in iter 339. `todo_edit` is tracked on every save from the Todos edit dialog; `logout` is tracked on every logout. Both appear in the Insights event breakdown for active users.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
+
+## 2026-05-17 — Mobile: GetCountSinceAsync for journal 7-day count (iter 343)
+
+**What:** Added `GetCountSinceAsync(accountFk, sinceMs)` to `JournalRepository` — a DB-level `COUNT` query that avoids loading all journal records. Updated `DashboardViewModel.RefreshDataAsync` to call it instead of loading all active journals to count in memory. Added 3 new tests: `GetCountSinceAsync_CountsEntriesOnOrAfterThreshold`, `GetCountSinceAsync_ExcludesSoftDeletedEntries`, `GetCountSinceAsync_ExcludesOtherAccounts`.
+
+**Why:** The dashboard previously called `GetAllActiveAsync` (loads full records) then counted with LINQ — unnecessarily expensive as the journal grows. A COUNT query at the DB layer returns only the number without deserializing any records.
+
+**Impact:** 238 mobile tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Mobile dashboard: journal-this-week stat card (iter 342)
 
 **What:** Added a third stat card ("Journal (7d)") to the mobile dashboard summary row, showing the count of journal entries from the last 7 days. Card taps navigate to `//journal`. Summary grid changed from 2-column to 3-column; card labels and font sizes adjusted for the tighter layout. Added `JournalThisWeek` observable property and `GoToJournalCommand` to `DashboardViewModel`.
