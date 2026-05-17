@@ -86,4 +86,33 @@ public class AccountServiceTests : IDisposable
         Assert.Equal("https://new.example.com", account!.ServerUrl);
         Assert.Equal("existing-jwt", account.ServerJwt);
     }
+
+    [Fact]
+    public async Task VerifyPin_WhenNoAccount_ReturnsFalse()
+    {
+        var result = await _service.VerifyPinAsync("any-pin");
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task UpdateLastSync_WhenNoAccount_DoesNotThrow()
+    {
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _service.UpdateLastSyncAsync(ts);
+        var account = await _service.GetAccountAsync();
+        Assert.Null(account);
+    }
+
+    [Fact]
+    public async Task CreateAccount_SetsCreatedOn()
+    {
+        var before = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _service.CreateAccountAsync("george", "1234");
+        var after = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var account = await _service.GetAccountAsync();
+        Assert.NotNull(account);
+        Assert.True(account!.CreatedOn >= before);
+        Assert.True(account.CreatedOn <= after);
+    }
 }
