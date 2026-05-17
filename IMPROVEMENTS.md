@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 112 — Mobile Tests: UpsertFromSync tests for Goal and Journal repos
+
+**What changed:**
+- `GoalRepositoryTests.cs`: Added `UpsertFromSync_OverwritesExistingGoal`.
+- `JournalRepositoryTests.cs`: Added `UpsertFromSync_OverwritesExistingJournal`.
+
+**Why:** `UpsertFromSyncAsync` is the downlink path in the sync protocol; it bypasses `SaveAsync`'s `UpdatedOn` override. The method existed untested in both repositories.
+
+**Impact:** 42 mobile tests pass. 91 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 111 — Mobile Tests: TodoRepository GetCompletedCount, DueDate ordering, UpsertFromSync
 
 **What changed:**
