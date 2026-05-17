@@ -53,6 +53,22 @@ public class SyncInputValidationTests(ApiFactory factory) : IClassFixture<ApiFac
     }
 
     [Theory]
+    [InlineData("/api/sync/journal",      "{\"Records\":[{\"Guid\":\"not-a-guid\",\"AccountFk\":\"a1\",\"UpdatedOn\":0,\"EnteredDate\":0,\"DeletedAt\":null}],\"LastSyncAt\":0}")]
+    [InlineData("/api/sync/goal",         "{\"Records\":[{\"Guid\":\"not-a-guid\",\"AccountFk\":\"a1\",\"UpdatedOn\":0,\"EnteredDate\":0,\"DeletedAt\":null}],\"LastSyncAt\":0}")]
+    [InlineData("/api/sync/goal-progress","{\"Records\":[{\"Guid\":\"not-a-guid\",\"AccountFk\":\"a1\",\"GoalFk\":\"f1\",\"UpdatedOn\":0,\"DeletedAt\":null}],\"LastSyncAt\":0}")]
+    [InlineData("/api/sync/todo",         "{\"Records\":[{\"Guid\":\"not-a-guid\",\"AccountFk\":\"a1\",\"UpdatedOn\":0,\"DeletedAt\":null}],\"LastSyncAt\":0}")]
+    public async Task Sync_InvalidGuid_Returns422(string endpoint, string body)
+    {
+        var jwt = await RegisterJwtAsync($"guidval_{endpoint.Replace("/", "_")}");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var response = await _client.PostAsync(endpoint,
+            new StringContent(body, Encoding.UTF8, "application/json"));
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Theory]
     [InlineData("/api/sync/journal")]
     [InlineData("/api/sync/goal")]
     [InlineData("/api/sync/goal-progress")]
