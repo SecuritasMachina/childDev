@@ -331,6 +331,26 @@ public class GoalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task UpsertFromSyncAsync_NewRecord_UsesServerEnteredDate()
+    {
+        // When there is no existing local record, EnteredDate from the server payload
+        // must be stored as-is — not replaced with any local value.
+        var guid = System.Guid.NewGuid().ToString();
+        var serverEnteredDate = DateTimeOffset.UtcNow.AddDays(-3).ToUnixTimeMilliseconds();
+        var serverUpdatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _repo.UpsertFromSyncAsync(new Goal
+        {
+            Guid = guid, AccountFk = "account1", GoalText = "new from server",
+            EnteredDate = serverEnteredDate, UpdatedOn = serverUpdatedOn
+        });
+
+        var retrieved = await _repo.GetAsync(guid);
+        Assert.NotNull(retrieved);
+        Assert.Equal(serverEnteredDate, retrieved!.EnteredDate);
+    }
+
+    [Fact]
     public async Task DeleteAsync_WhenGuidNotFound_DoesNotThrow()
     {
         var nonExistentGuid = System.Guid.NewGuid().ToString();
