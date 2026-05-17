@@ -365,6 +365,28 @@ public class GoalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetAllActiveAsync_CompletedThenDeletedGoal_IsExcluded()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // A goal that was completed then soft-deleted should be excluded (DeletedAt takes precedence)
+        await _db.InsertOrReplaceAsync(new Goal
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = accountId,
+            GoalText = "completed and deleted",
+            EnteredDate = now,
+            CompletionDate = now,
+            UpdatedOn = now,
+            DeletedAt = now
+        });
+
+        var all = await _repo.GetAllActiveAsync(accountId);
+        Assert.Empty(all);
+    }
+
+    [Fact]
     public async Task GetAllActiveAsync_UpsertedSoftDeletedRecord_IsExcluded()
     {
         var accountId = System.Guid.NewGuid().ToString();
