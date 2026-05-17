@@ -142,4 +142,18 @@ public class AccountServiceTests : IDisposable
         Assert.False(string.IsNullOrEmpty(account!.Guid));
         Assert.True(System.Guid.TryParse(account.Guid, out _));
     }
+
+    [Fact]
+    public async Task UpdateLastSync_WhenCalledTwice_SecondTimestampPersisted()
+    {
+        await _service.CreateAccountAsync("ivan", "1234");
+        var t1 = DateTimeOffset.UtcNow.AddSeconds(-10).ToUnixTimeMilliseconds();
+        var t2 = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _service.UpdateLastSyncAsync(t1);
+        await _service.UpdateLastSyncAsync(t2);
+
+        var account = await _service.GetAccountAsync();
+        Assert.Equal(t2, account!.LastSyncAt);
+    }
 }
