@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 158 — Mobile: SyncService soft-delete upload coverage for Goal, Todo, GoalProgress
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_LocalSoftDeletedGoal_IncludedInUploadRequest`, `RunAsync_LocalSoftDeletedTodo_IncludedInUploadRequest`, and `RunAsync_LocalSoftDeletedGoalProgress_IncludedInUploadRequest`.
+
+**Why:** `RunAsync_LocalSoftDeletedJournal_IncludedInUploadRequest` already verified that soft-deleted journals appear in upload payloads (the `GetModifiedSinceAsync` filter has no `DeletedAt IS NULL` guard). Goal, Todo, and GoalProgress had no equivalent test — if `GetModifiedSinceAsync` accidentally gained a soft-delete filter for any of these entities, deletions would silently stop propagating to the server.
+
+**Impact:** 106 mobile tests pass (was 103). 125 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 157 — API: Goal + GoalProgress delta ordering by UpdatedOn
 
 **What changed:**
