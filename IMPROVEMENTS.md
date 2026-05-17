@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 65 — API: Validate Todo DueDate not more than 10 years in future
+
+**What changed:**
+- `TodoEndpoints.cs`: Added DueDate range check — any record with `DueDate > now + 10 years` returns HTTP 422 with a Problem Details response, consistent with the existing `UpdatedOn` future-date guard.
+- `SyncInputValidationTests.cs`: Added `Sync_Todo_FutureDueDate_Returns422` fact test.
+
+**Why:** Without a bound, a bug or malicious client could submit dates decades in the future that would sort to the top of any overdue list. 10 years is generous for any legitimate planning horizon.
+
+**Impact:** 25 mobile tests pass (0 warnings). 53 API tests pass (was 52).
+
+---
+
 ## 2026-05-16 — Iteration 64 — Mobile: Show account GUID in Settings
 
 **What changed:**
