@@ -21,7 +21,13 @@ public partial class JournalEntryViewModel(
     [ObservableProperty] private bool isExisting;
     [ObservableProperty] private int notesLength;
 
-    partial void OnNotesChanged(string value) => NotesLength = value?.Length ?? 0;
+    partial void OnNotesChanged(string value)
+    {
+        NotesLength = value?.Length ?? 0;
+        SaveCommand.NotifyCanExecuteChanged();
+    }
+
+    private bool CanSave() => !string.IsNullOrWhiteSpace(Notes);
 
     partial void OnGuidChanged(string value)
     {
@@ -42,7 +48,7 @@ public partial class JournalEntryViewModel(
         IsExisting = true;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanSave))]
     private async Task SaveAsync()
     {
         var account = await accountService.GetAccountAsync();
