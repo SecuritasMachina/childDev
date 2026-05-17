@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 200 — Mobile: AccountService SaveServerCredentials second call overwrites first
+
+**What changed:**
+- `AccountServiceTests.cs`: Added `SaveServerCredentials_WhenCalledTwice_SecondCredentialsPersisted` — calls `SaveServerCredentialsAsync` with (jwt-v1, server1) then (jwt-v2, server2), asserts stored values equal v2.
+
+**Why:** `SaveServerCredentials_PersistsJwtAndUrl` only tests a single call. Testing two calls verifies the `await db.UpdateAsync(account)` is correctly persisting the update. Mirrors iter 198's pattern for `UpdateLastSyncAsync`.
+
+**Impact:** 153 mobile tests pass (was 152). 157 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 199 — Mobile: GetLatestNextStepsAsync returns latest for each of two distinct goals
 
 **What changed:**
