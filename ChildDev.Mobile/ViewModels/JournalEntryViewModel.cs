@@ -32,11 +32,16 @@ public partial class JournalEntryViewModel(
         SaveCommand.NotifyCanExecuteChanged();
     }
 
-    partial void OnActivityChanged(string value) => ActivityLength = value?.Length ?? 0;
+    partial void OnActivityChanged(string value)
+    {
+        ActivityLength = value?.Length ?? 0;
+        SaveCommand.NotifyCanExecuteChanged();
+    }
+
     partial void OnMoodChanged(string value) => MoodLength = value?.Length ?? 0;
     partial void OnTagsChanged(string value) => TagsLength = value?.Length ?? 0;
 
-    private bool CanSave() => !string.IsNullOrWhiteSpace(Notes);
+    private bool CanSave() => !string.IsNullOrWhiteSpace(Notes) || !string.IsNullOrWhiteSpace(Activity);
 
     partial void OnGuidChanged(string value)
     {
@@ -69,7 +74,7 @@ public partial class JournalEntryViewModel(
             : await repo.GetAsync(Guid) ?? new Journal { Guid = Guid, AccountFk = account.Guid, EnteredDate = enteredMs };
 
         journal.EnteredDate = enteredMs;
-        journal.Notes = Notes.Trim();
+        journal.Notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim();
         journal.Activity = string.IsNullOrWhiteSpace(Activity) ? null : Activity.Trim();
         journal.Mood = string.IsNullOrWhiteSpace(Mood) ? null : Mood.Trim();
         journal.Tags = string.IsNullOrWhiteSpace(Tags) ? null : Tags.Trim();
