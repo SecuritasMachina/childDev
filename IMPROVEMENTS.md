@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-17 — Perf: replace N UpdateAsync calls with single SQL UPDATE in DeleteForGoalAsync (iter 392)
+
+**File:** `ChildDev.Mobile/Data/GoalProgressRepository.cs`
+
+**Change:** `DeleteForGoalAsync` previously fetched all active progress records for a goal then issued one `UpdateAsync` per row. Replaced with a single `ExecuteAsync("UPDATE GoalProgress SET DeletedAt = ?, UpdatedOn = ? WHERE GoalFk = ? AND DeletedAt IS NULL", ...)`. Already-deleted records are excluded by the `AND DeletedAt IS NULL` clause, matching the prior loop behavior.
+
+**Why:** N round-trips to SQLite for each active progress record on goal deletion. A single UPDATE is O(1) round-trips regardless of how many progress notes exist. Most goals will have few notes, but the pattern was unnecessarily chatty.
+
+**Impact:** 242 mobile tests — all passing.
+
+---
+
 ## 2026-05-17 — Fix: Disabled binding on progress note Save buttons in GoalDetail + Home (iter 391)
 
 **Files:** `ChildDev.Api/Components/Pages/GoalDetail.razor`, `ChildDev.Api/Components/Pages/Home.razor`
