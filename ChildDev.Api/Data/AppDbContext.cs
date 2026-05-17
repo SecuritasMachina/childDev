@@ -25,5 +25,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<Account>()
             .HasIndex(a => a.NickName)
             .IsUnique();
+        modelBuilder.Entity<AnalyticsEvent>()
+            .HasIndex(e => new { e.AccountGuid, e.Timestamp });
     }
 }

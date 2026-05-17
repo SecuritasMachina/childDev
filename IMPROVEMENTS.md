@@ -4133,3 +4133,13 @@ Both match mobile filter behavior (TodoListViewModel.FilterText, JournalListView
 **Impact:** 217 API tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — AnalyticsEvents DB index + journal date picker fixes (iters 321-322)
+
+**Iter 321 — Journal entry date picker:** See entry above.
+
+**Iter 322 — AnalyticsEvents index:** Added composite index `(AccountGuid, Timestamp)` to `AnalyticsEvent` in `AppDbContext.OnModelCreating`. The Insights page queries `WHERE AccountGuid = ? AND Timestamp >= ?` — without an index this would full-scan as event volume grows. `EnsureCreated()` will apply the index on fresh DB creation.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
