@@ -105,7 +105,10 @@
                         @if (g.NextMeetingDate.HasValue)
                         {
                             var mtg = DateTimeOffset.FromUnixTimeMilliseconds(g.NextMeetingDate.Value).LocalDateTime;
-                            <MudText Typo="Typo.caption" Color="Color.Info">📅 Next meeting: @mtg.ToString("MMM d")</MudText>
+                            var mtgPast = g.NextMeetingDate.Value < DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            <MudText Typo="Typo.caption" Color="@(mtgPast ? Color.Warning : Color.Info)">
+                                📅 @(mtgPast ? "Missed meeting" : "Next meeting"): @mtg.ToString("MMM d")
+                            </MudText>
                         }
                     </CardHeaderContent>
                 </MudCardHeader>

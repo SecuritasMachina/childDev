@@ -47,8 +47,10 @@
 @if (Goal.NextMeetingDate.HasValue)
 {
     var mtgDate = DateTimeOffset.FromUnixTimeMilliseconds(Goal.NextMeetingDate.Value).LocalDateTime;
-    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-1">
-        <MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Small" /> Next meeting: @mtgDate.ToString("MMM d, yyyy")
+    var mtgPast = Goal.NextMeetingDate.Value < DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    <MudText Typo="Typo.body2" Color="@(mtgPast ? Color.Warning : Color.Secondary)" Class="mb-1">
+        <MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Small" />
+        @(mtgPast ? "Missed meeting" : "Next meeting"): @mtgDate.ToString("MMM d, yyyy")
     </MudText>
 }
 @if (Goal.ExpirationDate.HasValue && Goal.CompletionDate is null)
