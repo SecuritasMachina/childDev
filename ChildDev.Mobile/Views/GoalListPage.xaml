@@ -68,6 +68,8 @@
                                    TextColor="{Binding LatestProgressAt, Converter={x:StaticResource ProgressStalenessColorConverter}}"
                                    FontSize="10"
                                    IsVisible="{Binding LatestProgressAt, Converter={x:StaticResource NotNullConverter}}" />
+                            <Label Text="No notes yet" FontSize="10" TextColor="Gray"
+                                   IsVisible="{Binding LatestProgressAt, Converter={x:StaticResource NullConverter}}" />
                         </VerticalStackLayout>
                         <Label Grid.Column="1" Text="✓ Done" FontSize="11" TextColor="Green"
                                VerticalOptions="Start" Margin="8,2,0,0"

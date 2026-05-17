@@ -15,6 +15,7 @@
             <converters:ProgressStalenessConverter x:Key="ProgressStalenessConverter" />
             <converters:ProgressStalenessColorConverter x:Key="ProgressStalenessColorConverter" />
             <converters:NotNullConverter x:Key="NotNullConverter" />
+            <converters:NullConverter x:Key="NullConverter" />
             <converters:DueDateLabelConverter x:Key="DueDateLabelConverter" />
             <converters:DueDateColorConverter x:Key="DueDateColorConverter" />
             <converters:EntryDateConverter x:Key="EntryDateConverter" />
