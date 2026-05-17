@@ -69,6 +69,11 @@ public static class JournalEndpoints
                 logger.LogWarning("sync/journal account={Account} rejected: Tags too long", accountGuid[..8]);
                 return Results.Problem("Record Tags must not exceed 500 characters.", statusCode: 422);
             }
+            if (req.Records.Any(r => r.DeletedAt.HasValue && r.DeletedAt.Value > r.UpdatedOn))
+            {
+                logger.LogWarning("sync/journal account={Account} rejected: DeletedAt > UpdatedOn", accountGuid[..8]);
+                return Results.Problem("Record DeletedAt must not exceed UpdatedOn.", statusCode: 422);
+            }
 
             var mismatchCount = req.Records.Count(r => r.AccountFk != accountGuid);
             if (mismatchCount > 0)

@@ -71,6 +71,11 @@ public static class GoalEndpoints
                 logger.LogWarning("sync/goal account={Account} rejected: MeasurableOutcome too long", accountGuid[..8]);
                 return Results.Problem("Record MeasurableOutcome must not exceed 2000 characters.", statusCode: 422);
             }
+            if (req.Records.Any(r => r.DeletedAt.HasValue && r.DeletedAt.Value > r.UpdatedOn))
+            {
+                logger.LogWarning("sync/goal account={Account} rejected: DeletedAt > UpdatedOn", accountGuid[..8]);
+                return Results.Problem("Record DeletedAt must not exceed UpdatedOn.", statusCode: 422);
+            }
             var mismatchCount = req.Records.Count(r => r.AccountFk != accountGuid);
             if (mismatchCount > 0)
                 logger.LogWarning("sync/goal account={Account} skipped {Skipped} records with mismatched AccountFk",

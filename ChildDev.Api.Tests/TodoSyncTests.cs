@@ -615,4 +615,18 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         Assert.DoesNotContain(body!.Records, r => r.Guid == guid);
     }
+
+    [Fact]
+    public async Task Sync_DeletedAtGreaterThanUpdatedOn_Returns422()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_deletedinvariant1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // DeletedAt = ts+1, UpdatedOn = ts → invalid invariant
+        var response = await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(Guid.NewGuid().ToString(), accountGuid, "task", null, null, null, ts, ts + 1)], 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
 }
