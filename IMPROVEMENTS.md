@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 50 — Mobile: Todo list live text filter
+
+**What changed:**
+- `TodoListViewModel.cs`: Added `FilterText` observable and `_allTodos` backing list; `OnFilterTextChanged` re-filters `Todos` client-side on each keystroke; `Add`/`Complete`/`Delete` keep `_allTodos` consistent
+- `TodoListPage.xaml`: Added `SearchBar` (row 3) below the add-task row; bumped RowDefinitions from 5 to 6 rows; footer moved to row 5
+
+**Why:** Users with many tasks had to scroll to find anything. Client-side filtering avoids extra DB queries and feels instant.
+
+**Impact:** 25 mobile tests pass. 51 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 49 — Mobile: Dashboard shows next upcoming goal meeting date
 
 **What changed:**
