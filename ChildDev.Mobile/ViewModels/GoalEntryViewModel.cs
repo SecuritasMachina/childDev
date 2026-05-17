@@ -50,6 +50,7 @@ public partial class GoalEntryViewModel(
     [RelayCommand]
     private async Task SaveAsync()
     {
+        if (string.IsNullOrWhiteSpace(GoalText)) return;
         var account = await accountService.GetAccountAsync();
         if (account is null) return;
 
