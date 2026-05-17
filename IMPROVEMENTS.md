@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 238 — API: GoalProgress delta response includes AccountFk
+
+**What changed:**
+- `GoalProgressSyncTests.cs`: Added `Sync_Delta_AccountFkIncludedInResponse` (account "gpsync_accountfk") — uploads a GoalProgress then syncs empty and asserts `AccountFk == accountGuid` in the delta record.
+
+**Why:** The mobile stores `AccountFk` from the server's delta response to filter future `GetModifiedSinceAsync` queries. If the server ever dropped `AccountFk` from the `GoalProgressDto` response, the mobile would silently store empty AccountFk, breaking all subsequent uploads for that entity. No prior test asserted this field in the response.
+
+**Impact:** 194 mobile tests pass. 165 API tests pass (was 164).
+
+---
+
 ## 2026-05-17 — Iteration 237 — Mobile: Synced soft-deleted GoalProgress excluded from GetForGoalAsync
 
 **What changed:**
