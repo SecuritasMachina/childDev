@@ -20,6 +20,9 @@ public partial class JournalEntryViewModel(
     [ObservableProperty] private DateTime enteredDate = DateTime.Today;
     [ObservableProperty] private bool isExisting;
     [ObservableProperty] private int notesWordCount;
+    [ObservableProperty] private int activityLength;
+    [ObservableProperty] private int moodLength;
+    [ObservableProperty] private int tagsLength;
 
     partial void OnNotesChanged(string value)
     {
@@ -28,6 +31,10 @@ public partial class JournalEntryViewModel(
             : value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
         SaveCommand.NotifyCanExecuteChanged();
     }
+
+    partial void OnActivityChanged(string value) => ActivityLength = value?.Length ?? 0;
+    partial void OnMoodChanged(string value) => MoodLength = value?.Length ?? 0;
+    partial void OnTagsChanged(string value) => TagsLength = value?.Length ?? 0;
 
     private bool CanSave() => !string.IsNullOrWhiteSpace(Notes);
 
