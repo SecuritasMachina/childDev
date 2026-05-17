@@ -419,4 +419,22 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Equal(deletedAt, deleted.DeletedAt);
         Assert.Null(deleted.Notes);
     }
+
+    [Fact]
+    public async Task Sync_Delta_AccountFkIncludedInResponse()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("jsync_accountfk");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, ts, ts, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
+
+        var record = body!.Records.Single(r => r.Guid == guid);
+        Assert.Equal(accountGuid, record.AccountFk);
+    }
 }

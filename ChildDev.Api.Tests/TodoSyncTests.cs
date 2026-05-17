@@ -445,4 +445,22 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Equal(deletedAt, deleted.DeletedAt);
         Assert.Null(deleted.Title);
     }
+
+    [Fact]
+    public async Task Sync_Delta_AccountFkIncludedInResponse()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("tsync_accountfk");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, "my task", null, null, null, ts, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+
+        var record = body!.Records.Single(r => r.Guid == guid);
+        Assert.Equal(accountGuid, record.AccountFk);
+    }
 }
