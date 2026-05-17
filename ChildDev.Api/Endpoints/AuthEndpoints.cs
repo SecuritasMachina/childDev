@@ -41,7 +41,8 @@ public static class AuthEndpoints
 
         app.MapPost("/api/auth/token", async (TokenRequest req, AppDbContext db, JwtService jwt) =>
         {
-            var account = await db.Accounts.FirstOrDefaultAsync(a => a.NickName == req.NickName);
+            var nickName = req.NickName?.Trim();
+            var account = await db.Accounts.FirstOrDefaultAsync(a => a.NickName == nickName);
             if (account is null || !BCrypt.Net.BCrypt.Verify(req.PinHash, account.PinHash))
                 return Results.Unauthorized();
 
