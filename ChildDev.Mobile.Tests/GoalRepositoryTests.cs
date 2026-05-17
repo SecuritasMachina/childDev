@@ -365,6 +365,27 @@ public class GoalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetAllActiveAsync_UpsertedSoftDeletedRecord_IsExcluded()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // A soft-deleted goal arriving via sync should not appear in GetAllActiveAsync
+        await _repo.UpsertFromSyncAsync(new Goal
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = accountId,
+            GoalText = "synced deleted goal",
+            EnteredDate = now,
+            UpdatedOn = now,
+            DeletedAt = now
+        });
+
+        var all = await _repo.GetAllActiveAsync(accountId);
+        Assert.Empty(all);
+    }
+
+    [Fact]
     public async Task GetAllActiveAsync_MixedActiveAndCompletedGoals_CorrectOrdering()
     {
         var accountId = System.Guid.NewGuid().ToString();
