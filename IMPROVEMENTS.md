@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 232 — Mobile: Bearer JWT verified in HTTP request headers
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_BearerJwt_IncludedInRequestHeaders` (user67) with `AuthHeaderCapturingHandler` — captures the `Authorization` header and asserts `Scheme == "Bearer"` and `Parameter == "my-secret-jwt"`.
+
+**Why:** All existing SyncService tests set a fake JWT but no test verified it was actually forwarded in `DefaultRequestHeaders.Authorization`. If the `new AuthenticationHeaderValue("Bearer", account.ServerJwt)` assignment were accidentally removed, every real server call would return 401 — but the fake handlers wouldn't catch it.
+
+**Impact:** 189 mobile tests pass (was 188). 164 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 231 — Mobile: lastSyncAt verified in all four entity request bodies
 
 **What changed:**
