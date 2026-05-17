@@ -21,9 +21,15 @@ public static class GoalEndpoints
             if (req.Records.Count > 500) return Results.Problem("Records must not exceed 500 per sync.", statusCode: 400);
             var maxFutureMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + 300_000;
             if (req.Records.Any(r => r.UpdatedOn > maxFutureMs))
+            {
+                logger.LogWarning("sync/goal account={Account} rejected: future UpdatedOn", accountGuid[..8]);
                 return Results.Problem("Record UpdatedOn is too far in the future.", statusCode: 422);
+            }
             if (req.Records.Any(r => !Guid.TryParse(r.Guid, out _)))
+            {
+                logger.LogWarning("sync/goal account={Account} rejected: invalid Guid", accountGuid[..8]);
                 return Results.Problem("Record Guid is not a valid GUID.", statusCode: 422);
+            }
             var incomingGuids = req.Records.Select(r => r.Guid).ToList();
             var existingMap = await db.Goals
                 .Where(g => incomingGuids.Contains(g.Guid))
