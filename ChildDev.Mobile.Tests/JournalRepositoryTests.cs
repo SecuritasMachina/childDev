@@ -314,6 +314,25 @@ public class JournalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task DeleteAsync_JournalAppearsInGetModifiedSince()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var oldTs = DateTimeOffset.UtcNow.AddSeconds(-10).ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new Journal
+        {
+            Guid = guid, AccountFk = "account1", Notes = "to delete",
+            EnteredDate = oldTs, UpdatedOn = oldTs
+        });
+
+        await _repo.DeleteAsync(guid);
+
+        var modified = await _repo.GetModifiedSinceAsync("account1", oldTs);
+        Assert.Single(modified);
+        Assert.Equal(guid, modified[0].Guid);
+        Assert.NotNull(modified[0].DeletedAt);
+    }
+
+    [Fact]
     public async Task SaveAsync_PersistsAllOptionalFields()
     {
         var journal = new Journal
