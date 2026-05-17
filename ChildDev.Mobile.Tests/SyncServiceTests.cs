@@ -297,6 +297,85 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_LocalSoftDeletedGoal_IncludedInUploadRequest()
+    {
+        await _accountService.CreateAccountAsync("user19", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var goalGuid = System.Guid.NewGuid().ToString();
+        var deletedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new Goal
+        {
+            Guid = goalGuid, AccountFk = account.Guid, GoalText = "deleted goal",
+            EnteredDate = deletedAt, UpdatedOn = deletedAt, DeletedAt = deletedAt
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var goalBody = capturingHandler.GetBodyFor("sync/goal");
+        Assert.NotNull(goalBody);
+        Assert.Contains(goalGuid, goalBody);
+    }
+
+    [Fact]
+    public async Task RunAsync_LocalSoftDeletedTodo_IncludedInUploadRequest()
+    {
+        await _accountService.CreateAccountAsync("user20", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var todoGuid = System.Guid.NewGuid().ToString();
+        var deletedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new Todo
+        {
+            Guid = todoGuid, AccountFk = account.Guid, Title = "deleted todo",
+            UpdatedOn = deletedAt, DeletedAt = deletedAt
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var todoBody = capturingHandler.GetBodyFor("sync/todo");
+        Assert.NotNull(todoBody);
+        Assert.Contains(todoGuid, todoBody);
+    }
+
+    [Fact]
+    public async Task RunAsync_LocalSoftDeletedGoalProgress_IncludedInUploadRequest()
+    {
+        await _accountService.CreateAccountAsync("user21", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var progressGuid = System.Guid.NewGuid().ToString();
+        var goalFk = System.Guid.NewGuid().ToString();
+        var deletedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = progressGuid, AccountFk = account.Guid, GoalFk = goalFk,
+            NextStepItems = "deleted step", UpdatedOn = deletedAt, DeletedAt = deletedAt
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var progressBody = capturingHandler.GetBodyFor("sync/goal-progress");
+        Assert.NotNull(progressBody);
+        Assert.Contains(progressGuid, progressBody);
+    }
+
+    [Fact]
     public async Task RunAsync_LocalGoalModifiedSinceLastSync_IncludedInRequest()
     {
         await _accountService.CreateAccountAsync("user10", "1234");
