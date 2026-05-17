@@ -77,6 +77,16 @@
     }
 </MudText>
 
+@if (ProgressEntries.Count >= 2)
+{
+    <MudChart ChartType="ChartType.Bar"
+              ChartSeries="@ProgressChartSeries"
+              XAxisLabels="@ProgressChartLabels"
+              Width="100%" Height="140px"
+              ChartOptions="@(new ChartOptions { YAxisTicks = 1 })"
+              Class="mb-4" />
+}
+
 @if (!ProgressEntries.Any())
 {
     <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">No progress notes yet. Add the first one!</MudText>
@@ -217,6 +227,8 @@ else
     private string NewNextSteps = string.Empty;
     private DateTime? NewMeetingDate;
     private bool ShowCelebration;
+    private List<ChartSeries> ProgressChartSeries = [];
+    private string[] ProgressChartLabels = [];
     private bool ShowEditProgressDialog;
     private string? EditingProgressGuid;
     private string EditProgressNextSteps = string.Empty;
@@ -245,6 +257,28 @@ else
             .Where(p => p.GoalFk == GoalGuid && p.AccountFk == AccountGuid && p.DeletedAt == null)
             .OrderByDescending(p => p.UpdatedOn)
             .ToListAsync();
+        BuildProgressChart();
+    }
+
+    private void BuildProgressChart()
+    {
+        const int weeks = 8;
+        var now = DateTime.Now;
+        var counts = new double[weeks];
+        var labels = new string[weeks];
+
+        for (var i = 0; i < weeks; i++)
+        {
+            var weekStart = now.AddDays(-(weeks - 1 - i) * 7).Date;
+            weekStart = weekStart.AddDays(-(int)weekStart.DayOfWeek); // Sunday of that week
+            var weekStartMs = new DateTimeOffset(weekStart, TimeSpan.Zero).ToUnixTimeMilliseconds();
+            var weekEndMs = weekStartMs + 7L * 24 * 60 * 60 * 1000;
+            counts[i] = ProgressEntries.Count(p => p.UpdatedOn >= weekStartMs && p.UpdatedOn < weekEndMs);
+            labels[i] = weekStart.ToString("MMM d");
+        }
+
+        ProgressChartSeries = [new ChartSeries { Name = "Notes", Data = counts }];
+        ProgressChartLabels = labels;
     }
 
     private async Task AddProgress()
