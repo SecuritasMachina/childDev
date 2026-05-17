@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 192 — Mobile: GoalProgress GetForGoal 3-item ordering test
+
+**What changed:**
+- `GoalProgressRepositoryTests.cs`: Added `GetForGoalAsync_ThreeItems_OrderedByUpdatedOnDescending` — inserts 3 progress items in shuffled order (middle, oldest, newest) and asserts `GetForGoalAsync` returns [newest, middle, oldest].
+
+**Why:** Existing `GetForGoalAsync_OrdersByUpdatedOnDescending` only tests with 2 items. A 3-item test with shuffled insertion order more thoroughly exercises the SQL `ORDER BY UpdatedOn DESC` and catches off-by-one ordering bugs that 2-item tests can miss.
+
+**Impact:** 144 mobile tests pass (was 143). 157 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 191 — Mobile: SyncService includes locally-completed goal with CompletionDate in upload
 
 **What changed:**
