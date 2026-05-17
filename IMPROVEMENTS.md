@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 87 — API: Validate GoalProgress.NextMeetingDate not in far future
+
+**What changed:**
+- `GoalProgressEndpoints.cs`: Added check rejecting `NextMeetingDate > now + 10 years` (HTTP 422).
+- `SyncInputValidationTests.cs`: Added `Sync_GoalProgress_FutureNextMeetingDate_Returns422` Fact test.
+
+**Why:** Completes the set of date-field range guards across all 4 sync endpoints. GoalProgress.NextMeetingDate was the last date field without a future cap.
+
+**Impact:** 25 mobile tests pass. 66 API tests pass (up from 65).
+
+---
+
 ## 2026-05-16 — Iteration 86 — API: Validate CompletionDate (Goal) and CompletedAt (Todo) not in far future
 
 **What changed:**
