@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 256 — Mobile: SyncService upserts all goal-progress records when server returns multiple
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsTwoGoalProgress_BothUpsertedLocally` (user85) and `MultiGoalProgressSyncHandler` helper — server returns 2 goal-progress records for the same goal, asserts both appear in `GetForGoalAsync` after sync.
+
+**Why:** Completes the 4-entity multi-record server response coverage set (Journal ✓ iter 250, Goal ✓ iter 254, Todo ✓ iter 255, GoalProgress ✓ iter 256). GoalProgress uses its own DTO and mapper; a GoalProgress-specific regression in the foreach would only be caught by this test.
+
+**Impact:** 210 mobile tests pass (was 209). 193 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 255 — Mobile: SyncService upserts all todos when server returns multiple
 
 **What changed:**
