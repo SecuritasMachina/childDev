@@ -1,5 +1,6 @@
 @page "/insights"
 @inject AppDbContext Db
+@inject NavigationManager Nav
 @inject IHttpContextAccessor HttpContextAccessor
 @inject WebAnalyticsService Analytics
 
@@ -7,7 +8,7 @@
 
 @if (AccountGuid is null)
 {
-    <MudText>Please <MudLink Href="/login">log in</MudLink> to view insights.</MudText>
+    Nav.NavigateTo("/login");
     return;
 }
 
