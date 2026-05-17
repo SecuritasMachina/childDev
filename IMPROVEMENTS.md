@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 190 — Mobile: SyncService includes locally-completed todo with CompletedAt in upload
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_LocalCompletedTodo_CompletedAtIncludedInUploadRequest` — pre-inserts a todo with CompletedAt set, syncs, asserts the upload body for sync/todo contains both the Guid and CompletedAt timestamp.
+
+**Why:** Soft-deleted record upload was tested (iter ~15-21) but completed-todo upload was not explicitly covered at the SyncService level. If `GetModifiedSinceAsync` were ever accidentally changed to filter out completed todos, this test would fail. Mirrors the pattern of `RunAsync_LocalSoftDeletedTodo_IncludedInUploadRequest`.
+
+**Impact:** 142 mobile tests pass (was 141). 157 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 189 — API: GoalProgress batch with mixed AccountFk stores valid and skips intruder
 
 **What changed:**
