@@ -172,4 +172,20 @@ public class GoalProgressRepositoryTests : IDisposable
         Assert.Single(items);
         Assert.Equal("synced", items[0].NextStepItems);
     }
+
+    [Fact]
+    public async Task GetModifiedSinceAsync_ExcludesOtherAccounts()
+    {
+        var account1 = System.Guid.NewGuid().ToString();
+        var account2 = System.Guid.NewGuid().ToString();
+        var tNew = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = account1, GoalFk = "g1", NextStepItems = "mine", UpdatedOn = tNew });
+        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = System.Guid.NewGuid().ToString(), AccountFk = account2, GoalFk = "g2", NextStepItems = "theirs", UpdatedOn = tNew });
+
+        var results = await _repo.GetModifiedSinceAsync(account1, 0);
+
+        Assert.Single(results);
+        Assert.Equal("mine", results[0].NextStepItems);
+    }
 }

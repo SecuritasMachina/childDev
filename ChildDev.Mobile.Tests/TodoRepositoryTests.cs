@@ -172,4 +172,44 @@ public class TodoRepositoryTests : IDisposable
         Assert.Single(results);
         Assert.Equal("my task", results[0].Title);
     }
+
+    [Fact]
+    public async Task SaveAsync_Edit_BumpsUpdatedOn()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var todo = new Todo
+        {
+            Guid = guid, AccountFk = "account1", Title = "original",
+            UpdatedOn = 1000L
+        };
+        await _db.InsertOrReplaceAsync(todo);
+
+        todo.Title = "edited";
+        await _repo.SaveAsync(todo);
+
+        var saved = await _repo.GetAsync(guid);
+        Assert.NotNull(saved);
+        Assert.Equal("edited", saved!.Title);
+        Assert.True(saved.UpdatedOn > 1000L);
+    }
+
+    [Fact]
+    public async Task SaveAsync_Edit_AppearsInGetModifiedSince()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var oldTs = DateTimeOffset.UtcNow.AddSeconds(-10).ToUnixTimeMilliseconds();
+        var todo = new Todo
+        {
+            Guid = guid, AccountFk = "account5", Title = "original",
+            UpdatedOn = oldTs
+        };
+        await _db.InsertOrReplaceAsync(todo);
+
+        todo.Title = "edited";
+        await _repo.SaveAsync(todo);
+
+        var modified = await _repo.GetModifiedSinceAsync("account5", oldTs);
+        Assert.Single(modified);
+        Assert.Equal("edited", modified[0].Title);
+    }
 }
