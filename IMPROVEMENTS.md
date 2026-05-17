@@ -4205,3 +4205,17 @@ Both match mobile filter behavior (TodoListViewModel.FilterText, JournalListView
 **Impact:** 232 mobile tests (up from 230). Build clean.
 
 ---
+
+## 2026-05-17 — Insights page: streak + week-over-week trend (iter 329)
+
+**What:** Added two new metrics to the Insights page:
+- **Day streak:** Counts consecutive days with at least one action ending today. Flame icon turns orange at 3+ days, red at 7+.
+- **Week-over-week trend:** Shows `TotalThisWeek` vs `TotalLastWeek` as % change with up/down trending icon.
+
+Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
+
+**Why:** Raw 30-day counts don't motivate behavior. A streak counter and trend line give caregivers momentum-based feedback — common in habit-tracking apps.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---

@@ -16,26 +16,44 @@
     My Activity Insights
 </MudText>
 
+@{
+    var weekTrend = TotalLastWeek == 0 ? 0 : (int)((TotalThisWeek - TotalLastWeek) * 100.0 / TotalLastWeek);
+    var trendColor = weekTrend >= 0 ? Color.Success : Color.Error;
+    var trendIcon = weekTrend >= 0 ? Icons.Material.Filled.TrendingUp : Icons.Material.Filled.TrendingDown;
+    var trendText = TotalLastWeek == 0
+        ? "no prior week"
+        : weekTrend == 0 ? "same as last week" : $"{Math.Abs(weekTrend)}% vs last week";
+}
 <MudGrid Class="mb-6">
-    <MudItem xs="12" sm="4">
+    <MudItem xs="12" sm="3">
         <MudPaper Elevation="2" Class="pa-4 text-center">
             <MudIcon Icon="@Icons.Material.Filled.TouchApp" Color="Color.Primary" Style="font-size:2rem;" />
             <MudText Typo="Typo.h4" Class="mt-1">@TotalLast30</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">Actions (last 30 days)</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Actions (30 days)</MudText>
         </MudPaper>
     </MudItem>
-    <MudItem xs="12" sm="4">
+    <MudItem xs="12" sm="3">
         <MudPaper Elevation="2" Class="pa-4 text-center">
-            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="Color.Success" Style="font-size:2rem;" />
+            <MudIcon Icon="@trendIcon" Color="@trendColor" Style="font-size:2rem;" />
             <MudText Typo="Typo.h4" Class="mt-1">@TotalThisWeek</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">Actions this week</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">This week</MudText>
+            <MudText Typo="Typo.caption" Color="@trendColor">@trendText</MudText>
         </MudPaper>
     </MudItem>
-    <MudItem xs="12" sm="4">
+    <MudItem xs="12" sm="3">
         <MudPaper Elevation="2" Class="pa-4 text-center">
             <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Color="Color.Info" Style="font-size:2rem;" />
             <MudText Typo="Typo.h4" Class="mt-1">@ActiveDaysLast30</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">Active days (last 30)</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Active days (30)</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="3">
+        <MudPaper Elevation="2" Class="pa-4 text-center">
+            <MudIcon Icon="@Icons.Material.Filled.LocalFireDepartment"
+                     Color="@(CurrentStreak >= 7 ? Color.Error : CurrentStreak >= 3 ? Color.Warning : Color.Default)"
+                     Style="font-size:2rem;" />
+            <MudText Typo="Typo.h4" Class="mt-1">@CurrentStreak</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Day streak</MudText>
         </MudPaper>
     </MudItem>
 </MudGrid>
@@ -91,7 +109,9 @@
     private string? AccountGuid;
     private int TotalLast30;
     private int TotalThisWeek;
+    private int TotalLastWeek;
     private int ActiveDaysLast30;
+    private int CurrentStreak;
     private List<ChartSeries> DailyChartSeries = [];
     private string[] DailyChartLabels = [];
     private Dictionary<string, int> TopEvents = new();
@@ -118,11 +138,22 @@
 
         TotalLast30 = last30.Count;
         TotalThisWeek = last30.Count(e => e.Timestamp >= day7Ms);
+        TotalLastWeek = last30.Count(e => e.Timestamp >= day14Ms && e.Timestamp < day7Ms);
 
-        ActiveDaysLast30 = last30
+        var activeDates = last30
             .Select(e => DateTimeOffset.FromUnixTimeMilliseconds(e.Timestamp).LocalDateTime.Date)
-            .Distinct()
-            .Count();
+            .ToHashSet();
+        ActiveDaysLast30 = activeDates.Count;
+
+        // Current streak: consecutive days ending today with at least one action
+        var today = DateTimeOffset.UtcNow.LocalDateTime.Date;
+        CurrentStreak = 0;
+        var streakDay = today;
+        while (activeDates.Contains(streakDay))
+        {
+            CurrentStreak++;
+            streakDay = streakDay.AddDays(-1);
+        }
 
         TopEvents = last30
             .Where(e => e.EventName != "page_view")
