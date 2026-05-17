@@ -250,6 +250,15 @@ public class GoalProgressRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task DeleteForGoalAsync_WhenNoActiveProgress_DoesNothing()
+    {
+        var emptyGoalFk = System.Guid.NewGuid().ToString();
+        await _repo.DeleteForGoalAsync(emptyGoalFk);
+        var items = await _repo.GetForGoalAsync(emptyGoalFk);
+        Assert.Empty(items);
+    }
+
+    [Fact]
     public async Task GetLatestNextStepsAsync_ExcludesOtherAccounts()
     {
         var account1 = System.Guid.NewGuid().ToString();

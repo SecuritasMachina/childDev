@@ -339,6 +339,24 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_FailedSync_ReleasesLockSoSubsequentSyncCanRun()
+    {
+        await _accountService.CreateAccountAsync("user15", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var service = BuildSyncService(new EntitySyncErrorHandler());
+        var firstResult = await service.RunAsync(account);
+        Assert.Equal(SyncResult.Failed, firstResult);
+
+        // If the finally block didn't release the lock, the guard would return Success immediately.
+        // Returning Failed here proves the second call actually ran (lock was freed).
+        var secondResult = await service.RunAsync(account);
+        Assert.Equal(SyncResult.Failed, secondResult);
+    }
+
+    [Fact]
     public async Task RunAsync_ServerReturnsGoal_UpsertsLocally()
     {
         await _accountService.CreateAccountAsync("user12", "1234");
