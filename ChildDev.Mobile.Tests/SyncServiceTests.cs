@@ -670,6 +670,52 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_ServerReturnsCompletedGoal_CompletionDateStoredLocally()
+    {
+        await _accountService.CreateAccountAsync("user27", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var completionDate = 5_000_000L;
+        var serverGoal = new GoalSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, "Completed goal",
+            null, null, completionDate, null, completionDate, completionDate, null);
+
+        var handler = new FakeGoalSyncHandler(serverGoal);
+        var service = BuildSyncService(handler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var stored = await _db.FindAsync<Goal>(serverGoal.Guid);
+        Assert.NotNull(stored);
+        Assert.Equal(completionDate, stored!.CompletionDate);
+    }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsCompletedTodo_CompletedAtStoredLocally()
+    {
+        await _accountService.CreateAccountAsync("user28", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var completedAt = 5_000_000L;
+        var serverTodo = new TodoSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, "Completed task",
+            null, null, completedAt, completedAt, null);
+
+        var handler = new FakeTodoSyncHandler(serverTodo);
+        var service = BuildSyncService(handler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var stored = await _db.FindAsync<Todo>(serverTodo.Guid);
+        Assert.NotNull(stored);
+        Assert.Equal(completedAt, stored!.CompletedAt);
+    }
+
+    [Fact]
     public async Task RunAsync_EntitySyncNetworkError_RetriesAndSucceeds()
     {
         await _accountService.CreateAccountAsync("user26", "1234");
