@@ -42,7 +42,7 @@
                                 CommandParameter="{Binding .}" />
                         </Grid.GestureRecognizers>
                         <VerticalStackLayout>
-                            <Label Text="{Binding Notes}" LineBreakMode="TailTruncation" MaxLines="2" />
+                            <Label Text="{Binding DisplayText}" LineBreakMode="TailTruncation" MaxLines="2" />
                             <HorizontalStackLayout Spacing="8">
                                 <Label Text="{Binding Mood}" FontSize="12" TextColor="Gray"
                                        IsVisible="{Binding Mood, Converter={StaticResource StringToBoolConverter}}" />
