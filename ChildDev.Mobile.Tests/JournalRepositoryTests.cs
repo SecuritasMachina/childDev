@@ -264,4 +264,28 @@ public class JournalRepositoryTests : IDisposable
         var retrieved = await _repo.GetAsync(nonExistentGuid);
         Assert.Null(retrieved);
     }
+
+    [Fact]
+    public async Task SaveAsync_PersistsAllOptionalFields()
+    {
+        var journal = new Journal
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = "account1",
+            Notes = "Today was productive",
+            Activity = "Coding",
+            Mood = "Focused",
+            Tags = "work,tech",
+            EnteredDate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            UpdatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+        };
+
+        await _repo.SaveAsync(journal);
+        var retrieved = await _repo.GetAsync(journal.Guid);
+
+        Assert.NotNull(retrieved);
+        Assert.Equal("Coding", retrieved!.Activity);
+        Assert.Equal("Focused", retrieved.Mood);
+        Assert.Equal("work,tech", retrieved.Tags);
+    }
 }
