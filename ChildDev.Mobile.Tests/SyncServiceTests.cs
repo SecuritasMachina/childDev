@@ -965,6 +965,96 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_ServerReturnsExistingGoal_OverwritesLocalVersion()
+    {
+        await _accountService.CreateAccountAsync("user40", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var goalGuid = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Goal
+        {
+            Guid = goalGuid, AccountFk = account.Guid, GoalText = "local goal",
+            EnteredDate = now, UpdatedOn = now
+        });
+
+        var serverGoal = new GoalSyncDto(goalGuid, account.Guid, "server goal",
+            null, null, now, null, null, now + 1000, null);
+
+        var handler = new FakeGoalSyncHandler(serverGoal);
+        var service = BuildSyncService(handler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var retrieved = await _goalRepo.GetAsync(goalGuid);
+        Assert.NotNull(retrieved);
+        Assert.Equal("server goal", retrieved!.GoalText);
+    }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsExistingTodo_OverwritesLocalVersion()
+    {
+        await _accountService.CreateAccountAsync("user41", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var todoGuid = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Todo
+        {
+            Guid = todoGuid, AccountFk = account.Guid, Title = "local task", UpdatedOn = now
+        });
+
+        var serverTodo = new TodoSyncDto(todoGuid, account.Guid, "server task",
+            null, null, null, now + 1000, null);
+
+        var handler = new FakeTodoSyncHandler(serverTodo);
+        var service = BuildSyncService(handler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var retrieved = await _todoRepo.GetAsync(todoGuid);
+        Assert.NotNull(retrieved);
+        Assert.Equal("server task", retrieved!.Title);
+    }
+
+    [Fact]
+    public async Task RunAsync_ServerReturnsExistingGoalProgress_OverwritesLocalVersion()
+    {
+        await _accountService.CreateAccountAsync("user42", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var progressGuid = System.Guid.NewGuid().ToString();
+        var goalFk = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = progressGuid, AccountFk = account.Guid, GoalFk = goalFk,
+            NextStepItems = "local steps", UpdatedOn = now
+        });
+
+        var serverProgress = new GoalProgressSyncDto(progressGuid, account.Guid, goalFk,
+            "server steps", null, now + 1000, null);
+
+        var handler = new FakeGoalProgressSyncHandler(serverProgress);
+        var service = BuildSyncService(handler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var retrieved = await _db.FindAsync<GoalProgress>(progressGuid);
+        Assert.NotNull(retrieved);
+        Assert.Equal("server steps", retrieved!.NextStepItems);
+    }
+
+    [Fact]
     public async Task RunAsync_NoLocalChanges_SendsEmptyBatchToAllEndpoints()
     {
         await _accountService.CreateAccountAsync("user38", "1234");
