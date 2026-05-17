@@ -162,6 +162,33 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_ConcurrentCall_SkipsSecondSync()
+    {
+        await _accountService.CreateAccountAsync("user7", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var serverJournal = new JournalSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, "Concurrent test",
+            null, null, null, 1000, 1000, null);
+
+        var handler = new FakeSyncHandler(serverJournal);
+        var service = BuildSyncService(handler);
+
+        // First sync sets _syncing=1 synchronously before the first await, then suspends at health call.
+        var firstSync = service.RunAsync(account);
+
+        // Second call while first is in-flight: _syncing guard returns Success immediately.
+        var secondResult = await service.RunAsync(account);
+
+        var firstResult = await firstSync;
+
+        Assert.Equal(SyncResult.Success, firstResult);
+        Assert.Equal(SyncResult.Success, secondResult);
+    }
+
+    [Fact]
     public async Task RunAsync_PartialFailure_DoesNotUpdateLastSyncAt()
     {
         await _accountService.CreateAccountAsync("user6", "1234");
