@@ -402,6 +402,28 @@ public class TodoRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task UpsertFromSyncAsync_PersistsAllOptionalFields()
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var dueDate = now + 86400000L;
+        var guid = System.Guid.NewGuid().ToString();
+
+        await _repo.UpsertFromSyncAsync(new Todo
+        {
+            Guid = guid, AccountFk = "account1",
+            Title = "Synced task",
+            Notes = "Important details from server",
+            DueDate = dueDate,
+            UpdatedOn = now
+        });
+
+        var retrieved = await _repo.GetAsync(guid);
+        Assert.NotNull(retrieved);
+        Assert.Equal("Important details from server", retrieved!.Notes);
+        Assert.Equal(dueDate, retrieved.DueDate);
+    }
+
+    [Fact]
     public async Task SaveAsync_PersistsAllOptionalFields()
     {
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();

@@ -341,6 +341,30 @@ public class GoalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task UpsertFromSyncAsync_PersistsAllOptionalFields()
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid = System.Guid.NewGuid().ToString();
+        var meetingDate = now + 86400000L;
+        var expirationDate = now + 2592000000L;
+
+        await _repo.UpsertFromSyncAsync(new Goal
+        {
+            Guid = guid, AccountFk = "account1", GoalText = "Synced goal",
+            MeasurableOutcome = "Finish chapter 1",
+            NextMeetingDate = meetingDate,
+            ExpirationDate = expirationDate,
+            EnteredDate = now, UpdatedOn = now
+        });
+
+        var retrieved = await _repo.GetAsync(guid);
+        Assert.NotNull(retrieved);
+        Assert.Equal("Finish chapter 1", retrieved!.MeasurableOutcome);
+        Assert.Equal(meetingDate, retrieved.NextMeetingDate);
+        Assert.Equal(expirationDate, retrieved.ExpirationDate);
+    }
+
+    [Fact]
     public async Task SaveAsync_PersistsAllOptionalFields()
     {
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
