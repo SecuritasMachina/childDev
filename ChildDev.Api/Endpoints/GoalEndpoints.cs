@@ -30,11 +30,16 @@ public static class GoalEndpoints
                 logger.LogWarning("sync/goal account={Account} rejected: invalid Guid", accountGuid[..8]);
                 return Results.Problem("Record Guid is not a valid GUID.", statusCode: 422);
             }
-            var maxEnteredDateMs = DateTimeOffset.UtcNow.AddYears(10).ToUnixTimeMilliseconds();
-            if (req.Records.Any(r => r.EnteredDate > maxEnteredDateMs))
+            var maxFutureTimestampMs = DateTimeOffset.UtcNow.AddYears(10).ToUnixTimeMilliseconds();
+            if (req.Records.Any(r => r.EnteredDate > maxFutureTimestampMs))
             {
                 logger.LogWarning("sync/goal account={Account} rejected: future EnteredDate", accountGuid[..8]);
                 return Results.Problem("Record EnteredDate is too far in the future.", statusCode: 422);
+            }
+            if (req.Records.Any(r => r.CompletionDate.HasValue && r.CompletionDate.Value > maxFutureTimestampMs))
+            {
+                logger.LogWarning("sync/goal account={Account} rejected: future CompletionDate", accountGuid[..8]);
+                return Results.Problem("Record CompletionDate is too far in the future.", statusCode: 422);
             }
             if (req.Records.Any(r => r.DeletedAt is null && string.IsNullOrWhiteSpace(r.GoalText)))
             {

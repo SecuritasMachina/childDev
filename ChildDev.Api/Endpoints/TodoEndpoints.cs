@@ -30,11 +30,16 @@ public static class TodoEndpoints
                 logger.LogWarning("sync/todo account={Account} rejected: invalid Guid", accountGuid[..8]);
                 return Results.Problem("Record Guid is not a valid GUID.", statusCode: 422);
             }
-            var maxDueDateMs = DateTimeOffset.UtcNow.AddYears(10).ToUnixTimeMilliseconds();
-            if (req.Records.Any(r => r.DueDate.HasValue && r.DueDate.Value > maxDueDateMs))
+            var maxFutureTimestampMs = DateTimeOffset.UtcNow.AddYears(10).ToUnixTimeMilliseconds();
+            if (req.Records.Any(r => r.DueDate.HasValue && r.DueDate.Value > maxFutureTimestampMs))
             {
                 logger.LogWarning("sync/todo account={Account} rejected: DueDate too far in future", accountGuid[..8]);
                 return Results.Problem("Record DueDate is too far in the future.", statusCode: 422);
+            }
+            if (req.Records.Any(r => r.CompletedAt.HasValue && r.CompletedAt.Value > maxFutureTimestampMs))
+            {
+                logger.LogWarning("sync/todo account={Account} rejected: CompletedAt too far in future", accountGuid[..8]);
+                return Results.Problem("Record CompletedAt is too far in the future.", statusCode: 422);
             }
             if (req.Records.Any(r => r.DeletedAt is null && r.CompletedAt is null && string.IsNullOrWhiteSpace(r.Title)))
             {
