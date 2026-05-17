@@ -106,6 +106,18 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 288 — Web: Todos empty state + logout analytics
+
+**What changed:**
+- `Todos.razor`: Added `MudAlert` info message "No todos yet — add one below to get started!" shown when both `PendingTodos` and `CompletedTodos` are empty. Replaces silent blank state for new users.
+- `Logout.razor`: Tracks `"logout"` analytics event before clearing session. Session lifecycle is now fully observable: `register` → `login` → `logout`.
+
+**Why:** New users saw a blank Todos page with just an "Add Todo" button — no context. The empty state guides them. Logout analytics enable session-length analysis and help identify churn patterns.
+
+**Impact:** 213 API tests pass. 221 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 287 — Mobile: Zero-UpdatedOn exclusion test for Journal, Todo, GoalProgress
 
 **What changed:**
