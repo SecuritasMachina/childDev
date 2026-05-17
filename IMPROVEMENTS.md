@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 189 — API: GoalProgress batch with mixed AccountFk stores valid and skips intruder
+
+**What changed:**
+- `GoalProgressSyncTests.cs`: Added `Sync_BatchWithMixedAccountFk_ValidRecordStoredInvalidSkipped` — completes mixed-AccountFk batch coverage for all 4 entities (Journal iter 182, Todo iter 187, Goal iter 188, GoalProgress this iter).
+
+**Why:** Final entity to add mixed-batch per-record filtering test. All 4 sync endpoints now have full symmetry for this behavior.
+
+**Impact:** 157 API tests pass (was 156). 141 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 188 — API: Goal batch with mixed AccountFk stores valid and skips intruder
 
 **What changed:**
