@@ -400,4 +400,27 @@ public class TodoRepositoryTests : IDisposable
         Assert.Equal("due day2", pending[1].Title);
         Assert.Equal("no due date", pending[2].Title);
     }
+
+    [Fact]
+    public async Task SaveAsync_PersistsAllOptionalFields()
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var dueDate = now + 86400000L;
+        var todo = new Todo
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = "account1",
+            Title = "Write tests",
+            Notes = "Cover all edge cases",
+            DueDate = dueDate,
+            UpdatedOn = now
+        };
+
+        await _repo.SaveAsync(todo);
+        var retrieved = await _repo.GetAsync(todo.Guid);
+
+        Assert.NotNull(retrieved);
+        Assert.Equal("Cover all edge cases", retrieved!.Notes);
+        Assert.Equal(dueDate, retrieved.DueDate);
+    }
 }
