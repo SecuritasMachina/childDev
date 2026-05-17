@@ -34,17 +34,24 @@ public partial class JournalListViewModel(
 
     partial void OnFilterTextChanged(string value)
     {
-        Journals = new ObservableCollection<Journal>(
-            string.IsNullOrWhiteSpace(value)
-                ? _allJournals
-                : _allJournals.Where(j =>
-                    (j.Notes != null && j.Notes.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
-                    (j.Activity != null && j.Activity.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
-                    (j.Mood != null && j.Mood.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
-                    (j.Tags != null && j.Tags.Contains(value, StringComparison.OrdinalIgnoreCase))));
-        EmptyMessage = string.IsNullOrWhiteSpace(value)
-            ? "No journal entries yet"
-            : $"No matches for \"{value}\"";
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            Journals = new ObservableCollection<Journal>(_allJournals);
+            EmptyMessage = "No journal entries yet";
+            UpdateEntryCountDisplay();
+        }
+        else
+        {
+            var filtered = _allJournals.Where(j =>
+                (j.Notes != null && j.Notes.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
+                (j.Activity != null && j.Activity.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
+                (j.Mood != null && j.Mood.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
+                (j.Tags != null && j.Tags.Contains(value, StringComparison.OrdinalIgnoreCase))).ToList();
+            Journals = new ObservableCollection<Journal>(filtered);
+            EmptyMessage = $"No matches for \"{value}\"";
+            var n = filtered.Count;
+            EntryCountDisplay = $"{n} {(n == 1 ? "entry" : "entries")} matching";
+        }
     }
 
     [RelayCommand]

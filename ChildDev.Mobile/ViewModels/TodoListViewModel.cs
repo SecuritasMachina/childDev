@@ -49,14 +49,21 @@ public partial class TodoListViewModel(
 
     partial void OnFilterTextChanged(string value)
     {
-        Todos = new ObservableCollection<Todo>(
-            string.IsNullOrWhiteSpace(value)
-                ? _allTodos
-                : _allTodos.Where(t => t.Title != null &&
-                    t.Title.Contains(value, StringComparison.OrdinalIgnoreCase)));
-        EmptyMessage = string.IsNullOrWhiteSpace(value)
-            ? "All done!"
-            : $"No matches for \"{value}\"";
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            Todos = new ObservableCollection<Todo>(_allTodos);
+            EmptyMessage = "All done!";
+            UpdateOverdueCount(_allTodos);
+        }
+        else
+        {
+            var filtered = _allTodos.Where(t =>
+                t.Title != null && t.Title.Contains(value, StringComparison.OrdinalIgnoreCase)).ToList();
+            Todos = new ObservableCollection<Todo>(filtered);
+            EmptyMessage = $"No matches for \"{value}\"";
+            var n = filtered.Count;
+            EntryCountDisplay = $"{n} {(n == 1 ? "task" : "tasks")} matching";
+        }
     }
 
     [RelayCommand]
