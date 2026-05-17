@@ -222,4 +222,21 @@ public class GoalRepositoryTests : IDisposable
         Assert.Single(results);
         Assert.Equal("mine", results[0].GoalText);
     }
+
+    [Fact]
+    public async Task GetAllActiveAsync_OrdersActiveGoalsByEnteredDateDescending()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var older = DateTimeOffset.UtcNow.AddDays(-2).ToUnixTimeMilliseconds();
+        var newer = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalText = "older goal", EnteredDate = older, UpdatedOn = older });
+        await _db.InsertOrReplaceAsync(new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalText = "newer goal", EnteredDate = newer, UpdatedOn = newer });
+
+        var results = await _repo.GetAllActiveAsync(accountId);
+
+        Assert.Equal(2, results.Count);
+        Assert.Equal("newer goal", results[0].GoalText);
+        Assert.Equal("older goal", results[1].GoalText);
+    }
 }
