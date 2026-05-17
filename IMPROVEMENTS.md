@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 51 — API: Validate GoalFk on goal-progress sync endpoint
+
+**What changed:**
+- `GoalProgressEndpoints.cs`: Added GUID format check for `GoalFk` field; returns 422 with LogWarning if invalid
+- `SyncInputValidationTests.cs`: Added `Sync_GoalProgress_InvalidGoalFk_Returns422` test (52 API tests total)
+
+**Why:** An invalid GoalFk string (null/non-GUID) would be accepted and stored as an orphaned GoalProgress record with no matching Goal. The new check is consistent with how `Guid` is validated on the same endpoint.
+
+**Impact:** 52 API tests pass. 25 mobile tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 50 — Mobile: Todo list live text filter
 
 **What changed:**
