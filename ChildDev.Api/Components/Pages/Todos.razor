@@ -82,10 +82,17 @@ else if (PendingTodos.Any())
                 @foreach (var t in CompletedTodos)
                 {
                     var completedOn = DateTimeOffset.FromUnixTimeMilliseconds(t.CompletedAt!.Value).LocalDateTime;
-                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
-                        <MudStack Spacing="0">
-                            <MudText Typo="Typo.body2" Class="text-decoration-line-through">@t.Title</MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">Done @completedOn.ToString("MMM d")</MudText>
+                    <MudListItem>
+                        <MudStack Row="true" AlignItems="AlignItems.Center">
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                            <MudStack Spacing="0" Style="flex:1">
+                                <MudText Typo="Typo.body2" Class="text-decoration-line-through">@t.Title</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Done @completedOn.ToString("MMM d")</MudText>
+                            </MudStack>
+                            <MudIconButton Icon="@Icons.Material.Filled.Undo" Size="Size.Small"
+                                           Color="Color.Default" OnClick="() => UncompleteTodo(t.Guid)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                                           Color="Color.Error" OnClick="() => DeleteTodo(t.Guid)" />
                         </MudStack>
                     </MudListItem>
                 }
@@ -211,6 +218,19 @@ else if (PendingTodos.Any())
         await Db.SaveChangesAsync();
         await Analytics.TrackAsync("todo_complete", AccountGuid, "todos");
         Snackbar.Add("Todo completed!", Severity.Success);
+        await LoadTodos();
+    }
+
+    private async Task UncompleteTodo(string guid)
+    {
+        var todo = await Db.Todos.FirstOrDefaultAsync(t => t.Guid == guid && t.AccountFk == AccountGuid);
+        if (todo is null) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        todo.CompletedAt = null;
+        todo.UpdatedOn = now;
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("todo_uncomplete", AccountGuid, "todos");
+        Snackbar.Add("Todo moved back to pending.", Severity.Info);
         await LoadTodos();
     }
 
