@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 218 — Mobile: AccountService UpdateLastSync preserves ServerCredentials
+
+**What changed:**
+- `AccountServiceTests.cs`: Added `UpdateLastSync_PreservesServerCredentials` — creates account, saves credentials (jwt + url), calls `UpdateLastSyncAsync`, asserts ServerJwt and ServerUrl are unchanged.
+
+**Why:** Mirrors iter 217 for `UpdateLastSyncAsync`. The same partial-object refactor risk applies: if account.ServerJwt and ServerUrl were not loaded into the account before `db.UpdateAsync`, they would be wiped on every sync. `UpdateLastSync_SetsTimestamp` only checks LastSyncAt.
+
+**Impact:** 169 mobile tests pass (was 168). 160 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 217 — Mobile: AccountService SaveServerCredentials preserves NickName and CreatedOn
 
 **What changed:**
