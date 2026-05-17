@@ -1,5 +1,19 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 78 — API: Enforce maximum content field length
+
+**What changed:**
+- `JournalEndpoints.cs`: Rejects Notes > 10,000 characters (HTTP 422).
+- `GoalEndpoints.cs`: Rejects GoalText or MeasurableOutcome > 2,000 characters (HTTP 422).
+- `GoalProgressEndpoints.cs`: Rejects NextStepItems > 2,000 characters (HTTP 422).
+- `SyncInputValidationTests.cs`: Added `Sync_FieldTooLong_Returns422` theory test with inlines for Journal/Notes and Goal/GoalText.
+
+**Why:** Without length limits, a buggy client could store multi-MB strings that bloat the DB and slow sync delta queries for all devices. 10k chars is generous for journal notes (~2000 words); 2k for structured goal/progress fields.
+
+**Impact:** 25 mobile tests pass (0 warnings). 59 API tests pass (was 57).
+
+---
+
 ## 2026-05-16 — Iteration 77 Brainstorm (fresh — every 3rd)
 
 | # | Description | Dim | Impact | Effort | Risk |
