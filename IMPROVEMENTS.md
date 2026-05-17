@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 127 — API Tests: Register endpoint NickName trim test
+
+**What changed:**
+- `AuthEndpointTests.cs`: Added `Register_NickNameWithSurroundingSpaces_StoredTrimmed` — registers with `"  trimmeduser  "`, then authenticates via token with `"trimmeduser"` (exact trimmed form) to prove the value was stored trimmed.
+
+**Why:** The register endpoint trims NickName before storing (`NickName = req.NickName.Trim()`), but there was no test verifying this. The analogous token-side trim was tested in iteration 116 (`Token_NickNameWithSurroundingSpaces_StillAuthenticates`). Without a register trim test, a regression (removing the trim) would silently store ` alice ` and make all subsequent logins fail even with correct input.
+
+**Impact:** 48 mobile tests pass. 105 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 126 — API Tests: Soft-deleted records with blank required fields are accepted
 
 **What changed:**
