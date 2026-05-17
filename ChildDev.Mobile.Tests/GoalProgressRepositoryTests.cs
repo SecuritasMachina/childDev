@@ -331,4 +331,29 @@ public class GoalProgressRepositoryTests : IDisposable
         Assert.NotNull(retrieved);
         Assert.Equal(serverTs, retrieved!.UpdatedOn);
     }
+
+    [Fact]
+    public async Task GetLatestNextStepsAsync_WhenLatestIsSoftDeleted_FallsBackToPrior()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var goalFk = System.Guid.NewGuid().ToString();
+        var older = DateTimeOffset.UtcNow.AddSeconds(-10).ToUnixTimeMilliseconds();
+        var newer = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId,
+            GoalFk = goalFk, NextStepItems = "prior steps", UpdatedOn = older
+        });
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId,
+            GoalFk = goalFk, NextStepItems = "deleted steps", UpdatedOn = newer, DeletedAt = newer
+        });
+
+        var latest = await _repo.GetLatestNextStepsAsync(accountId);
+
+        Assert.True(latest.ContainsKey(goalFk));
+        Assert.Equal("prior steps", latest[goalFk]);
+    }
 }

@@ -311,4 +311,32 @@ public class GoalRepositoryTests : IDisposable
         var retrieved = await _repo.GetAsync(nonExistentGuid);
         Assert.Null(retrieved);
     }
+
+    [Fact]
+    public async Task GetAllActiveAsync_TwoCompletedGoals_OrderedByEnteredDateDescending()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var olderEntered = DateTimeOffset.UtcNow.AddDays(-5).ToUnixTimeMilliseconds();
+        var newerEntered = DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeMilliseconds();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Goal
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId,
+            GoalText = "older completed", EnteredDate = olderEntered,
+            CompletionDate = now, UpdatedOn = now
+        });
+        await _db.InsertOrReplaceAsync(new Goal
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId,
+            GoalText = "newer completed", EnteredDate = newerEntered,
+            CompletionDate = now, UpdatedOn = now
+        });
+
+        var results = await _repo.GetAllActiveAsync(accountId);
+
+        Assert.Equal(2, results.Count);
+        Assert.Equal("newer completed", results[0].GoalText);
+        Assert.Equal("older completed", results[1].GoalText);
+    }
 }
