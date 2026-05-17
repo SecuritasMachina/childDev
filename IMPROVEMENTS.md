@@ -1,5 +1,29 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 74 Brainstorm (fresh — every 3rd)
+
+| # | Description | Dim | Impact | Effort | Risk |
+|---|-------------|-----|--------|--------|------|
+| 1 | API: Add RequestId log scope to X-Request-ID middleware | Observ. | Medium | S | Low | **SELECTED** |
+| 2 | Mobile: TodoList footer — include overdue count when >0 | UI | Small | XS | Low | |
+| 3 | Mobile: SyncService — shorter timeout for health check vs entity sync | Quality | Small | S | Low | |
+| 4 | Mobile: GoalEntry — show GoalText character count | UI | Small | XS | Low | |
+| 5 | API: GoalProgress — validate NextStepItems not blank | Quality | Small | XS | Low | |
+| 6 | Mobile: JournalEntry — add character count alongside word count | UI | Small | XS | Low | |
+| 7 | Mobile: Todo trim Title/Notes on save | Quality | Small | XS | Low | |
+| 8 | API: Rate-limit sync endpoints | Quality | Small | M | Low | |
+
+## 2026-05-16 — Iteration 74 — API: Add RequestId log scope to X-Request-ID middleware
+
+**What changed:**
+- `Program.cs`: Enhanced the existing X-Request-ID middleware to create a structured log scope via `logger.BeginScope({"RequestId": requestId})`. All log messages from sync endpoints within the same request now include `RequestId` in their scope, enabling per-request correlation in log aggregators.
+
+**Why:** The header was already echoed back to the client, but server-side logs had no way to correlate the 4 separate sync endpoint log lines from a single mobile sync call. Adding the log scope fixes this for any structured logging sink.
+
+**Impact:** 25 mobile tests pass (0 warnings). 56 API tests pass. Existing X-Request-ID header tests continue to pass.
+
+---
+
 ## 2026-05-16 — Iteration 73 — Mobile: GoalList footer shows active/completed split
 
 **What changed:**
