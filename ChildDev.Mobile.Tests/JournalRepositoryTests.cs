@@ -126,4 +126,18 @@ public class JournalRepositoryTests : IDisposable
         Assert.Single(modified);
         Assert.Equal("new", modified[0].Notes);
     }
+
+    [Fact]
+    public async Task UpsertFromSync_OverwritesExistingJournal()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _repo.SaveAsync(new Journal { Guid = guid, AccountFk = "account1", Notes = "original", EnteredDate = now, UpdatedOn = now });
+        await _repo.UpsertFromSyncAsync(new Journal { Guid = guid, AccountFk = "account1", Notes = "synced", EnteredDate = now, UpdatedOn = now + 1000 });
+
+        var retrieved = await _repo.GetAsync(guid);
+        Assert.NotNull(retrieved);
+        Assert.Equal("synced", retrieved!.Notes);
+    }
 }
