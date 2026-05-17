@@ -28,6 +28,8 @@
                     <VerticalStackLayout>
                         <Label Text="{Binding ActiveGoalCount}" FontSize="32" HorizontalOptions="Center" />
                         <Label Text="Active Goals" HorizontalOptions="Center" />
+                        <Label Text="Set a goal!" FontSize="11" TextColor="Gray"
+                               HorizontalOptions="Center" IsVisible="{Binding HasNoActiveGoals}" />
                     </VerticalStackLayout>
                 </Border>
                 <Border Grid.Column="1" Padding="16" StrokeShape="RoundRectangle 8">
@@ -37,6 +39,8 @@
                     <VerticalStackLayout>
                         <Label Text="{Binding PendingTodoCount}" FontSize="32" HorizontalOptions="Center" />
                         <Label Text="Pending Todos" HorizontalOptions="Center" />
+                        <Label Text="All caught up!" FontSize="11" TextColor="Gray"
+                               HorizontalOptions="Center" IsVisible="{Binding HasNoPendingTodos}" />
                         <Label Text="{Binding OverdueTodoCount, StringFormat='{0} overdue'}"
                                FontSize="11" TextColor="Red" HorizontalOptions="Center"
                                IsVisible="{Binding HasOverdueTodos}" />

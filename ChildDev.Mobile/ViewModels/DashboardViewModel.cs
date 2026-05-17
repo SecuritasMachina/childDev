@@ -16,7 +16,9 @@ public partial class DashboardViewModel(
 {
     [ObservableProperty] private ObservableCollection<Journal> recentJournals = [];
     [ObservableProperty] private int activeGoalCount;
+    [ObservableProperty] private bool hasNoActiveGoals;
     [ObservableProperty] private int pendingTodoCount;
+    [ObservableProperty] private bool hasNoPendingTodos;
     [ObservableProperty] private int overdueTodoCount;
     [ObservableProperty] private bool hasOverdueTodos;
     [ObservableProperty] private string nextGoalMeeting = string.Empty;
@@ -53,6 +55,7 @@ public partial class DashboardViewModel(
         var goals = await goalRepo.GetAllActiveAsync(account.Guid);
         var activeGoals = goals.Where(g => g.CompletionDate is null).ToList();
         ActiveGoalCount = activeGoals.Count;
+        HasNoActiveGoals = activeGoals.Count == 0;
         var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var nextGoal = activeGoals
             .Where(g => g.NextMeetingDate.HasValue && g.NextMeetingDate.Value > nowMs)
@@ -74,6 +77,7 @@ public partial class DashboardViewModel(
 
         var todos = await todoRepo.GetPendingAsync(account.Guid);
         PendingTodoCount = todos.Count;
+        HasNoPendingTodos = todos.Count == 0;
         OverdueTodoCount = todos.Count(t => t.DueDate.HasValue && t.DueDate.Value < nowMs);
         HasOverdueTodos = OverdueTodoCount > 0;
     }
