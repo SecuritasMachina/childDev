@@ -4143,3 +4143,13 @@ Both match mobile filter behavior (TodoListViewModel.FilterText, JournalListView
 **Impact:** 217 API tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — Register page confirm PIN field (iter 323)
+
+**What:** Added a "Confirm PIN" field to the web registration form. Submission is blocked with an error state (`MudTextField Error`) when the two PIN fields don't match.
+
+**Why:** Without confirmation, a typo during registration creates an account the user cannot log into. The mobile registration flow forces the caregiver to confirm their PIN.
+
+**Impact:** 217 API tests pass. Build clean.
+
+---

@@ -27,6 +27,9 @@
                 <MudTextField @bind-Value="Pin" Label="PIN" Variant="Variant.Outlined"
                               InputType="InputType.Password" Class="mb-4"
                               HelperText="Remember this PIN to log back in" />
+                <MudTextField @bind-Value="ConfirmPin" Label="Confirm PIN" Variant="Variant.Outlined"
+                              InputType="InputType.Password" Class="mb-4"
+                              Error="@PinMismatch" ErrorText="PINs do not match" />
             </MudCardContent>
             <MudCardActions Class="px-4 pb-4 flex-column">
                 <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true"
@@ -42,6 +45,8 @@
 @code {
     private string NickName = string.Empty;
     private string Pin = string.Empty;
+    private string ConfirmPin = string.Empty;
+    private bool PinMismatch;
     private string? Error;
 
     protected override void OnInitialized()
@@ -58,6 +63,8 @@
             Error = "Nickname must be 1–50 characters.";
             return;
         }
+        PinMismatch = Pin != ConfirmPin;
+        if (PinMismatch) return;
         if (await Db.Accounts.AnyAsync(a => a.NickName == nick))
         {
             Error = "Nickname already taken.";
