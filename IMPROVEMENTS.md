@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 126 — API Tests: Soft-deleted records with blank required fields are accepted
+
+**What changed:**
+- `SyncInputValidationTests.cs`: Added 4 tests — `Sync_Journal_SoftDeletedWithBlankNotes_IsAccepted`, `Sync_Goal_SoftDeletedWithBlankGoalText_IsAccepted`, `Sync_GoalProgress_SoftDeletedWithBlankNextStepItems_IsAccepted`, `Sync_Todo_SoftDeletedWithBlankTitle_IsAccepted`.
+
+**Why:** The existing blank-field rejection tests only cover the active-record case (DeletedAt = null). The validation logic guards with `r.DeletedAt is null && ...` — meaning soft-deleted records should be accepted even with null/blank text fields. No test verified this acceptance path. A regression (e.g., accidentally changing `&&` to `||`) would cause soft deletions to fail with 422, preventing deletion sync from reaching the server.
+
+**Impact:** 48 mobile tests pass. 104 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 125 — Mobile Tests: DeleteAsync UpdatedOn sync invariant
 
 **What changed:**
