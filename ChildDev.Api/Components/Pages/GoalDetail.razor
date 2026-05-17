@@ -215,7 +215,8 @@ else
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => ShowEditDialog = false">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveGoalEdit">Save</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveGoalEdit"
+                   Disabled="@string.IsNullOrWhiteSpace(EditGoalText)">Save</MudButton>
     </DialogActions>
 </MudDialog>
 
