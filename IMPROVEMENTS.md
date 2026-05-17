@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 230 — Mobile: Double network failure on entity sync returns Failed
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_EntitySyncNetworkErrorOnBothAttempts_ReturnsFailed` (user65) with `AlwaysNetworkErrorEntityHandler` — throws HttpRequestException for all entity sync calls (both initial and retry).
+
+**Why:** The existing `RunAsync_EntitySyncNetworkError_RetriesAndSucceeds` tests the case where the retry succeeds. The case where both attempts fail (exception propagates through SyncEntityAsync to the outer catch → Failed) was untested. This ensures the retry logic doesn't silently swallow double failures or return Success.
+
+**Impact:** 187 mobile tests pass (was 186). 164 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 229 — Mobile: SaveServerCredentials/Url preserve LastSyncAt
 
 **What changed:**
