@@ -2,6 +2,21 @@
 
 ---
 
+## 2026-05-17 — Fix: Disabled binding on progress note Save buttons in GoalDetail + Home (iter 391)
+
+**Files:** `ChildDev.Api/Components/Pages/GoalDetail.razor`, `ChildDev.Api/Components/Pages/Home.razor`
+
+**Change:** Added `Disabled` bindings to three Save/Note buttons:
+- Home Quick Note "Save Note" — disabled when `QuickNoteText` is blank
+- GoalDetail Add Progress "Save" — disabled when both `NewNextSteps` is blank and `NewMeetingDate` is null
+- GoalDetail Edit Progress "Save" — disabled when both `EditProgressNextSteps` is blank and `EditProgressMeetingDate` is null
+
+**Why:** Iter 387 added warning snackbars for these empty-submission cases, but did not gray out the button. Silent no-ops or warning-only feedback are weaker UX than a grayed-out button that prevents the invalid action upfront. Completes the button-disable sweep started in iter 388.
+
+**Impact:** 220 API tests — all passing.
+
+---
+
 ## 2026-05-17 — Perf: eliminate redundant SELECT in UpdateLastSyncAsync (iter 390)
 
 **File:** `ChildDev.Mobile/Services/AccountService.cs`

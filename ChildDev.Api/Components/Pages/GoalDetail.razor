@@ -174,7 +174,8 @@ else
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => ShowAddDialog = false">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddProgress">Save</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddProgress"
+                   Disabled="@(string.IsNullOrWhiteSpace(NewNextSteps) && !NewMeetingDate.HasValue)">Save</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -192,7 +193,8 @@ else
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => ShowEditProgressDialog = false">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveProgressEdit">Save</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveProgressEdit"
+                   Disabled="@(string.IsNullOrWhiteSpace(EditProgressNextSteps) && !EditProgressMeetingDate.HasValue)">Save</MudButton>
     </DialogActions>
 </MudDialog>
 

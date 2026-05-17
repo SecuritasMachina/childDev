@@ -300,7 +300,8 @@
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => ShowQuickNoteDialog = false">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveQuickNote">Save Note</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveQuickNote"
+                   Disabled="@string.IsNullOrWhiteSpace(QuickNoteText)">Save Note</MudButton>
     </DialogActions>
 </MudDialog>
 
