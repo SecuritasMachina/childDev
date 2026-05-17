@@ -1,5 +1,20 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 166 — API: LWW tie behavior (server wins) + exact-500 batch boundary
+
+**What changed:**
+- `JournalSyncTests.cs`: Added `Sync_TieOnUpdatedOn_ServerVersionWins` — server stores v1 at time T, client resends same Guid with different content at same T; asserts server kept its version.
+- `TodoSyncTests.cs`: Same for Todo.
+- `GoalSyncTests.cs`: Same for Goal.
+- `GoalProgressSyncTests.cs`: Same for GoalProgress.
+- `SyncInputValidationTests.cs`: Added `Sync_ExactlyMaxBatchSize_Returns200` — sends exactly 500 Journal records with valid fields; asserts 200 OK (boundary condition complementing the existing 501→400 test).
+
+**Why:** The LWW implementation uses strict `>` (not `>=`), meaning ties go to the server's stored version. No test documented this invariant — a refactor to `>=` would silently allow clients to overwrite concurrent edits on tie. The 500-record boundary test ensures the upper limit is inclusive (the existing test only proves 501 is rejected).
+
+**Impact:** 135 API tests pass (was 130). 118 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 165 — Mobile: SyncService inbound optional field propagation for all 4 entities
 
 **What changed:**
