@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 128 — API Fix: Register duplicate check used untrimmed NickName
+
+**What changed:**
+- `AuthEndpoints.cs`: Moved NickName trim to top of register handler. Now `var nickName = req.NickName?.Trim() ?? string.Empty` is computed first, and all subsequent checks (whitespace, length, duplicate lookup, account creation) use the trimmed value.
+- `AuthEndpointTests.cs`: Added `Register_SpacePaddedNickName_DetectsConflictWithExistingTrimmedName` — verifies that registering `"  alice  "` after `"alice"` exists returns 409 Conflict.
+
+**Why:** The duplicate check `a.NickName == req.NickName` used the raw (untrimmed) input, while the stored NickName was always trimmed. So registering `" alice "` after `"alice"` existed would pass the duplicate check (comparing `" alice "` to `"alice"`) and create a second account with the same effective nickname. This iteration 127's trim test discovered the gap by prompting a fresh audit of the endpoint logic.
+
+**Impact:** 48 mobile tests pass. 106 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 127 — API Tests: Register endpoint NickName trim test
 
 **What changed:**
