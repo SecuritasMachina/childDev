@@ -11,13 +11,10 @@ public class JournalRepository(SQLiteAsyncConnection db)
         return db.InsertOrReplaceAsync(journal);
     }
 
-    public async Task DeleteAsync(string guid)
+    public Task DeleteAsync(string guid)
     {
-        var item = await db.FindAsync<Journal>(guid);
-        if (item is null) return;
-        item.DeletedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        item.UpdatedOn = item.DeletedAt.Value;
-        await db.UpdateAsync(item);
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        return db.ExecuteAsync("UPDATE Journal SET DeletedAt = ?, UpdatedOn = ? WHERE Guid = ?", now, now, guid);
     }
 
     public Task<List<Journal>> GetAllActiveAsync(string accountFk) =>

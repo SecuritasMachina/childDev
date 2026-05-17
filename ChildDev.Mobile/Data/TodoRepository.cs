@@ -11,31 +11,22 @@ public class TodoRepository(SQLiteAsyncConnection db)
         return db.InsertOrReplaceAsync(todo);
     }
 
-    public async Task CompleteAsync(string guid)
+    public Task CompleteAsync(string guid)
     {
-        var item = await db.FindAsync<Todo>(guid);
-        if (item is null) return;
-        item.CompletedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        item.UpdatedOn = item.CompletedAt.Value;
-        await db.UpdateAsync(item);
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        return db.ExecuteAsync("UPDATE Todo SET CompletedAt = ?, UpdatedOn = ? WHERE Guid = ?", now, now, guid);
     }
 
-    public async Task UncompleteAsync(string guid)
+    public Task UncompleteAsync(string guid)
     {
-        var item = await db.FindAsync<Todo>(guid);
-        if (item is null || item.CompletedAt is null) return;
-        item.CompletedAt = null;
-        item.UpdatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        await db.UpdateAsync(item);
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        return db.ExecuteAsync("UPDATE Todo SET CompletedAt = NULL, UpdatedOn = ? WHERE Guid = ? AND CompletedAt IS NOT NULL", now, guid);
     }
 
-    public async Task DeleteAsync(string guid)
+    public Task DeleteAsync(string guid)
     {
-        var item = await db.FindAsync<Todo>(guid);
-        if (item is null) return;
-        item.DeletedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        item.UpdatedOn = item.DeletedAt.Value;
-        await db.UpdateAsync(item);
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        return db.ExecuteAsync("UPDATE Todo SET DeletedAt = ?, UpdatedOn = ? WHERE Guid = ?", now, now, guid);
     }
 
     public async Task<Todo?> GetAsync(string guid) =>

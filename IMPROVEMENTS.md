@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-17 — Perf: replace read-modify-write with targeted SQL UPDATE in GoalRepository, JournalRepository, TodoRepository (iter 400)
+
+**Files:** `ChildDev.Mobile/Data/GoalRepository.cs`, `JournalRepository.cs`, `TodoRepository.cs`
+
+**Change:** 7 methods (GoalRepository: DeleteAsync, CompleteAsync, ReopenAsync; JournalRepository: DeleteAsync; TodoRepository: CompleteAsync, UncompleteAsync, DeleteAsync) previously did `FindAsync` + `UpdateAsync`, writing all columns back. Replaced each with a targeted `ExecuteAsync` updating only the specific columns that change.
+
+**Why:** Same analysis as the AccountService cleanup in iters 376/390/393/394. Eliminates unnecessary SELECT round-trips and removes the risk of overwriting columns that may have been modified by sync during the brief window between SELECT and UPDATE. The `UncompleteAsync` adds `AND CompletedAt IS NOT NULL` guard to maintain the existing no-op behavior for already-pending todos.
+
+**Impact:** 242 mobile tests — all passing (including `WhenGuidNotFound_DoesNotThrow` tests, which pass since a no-match UPDATE returns 0 rows without throwing).
+
+---
+
 ## 2026-05-17 — UX: delete confirmation in TodoEntryViewModel (iter 399)
 
 **File:** `ChildDev.Mobile/ViewModels/TodoEntryViewModel.cs`

@@ -11,31 +11,22 @@ public class GoalRepository(SQLiteAsyncConnection db)
         return db.InsertOrReplaceAsync(goal);
     }
 
-    public async Task DeleteAsync(string guid)
+    public Task DeleteAsync(string guid)
     {
-        var item = await db.FindAsync<Goal>(guid);
-        if (item is null) return;
-        item.DeletedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        item.UpdatedOn = item.DeletedAt.Value;
-        await db.UpdateAsync(item);
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        return db.ExecuteAsync("UPDATE Goal SET DeletedAt = ?, UpdatedOn = ? WHERE Guid = ?", now, now, guid);
     }
 
-    public async Task CompleteAsync(string guid)
+    public Task CompleteAsync(string guid)
     {
-        var item = await db.FindAsync<Goal>(guid);
-        if (item is null) return;
-        item.CompletionDate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        item.UpdatedOn = item.CompletionDate.Value;
-        await db.UpdateAsync(item);
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        return db.ExecuteAsync("UPDATE Goal SET CompletionDate = ?, UpdatedOn = ? WHERE Guid = ?", now, now, guid);
     }
 
-    public async Task ReopenAsync(string guid)
+    public Task ReopenAsync(string guid)
     {
-        var item = await db.FindAsync<Goal>(guid);
-        if (item is null) return;
-        item.CompletionDate = null;
-        item.UpdatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        await db.UpdateAsync(item);
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        return db.ExecuteAsync("UPDATE Goal SET CompletionDate = NULL, UpdatedOn = ? WHERE Guid = ?", now, guid);
     }
 
     public Task<List<Goal>> GetAllActiveAsync(string accountFk) =>
