@@ -27,6 +27,8 @@
         <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" Size="Size.Small"
                        OnClick="OpenEditDialog" />
     }
+    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                   OnClick="DeleteGoal" />
 </MudStack>
 
 @if (Goal.CompletionDate.HasValue)
@@ -263,6 +265,18 @@ else
         await Analytics.TrackAsync("progress_delete", AccountGuid, "goal_detail", GoalGuid);
         Snackbar.Add("Progress note removed.", Severity.Info);
         await LoadProgress();
+    }
+
+    private async Task DeleteGoal()
+    {
+        if (Goal is null) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        Goal.DeletedAt = now;
+        Goal.UpdatedOn = now;
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("goal_delete", AccountGuid, "goal_detail", GoalGuid);
+        Snackbar.Add("Goal deleted.", Severity.Info);
+        Nav.NavigateTo("/");
     }
 
     private void OpenEditProgress(GoalProgress p)
