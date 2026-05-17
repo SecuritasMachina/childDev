@@ -106,6 +106,17 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 281 — Mobile: GetModifiedSinceAsync zero UpdatedOn exclusion test
+
+**What changed:**
+- `GoalRepositoryTests.cs`: Added `GetModifiedSinceAsync_ExcludesRecordsWithZeroUpdatedOn` — inserts a goal with `UpdatedOn = 0` alongside a normal goal, calls `GetModifiedSinceAsync(account, 0)`, asserts only the normal goal is returned.
+
+**Why:** The strict `>` comparison in `GetModifiedSinceAsync` means records with `UpdatedOn = 0` are never included in sync. This is correct behavior (0 is an invalid sentinel), but was untested.
+
+**Impact:** 213 API tests pass. 215 mobile tests pass (was 214).
+
+---
+
 ## 2026-05-17 — Iteration 280 — API: Orphan GoalProgress sync test
 
 **What changed:**
