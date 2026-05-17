@@ -23,6 +23,7 @@ public partial class GoalEntryViewModel(
     [ObservableProperty] private string enteredDateDisplay = string.Empty;
 
     [ObservableProperty] private int goalTextLength;
+    [ObservableProperty] private int measurableOutcomeLength;
 
     private string _loadedNextStepItems = string.Empty;
 
@@ -33,6 +34,9 @@ public partial class GoalEntryViewModel(
         GoalTextLength = value?.Length ?? 0;
         SaveCommand.NotifyCanExecuteChanged();
     }
+
+    partial void OnMeasurableOutcomeChanged(string value) =>
+        MeasurableOutcomeLength = value?.Length ?? 0;
 
     partial void OnGuidChanged(string value)
     {
