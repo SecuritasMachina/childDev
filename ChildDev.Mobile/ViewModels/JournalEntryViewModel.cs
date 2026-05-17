@@ -59,10 +59,10 @@ public partial class JournalEntryViewModel(
             ? new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid, EnteredDate = enteredMs }
             : await repo.GetAsync(Guid) ?? new Journal { Guid = Guid, AccountFk = account.Guid, EnteredDate = enteredMs };
 
-        journal.Notes = Notes;
-        journal.Activity = Activity;
-        journal.Mood = Mood;
-        journal.Tags = Tags;
+        journal.Notes = Notes.Trim();
+        journal.Activity = string.IsNullOrWhiteSpace(Activity) ? null : Activity.Trim();
+        journal.Mood = string.IsNullOrWhiteSpace(Mood) ? null : Mood.Trim();
+        journal.Tags = string.IsNullOrWhiteSpace(Tags) ? null : Tags.Trim();
 
         await repo.SaveAsync(journal);
         await Shell.Current.GoToAsync("..");
