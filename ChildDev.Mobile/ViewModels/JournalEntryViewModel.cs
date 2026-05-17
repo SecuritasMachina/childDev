@@ -17,6 +17,7 @@ public partial class JournalEntryViewModel(
     [ObservableProperty] private string mood = string.Empty;
     [ObservableProperty] private string tags = string.Empty;
     [ObservableProperty] private string enteredDateDisplay = string.Empty;
+    [ObservableProperty] private DateTime enteredDate = DateTime.Today;
     [ObservableProperty] private bool isExisting;
 
     partial void OnGuidChanged(string value)
@@ -33,7 +34,8 @@ public partial class JournalEntryViewModel(
         Activity = item.Activity ?? string.Empty;
         Mood = item.Mood ?? string.Empty;
         Tags = item.Tags ?? string.Empty;
-        EnteredDateDisplay = DateTimeOffset.FromUnixTimeMilliseconds(item.EnteredDate).LocalDateTime.ToString("ddd, MMM d yyyy");
+        EnteredDate = DateTimeOffset.FromUnixTimeMilliseconds(item.EnteredDate).LocalDateTime;
+        EnteredDateDisplay = EnteredDate.ToString("ddd, MMM d yyyy");
         IsExisting = true;
     }
 
@@ -43,9 +45,10 @@ public partial class JournalEntryViewModel(
         var account = await accountService.GetAccountAsync();
         if (account is null) return;
 
+        var enteredMs = new DateTimeOffset(EnteredDate, TimeSpan.Zero).ToUnixTimeMilliseconds();
         var journal = string.IsNullOrEmpty(Guid)
-            ? new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid, EnteredDate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() }
-            : await repo.GetAsync(Guid) ?? new Journal { Guid = Guid, AccountFk = account.Guid, EnteredDate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() };
+            ? new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid, EnteredDate = enteredMs }
+            : await repo.GetAsync(Guid) ?? new Journal { Guid = Guid, AccountFk = account.Guid, EnteredDate = enteredMs };
 
         journal.Notes = Notes;
         journal.Activity = Activity;
