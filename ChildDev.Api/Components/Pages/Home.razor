@@ -292,6 +292,12 @@
             .ToListAsync();
         ProgressCounts = progressGroups.ToDictionary(x => x.GoalFk, x => x.Count);
         LastProgressAt = progressGroups.ToDictionary(x => x.GoalFk, x => x.LastAt);
+
+        // Sort: goals with no progress first (needs attention), then by oldest-update-first
+        ActiveGoals = ActiveGoals
+            .OrderBy(g => LastProgressAt.ContainsKey(g.Guid) ? 1 : 0)
+            .ThenBy(g => LastProgressAt.GetValueOrDefault(g.Guid, 0))
+            .ToList();
     }
 
     private async Task AddGoal()
