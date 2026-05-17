@@ -358,6 +358,28 @@ public class GoalProgressRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task UpsertFromSyncAsync_PersistsAllOptionalFields()
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid = System.Guid.NewGuid().ToString();
+        var meetingDate = now + 86400000L;
+
+        await _repo.UpsertFromSyncAsync(new GoalProgress
+        {
+            Guid = guid, AccountFk = "account1",
+            GoalFk = System.Guid.NewGuid().ToString(),
+            NextStepItems = "Synced: step A, step B",
+            NextMeetingDate = meetingDate,
+            UpdatedOn = now
+        });
+
+        var retrieved = await _db.FindAsync<GoalProgress>(guid);
+        Assert.NotNull(retrieved);
+        Assert.Equal("Synced: step A, step B", retrieved!.NextStepItems);
+        Assert.Equal(meetingDate, retrieved.NextMeetingDate);
+    }
+
+    [Fact]
     public async Task SaveAsync_PersistsAllOptionalFields()
     {
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();

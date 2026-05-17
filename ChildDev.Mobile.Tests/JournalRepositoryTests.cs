@@ -266,6 +266,26 @@ public class JournalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task UpsertFromSyncAsync_PersistsAllOptionalFields()
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid = System.Guid.NewGuid().ToString();
+
+        await _repo.UpsertFromSyncAsync(new Journal
+        {
+            Guid = guid, AccountFk = "account1", Notes = "synced note",
+            Activity = "Running", Mood = "Energized", Tags = "fitness,outdoors",
+            EnteredDate = now, UpdatedOn = now
+        });
+
+        var retrieved = await _repo.GetAsync(guid);
+        Assert.NotNull(retrieved);
+        Assert.Equal("Running", retrieved!.Activity);
+        Assert.Equal("Energized", retrieved.Mood);
+        Assert.Equal("fitness,outdoors", retrieved.Tags);
+    }
+
+    [Fact]
     public async Task SaveAsync_PersistsAllOptionalFields()
     {
         var journal = new Journal
