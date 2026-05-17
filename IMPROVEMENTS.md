@@ -1,5 +1,18 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 173 — Mobile: Goal, Todo, GoalProgress SaveAsync optional fields persistence
+
+**What changed:**
+- `GoalRepositoryTests.cs`: Added `SaveAsync_PersistsAllOptionalFields` — verifies MeasurableOutcome, NextMeetingDate, ExpirationDate are stored and retrievable after `SaveAsync`.
+- `TodoRepositoryTests.cs`: Added `SaveAsync_PersistsAllOptionalFields` — verifies Notes and DueDate survive the `SaveAsync` + `GetAsync` round-trip.
+- `GoalProgressRepositoryTests.cs`: Added `SaveAsync_PersistsAllOptionalFields` — verifies NextStepItems and NextMeetingDate are stored after `SaveAsync`.
+
+**Why:** Iter 172 added the same pattern for Journal. The remaining 3 repositories all have optional fields that `SaveAsync` writes through `InsertOrReplaceAsync`, but no test previously confirmed the full set of nullable fields survived the round-trip. If a field were accidentally removed from the model mapping (e.g., missing `[Column]` attribute), these tests would catch it.
+
+**Impact:** 132 mobile tests pass (was 129). 138 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 172 — Mobile: Journal optional fields persistence + SyncService empty batch
 
 **What changed:**
