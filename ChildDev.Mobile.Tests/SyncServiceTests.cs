@@ -2016,6 +2016,39 @@ public class SyncServiceTests : IDisposable
         Assert.NotNull(body);
         Assert.Contains(deletedAt.ToString(), body);
     }
+
+    [Fact]
+    public async Task RunAsync_TwoLocalJournalsModified_BothIncludedInUpload()
+    {
+        await _accountService.CreateAccountAsync("user82", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid1 = System.Guid.NewGuid().ToString();
+        var guid2 = System.Guid.NewGuid().ToString();
+
+        await _db.InsertOrReplaceAsync(new Journal
+        {
+            Guid = guid1, AccountFk = account.Guid, Notes = "first journal",
+            EnteredDate = now, UpdatedOn = now
+        });
+        await _db.InsertOrReplaceAsync(new Journal
+        {
+            Guid = guid2, AccountFk = account.Guid, Notes = "second journal",
+            EnteredDate = now + 1, UpdatedOn = now + 1
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var result = await BuildSyncService(capturingHandler).RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var body = capturingHandler.GetBodyFor("sync/journal");
+        Assert.NotNull(body);
+        Assert.Contains(guid1, body);
+        Assert.Contains(guid2, body);
+    }
 }
 
 // Test helpers
