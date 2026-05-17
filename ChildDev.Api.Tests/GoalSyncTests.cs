@@ -160,6 +160,25 @@ public class GoalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Sync_CompletedGoal_CompletionDatePropagatedInDelta()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gsync_complete1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var completionDate = ts - 1000;
+
+        await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(guid, accountGuid, "Completed goal", null, null, ts, null, completionDate, ts, null)], 0));
+        var response = await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalDto>>();
+
+        var returned = body!.Records.FirstOrDefault(r => r.Guid == guid);
+        Assert.NotNull(returned);
+        Assert.Equal(completionDate, returned!.CompletionDate);
+    }
+
+    [Fact]
     public async Task Sync_BatchMixedLWW_PerRecordWinnerApplied()
     {
         var (jwt, accountGuid) = await RegisterAsync("gsync_mixed_lww");
