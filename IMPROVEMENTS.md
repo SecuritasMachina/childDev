@@ -106,6 +106,17 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 274 — Web: Soft-delete goal from home page
+
+**What changed:**
+- `Home.razor`: Added delete (trash) icon to each active goal card. Sets `DeletedAt = UpdatedOn = now` (LWW soft-delete). Reloads goals and stats. Tracks `goal_delete` analytics event.
+
+**Why:** Users could complete goals but had no way to remove mistakenly added ones from the web UI.
+
+**Impact:** 200 API tests pass. Build clean.
+
+---
+
 ## 2026-05-17 — Iteration 273 — Web: Soft-delete todo from web
 
 **What changed:**
