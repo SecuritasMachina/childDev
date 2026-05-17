@@ -531,6 +531,19 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Sync_ActivityOnlyEntryNullNotes_Accepted()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("jsync_actonly1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var response = await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(Guid.NewGuid().ToString(), accountGuid, null, "Swimming", null, null, ts, ts, null)], 0));
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Sync_SameGuidUploadedTwice_DeltaContainsExactlyOneRecord()
     {
         var (jwt, accountGuid) = await RegisterAsync("jsync_idempotent1");

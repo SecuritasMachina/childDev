@@ -44,10 +44,10 @@ public static class JournalEndpoints
                 logger.LogWarning("sync/journal account={Account} rejected: future EnteredDate", accountGuid[..8]);
                 return Results.Problem("Record EnteredDate is too far in the future.", statusCode: 422);
             }
-            if (req.Records.Any(r => r.DeletedAt is null && string.IsNullOrWhiteSpace(r.Notes)))
+            if (req.Records.Any(r => r.DeletedAt is null && string.IsNullOrWhiteSpace(r.Notes) && string.IsNullOrWhiteSpace(r.Activity)))
             {
-                logger.LogWarning("sync/journal account={Account} rejected: blank Notes", accountGuid[..8]);
-                return Results.Problem("Record Notes must not be blank.", statusCode: 422);
+                logger.LogWarning("sync/journal account={Account} rejected: blank Notes and Activity", accountGuid[..8]);
+                return Results.Problem("Record must have Notes or Activity.", statusCode: 422);
             }
             if (req.Records.Any(r => r.Notes?.Length > 10_000))
             {
