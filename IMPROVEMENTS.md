@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 57 — Mobile: JournalEntry Save disabled when Notes empty
+
+**What changed:**
+- `JournalEntryViewModel.cs`: Added `CanSave()` method; `[RelayCommand(CanExecute = nameof(CanSave))]` on SaveAsync; `OnNotesChanged` now notifies both `NotesLength` and `SaveCommand.CanExecute`
+
+**Why:** Blank journal entries were accepted silently. The toolbar Save button now disables until the user types at least one non-whitespace character. Consistent with GoalEntry (iter 54).
+
+**Impact:** 25 mobile tests pass. 52 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 56 Brainstorm (fresh — every 3rd)
 
 | # | Description | Dim | Impact | Effort | Risk |
