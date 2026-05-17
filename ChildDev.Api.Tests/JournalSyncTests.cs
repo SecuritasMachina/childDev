@@ -240,4 +240,21 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Equal("A client newer", recordA.Notes);
         Assert.Equal("B server", recordB.Notes);
     }
+
+    [Fact]
+    public async Task Sync_LastSyncAt_NegativeValue_ReturnsAllRecords()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("jsync_neg_lastsync");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _client.PostAsJsonAsync("/api/sync/journal",
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "Always returned", null, null, null, ts, ts, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], -1));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
+
+        Assert.Contains(body!.Records, r => r.Guid == guid);
+    }
 }

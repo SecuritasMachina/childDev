@@ -243,4 +243,22 @@ public class GoalProgressSyncTests(ApiFactory factory) : IClassFixture<ApiFactor
         Assert.Equal("A client newer", recordA.NextStepItems);
         Assert.Equal("B server", recordB.NextStepItems);
     }
+
+    [Fact]
+    public async Task Sync_LastSyncAt_NegativeValue_ReturnsAllRecords()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_neg_lastsync");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var goalFk = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(guid, accountGuid, goalFk, "Always returned", null, ts, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([], -1));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalProgressDto>>();
+
+        Assert.Contains(body!.Records, r => r.Guid == guid);
+    }
 }
