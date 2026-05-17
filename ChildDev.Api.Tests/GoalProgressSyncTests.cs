@@ -647,4 +647,30 @@ public class GoalProgressSyncTests(ApiFactory factory) : IClassFixture<ApiFactor
         Assert.NotNull(newRecord);
         Assert.Equal("brand new step", newRecord.NextStepItems);
     }
+
+    [Fact]
+    public async Task Sync_OrphanGoalProgress_StoredEvenWhenGoalDoesNotExist()
+    {
+        // GoalProgress can be uploaded with a GoalFk that has no corresponding Goal.
+        // The API must not enforce referential integrity at the sync layer — the Goal
+        // may arrive in a later sync, and rejecting orphans would cause data loss.
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_orphan");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var progressGuid = Guid.NewGuid().ToString();
+        var nonExistentGoalGuid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var upload = await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([
+                new GoalProgressDto(progressGuid, accountGuid, nonExistentGoalGuid, "orphan step", null, ts, null)
+            ], 0));
+        Assert.Equal(HttpStatusCode.OK, upload.StatusCode);
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalProgressDto>>();
+        var stored = body!.Records.FirstOrDefault(r => r.Guid == progressGuid);
+        Assert.NotNull(stored);
+        Assert.Equal(nonExistentGoalGuid, stored.GoalFk);
+        Assert.Equal("orphan step", stored.NextStepItems);
+    }
 }
