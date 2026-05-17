@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 214 — Mobile: SyncService includes Journal EnteredDate in upload request
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_LocalJournal_EnteredDateIncludedInUploadRequest` — inserts a journal with EnteredDate=3_000_000 and UpdatedOn=4_000_000, asserts the captured sync/journal body contains 3_000_000.
+
+**Why:** Mirrors iter 213 for Journal. AuxFieldsIncluded uses identical values for EnteredDate and UpdatedOn, making it impossible to distinguish the two in the JSON body. If `j.EnteredDate` were dropped from the toDto lambda, the journal entry date would default to 0 silently.
+
+**Impact:** 165 mobile tests pass (was 164). 160 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 213 — Mobile: SyncService includes Goal EnteredDate in upload request
 
 **What changed:**
