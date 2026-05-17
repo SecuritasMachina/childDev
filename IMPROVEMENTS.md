@@ -106,6 +106,17 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 291 — Web: Soft-delete progress notes from goal detail
+
+**What changed:**
+- `GoalDetail.razor`: Each progress note timeline item now has a delete icon. Clicking it soft-deletes (DeletedAt = UpdatedOn = now) and reloads the list. Tracks `progress_delete` analytics.
+
+**Why:** There was no way to remove an incorrectly added progress note from the web. The deletion propagates to mobile via the existing LWW sync mechanism.
+
+**Impact:** 213 API tests pass. 221 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 290 — Web: Edit NextMeetingDate and ExpirationDate from goal detail
 
 **What changed:**
