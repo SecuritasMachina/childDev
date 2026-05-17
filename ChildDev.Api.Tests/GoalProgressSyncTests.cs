@@ -165,4 +165,36 @@ public class GoalProgressSyncTests(ApiFactory factory) : IClassFixture<ApiFactor
 
         Assert.DoesNotContain(body!.Records, r => r.Guid == guid);
     }
+
+    [Fact]
+    public async Task Sync_BatchMixedLWW_PerRecordWinnerApplied()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_mixed_lww");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var goalFk = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var guidA = Guid.NewGuid().ToString();
+        var guidB = Guid.NewGuid().ToString();
+
+        // Establish server state: A at ts+1000, B at ts+2000
+        await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([
+            new GoalProgressDto(guidA, accountGuid, goalFk, "A server", null, ts + 1000, null),
+            new GoalProgressDto(guidB, accountGuid, goalFk, "B server", null, ts + 2000, null)
+        ], 0));
+
+        // Client sends A at ts+2000 (newer → client wins) and B at ts+1000 (older → server wins)
+        await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([
+            new GoalProgressDto(guidA, accountGuid, goalFk, "A client newer", null, ts + 2000, null),
+            new GoalProgressDto(guidB, accountGuid, goalFk, "B client stale", null, ts + 1000, null)
+        ], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalProgressDto>>();
+
+        var recordA = body!.Records.First(r => r.Guid == guidA);
+        var recordB = body.Records.First(r => r.Guid == guidB);
+        Assert.Equal("A client newer", recordA.NextStepItems);
+        Assert.Equal("B server", recordB.NextStepItems);
+    }
 }
