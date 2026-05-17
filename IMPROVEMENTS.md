@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 198 — Mobile: AccountService UpdateLastSync second call overwrites first
+
+**What changed:**
+- `AccountServiceTests.cs`: Added `UpdateLastSync_WhenCalledTwice_SecondTimestampPersisted` — calls `UpdateLastSyncAsync` with T1 then T2, asserts stored LastSyncAt equals T2.
+
+**Why:** `UpdateLastSync_SetsTimestamp` only tests a single call. Testing two sequential calls verifies that the second update correctly persists via `db.UpdateAsync`, not just to an in-memory object. If `await db.UpdateAsync(account)` were removed, the second call would appear to succeed but the value from GetAccountAsync would be stale.
+
+**Impact:** 151 mobile tests pass (was 150). 157 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 197 — Mobile: GoalRepository excludes completed-then-deleted goal from GetAllActive
 
 **What changed:**
