@@ -19,6 +19,9 @@ public partial class JournalEntryViewModel(
     [ObservableProperty] private string enteredDateDisplay = string.Empty;
     [ObservableProperty] private DateTime enteredDate = DateTime.Today;
     [ObservableProperty] private bool isExisting;
+    [ObservableProperty] private int notesLength;
+
+    partial void OnNotesChanged(string value) => NotesLength = value?.Length ?? 0;
 
     partial void OnGuidChanged(string value)
     {

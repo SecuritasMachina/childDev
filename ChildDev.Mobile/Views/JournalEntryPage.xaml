@@ -14,6 +14,8 @@
                         xmlns:system="clr-namespace:System;assembly=netstandard" />
             <Label Text="Notes" />
             <Editor Text="{Binding Notes}" HeightRequest="150" AutoSize="TextChanges" />
+            <Label Text="{Binding NotesLength, StringFormat='{0} characters'}"
+                   FontSize="11" TextColor="Gray" HorizontalOptions="End" />
             <Label Text="Activity" />
             <Entry Text="{Binding Activity}" Placeholder="e.g. Reading, Drawing" />
             <Label Text="Mood" />
