@@ -138,6 +138,27 @@ public class GoalProgressRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task DeleteForGoal_SetsUpdatedOnToDeletedAt()
+    {
+        var goalFk = System.Guid.NewGuid().ToString();
+        var guid1 = System.Guid.NewGuid().ToString();
+        var guid2 = System.Guid.NewGuid().ToString();
+
+        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = guid1, AccountFk = "account1", GoalFk = goalFk, NextStepItems = "step A", UpdatedOn = 1000L });
+        await _db.InsertOrReplaceAsync(new GoalProgress { Guid = guid2, AccountFk = "account1", GoalFk = goalFk, NextStepItems = "step B", UpdatedOn = 1000L });
+
+        await _repo.DeleteForGoalAsync(goalFk);
+
+        var r1 = await _db.FindAsync<GoalProgress>(guid1);
+        var r2 = await _db.FindAsync<GoalProgress>(guid2);
+        Assert.NotNull(r1!.DeletedAt);
+        Assert.Equal(r1.DeletedAt!.Value, r1.UpdatedOn);
+        Assert.True(r1.UpdatedOn > 1000L);
+        Assert.NotNull(r2!.DeletedAt);
+        Assert.Equal(r2.DeletedAt!.Value, r2.UpdatedOn);
+    }
+
+    [Fact]
     public async Task UpsertFromSync_OverwritesExistingRecord()
     {
         var guid = System.Guid.NewGuid().ToString();
