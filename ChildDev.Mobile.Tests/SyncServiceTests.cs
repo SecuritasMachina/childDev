@@ -933,6 +933,24 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_NoLocalChanges_SendsEmptyBatchToAllEndpoints()
+    {
+        await _accountService.CreateAccountAsync("user38", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var journalBody = capturingHandler.GetBodyFor("sync/journal");
+        Assert.NotNull(journalBody);
+        Assert.Contains("\"records\":[]", journalBody);
+    }
+
+    [Fact]
     public async Task RunAsync_MultipleLocalModifications_AllFourEndpointsReceiveData()
     {
         await _accountService.CreateAccountAsync("user37", "1234");
