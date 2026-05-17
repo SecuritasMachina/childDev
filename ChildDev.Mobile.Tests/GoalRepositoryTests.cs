@@ -365,6 +365,29 @@ public class GoalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetAllActiveAsync_MixedActiveAndCompletedGoals_CorrectOrdering()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var older = DateTimeOffset.UtcNow.AddDays(-5).ToUnixTimeMilliseconds();
+        var newer = DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeMilliseconds();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Insert in shuffled order to confirm SQL ORDER BY handles it
+        await _db.InsertOrReplaceAsync(new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalText = "older completed", EnteredDate = older, CompletionDate = now, UpdatedOn = now });
+        await _db.InsertOrReplaceAsync(new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalText = "newer active", EnteredDate = newer, UpdatedOn = newer });
+        await _db.InsertOrReplaceAsync(new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalText = "newer completed", EnteredDate = newer, CompletionDate = now, UpdatedOn = now });
+        await _db.InsertOrReplaceAsync(new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, GoalText = "older active", EnteredDate = older, UpdatedOn = older });
+
+        var results = await _repo.GetAllActiveAsync(accountId);
+
+        Assert.Equal(4, results.Count);
+        Assert.Equal("newer active", results[0].GoalText);
+        Assert.Equal("older active", results[1].GoalText);
+        Assert.Equal("newer completed", results[2].GoalText);
+        Assert.Equal("older completed", results[3].GoalText);
+    }
+
+    [Fact]
     public async Task SaveAsync_PersistsAllOptionalFields()
     {
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
