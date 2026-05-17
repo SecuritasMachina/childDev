@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 48 — Mobile: Skip GoalProgress insert when NextStepItems unchanged
+
+**What changed:**
+- `GoalEntryViewModel.cs`: Added `_loadedNextStepItems` field; set on load from existing GoalProgress; SaveAsync only creates a new GoalProgress row when `NextStepItems != _loadedNextStepItems`
+
+**Why:** Every goal save (e.g., updating MeasurableOutcome without touching next steps) was inserting a new GoalProgress row with identical content. Over time this grows the table and bloats sync payloads.
+
+**Impact:** 25 mobile tests pass. 51 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 47 Brainstorm (fresh — every 3rd)
 
 | # | Description | Dim | Impact | Effort | Risk |
