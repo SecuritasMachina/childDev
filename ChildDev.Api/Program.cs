@@ -35,6 +35,14 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
         };
     });
 
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
+    policy.WithOrigins(
+            builder.Configuration["CHILDDEV_CORS_ORIGIN"] ?? "http://localhost:4200",
+            "http://localhost:5173",
+            "http://localhost:3000")
+          .AllowAnyHeader()
+          .AllowAnyMethod()));
+
 builder.Services.AddAuthorization();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
@@ -43,6 +51,8 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 var app = builder.Build();
+
+app.UseCors();
 
 app.Use(async (ctx, next) =>
 {
