@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 96 — API: Reject sync batches with duplicate Guids (422)
+
+**What changed:**
+- All four sync endpoints (`JournalEndpoints`, `GoalEndpoints`, `GoalProgressEndpoints`, `TodoEndpoints`): Added a duplicate-GUID check after the GUID-format check. Returns 422 with "Records must not contain duplicate Guids." if any two records in the batch share the same Guid.
+- `SyncInputValidationTests.cs`: Added `Sync_DuplicateGuid_Returns422` Theory covering all four endpoints.
+
+**Why:** Without this check a batch containing two records with the same Guid (neither yet in the DB) would cause EF to track both for insert, leading to a unique-constraint violation at `SaveChangesAsync` and an unhandled 500 response.
+
+**Impact:** 25 mobile tests pass. 76 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 95 — API: Move health endpoint to /api/health
 
 **What changed:**
