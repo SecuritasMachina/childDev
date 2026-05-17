@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 115 — Mobile: Fix GoalListViewModel swipe-delete missing cascade
+
+**What changed:**
+- `GoalListViewModel.cs`: `DeleteAsync` (swipe-to-delete from list) now calls `progressRepo.DeleteForGoalAsync(goal.Guid)` after deleting the goal.
+
+**Why:** Iteration 114 added the cascade to `GoalEntryViewModel.DeleteAsync`, but missed the same operation in `GoalListViewModel.DeleteAsync` (swipe gesture on the list). Orphaned GoalProgress records would still accumulate when deleting goals from the list screen.
+
+**Impact:** 43 mobile tests pass. 92 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 114 — Mobile: Cascade soft-delete GoalProgress when Goal is deleted
 
 **What changed:**
