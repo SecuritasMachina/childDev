@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 179 — API: Completed Todo can be un-completed via newer LWW update
+
+**What changed:**
+- `TodoSyncTests.cs`: Added `Sync_CompletedTodo_CanBeUncompletedByClient_ViaNewerUpdate` — stores a completed todo (CompletedAt set), then sends same Guid with CompletedAt=null and a newer UpdatedOn; asserts the stored record has CompletedAt=null.
+
+**Why:** Parallel to iter 178's Goal test. `TodoEndpoints.ApplyDto` includes `e.CompletedAt = dto.CompletedAt`, so LWW allows un-completing a todo. The test documents the intentional behavior and guards against a future guard condition blocking null CompletedAt updates.
+
+**Impact:** 145 API tests pass (was 144). 136 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 178 — API: Completed Goal can be un-completed via newer LWW update
 
 **What changed:**
