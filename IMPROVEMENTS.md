@@ -4173,3 +4173,13 @@ Both match mobile filter behavior (TodoListViewModel.FilterText, JournalListView
 **Impact:** 217 API tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — Mobile todo filter searches notes field (iter 326)
+
+**What:** `TodoListViewModel.OnFilterTextChanged` now also searches `t.Notes` in addition to `t.Title`. The inline Add path checks both fields too. Matches web Todo filter behavior (iter 310 searched title + notes).
+
+**Why:** Caregivers often add context in the Notes field. The web filter already searched both; the mobile filter was title-only and would miss notes-only matches.
+
+**Impact:** 228 mobile tests pass. Build clean.
+
+---

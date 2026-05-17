@@ -64,7 +64,8 @@ public partial class TodoListViewModel(
         else
         {
             var filtered = _allTodos.Where(t =>
-                t.Title != null && t.Title.Contains(value, StringComparison.OrdinalIgnoreCase)).ToList();
+                (t.Title?.Contains(value, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (t.Notes?.Contains(value, StringComparison.OrdinalIgnoreCase) ?? false)).ToList();
             Todos = new ObservableCollection<Todo>(filtered);
             EmptyMessage = $"No matches for \"{value}\"";
             var n = filtered.Count;
@@ -140,7 +141,8 @@ public partial class TodoListViewModel(
         await repo.SaveAsync(todo);
         _allTodos.Insert(0, todo);
         if (string.IsNullOrWhiteSpace(FilterText) ||
-            (todo.Title?.Contains(FilterText, StringComparison.OrdinalIgnoreCase) ?? false))
+            (todo.Title?.Contains(FilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (todo.Notes?.Contains(FilterText, StringComparison.OrdinalIgnoreCase) ?? false))
             Todos.Insert(0, todo);
         NewTodoTitle = string.Empty;
         UpdateOverdueCount(_allTodos);
