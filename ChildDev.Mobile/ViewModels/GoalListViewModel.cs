@@ -113,5 +113,6 @@ public partial class GoalListViewModel(
         await repo.DeleteAsync(goal.Guid);
         _allGoals.Remove(goal);
         Goals.Remove(goal);
+        UpdateEntryCountDisplay();
     }
 }

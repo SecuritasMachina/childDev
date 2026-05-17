@@ -118,6 +118,7 @@ public partial class TodoListViewModel(
             (todo.Title?.Contains(FilterText, StringComparison.OrdinalIgnoreCase) ?? false))
             Todos.Insert(0, todo);
         NewTodoTitle = string.Empty;
+        UpdateOverdueCount(_allTodos);
     }
 
     [RelayCommand]
