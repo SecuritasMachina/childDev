@@ -31,6 +31,7 @@ public class SyncService(
             client.BaseAddress = new Uri(account.ServerUrl.TrimEnd('/') + "/");
             client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", account.ServerJwt);
+            client.Timeout = TimeSpan.FromSeconds(15);
 
             // Pre-flight: verify the server is reachable before attempting all 4 sync calls
             var ping = await client.GetAsync("health");
