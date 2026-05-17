@@ -1,5 +1,209 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 46 — Mobile: GoalList shows latest next-step items
+
+**What changed:**
+- `Goal.cs`: Added `[Ignore] public string? LatestNextStepItems { get; set; }` (transient, not persisted)
+- `GoalProgressRepository.cs`: Added `GetLatestNextStepsAsync` — single SQL GROUP BY query returning latest `NextStepItems` per goal
+- `GoalListViewModel.cs`: Added `GoalProgressRepository progressRepo` to constructor; `LoadGoalsWithStepsAsync` populates LatestNextStepItems via dictionary lookup (avoids N+1)
+- `GoalListPage.xaml`: New gray label below expiration date shows LatestNextStepItems, hidden when null/empty
+
+**Why:** The goal list was missing context — users couldn't see where they left off on each goal without opening it. This surfaces the latest next-step directly in the list without extra taps.
+
+**Impact:** 23 mobile tests pass. 51 API tests pass.
+
+---
+
+## 2026-05-16 — Iteration 45 — API: Warning log on sync 422 rejections
+
+**What changed:**
+- All 4 sync endpoints: Added `logger.LogWarning(...)` before returning 422 for future `UpdatedOn` or invalid `Guid`. Includes account prefix for correlation.
+
+**Why:** 422 responses from misbehaving or clock-skewed clients are silent at Debug level. Warning level makes them searchable in production without flooding logs on normal operation.
+
+**Impact:** 51 API tests pass. 23 mobile tests pass.
+
+---
+
+## 2026-05-16 — Iteration 44 — API: NickName validation on register
+
+**What changed:**
+- `AuthEndpoints.cs`: Added empty/whitespace check (400) and max 50-char check (400) before the duplicate NickName check. NickName is trimmed before storage.
+- `AuthEndpointTests.cs`: 3 new tests (empty, whitespace, too-long). 51 API tests total.
+
+**Why:** A blank NickName or a 1000-char string would be stored in the DB and displayed in settings. Trimming prevents accidental leading/trailing spaces creating duplicate-looking accounts.
+
+**Impact:** 51 API tests pass. 23 mobile tests pass.
+
+---
+
+## 2026-05-16 — Iteration 44 Brainstorm (fresh — every 3rd)
+
+| # | Description | Dim | Impact | Effort | Risk | Status |
+|---|-------------|-----|--------|--------|------|--------|
+| 1 | API: NickName validation on register (non-empty, max 50 chars) | Stability | Medium | S | Low | **SELECTED** |
+| 2 | API: structured warning log for 4xx sync validation failures | Ops | Low | S | Low | Backlog |
+| 3 | GoalListPage: show NextStepItems from latest GoalProgress | UI | Medium | M | Low | Backlog |
+| 4 | DashboardPage: show 2-3 active goals below journal section | UI | Medium | M | Low | Backlog |
+| 5 | JournalList: search by notes keyword | Func | Medium | M | Low | Backlog |
+| 6 | GoalList: collapsible completed goals section | UI | Low | M | Low | Backlog |
+| 7 | Mobile: guard nav when account not configured (SetupPage gate) | Stability | Medium | M | Medium | Backlog |
+| 8 | TodoEntry: add UpdatedOn to inline add (quick add) | Stability | Low | S | Low | Backlog |
+| 9 | DashboardViewModel: show last 3 goals count with upcoming meeting | UI | Low | M | Low | Backlog |
+| 10 | API: register endpoint returns account Guid + JWT (already does) | Done | — | — | — | Done |
+
+---
+
+## 2026-05-16 — Iteration 43 — SyncService: 15-second HTTP client timeout
+
+**What changed:**
+- `SyncService.RunAsync`: `client.Timeout = TimeSpan.FromSeconds(15)` set on the `HttpClient` before making any requests.
+
+**Why:** Without a client-side timeout, a hung API server (unresponsive but connected) blocks `RunAsync` for the OS default timeout (100s+). 15 seconds is generous relative to the API's 10-second request timeout while still failing fast for users.
+
+**Impact:** 23 mobile tests pass. 48 API tests pass.
+
+---
+
+## 2026-05-16 — Iteration 42 — API: EF Core 8-second command timeout
+
+**What changed:**
+- `Program.cs`: `UseMySql(…, mySqlOptions => mySqlOptions.CommandTimeout(8))` — 8-second limit per DB command.
+
+**Why:** The 10-second request timeout kills the HTTP request but doesn't cancel the underlying DB query, holding the connection open. The EF command timeout cancels the query itself, releasing the connection immediately.
+
+**Impact:** 48 API tests pass. 23 mobile tests pass.
+
+---
+
+## 2026-05-16 — Iteration 41 — TodoListPage: overdue count banner
+
+**What changed:**
+- `TodoListViewModel`: Added `OverdueTodoCount` and `HasOverdueTodos` observables. `UpdateOverdueCount(items)` computes count from pending todos with `DueDate < now`. Called in `LoadAsync`, `RefreshAsync`, `CompleteAsync`, `DeleteAsync`.
+- `TodoListPage.xaml`: Added row 1 as red banner `"{0} task(s) overdue"`, visible only when `HasOverdueTodos`. Existing add-input row → row 2, CollectionView row → row 3, footer → row 4.
+
+**Why:** Dashboard shows overdue count but the todo list itself gave no indication of urgency. Users had to scroll to find overdue items (they're sorted first). The banner makes urgency visible on arrival.
+
+**Impact:** 23 mobile tests pass. 48 API tests pass.
+
+---
+
+## 2026-05-16 — Iteration 41 Brainstorm (fresh — every 3rd)
+
+| # | Description | Dim | Impact | Effort | Risk | Status |
+|---|-------------|-----|--------|--------|------|--------|
+| 1 | TodoListPage: overdue count banner at top | UI | Medium | S | Low | **SELECTED** |
+| 2 | API: rate limiting per account (built-in ASP.NET 8) | Stability | Medium | M | Medium | Backlog |
+| 3 | GoalListPage: show NextStepItems from latest progress | UI | Medium | M | Low | Backlog |
+| 4 | JournalListPage: search/filter by notes keyword | Func | Medium | M | Low | Backlog |
+| 5 | EF Core: command timeout on AppDbContext | Stability | Low | S | Low | Backlog |
+| 6 | SyncService: per-entity HTTP timeout (HttpClient.Timeout) | Stability | Low | S | Low | Backlog |
+| 7 | AccountService: PIN change from SettingsPage | Func | Medium | M | Medium | Backlog |
+| 8 | GoalEntry: save progress NextMeetingDate from GoalText NextMeeting | Func | Low | S | Low | Backlog |
+| 9 | API: structured error logging (log 4xx/5xx responses) | Ops | Low | S | Low | Backlog |
+| 10 | DashboardPage: recent goals list (not just count) | UI | Low | M | Low | Backlog |
+
+---
+
+## 2026-05-16 — Iteration 40 — API: GUID format validation on sync endpoints
+
+**What changed:**
+- All 4 sync endpoints (`journal`, `goal`, `goal-progress`, `todo`): Added `Guid.TryParse` check on every incoming record's Guid field; returns 422 if any record has an invalid UUID format.
+- `SyncInputValidationTests.cs`: Added 4 `[Theory]` tests covering the new 422 path. 48 API tests total.
+
+**Why:** Previously any string could be accepted as a Guid, polluting the DB with records that could never be retrieved by UUID. Client code always generates proper UUIDs but a malformed or tampered payload could insert garbage.
+
+**Impact:** 48 API tests pass. 23 mobile tests pass.
+
+---
+
+## 2026-05-16 — Iteration 39 — JournalList: Activity badge per row
+
+**What changed:**
+- `JournalListPage.xaml`: Wrapped Mood label in `HorizontalStackLayout`; added Activity label in `CornflowerBlue` beside it, each hidden when empty.
+
+**Why:** Activity field was collected but invisible in list view. Users had to open each entry to see what they were doing, making list scanning useless for activity context.
+
+**Impact:** 23 mobile tests pass. 44 API tests pass.
+
+---
+
+## 2026-05-16 — Iteration 38 — GoalEntry: Delete button
+
+**What changed:**
+- `GoalEntryViewModel`: Added `DeleteAsync` relay command.
+- `GoalEntryPage.xaml`: Added red "Delete Goal" button below "Mark as Complete", visible only for existing goals.
+
+**Why:** Parity with JournalEntry and TodoEntry. Goals could be swipe-deleted from the list but not from the entry view.
+
+**Impact:** 23 mobile tests pass. 44 API tests pass.
+
+---
+
+## 2026-05-16 — Iteration 37 — TodoEntry: Delete button
+
+**What changed:**
+- `TodoEntryViewModel`: Added `DeleteAsync` relay command — soft-deletes via `repo.DeleteAsync`, then navigates back.
+- `TodoEntryPage.xaml`: Added red "Delete Task" button below "Mark as Done", visible only for existing todos (`IsExisting`).
+
+**Why:** Users could swipe-to-delete from the todo list but had no way to delete a todo they'd opened for editing. JournalEntry already had this pattern; this closes the parity gap.
+
+**Impact:** 23 mobile tests pass. 44 API tests pass.
+
+---
+
+## 2026-05-16 — Iteration 36 — API: /health DB ping
+
+**What changed:**
+- `Program.cs`: `/health` endpoint now calls `db.Database.CanConnectAsync()`. Returns 503 Problem Details if the DB is unreachable; 200 only when DB is live.
+
+**Why:** `SyncService` uses `/health` as a pre-flight before 4 entity syncs. Previously it returned 200 even if the DB was down, causing all entity syncs to fail with confusing errors rather than a clean `SyncResult.NoServer`.
+
+**Impact:** 44 API tests pass. 23 mobile tests pass.
+
+---
+
+## 2026-05-16 — Iteration 35 — SyncService concurrent sync guard
+
+**What changed:**
+- `SyncService`: Added `private int _syncing` field. `RunAsync` uses `Interlocked.CompareExchange` at entry to return `SyncResult.Success` immediately if a sync is already in-flight. `Interlocked.Exchange` resets the flag in a `finally` block.
+- `SyncServiceTests.cs`: Added `RunAsync_ConcurrentCall_SkipsSecondSync` test.
+
+**Why:** `SyncService` is a singleton. `DashboardViewModel` fires `RunSyncAsync` as a background task immediately after loading. If a user pulls to refresh on any list page before that background sync completes, two concurrent `RunAsync` calls would both read the same `account.LastSyncAt`, make duplicate HTTP calls, and potentially race on `UpdateLastSyncAsync`. The guard prevents this.
+
+**Impact:** 23 mobile tests pass. 44 API tests pass.
+
+---
+
+## 2026-05-16 — Iteration 34 — API: RFC 7807 Problem Details for sync validation
+
+**What changed:**
+- `Program.cs`: Added `builder.Services.AddProblemDetails()`.
+- `JournalEndpoints.cs`, `GoalEndpoints.cs`, `GoalProgressEndpoints.cs`, `TodoEndpoints.cs`: All validation returns (`BadRequest`/`UnprocessableEntity`) replaced with `Results.Problem()` for RFC 7807 compliant error bodies.
+
+**Why:** String-based error responses gave clients no structured way to parse validation failures. RFC 7807 `application/problem+json` with `status`, `title`, and `detail` fields enables client-side error handling without string parsing.
+
+**Impact:** 44 API tests pass. 0 regressions.
+
+---
+
+## 2026-05-16 — Iteration 35 Brainstorm (fresh — every 3rd)
+
+| # | Description | Dim | Impact | Effort | Risk | Status |
+|---|-------------|-----|--------|--------|------|--------|
+| 1 | SyncService: concurrent sync guard (Interlocked flag) | Stability | Medium | S | Low | **SELECTED** |
+| 2 | API: /health DB ping (real connectivity check) | Stability | Medium | S | Low | Backlog |
+| 3 | TodoEntry: Delete button (parity with JournalEntry) | Func | Medium | S | Low | Backlog |
+| 4 | GoalEntry: Delete button | Func | Low | S | Low | Backlog |
+| 5 | Dashboard: tappable goal/todo counts → navigate | UI | Low | S | Low | Backlog |
+| 6 | JournalListPage: activity/mood badge per row | UI | Low | S | Low | Backlog |
+| 7 | API: Guid format validation on incoming records | Stability | Low | S | Low | Backlog |
+| 8 | JournalList: filter by tag or mood | Func | Medium | M | Low | Backlog |
+| 9 | GoalList: separate section for completed goals | UI | Low | M | Low | Backlog |
+| 10 | TodoEntry: time component on DueDate (not just date) | Func | Low | M | Medium | Backlog |
+
+---
+
 ## 2026-05-16 — Iteration 26 Brainstorm (fresh — every 3rd)
 
 | # | Description | Dim | Impact | Effort | Risk | Status |
