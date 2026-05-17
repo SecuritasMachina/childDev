@@ -75,7 +75,18 @@ app.Use(async (ctx, next) =>
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapGet("/health", () => Results.Ok(new { status = "ok", utc = DateTime.UtcNow }));
+app.MapGet("/health", async (AppDbContext db) =>
+{
+    try
+    {
+        await db.Database.CanConnectAsync();
+        return Results.Ok(new { status = "ok", utc = DateTime.UtcNow });
+    }
+    catch
+    {
+        return Results.Problem("Database unavailable.", statusCode: 503);
+    }
+});
 
 app.MapAuthEndpoints();
 app.MapJournalEndpoints();
