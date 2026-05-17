@@ -2119,6 +2119,106 @@ public class SyncServiceTests : IDisposable
         Assert.Contains(records, p => p.NextStepItems == "step one");
         Assert.Contains(records, p => p.NextStepItems == "step two");
     }
+
+    [Fact]
+    public async Task RunAsync_TwoLocalTodosModified_BothIncludedInUpload()
+    {
+        await _accountService.CreateAccountAsync("user86", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid1 = System.Guid.NewGuid().ToString();
+        var guid2 = System.Guid.NewGuid().ToString();
+
+        await _db.InsertOrReplaceAsync(new Todo
+        {
+            Guid = guid1, AccountFk = account.Guid, Title = "first todo",
+            UpdatedOn = now
+        });
+        await _db.InsertOrReplaceAsync(new Todo
+        {
+            Guid = guid2, AccountFk = account.Guid, Title = "second todo",
+            UpdatedOn = now + 1
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var result = await BuildSyncService(capturingHandler).RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var body = capturingHandler.GetBodyFor("sync/todo");
+        Assert.NotNull(body);
+        Assert.Contains(guid1, body);
+        Assert.Contains(guid2, body);
+    }
+
+    [Fact]
+    public async Task RunAsync_TwoLocalGoalsModified_BothIncludedInUpload()
+    {
+        await _accountService.CreateAccountAsync("user87", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid1 = System.Guid.NewGuid().ToString();
+        var guid2 = System.Guid.NewGuid().ToString();
+
+        await _db.InsertOrReplaceAsync(new Goal
+        {
+            Guid = guid1, AccountFk = account.Guid, GoalText = "first goal",
+            EnteredDate = now, UpdatedOn = now
+        });
+        await _db.InsertOrReplaceAsync(new Goal
+        {
+            Guid = guid2, AccountFk = account.Guid, GoalText = "second goal",
+            EnteredDate = now + 1, UpdatedOn = now + 1
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var result = await BuildSyncService(capturingHandler).RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var body = capturingHandler.GetBodyFor("sync/goal");
+        Assert.NotNull(body);
+        Assert.Contains(guid1, body);
+        Assert.Contains(guid2, body);
+    }
+
+    [Fact]
+    public async Task RunAsync_TwoLocalGoalProgressesModified_BothIncludedInUpload()
+    {
+        await _accountService.CreateAccountAsync("user88", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goalGuid = System.Guid.NewGuid().ToString();
+        var guid1 = System.Guid.NewGuid().ToString();
+        var guid2 = System.Guid.NewGuid().ToString();
+
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = guid1, AccountFk = account.Guid, GoalFk = goalGuid,
+            NextStepItems = "step one", UpdatedOn = now
+        });
+        await _db.InsertOrReplaceAsync(new GoalProgress
+        {
+            Guid = guid2, AccountFk = account.Guid, GoalFk = goalGuid,
+            NextStepItems = "step two", UpdatedOn = now + 1
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var result = await BuildSyncService(capturingHandler).RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var body = capturingHandler.GetBodyFor("sync/goal-progress");
+        Assert.NotNull(body);
+        Assert.Contains(guid1, body);
+        Assert.Contains(guid2, body);
+    }
 }
 
 // Test helpers
