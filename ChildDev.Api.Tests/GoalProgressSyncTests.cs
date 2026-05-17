@@ -539,4 +539,27 @@ public class GoalProgressSyncTests(ApiFactory factory) : IClassFixture<ApiFactor
 
         Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Sync_SameGuidUploadedTwice_DeltaContainsExactlyOneRecord()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_idempotent1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid = Guid.NewGuid().ToString();
+        var goalGuid = Guid.NewGuid().ToString();
+
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(guid, accountGuid, goalGuid, "first upload", null, ts, null)], 0));
+
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([new GoalProgressDto(guid, accountGuid, goalGuid, "second upload", null, ts + 1, null)], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalProgressDto>>();
+
+        var matches = body!.Records.Where(r => r.Guid == guid).ToList();
+        Assert.Single(matches);
+        Assert.Equal("second upload", matches[0].NextStepItems);
+    }
 }
