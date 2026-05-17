@@ -147,6 +147,21 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_EntitySyncTransient5xx_RetriesAndSucceeds()
+    {
+        await _accountService.CreateAccountAsync("user6b", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        // First entity call returns 500, second returns 200 — simulates transient failure
+        var service = BuildSyncService(new TransientFailThenSucceedHandler());
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+    }
+
+    [Fact]
     public async Task RunAsync_PartialFailure_DoesNotUpdateLastSyncAt()
     {
         await _accountService.CreateAccountAsync("user6", "1234");
@@ -223,6 +238,31 @@ public class GoalFailureHandler : HttpMessageHandler
         return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = JsonContent.Create(new { Records = Array.Empty<object>() })
+        });
+    }
+}
+
+// Returns 500 on the first entity sync call, then 200 on retry — tests retry logic
+public class TransientFailThenSucceedHandler : HttpMessageHandler
+{
+    private int _entityCallCount;
+
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        if (request.RequestUri!.PathAndQuery.Contains("health"))
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new { status = "ok" })
+            });
+
+        _entityCallCount++;
+        if (_entityCallCount == 1)
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.InternalServerError));
+
+        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new SyncResponseDto<JournalSyncDto>([]))
         });
     }
 }
