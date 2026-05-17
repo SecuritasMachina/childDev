@@ -4559,3 +4559,27 @@ Stats grid expanded from 3 to 4 cards (3→4 per row using `sm="3"`).
 **Impact:** 217 API tests pass. Build clean.
 
 ---
+
+---
+
+## 2026-05-17 — Fix: mobile sync permanently broken — add server link flow (iter 364)
+
+**What:** `AccountService.SaveServerCredentialsAsync` was defined but never called from any ViewModel. `SyncService.RunAsync` returns `SyncResult.NoServer` when `account.ServerJwt` is null — meaning sync was always a no-op for all real users. 
+
+Added `AccountService.LinkToServerAsync(jwt, serverUrl, serverAccountGuid)` which:
+1. Migrates all local record `AccountFk` values from the old local GUID to the server's GUID via raw SQL updates to Journal, Goal, GoalProgress, and Todo tables
+2. Updates the Account.Guid PK via raw SQL so subsequent record creation uses the server GUID
+3. Also stores JWT and ServerUrl on the same row
+
+Added `AccountService.ClearServerJwtAsync()` for unlinking.
+
+Updated `SettingsViewModel` with `LinkToServerCommand` (NickName + PIN → `/api/auth/token` → receives JWT + serverAccountGuid → calls LinkToServerAsync) and `UnlinkFromServerCommand`.
+
+Updated `SettingsPage.xaml` with a conditional section:
+- When linked: green "✓ Linked to server account" + red "Unlink from Server" button
+- When not linked: NickName + PIN entry + blue "Link to Server" button
+
+**Why:** The GUID used as `AccountFk` on all mobile records must match the GUID embedded in the server JWT claim, otherwise the server's ownership check skips all records during sync. Before this fix, every sync for every user silently returned `NoServer`.
+
+**Impact:** 238 mobile tests, 217 API tests — all passing. Build clean.
+
