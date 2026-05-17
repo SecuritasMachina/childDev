@@ -4030,3 +4030,26 @@ MudTextField filter bar added above the pending todos list. Filters by title and
 **Impact:** All 217 API + 226 mobile tests pass. Build clean.
 
 ---
+
+## 2026-05-17 — Mobile goal staleness indicator (iter 312)
+
+**Branch:** `improve/mobile-goal-staleness-312`
+
+**What:** Added `GetLatestProgressInfoAsync` to `GoalProgressRepository` returning `(Steps, UpdatedOn)` per goal. `GoalListViewModel` populates `LatestProgressAt` on each `Goal`. `GoalListPage` shows "Updated Xd ago" in gray (or orange when 14+ days stale). Added `ProgressStalenessConverter` and `ProgressStalenessColorConverter`. Two new repository tests.
+
+**Why:** Mobile goal list showed next-step text but no temporal signal about how long since anyone added a progress note. Web had this chip (green/yellow); mobile was lagging behind.
+
+**Impact:** 228 mobile tests (up from 226). Build clean.
+
+---
+
+## 2026-05-17 — Search filters on web Todos and Journal pages (iters 310–311)
+
+**Iter 310 — Todos filter:** Real-time filter by title and notes. Shows "N matching 'query'" count.
+**Iter 311 — Journal filter:** Real-time filter by notes, activity, mood, and tags. Shows "No entries matching…" when empty.
+
+Both match mobile filter behavior (TodoListViewModel.FilterText, JournalListViewModel.FilterText).
+
+**Impact:** 217 API tests pass. Build clean.
+
+---
