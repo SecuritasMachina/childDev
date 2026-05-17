@@ -658,4 +658,25 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.NotNull(newRecord);
         Assert.Equal("brand new task", newRecord.Title);
     }
+
+    [Fact]
+    public async Task Sync_SoftDeletedRecord_BlankTitle_Accepted()
+    {
+        // Validation requires Title only for non-deleted records (DeletedAt is null).
+        // A soft-deleted todo with null Title must be accepted and stored.
+        var (jwt, accountGuid) = await RegisterAsync("tsync_softdel_blank");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var upload = await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([new TodoDto(guid, accountGuid, null, null, null, null, ts, ts)], 0));
+        Assert.Equal(HttpStatusCode.OK, upload.StatusCode);
+
+        var response = await _client.PostAsJsonAsync("/api/sync/todo", new SyncRequest<TodoDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+        var stored = body!.Records.FirstOrDefault(r => r.Guid == guid);
+        Assert.NotNull(stored);
+        Assert.Equal(ts, stored!.DeletedAt);
+    }
 }
