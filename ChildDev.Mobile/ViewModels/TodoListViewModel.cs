@@ -42,14 +42,22 @@ public partial class TodoListViewModel(
     [ObservableProperty]
     private string entryCountDisplay = string.Empty;
 
+    [ObservableProperty]
+    private string emptyMessage = "All done!";
+
     private List<Todo> _allTodos = [];
 
-    partial void OnFilterTextChanged(string value) =>
+    partial void OnFilterTextChanged(string value)
+    {
         Todos = new ObservableCollection<Todo>(
             string.IsNullOrWhiteSpace(value)
                 ? _allTodos
                 : _allTodos.Where(t => t.Title != null &&
                     t.Title.Contains(value, StringComparison.OrdinalIgnoreCase)));
+        EmptyMessage = string.IsNullOrWhiteSpace(value)
+            ? "All done!"
+            : $"No matches for \"{value}\"";
+    }
 
     [RelayCommand]
     private async Task LoadAsync()

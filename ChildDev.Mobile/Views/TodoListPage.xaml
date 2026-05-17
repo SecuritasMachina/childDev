@@ -23,10 +23,8 @@
         <RefreshView Grid.Row="4" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
         <CollectionView ItemsSource="{Binding Todos}">
             <CollectionView.EmptyView>
-                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8" Padding="32">
-                    <Label Text="All done!" FontSize="18" HorizontalOptions="Center" />
-                    <Label Text="Type a task above and tap Add." TextColor="Gray" HorizontalOptions="Center" />
-                </VerticalStackLayout>
+                <Label Text="{Binding EmptyMessage}" FontSize="18" TextColor="Gray"
+                       HorizontalOptions="Center" VerticalOptions="Center" Padding="32" />
             </CollectionView.EmptyView>
             <CollectionView.Footer>
                 <Label Text="{Binding EntryCountDisplay}" FontSize="11" TextColor="Gray"
