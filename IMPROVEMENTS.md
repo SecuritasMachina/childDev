@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 250 — Mobile: SyncService upserts all records when server returns multiple
+
+**What changed:**
+- `SyncServiceTests.cs`: Added `RunAsync_ServerReturnsTwoJournals_BothUpsertedLocally` (user80) and `MultiJournalSyncHandler` helper — server returns 2 journals, asserts both are in the local repository after sync.
+
+**Why:** All existing server-returns-data tests use a single-record response. The `SyncEntityAsync` loops `foreach (var dto in result.Records)` but this was only tested with 1 record. If the loop were accidentally broken (e.g., `FirstOrDefault` instead of iterating all), only the 2-record test would catch it.
+
+**Impact:** 205 mobile tests pass (was 204). 192 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 249 — Mobile: SyncService releases _syncing lock after partial entity failure
 
 **What changed:**
