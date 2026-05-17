@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 72 — API: Reject Todo sync records with blank Title
+
+**What changed:**
+- `TodoEndpoints.cs`: Added validation — any active (non-deleted, non-completed) record with blank/whitespace `Title` returns HTTP 422. Soft-deletes and completed records are exempt.
+- `SyncInputValidationTests.cs`: Added `Sync_Todo_BlankTitle_Returns422` fact test.
+
+**Why:** Consistent with the blank-Notes/GoalText validation added for Journal and Goal in iter 68. The client already guards empty input via `CanSave`, but a direct API caller could bypass it.
+
+**Impact:** 25 mobile tests pass (0 warnings). 56 API tests pass (was 55).
+
+---
+
 ## 2026-05-16 — Iteration 71 Brainstorm (fresh — every 3rd)
 
 | # | Description | Dim | Impact | Effort | Risk |
