@@ -106,6 +106,17 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 278 — API: Mixed batch (new + existing) upsert tests
+
+**What changed:**
+- `GoalSyncTests.cs`, `JournalSyncTests.cs`, `TodoSyncTests.cs`, `GoalProgressSyncTests.cs`: Added `Sync_MixedBatch_NewAndExistingBothPersisted` to each. Pattern: upload existing record → send batch with updated existing + brand-new record → assert both in delta with correct field values.
+
+**Why:** No test verified that a single batch containing both new inserts and updates to existing records handled both paths correctly. A bug affecting only the INSERT path in the upsert logic would be invisible to single-record tests.
+
+**Impact:** 212 API tests pass (was 208). 213 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 277 — API: Reject DeletedAt > UpdatedOn on all 4 sync endpoints
 
 **What changed:**
