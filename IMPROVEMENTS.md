@@ -4678,6 +4678,18 @@ Updated `SettingsPage.xaml` with a conditional section:
 
 ---
 
+## 2026-05-17 — Fix: Activity-only journal entries blank on Dashboard recent list (iter 375)
+
+**Files:** `ChildDev.Mobile/Models/Journal.cs`, `ChildDev.Mobile/Views/DashboardPage.xaml`
+
+**Change:** Added `[Ignore] public string DisplayText => Notes ?? Activity ?? string.Empty` computed property to `Journal`. Updated `DashboardPage.xaml` to bind recent journal entries to `DisplayText` instead of `Notes`.
+
+**Why:** After iter 367, Activity-only journal entries (null Notes) are valid. The Dashboard's recent journal list was binding directly to `Notes`, which displayed as blank text for Activity-only entries. `DisplayText` falls back to Activity when Notes is null, ensuring the entry always shows some text.
+
+**Impact:** 244 mobile tests — all passing.
+
+---
+
 ## 2026-05-17 — UX: Enter key on Login Nickname field (iter 374)
 
 **File:** `ChildDev.Api/Components/Pages/Login.razor`
