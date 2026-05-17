@@ -106,6 +106,17 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 289 — Web: Goal creation date and age on detail page
+
+**What changed:**
+- `GoalDetail.razor`: Shows "Set on [date] — N days ago" below the measurable outcome using `Goal.EnteredDate`.
+
+**Why:** Without the creation date, the progress timeline has no anchor. Knowing a goal was set "14 days ago" makes 3 progress notes feel like meaningful momentum rather than random entries.
+
+**Impact:** 213 API tests pass. 221 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 288 — Web: Todos empty state + logout analytics
 
 **What changed:**
