@@ -339,6 +339,35 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_SecondSync_SendsLastSyncAtFromPriorSync()
+    {
+        await _accountService.CreateAccountAsync("user16", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        // First sync — sets LastSyncAt
+        var firstHandler = new CapturingHandler();
+        var service = BuildSyncService(firstHandler);
+        await service.RunAsync(account);
+
+        account = await _accountService.GetAccountAsync();
+        var firstLastSyncAt = account!.LastSyncAt;
+        Assert.True(firstLastSyncAt > 0);
+
+        // Second sync — the request body must contain the persisted LastSyncAt value
+        account.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+        var secondHandler = new CapturingHandler();
+        var service2 = BuildSyncService(secondHandler);
+        await service2.RunAsync(account);
+
+        var journalBody = secondHandler.GetBodyFor("sync/journal");
+        Assert.NotNull(journalBody);
+        Assert.Contains(firstLastSyncAt.ToString(), journalBody);
+    }
+
+    [Fact]
     public async Task RunAsync_FailedSync_ReleasesLockSoSubsequentSyncCanRun()
     {
         await _accountService.CreateAccountAsync("user15", "1234");
