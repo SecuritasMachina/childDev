@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 108 — API: Validate PinHash non-empty on register
+
+**What changed:**
+- `AuthEndpoints.cs`: Added `string.IsNullOrWhiteSpace(req.PinHash)` check before hashing, returns 400 if blank.
+- `AuthEndpointTests.cs`: Added `Register_EmptyPinHash_Returns400` and `Register_WhitespacePinHash_Returns400`.
+
+**Why:** The register endpoint accepted empty/whitespace PinHash, silently storing a BCrypt hash of an empty string. Any caller knowing the NickName could authenticate by sending an empty pin.
+
+**Impact:** 36 mobile tests pass. 88 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 107 — Mobile Tests: GoalProgressRepository full coverage
 
 **What changed:**
