@@ -1853,6 +1853,35 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_Server401OnEntitySync_ReturnsFailed()
+    {
+        await _accountService.CreateAccountAsync("user77", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "expired-jwt";
+
+        // Health passes but entity sync returns 401 — EnsureSuccessStatusCode throws → Failed
+        var service = BuildSyncService(new EntitySync401Handler());
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Failed, result);
+    }
+
+    [Fact]
+    public async Task RunAsync_Server403OnEntitySync_ReturnsFailed()
+    {
+        await _accountService.CreateAccountAsync("user78", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "forbidden-jwt";
+
+        var service = BuildSyncService(new EntitySync403Handler());
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Failed, result);
+    }
+
+    [Fact]
     public async Task RunAsync_LocalSoftDeletedJournal_DeletedAtSerializedInUploadBody()
     {
         await _accountService.CreateAccountAsync("user73", "1234");
@@ -2227,5 +2256,35 @@ public class AlwaysNetworkErrorEntityHandler : HttpMessageHandler
                 Content = JsonContent.Create(new { status = "ok" })
             });
         throw new HttpRequestException("Simulated persistent network error");
+    }
+}
+
+// Health passes; entity sync returns 401 — simulates expired JWT on entity endpoint
+public class EntitySync401Handler : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        if (request.RequestUri!.PathAndQuery.Contains("health"))
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new { status = "ok" })
+            });
+        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Unauthorized));
+    }
+}
+
+// Health passes; entity sync returns 403
+public class EntitySync403Handler : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        if (request.RequestUri!.PathAndQuery.Contains("health"))
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new { status = "ok" })
+            });
+        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Forbidden));
     }
 }
