@@ -49,6 +49,15 @@
         <MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Small" /> Next meeting: @mtgDate.ToString("MMM d, yyyy")
     </MudText>
 }
+@if (Goal.ExpirationDate.HasValue && Goal.CompletionDate is null)
+{
+    var expDate = DateTimeOffset.FromUnixTimeMilliseconds(Goal.ExpirationDate.Value).LocalDateTime;
+    var isOverdue = Goal.ExpirationDate.Value < DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    <MudText Typo="Typo.body2" Color="@(isOverdue ? Color.Error : Color.Secondary)" Class="mb-1">
+        <MudIcon Icon="@Icons.Material.Filled.Flag" Size="Size.Small" />
+        Target: @expDate.ToString("MMM d, yyyy")@(isOverdue ? " — overdue" : "")
+    </MudText>
+}
 @{
     var goalDate = DateTimeOffset.FromUnixTimeMilliseconds(Goal.EnteredDate).LocalDateTime;
     var daysSince = (int)(DateTime.Now - goalDate).TotalDays;
