@@ -1,5 +1,31 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 59 Brainstorm (fresh — every 3rd)
+
+| # | Description | Dim | Impact | Effort | Risk |
+|---|-------------|-----|--------|--------|------|
+| 1 | Mobile: Fix CS8619/CS1998 build warnings in TodoRepository + SyncServiceTests | Quality | Medium | XS | Low | **SELECTED** |
+| 2 | Mobile: Trim Activity/Mood/Tags before saving in JournalEntry | Quality | Small | XS | Low | |
+| 3 | Mobile: Settings — show account GUID for support | UI | Small | XS | Low | |
+| 4 | Mobile: DashboardPage — better zero-state for goal/todo counts | UI | Small | XS | Low | |
+| 5 | API: Add per-request log scope with correlation ID | Observ. | Medium | S | Low | |
+| 6 | Mobile: SyncService — simplify pre-flight health check URL | Quality | Small | XS | Low | |
+| 7 | Mobile: GoalList — completed goals shown at bottom with faded style | UI | Medium | S | Low | |
+| 8 | Mobile: JournalList — show total entry count in footer | UI | Small | XS | Low | |
+
+## 2026-05-16 — Iteration 59 — Mobile: Fix all build warnings (CS8619 + CS1998)
+
+**What changed:**
+- `TodoRepository.cs`: `GetAsync` now uses `async Task<Todo?>` with `await db.FindAsync<Todo>(guid)` — fixes CS8619 (nullable mismatch; `Task<Todo>` wasn't assignable to `Task<Todo?>` without the await)
+- `SyncServiceTests.cs (FakeSyncHandler)`: Removed `async` from `SendAsync` override and wrapped returns in `Task.FromResult` — fixes CS1998 (async method without await)
+- Build now produces 0 warnings
+
+**Why:** The CS8619 warning was a real type contract mismatch — `FindAsync` can return null at runtime even though the type system didn't express it. The CS1998 warning was dead async machinery in a test helper. Clearing all warnings restores a clean build signal.
+
+**Impact:** 25 mobile tests pass (0 warnings). 52 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 58 — API: Skip SaveChanges when ChangeTracker has no changes
 
 **What changed:**
