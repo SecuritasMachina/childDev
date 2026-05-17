@@ -167,6 +167,27 @@ public class GoalProgressSyncTests(ApiFactory factory) : IClassFixture<ApiFactor
     }
 
     [Fact]
+    public async Task Sync_NextMeetingDateRoundTrips()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_optional1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid = Guid.NewGuid().ToString();
+        var goalFk = Guid.NewGuid().ToString();
+        var nextMeeting = ts + 7L * 86_400_000L;
+
+        await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([
+            new GoalProgressDto(guid, accountGuid, goalFk, "Step 1", nextMeeting, ts, null)
+        ], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress", new SyncRequest<GoalProgressDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalProgressDto>>();
+        var record = body!.Records.First(r => r.Guid == guid);
+
+        Assert.Equal(nextMeeting, record.NextMeetingDate);
+    }
+
+    [Fact]
     public async Task Sync_BatchMixedLWW_PerRecordWinnerApplied()
     {
         var (jwt, accountGuid) = await RegisterAsync("gpsync_mixed_lww");

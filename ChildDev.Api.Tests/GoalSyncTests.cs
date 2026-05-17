@@ -160,6 +160,29 @@ public class GoalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Sync_OptionalFieldsRoundTrip()
+    {
+        var (jwt, accountGuid) = await RegisterAsync("gsync_optional1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid = Guid.NewGuid().ToString();
+        var nextMeeting = ts + 86_400_000L;
+        var expiration = ts + 30L * 86_400_000L;
+
+        await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([
+            new GoalDto(guid, accountGuid, "Full goal", nextMeeting, expiration, ts, "Measure outcome", null, ts, null)
+        ], 0));
+
+        var response = await _client.PostAsJsonAsync("/api/sync/goal", new SyncRequest<GoalDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalDto>>();
+        var record = body!.Records.First(r => r.Guid == guid);
+
+        Assert.Equal("Measure outcome", record.MeasurableOutcome);
+        Assert.Equal(nextMeeting, record.NextMeetingDate);
+        Assert.Equal(expiration, record.ExpirationDate);
+    }
+
+    [Fact]
     public async Task Sync_CompletedGoal_CompletionDatePropagatedInDelta()
     {
         var (jwt, accountGuid) = await RegisterAsync("gsync_complete1");
