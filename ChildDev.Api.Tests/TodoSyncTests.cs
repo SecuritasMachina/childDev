@@ -141,4 +141,16 @@ public class TodoSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.NotNull(deleted);
         Assert.Equal(deletedAt, deleted.DeletedAt);
     }
+
+    [Fact]
+    public async Task Sync_EmptyBatch_Returns200_WithEmptyList()
+    {
+        var (jwt, _) = await RegisterAsync("tsync-empty1");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var response = await _client.PostAsJsonAsync("/api/sync/todo",
+            new SyncRequest<TodoDto>([], 0));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<TodoDto>>();
+        Assert.Empty(body!.Records);
+    }
 }
