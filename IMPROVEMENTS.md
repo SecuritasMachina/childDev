@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 169 — Mobile: Todo pending 3-item ordering + SyncService multi-entity upload
+
+**What changed:**
+- `TodoRepositoryTests.cs`: Added `GetPendingAsync_ThreeItems_DueDateTodosBeforeNoDueDate` — inserts 3 pending items (day1 DueDate, day2 DueDate, no DueDate) in shuffled order, asserts the pending list is [day1, day2, no-due-date]. The existing tests had a 2-item due/null test and a 3-item all-due test, but no 3-item mixed test covering the sort across the DueDate/null boundary.
+- `SyncServiceTests.cs`: Added `RunAsync_MultipleLocalModifications_AllFourEndpointsReceiveData` — inserts one record per entity type (Journal, Goal, GoalProgress, Todo), then verifies all 4 sync endpoints received request bodies. Ensures the full sync pipeline calls each entity endpoint when data exists.
+
+**Why:** The 3-item mixed-due-date test verifies the `ORDER BY (DueDate IS NULL), DueDate` sort is stable across the boundary (not just within like-typed groups). The multi-entity upload test confirms no entity is accidentally skipped when all 4 have local data.
+
+**Impact:** 126 mobile tests pass (was 124). 135 API tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 168 — Mobile: SyncService outgoing upload serialization for optional fields
 
 **What changed:**
