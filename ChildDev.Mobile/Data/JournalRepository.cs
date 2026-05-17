@@ -7,10 +7,7 @@ public class JournalRepository(SQLiteAsyncConnection db)
 {
     public Task SaveAsync(Journal journal)
     {
-        if (journal.UpdatedOn == 0)
-        {
-            journal.UpdatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        }
+        journal.UpdatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         return db.InsertOrReplaceAsync(journal);
     }
 
