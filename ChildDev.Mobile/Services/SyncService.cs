@@ -16,11 +16,14 @@ public class SyncService(
     ConnectivityService connectivity,
     IHttpClientFactory httpFactory)
 {
+    private int _syncing;
+
     public async Task<SyncResult> RunAsync(Account account)
     {
         if (!connectivity.IsConnected) return SyncResult.NoServer;
         if (string.IsNullOrEmpty(account.ServerUrl) || string.IsNullOrEmpty(account.ServerJwt))
             return SyncResult.NoServer;
+        if (Interlocked.CompareExchange(ref _syncing, 1, 0) == 1) return SyncResult.Success;
 
         try
         {
@@ -93,6 +96,10 @@ public class SyncService(
         catch
         {
             return SyncResult.Failed;
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _syncing, 0);
         }
     }
 
