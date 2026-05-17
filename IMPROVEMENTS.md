@@ -1,5 +1,18 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 104 — Mobile: Fix local-to-UTC timestamp conversion in entry ViewModels
+
+**What changed:**
+- `JournalEntryViewModel.cs`: `EnteredDate` → `DateTime.SpecifyKind(EnteredDate, DateTimeKind.Local)` before `new DateTimeOffset(...)`.
+- `TodoEntryViewModel.cs`: Same fix for `DueDate`.
+- `GoalEntryViewModel.cs`: Same fix for `NextMeetingDate` and `ExpirationDate`.
+
+**Why:** `new DateTimeOffset(dt, TimeSpan.Zero)` ignores `DateTime.Kind` and sets UTC offset to zero, treating local midnight as UTC midnight. For non-UTC users (e.g. UTC-5), a date picked as May 16 would round-trip back as May 15 after reload. Forcing `DateTimeKind.Local` before passing to `DateTimeOffset` uses the system's correct UTC offset.
+
+**Impact:** 25 mobile tests pass. 86 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 103 — API Tests: Todo + GoalProgress soft-delete roundtrip
 
 **What changed:**
