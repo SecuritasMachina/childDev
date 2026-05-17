@@ -126,6 +126,7 @@ public partial class GoalListViewModel(
     private async Task DeleteAsync(Goal goal)
     {
         await repo.DeleteAsync(goal.Guid);
+        await progressRepo.DeleteForGoalAsync(goal.Guid);
         _allGoals.Remove(goal);
         Goals.Remove(goal);
         UpdateEntryCountDisplay();
