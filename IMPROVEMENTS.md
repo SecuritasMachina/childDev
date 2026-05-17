@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 110 — API Tests: Empty batch returns 200 for Goal, GoalProgress, Todo
+
+**What changed:**
+- `GoalSyncTests.cs`, `GoalProgressSyncTests.cs`, `TodoSyncTests.cs`: Each got `Sync_EmptyBatch_Returns200_WithEmptyList` to match the same test that already existed in `JournalSyncTests`.
+
+**Why:** Sending an empty batch is valid and must return 200 with an empty delta — three sync endpoints lacked this basic smoke test.
+
+**Impact:** 37 mobile tests pass. 91 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 109 — Mobile Tests: SyncService uplink verification
 
 **What changed:**
