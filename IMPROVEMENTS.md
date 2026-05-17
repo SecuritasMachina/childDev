@@ -1,5 +1,17 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 139 — API delta isolation + Goal active ordering test
+
+**What changed:**
+- `JournalSyncTests.cs`: Added `Sync_DeltaIsolation_OtherUsersRecordsNotReturned` — registers two users, user1 uploads a journal entry, user2 syncs and verifies they never receive user1's record in the delta (explicit security isolation test for the download path).
+- `GoalRepositoryTests.cs`: Added `GetAllActiveAsync_OrdersActiveGoalsByEnteredDateDescending` — verifies the `EnteredDate DESC` ordering within the active group of goals.
+
+**Why:** The `Sync_RecordWithWrongAccountFk_IsRejected` tests covered the upload-rejection path, but there was no test explicitly verifying that the delta (server→client download) only contains the calling user's own records. An AccountFk filter bug in the delta query would be invisible to existing tests. Goal's ordering by `EnteredDate DESC` was implemented in SQL but untested — the `GetAllActiveAsync_ActiveBeforeCompleted` test only verified active vs completed boundary, not ordering within the active group.
+
+**Impact:** 77 mobile tests pass (was 76). 108 API tests pass (was 107).
+
+---
+
 ## 2026-05-16 — Iteration 138 — Mobile Tests: GetLatestNextStepsAsync isolation + AccountService null-account + CreatedOn tests
 
 **What changed:**
