@@ -349,4 +349,28 @@ public class SyncInputValidationTests(ApiFactory factory) : IClassFixture<ApiFac
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
+
+    [Theory]
+    [InlineData("/api/sync/journal",
+        "{\"Records\":[{\"Guid\":\"PLACEHOLDER\",\"AccountFk\":\"a1\",\"Notes\":\"x\",\"EnteredDate\":0,\"UpdatedOn\":0,\"DeletedAt\":null},{\"Guid\":\"PLACEHOLDER\",\"AccountFk\":\"a1\",\"Notes\":\"y\",\"EnteredDate\":0,\"UpdatedOn\":1,\"DeletedAt\":null}],\"LastSyncAt\":0}")]
+    [InlineData("/api/sync/goal",
+        "{\"Records\":[{\"Guid\":\"PLACEHOLDER\",\"AccountFk\":\"a1\",\"GoalText\":\"x\",\"EnteredDate\":0,\"UpdatedOn\":0,\"DeletedAt\":null},{\"Guid\":\"PLACEHOLDER\",\"AccountFk\":\"a1\",\"GoalText\":\"y\",\"EnteredDate\":0,\"UpdatedOn\":1,\"DeletedAt\":null}],\"LastSyncAt\":0}")]
+    [InlineData("/api/sync/goal-progress",
+        "{\"Records\":[{\"Guid\":\"PLACEHOLDER\",\"AccountFk\":\"a1\",\"GoalFk\":\"GOALFK\",\"NextStepItems\":\"x\",\"UpdatedOn\":0,\"DeletedAt\":null},{\"Guid\":\"PLACEHOLDER\",\"AccountFk\":\"a1\",\"GoalFk\":\"GOALFK\",\"NextStepItems\":\"y\",\"UpdatedOn\":1,\"DeletedAt\":null}],\"LastSyncAt\":0}")]
+    [InlineData("/api/sync/todo",
+        "{\"Records\":[{\"Guid\":\"PLACEHOLDER\",\"AccountFk\":\"a1\",\"Title\":\"x\",\"UpdatedOn\":0,\"DeletedAt\":null},{\"Guid\":\"PLACEHOLDER\",\"AccountFk\":\"a1\",\"Title\":\"y\",\"UpdatedOn\":1,\"DeletedAt\":null}],\"LastSyncAt\":0}")]
+    public async Task Sync_DuplicateGuid_Returns422(string endpoint, string bodyTemplate)
+    {
+        var jwt = await RegisterJwtAsync($"dupguid_{endpoint.Replace("/", "_")}");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var guid = Guid.NewGuid().ToString();
+        var goalFk = Guid.NewGuid().ToString();
+        var body = new StringContent(
+            bodyTemplate.Replace("PLACEHOLDER", guid).Replace("GOALFK", goalFk),
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync(endpoint, body);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
 }

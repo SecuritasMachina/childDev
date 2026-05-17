@@ -30,6 +30,11 @@ public static class GoalEndpoints
                 logger.LogWarning("sync/goal account={Account} rejected: invalid Guid", accountGuid[..8]);
                 return Results.Problem("Record Guid is not a valid GUID.", statusCode: 422);
             }
+            if (req.Records.Select(r => r.Guid).Distinct().Count() != req.Records.Count)
+            {
+                logger.LogWarning("sync/goal account={Account} rejected: duplicate Guid", accountGuid[..8]);
+                return Results.Problem("Records must not contain duplicate Guids.", statusCode: 422);
+            }
             var maxFutureTimestampMs = DateTimeOffset.UtcNow.AddYears(10).ToUnixTimeMilliseconds();
             if (req.Records.Any(r => r.EnteredDate > maxFutureTimestampMs))
             {
