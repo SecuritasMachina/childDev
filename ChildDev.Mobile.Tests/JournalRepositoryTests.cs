@@ -58,30 +58,71 @@ public class JournalRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task SaveAsync_Edit_BumpsUpdatedOn()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var journal = new Journal
+        {
+            Guid = guid, AccountFk = "account1", Notes = "original",
+            EnteredDate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            UpdatedOn = 1000L
+        };
+        await _db.InsertOrReplaceAsync(journal);
+
+        journal.Notes = "edited";
+        await _repo.SaveAsync(journal);
+
+        var saved = await _repo.GetAsync(guid);
+        Assert.NotNull(saved);
+        Assert.Equal("edited", saved!.Notes);
+        Assert.True(saved.UpdatedOn > 1000L);
+    }
+
+    [Fact]
+    public async Task SaveAsync_Edit_AppearsInGetModifiedSince()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var oldTs = DateTimeOffset.UtcNow.AddSeconds(-10).ToUnixTimeMilliseconds();
+        var journal = new Journal
+        {
+            Guid = guid, AccountFk = "account3", Notes = "original",
+            EnteredDate = oldTs, UpdatedOn = oldTs
+        };
+        await _db.InsertOrReplaceAsync(journal);
+
+        journal.Notes = "edited";
+        await _repo.SaveAsync(journal);
+
+        var modified = await _repo.GetModifiedSinceAsync("account3", oldTs);
+        Assert.Single(modified);
+        Assert.Equal("edited", modified[0].Notes);
+    }
+
+    [Fact]
     public async Task GetModifiedSince_ReturnsOnlyNewerRecords()
     {
-        var t1 = 1000L;
-        var t2 = 2000L;
-        var accountId = "account2";
+        var accountId = System.Guid.NewGuid().ToString();
+        var tOld = DateTimeOffset.UtcNow.AddSeconds(-10).ToUnixTimeMilliseconds();
+        var tNew = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-        await _repo.SaveAsync(new Journal
+        await _db.InsertOrReplaceAsync(new Journal
         {
             Guid = System.Guid.NewGuid().ToString(),
             AccountFk = accountId,
             Notes = "old",
-            EnteredDate = t1,
-            UpdatedOn = t1
+            EnteredDate = tOld,
+            UpdatedOn = tOld
         });
-        await _repo.SaveAsync(new Journal
+        await _db.InsertOrReplaceAsync(new Journal
         {
             Guid = System.Guid.NewGuid().ToString(),
             AccountFk = accountId,
             Notes = "new",
-            EnteredDate = t2,
-            UpdatedOn = t2
+            EnteredDate = tNew,
+            UpdatedOn = tNew
         });
 
-        var modified = await _repo.GetModifiedSinceAsync(accountId, t1);
+        var modified = await _repo.GetModifiedSinceAsync(accountId, tOld);
         Assert.Single(modified);
         Assert.Equal("new", modified[0].Notes);
     }
