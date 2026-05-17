@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 178 — API: Completed Goal can be un-completed via newer LWW update
+
+**What changed:**
+- `GoalSyncTests.cs`: Added `Sync_CompletedGoal_CanBeUncompletedByClient_ViaNewerUpdate` — stores a completed goal (CompletionDate set), then sends same Guid with CompletionDate=null and a newer UpdatedOn; asserts the stored record has CompletionDate=null.
+
+**Why:** `GoalEndpoints.ApplyDto` includes `e.CompletionDate = dto.CompletionDate`, so LWW semantics allow un-completing a goal. Without a test, a well-intentioned developer could add a guard like `if (entity.CompletionDate.HasValue) return;` to "protect" completed goals, which would silently break the LWW contract. The test documents the intentional behavior: completion status follows the latest `UpdatedOn`, same as every other field.
+
+**Impact:** 144 API tests pass (was 143). 136 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 177 — API: Journal EnteredDate is mutable on LWW overwrite
 
 **What changed:**
