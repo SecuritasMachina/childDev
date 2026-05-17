@@ -1615,6 +1615,39 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_LastSyncAt_IncludedInAllFourEntityBodies()
+    {
+        await _accountService.CreateAccountAsync("user66", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var knownLastSync = 12_345_678L;
+        await _accountService.UpdateLastSyncAsync(knownLastSync);
+        account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        await service.RunAsync(account);
+
+        var journalBody = capturingHandler.GetBodyFor("sync/journal");
+        var goalBody = capturingHandler.GetBodyFor("sync/goal");
+        var progressBody = capturingHandler.GetBodyFor("sync/goal-progress");
+        var todoBody = capturingHandler.GetBodyFor("sync/todo");
+
+        Assert.NotNull(journalBody);
+        Assert.NotNull(goalBody);
+        Assert.NotNull(progressBody);
+        Assert.NotNull(todoBody);
+        Assert.Contains(knownLastSync.ToString(), journalBody);
+        Assert.Contains(knownLastSync.ToString(), goalBody);
+        Assert.Contains(knownLastSync.ToString(), progressBody);
+        Assert.Contains(knownLastSync.ToString(), todoBody);
+    }
+
+    [Fact]
     public async Task RunAsync_EntitySyncNetworkErrorOnBothAttempts_ReturnsFailed()
     {
         await _accountService.CreateAccountAsync("user65", "1234");
