@@ -296,21 +296,20 @@ public class TransientFailThenSucceedHandler : HttpMessageHandler
 
 public class FakeSyncHandler(JournalSyncDto journal) : HttpMessageHandler
 {
-    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
         if (request.RequestUri!.PathAndQuery.Contains("journal"))
         {
             var response = new SyncResponseDto<JournalSyncDto>([journal]);
-            return new HttpResponseMessage(HttpStatusCode.OK)
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = JsonContent.Create(response)
-            };
+            });
         }
-        // Return empty for other entity types
-        return new HttpResponseMessage(HttpStatusCode.OK)
+        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = JsonContent.Create(new { Records = Array.Empty<object>() })
-        };
+        });
     }
 }

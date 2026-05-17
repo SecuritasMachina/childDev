@@ -29,8 +29,8 @@ public class TodoRepository(SQLiteAsyncConnection db)
         await db.UpdateAsync(item);
     }
 
-    public Task<Todo?> GetAsync(string guid) =>
-        db.FindAsync<Todo>(guid);
+    public async Task<Todo?> GetAsync(string guid) =>
+        await db.FindAsync<Todo>(guid);
 
     public Task<List<Todo>> GetPendingAsync(string accountFk) =>
         db.QueryAsync<Todo>(
@@ -43,6 +43,11 @@ public class TodoRepository(SQLiteAsyncConnection db)
           .Where(t => t.AccountFk == accountFk && t.DeletedAt == null)
           .OrderByDescending(t => t.UpdatedOn)
           .ToListAsync();
+
+    public Task<int> GetCompletedCountAsync(string accountFk) =>
+        db.Table<Todo>()
+          .Where(t => t.AccountFk == accountFk && t.DeletedAt == null && t.CompletedAt != null)
+          .CountAsync();
 
     public Task<List<Todo>> GetModifiedSinceAsync(string accountFk, long since) =>
         db.Table<Todo>()
