@@ -199,6 +199,24 @@ public class SyncInputValidationTests(ApiFactory factory) : IClassFixture<ApiFac
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
 
+    [Theory]
+    [InlineData("/api/sync/journal")]
+    [InlineData("/api/sync/goal")]
+    public async Task Sync_FutureEnteredDate_Returns422(string endpoint)
+    {
+        var jwt = await RegisterJwtAsync($"futentdate_{endpoint.Replace("/", "_")}");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var farFutureMs = DateTimeOffset.UtcNow.AddYears(11).ToUnixTimeMilliseconds();
+        var guid = Guid.NewGuid();
+        var body = new StringContent(
+            $"{{\"Records\":[{{\"Guid\":\"{guid}\",\"AccountFk\":\"a1\",\"Notes\":\"x\",\"GoalText\":\"x\",\"EnteredDate\":{farFutureMs},\"UpdatedOn\":0,\"DeletedAt\":null}}],\"LastSyncAt\":0}}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync(endpoint, body);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
     [Fact]
     public async Task Sync_Todo_BlankTitle_Returns422()
     {
