@@ -106,6 +106,19 @@ Key domain workflows:
 
 ---
 
+## 2026-05-17 — Iteration 283 — Web: Goal expiration warning chips on home page cards
+
+**What changed:**
+- `Home.razor`: Goal cards now show a contextual chip when `ExpirationDate` is set:
+  - **Overdue** (red, Warning icon): expiration date is in the past
+  - **Due soon** (orange, Schedule icon): expiration within 7 days
+
+**Why:** Goals have an `ExpirationDate` field but it was never surfaced on the web. Kids need a visual signal to prioritize goals approaching their deadline without opening each goal's detail page.
+
+**Impact:** 213 API tests pass. 216 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 282 — Mobile: Preserve EnteredDate through Journal sync upsert
 
 **What changed:**
