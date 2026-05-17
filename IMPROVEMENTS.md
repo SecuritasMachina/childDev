@@ -1,5 +1,18 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 140 — API delta isolation tests for Goal, Todo, GoalProgress
+
+**What changed:**
+- `GoalSyncTests.cs`: Added `Sync_DeltaIsolation_OtherUsersRecordsNotReturned`.
+- `TodoSyncTests.cs`: Added `Sync_DeltaIsolation_OtherUsersRecordsNotReturned`.
+- `GoalProgressSyncTests.cs`: Added `Sync_DeltaIsolation_OtherUsersRecordsNotReturned`.
+
+**Why:** Iter 139 added this test to Journal. The same security property — that `AccountFk` filtering in the delta query prevents one user from receiving another user's records in the download — was missing for Goal, Todo, and GoalProgress. All four entity sync endpoints now have explicit cross-account delta isolation tests. A bug removing the `AccountFk` filter in any endpoint's delta query would be caught.
+
+**Impact:** 77 mobile tests pass. 111 API tests pass (was 108).
+
+---
+
 ## 2026-05-16 — Iteration 139 — API delta isolation + Goal active ordering test
 
 **What changed:**
