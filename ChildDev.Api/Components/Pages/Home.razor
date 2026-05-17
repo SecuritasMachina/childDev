@@ -178,6 +178,24 @@
     </MudExpansionPanels>
 }
 
+@* Goal completion celebration *@
+<MudDialog @bind-Visible="ShowCelebration" MaxWidth="MaxWidth.Small" FullWidth="true">
+    <DialogContent>
+        <MudStack AlignItems="AlignItems.Center" Spacing="3" Class="pa-4">
+            <MudText Typo="Typo.h2">🎉</MudText>
+            <MudText Typo="Typo.h5" Align="Align.Center" Color="Color.Success">Goal Achieved!</MudText>
+            <MudText Typo="Typo.body1" Align="Align.Center" Color="Color.Secondary">@CelebratedGoalText</MudText>
+            <MudText Typo="Typo.body2" Align="Align.Center">
+                Amazing work! Every big achievement starts with a single step. 🌟
+            </MudText>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true"
+                   OnClick="() => ShowCelebration = false">Awesome! 🙌</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @* Quick-add journal entry *@
 <MudPaper Elevation="1" Class="pa-4 mt-6">
     <MudText Typo="Typo.subtitle2" Class="mb-3">
@@ -229,6 +247,8 @@
     private int OverdueTodoCount;
     private int JournalThisWeek;
     private string QuickJournalText = string.Empty;
+    private bool ShowCelebration;
+    private string? CelebratedGoalText;
 
     protected override async Task OnInitializedAsync()
     {
@@ -308,7 +328,8 @@
         goal.UpdatedOn = now;
         await Db.SaveChangesAsync();
         await Analytics.TrackAsync("goal_complete", AccountGuid, "home", guid);
-        Snackbar.Add("🎉 Goal completed!", Severity.Success);
+        CelebratedGoalText = goal.GoalText;
+        ShowCelebration = true;
         await LoadGoals();
     }
 
