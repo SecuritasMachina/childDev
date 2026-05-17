@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-16 — Iteration 63 — Mobile: Disable TodoEntry Save when Title is empty
+
+**What changed:**
+- `TodoEntryViewModel.cs`: Added `CanSave()` returning `!string.IsNullOrWhiteSpace(Title)`, `OnTitleChanged` partial to call `SaveCommand.NotifyCanExecuteChanged()`, and changed `[RelayCommand]` to `[RelayCommand(CanExecute = nameof(CanSave))]`. Removed now-redundant `if (string.IsNullOrWhiteSpace(Title)) return;` guard.
+
+**Why:** Consistent with JournalEntry and GoalEntry patterns. The Save button should be visually disabled rather than silently no-op when Title is blank.
+
+**Impact:** 25 mobile tests pass (0 warnings). 52 API tests pass.
+
+---
+
 ## 2026-05-16 — Iteration 62 Brainstorm (fresh — every 3rd)
 
 | # | Description | Dim | Impact | Effort | Risk |
