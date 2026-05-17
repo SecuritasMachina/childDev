@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-17 — Perf: replace read-modify-write with targeted UPDATEs in AccountService (iter 394)
+
+**File:** `ChildDev.Mobile/Services/AccountService.cs`
+
+**Change:** Replaced `GetAccountAsync()` + `db.UpdateAsync(account)` in `SaveServerCredentialsAsync` and `SaveServerUrlAsync` with single `db.ExecuteAsync("UPDATE Account SET ... = ?"` calls targeting only the changed columns.
+
+**Why:** The read-modify-write pattern loaded all Account columns, modified one or two, and saved all back. If `UpdateLastSyncAsync` ran concurrently (e.g., sync completing while the user saves settings), the `db.UpdateAsync` could overwrite `LastSyncAt` with the stale snapshot. Targeted column UPDATEs eliminate this race. Consistent with iters 376, 390, 393 which already cleaned up `UpdateLastSyncAsync` and `ClearServerJwtAsync`.
+
+**Impact:** 242 mobile tests — all passing.
+
+---
+
 ## 2026-05-17 — Perf: eliminate redundant SELECT in ClearServerJwtAsync (iter 393)
 
 **File:** `ChildDev.Mobile/Services/AccountService.cs`

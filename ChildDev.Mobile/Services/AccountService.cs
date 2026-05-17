@@ -33,22 +33,11 @@ public class AccountService(SQLiteAsyncConnection db)
         await db.ExecuteAsync("UPDATE Account SET LastSyncAt = ?", timestamp);
     }
 
-    public async Task SaveServerCredentialsAsync(string jwt, string serverUrl)
-    {
-        var account = await GetAccountAsync();
-        if (account is null) return;
-        account.ServerJwt = jwt;
-        account.ServerUrl = serverUrl;
-        await db.UpdateAsync(account);
-    }
+    public Task SaveServerCredentialsAsync(string jwt, string serverUrl) =>
+        db.ExecuteAsync("UPDATE Account SET ServerJwt = ?, ServerUrl = ?", jwt, serverUrl);
 
-    public async Task SaveServerUrlAsync(string serverUrl)
-    {
-        var account = await GetAccountAsync();
-        if (account is null) return;
-        account.ServerUrl = serverUrl;
-        await db.UpdateAsync(account);
-    }
+    public Task SaveServerUrlAsync(string serverUrl) =>
+        db.ExecuteAsync("UPDATE Account SET ServerUrl = ?", serverUrl);
 
     public Task ClearServerJwtAsync() =>
         db.ExecuteAsync("UPDATE Account SET ServerJwt = NULL");
