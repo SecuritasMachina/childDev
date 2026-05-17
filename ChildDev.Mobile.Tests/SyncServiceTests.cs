@@ -1098,6 +1098,33 @@ public class SyncServiceTests : IDisposable
         Assert.NotNull(capturingHandler.GetBodyFor("sync/goal-progress"));
         Assert.NotNull(capturingHandler.GetBodyFor("sync/todo"));
     }
+
+    [Fact]
+    public async Task RunAsync_LocalCompletedTodo_CompletedAtIncludedInUploadRequest()
+    {
+        await _accountService.CreateAccountAsync("user43", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+
+        var todoGuid = System.Guid.NewGuid().ToString();
+        var completedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await _db.InsertOrReplaceAsync(new Todo
+        {
+            Guid = todoGuid, AccountFk = account.Guid, Title = "done task",
+            UpdatedOn = completedAt, CompletedAt = completedAt
+        });
+
+        var capturingHandler = new CapturingHandler();
+        var service = BuildSyncService(capturingHandler);
+        var result = await service.RunAsync(account);
+
+        Assert.Equal(SyncResult.Success, result);
+        var todoBody = capturingHandler.GetBodyFor("sync/todo");
+        Assert.NotNull(todoBody);
+        Assert.Contains(todoGuid, todoBody);
+        Assert.Contains(completedAt.ToString(), todoBody);
+    }
 }
 
 // Test helpers
