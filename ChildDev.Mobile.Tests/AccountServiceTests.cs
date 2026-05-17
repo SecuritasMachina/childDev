@@ -63,4 +63,27 @@ public class AccountServiceTests : IDisposable
         var account = await _service.GetAccountAsync();
         Assert.Equal(ts, account!.LastSyncAt);
     }
+
+    [Fact]
+    public async Task SaveServerCredentials_PersistsJwtAndUrl()
+    {
+        await _service.CreateAccountAsync("eve", "1234");
+        await _service.SaveServerCredentialsAsync("test-jwt-token", "https://example.com");
+
+        var account = await _service.GetAccountAsync();
+        Assert.Equal("test-jwt-token", account!.ServerJwt);
+        Assert.Equal("https://example.com", account.ServerUrl);
+    }
+
+    [Fact]
+    public async Task SaveServerUrl_UpdatesUrlWithoutAffectingJwt()
+    {
+        await _service.CreateAccountAsync("frank", "1234");
+        await _service.SaveServerCredentialsAsync("existing-jwt", "https://old.example.com");
+        await _service.SaveServerUrlAsync("https://new.example.com");
+
+        var account = await _service.GetAccountAsync();
+        Assert.Equal("https://new.example.com", account!.ServerUrl);
+        Assert.Equal("existing-jwt", account.ServerJwt);
+    }
 }
