@@ -144,4 +144,29 @@ public class JournalRepositoryTests : IDisposable
         Assert.NotNull(retrieved);
         Assert.Equal("synced", retrieved!.Notes);
     }
+
+    [Fact]
+    public async Task GetAllActiveAsync_OrdersByEnteredDateDescending()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var older = DateTimeOffset.UtcNow.AddDays(-2).ToUnixTimeMilliseconds();
+        var newer = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _db.InsertOrReplaceAsync(new Journal
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId,
+            Notes = "older entry", EnteredDate = older, UpdatedOn = older
+        });
+        await _db.InsertOrReplaceAsync(new Journal
+        {
+            Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId,
+            Notes = "newer entry", EnteredDate = newer, UpdatedOn = newer
+        });
+
+        var results = await _repo.GetAllActiveAsync(accountId);
+
+        Assert.Equal(2, results.Count);
+        Assert.Equal("newer entry", results[0].Notes);
+        Assert.Equal("older entry", results[1].Notes);
+    }
 }
