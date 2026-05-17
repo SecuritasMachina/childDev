@@ -355,4 +355,23 @@ public class JournalRepositoryTests : IDisposable
         Assert.Equal("Focused", retrieved.Mood);
         Assert.Equal("work,tech", retrieved.Tags);
     }
+
+    [Fact]
+    public async Task GetAsync_WhenDeleted_StillReturnsRecord()
+    {
+        var guid = System.Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await _repo.SaveAsync(new Journal
+        {
+            Guid = guid, AccountFk = "account1", Notes = "to be deleted",
+            EnteredDate = now, UpdatedOn = now
+        });
+        await _repo.DeleteAsync(guid);
+
+        // GetAsync must return the record regardless of DeletedAt status
+        var retrieved = await _repo.GetAsync(guid);
+        Assert.NotNull(retrieved);
+        Assert.NotNull(retrieved!.DeletedAt);
+    }
 }
