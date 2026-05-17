@@ -58,6 +58,7 @@ public class JournalRepositoryTests : IDisposable
         var retrieved = await _repo.GetAsync(journal.Guid);
         Assert.NotNull(retrieved);
         Assert.NotNull(retrieved!.DeletedAt);
+        Assert.Equal(retrieved.DeletedAt!.Value, retrieved.UpdatedOn);
     }
 
     [Fact]

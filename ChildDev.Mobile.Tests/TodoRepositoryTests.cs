@@ -95,6 +95,7 @@ public class TodoRepositoryTests : IDisposable
         var retrieved = await _repo.GetAsync(todo.Guid);
         Assert.NotNull(retrieved);
         Assert.NotNull(retrieved.DeletedAt);
+        Assert.Equal(retrieved.DeletedAt!.Value, retrieved.UpdatedOn);
     }
 
     [Fact]

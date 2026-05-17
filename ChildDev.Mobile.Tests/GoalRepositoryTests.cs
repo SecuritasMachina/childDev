@@ -75,6 +75,7 @@ public class GoalRepositoryTests : IDisposable
         var retrieved = await _repo.GetAsync(goal.Guid);
         Assert.NotNull(retrieved);
         Assert.NotNull(retrieved!.DeletedAt);
+        Assert.Equal(retrieved.DeletedAt!.Value, retrieved.UpdatedOn);
     }
 
     [Fact]
