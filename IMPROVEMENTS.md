@@ -1,5 +1,78 @@
 # Improvement Log
 
+---
+
+## 2026-05-17 — Loop 2 Bootstrap
+
+### Deploy & Playwright Status
+- **Deploy target:** No staging deploy target exists. Only a Dockerfile for production-style builds. Per loop rules, deploy step is skipped to avoid touching prod. Logged here per instructions.
+- **Playwright:** No Playwright test suite exists in this repo. Playwright step skipped. Logged here per instructions.
+- **Git branch:** Repo uses `master` (not `main`). Merging to `master`.
+
+---
+
+### Unsolved Problems (Step 0a — one-time research)
+
+Search results were sparse for this niche domain. Key pain points found:
+
+| Pain point | Source | Frequency | In scope? |
+|---|---|---|---|
+| Default date filters not customizable (e.g., "past 7 days" default) | AbleSpace Capterra reviews, 2025 | Low (1 review) | Partial — our filters are hardcoded |
+| No way to track by session count vs. service time | AbleSpace Capterra, 2025 | Low (1 review) | No |
+| Paywalls on "free" child dev apps block basic features | Kinedu App Store reviews | Medium (multiple) | No |
+| Data entry burden — paper tracking is cumbersome but apps add learning curve | Behaviorhelp, alightaba articles 2024 | Medium | Yes — simpler entry flows |
+| Missing educational resources linked to goals/milestones | CDC Milestone Tracker reviews | Low | Partial |
+| Scheduling overlap (which kids share a session) | AbleSpace Capterra 2025 | Low | No |
+
+**Research note:** This is a niche B2C/prosumer app; web search returns mostly competitor marketing, not raw user pain. The most actionable signal is the data-entry friction theme — users want fast, simple capture with minimal clicks.
+
+---
+
+### Domain Notes (Step 0b)
+
+ChildDev tracks 4 core entities for a child's developmental journey:
+- **Journal** — free-form notes/observations (with mood, activity, tags, location)
+- **Goals** — developmental goals with measurable outcomes, expiration dates, next-meeting dates
+- **GoalProgress** — progress notes per goal (next steps, meeting dates)
+- **Todos** — tasks related to the child (with due dates, notes)
+
+The app is offline-first (mobile-primary via MAUI), with a sync API and now a web UI (Razor Pages, just added). Comparable tools: AbleSpace, Understood, Thumsters, CDC Milestone Tracker.
+
+Key domain workflows:
+1. Capture a quick observation → Journal entry
+2. Set a goal at a meeting → Goal + GoalProgress
+3. Assign followup tasks → Todos
+4. Review progress across time → Dashboard
+
+**Regulatory:** Not HIPAA-covered (no provider context evident), but parental data sensitivity warrants no PII beyond what's already stored.
+
+**Actionable domain insights:**
+- Fast capture (minimal taps/clicks) is crucial — parents/teachers log on-the-go
+- Cross-entity dashboard view matters — quick status of "what's happening with this child today"
+- Due date visibility for todos is high-value — overdue todos should be prominent
+- Progress visualization (trend over time) is the #1 differentiator in comparable tools
+
+---
+
+### Brainstorm — 2026-05-17
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Add Todos web page (list + add + complete) | Func | Domain: Todos is core entity, no web access | High | S | Low | Complete web coverage of all 4 entities; users can manage tasks from browser | +2 files, small test gap | No |
+| 2 | Add Journal web page (list + add entries) | Func | Domain: Journal is core entity | High | S | Low | Full CRUD parity with mobile; journaling from desktop | +2 files | No |
+| 3 | Add analytics event tracking to web UI | Perf/Stability | CLAUDE.md mandatory requirement | High | S | Low | Enables feature optimization and usage analytics per CLAUDE.md | New DB table; EnsureCreated handles it; ~1 extra write per action | No |
+| 4 | Dashboard stats summary (active goals, pending todos, journal entries this week) | UI | Domain: quick-status view | Medium | S | Low | At-a-glance status reduces navigation burden by ~50% | 3 additional DB queries per dashboard load | No |
+| 5 | GoalProgress entry from web (add progress notes to a goal) | Func | Domain: progress notes per goal | High | M | Low | Enables full goal lifecycle from web without mobile | More complex UI; ~3 new files | No |
+| 6 | Overdue todo highlight (show overdue in red, count badge) | UI | Unsolved: data-entry friction / quick status | Medium | S | Low | Reduces missed tasks; immediate visual signal | CSS-only change, negligible | No |
+| 7 | Goal edit from web (edit GoalText, MeasurableOutcome) | Func | Domain: goals need updating | Medium | M | Low | Users can correct goal text without mobile | +1 page, ~3 files | No |
+| 8 | Add GoalProgress list per goal on Goals page | UI | Domain: progress visibility | Medium | S | Low | Shows progress history inline | Extra DB query per goal | No |
+| 9 | Pagination for large datasets | Perf | Domain: long-term use accumulates data | Low | S | Low | Prevents slow pages at scale | Adds complexity; dev datasets tiny | No |
+| 10 | Search/filter goals and todos | UI | Unsolved: data-entry friction / finding records | Low | M | Low | Faster retrieval for power users | Requires query changes | No |
+
+**Selection for iteration 1:** Items #3 (analytics, mandatory per CLAUDE.md) + #1 (Todos page, highest-impact missing feature). Combining because #3 is a pre-existing requirement from CLAUDE.md that should have been in the initial web UI build, not truly optional. Both are S effort. The analytics table uses EnsureCreated — no migration files involved.
+
+---
+
 ## 2026-05-17 — Iteration 263 — API: GoalProgress delta strict-greater-than LastSyncAt boundary test
 
 **What changed:**
