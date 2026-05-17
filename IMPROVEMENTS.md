@@ -1,5 +1,16 @@
 # Improvement Log
 
+## 2026-05-17 — Iteration 187 — API: Todo batch with mixed AccountFk stores valid and skips intruder
+
+**What changed:**
+- `TodoSyncTests.cs`: Added `Sync_BatchWithMixedAccountFk_ValidRecordStoredInvalidSkipped` — sends a batch containing one valid record (correct AccountFk) and one intruder (different account's Guid), asserts valid is stored and intruder is absent from delta.
+
+**Why:** `Sync_BatchWithMixedAccountFk_ValidRecordStoredInvalidSkipped` was added for Journal in iter 182. Todo, Goal, and GoalProgress only had `Sync_RecordWithWrongAccountFk_IsRejected` (whole-batch-of-one-bad-record). The mixed-batch test (one valid + one intruder) exercises per-record filtering, which is a distinct behavior from the single-record rejection path.
+
+**Impact:** 155 API tests pass (was 154). 141 mobile tests pass.
+
+---
+
 ## 2026-05-17 — Iteration 186 — API: Goal NextMeetingDate can be cleared by client via LWW
 
 **What changed:**
