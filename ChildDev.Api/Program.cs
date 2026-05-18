@@ -1,5 +1,6 @@
 using System.Text;
 using ChildDev.Api.Data;
+using MudBlazor.Services;
 using ChildDev.Api.Endpoints;
 using ChildDev.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -53,6 +54,7 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
           .AllowAnyMethod()));
 
 builder.Services.AddAuthorization();
+builder.Services.AddMudServices();
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddScoped<WebAnalyticsService>();
 builder.Services.AddHttpContextAccessor();
