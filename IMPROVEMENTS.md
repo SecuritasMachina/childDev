@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-18 — Perf: TodoListViewModel caches account GUID to avoid repeated GetAccountAsync calls (iter 414)
+
+**File:** `ChildDev.Mobile/ViewModels/TodoListViewModel.cs`
+
+**Change:** Added `_accountGuid` private field, set on `LoadAsync`/`RefreshAsync`. `AddAsync` and `UncompleteAsync` now use the cached GUID instead of calling `GetAccountAsync()` each time. `RefreshAsync` still calls `GetAccountAsync()` to get the full `Account` for sync.
+
+**Why:** `GetAccountAsync()` is a `SELECT * FROM Account LIMIT 1` — fast but still a DB round trip per user action. Caching after first load eliminates this overhead from `AddAsync` and `UncompleteAsync`.
+
+**Impact:** 243 mobile tests — all passing.
+
+---
+
 ## 2026-05-18 — Perf: TodoListViewModel CompleteAsync updates in-memory instead of re-fetching (iter 413)
 
 **File:** `ChildDev.Mobile/ViewModels/TodoListViewModel.cs`

@@ -52,6 +52,7 @@ public partial class TodoListViewModel(
     private string emptyMessage = "All done!";
 
     private List<Todo> _allTodos = [];
+    private string _accountGuid = string.Empty;
 
     private bool CanAdd() => !string.IsNullOrWhiteSpace(NewTodoTitle);
 
@@ -85,10 +86,11 @@ public partial class TodoListViewModel(
             StatusMessage = string.Empty;
             var account = await accountService.GetAccountAsync();
             if (account is null) return;
-            var items = await repo.GetPendingAsync(account.Guid);
+            _accountGuid = account.Guid;
+            var items = await repo.GetPendingAsync(_accountGuid);
             _allTodos = items;
             Todos = new ObservableCollection<Todo>(items);
-            var completed = await repo.GetCompletedAsync(account.Guid);
+            var completed = await repo.GetCompletedAsync(_accountGuid);
             CompletedTodoCount = completed.Count;
             HasCompletedTodos = CompletedTodoCount > 0;
             CompletedTodos = new ObservableCollection<Todo>(completed);
@@ -107,11 +109,12 @@ public partial class TodoListViewModel(
         {
             var account = await accountService.GetAccountAsync();
             if (account is null) { IsRefreshing = false; return; }
+            _accountGuid = account.Guid;
             await syncService.RunAsync(account);
-            var items = await repo.GetPendingAsync(account.Guid);
+            var items = await repo.GetPendingAsync(_accountGuid);
             _allTodos = items;
             Todos = new ObservableCollection<Todo>(items);
-            var completed = await repo.GetCompletedAsync(account.Guid);
+            var completed = await repo.GetCompletedAsync(_accountGuid);
             CompletedTodoCount = completed.Count;
             HasCompletedTodos = CompletedTodoCount > 0;
             CompletedTodos = new ObservableCollection<Todo>(completed);
@@ -132,13 +135,17 @@ public partial class TodoListViewModel(
     private async Task AddAsync()
     {
         if (string.IsNullOrWhiteSpace(NewTodoTitle)) return;
-        var account = await accountService.GetAccountAsync();
-        if (account is null) return;
+        if (string.IsNullOrEmpty(_accountGuid))
+        {
+            var account = await accountService.GetAccountAsync();
+            if (account is null) return;
+            _accountGuid = account.Guid;
+        }
 
         var todo = new Todo
         {
             Guid = System.Guid.NewGuid().ToString(),
-            AccountFk = account.Guid,
+            AccountFk = _accountGuid,
             Title = NewTodoTitle.Trim(),
             UpdatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
         };
@@ -175,7 +182,7 @@ public partial class TodoListViewModel(
         CompletedTodoCount = CompletedTodos.Count;
         HasCompletedTodos = CompletedTodoCount > 0;
         if (CompletedTodoCount == 0) ShowCompletedTodos = false;
-        var pending = await repo.GetPendingAsync((await accountService.GetAccountAsync())!.Guid);
+        var pending = await repo.GetPendingAsync(_accountGuid);
         _allTodos = pending;
         Todos = new ObservableCollection<Todo>(pending);
         UpdateOverdueCount(_allTodos);
