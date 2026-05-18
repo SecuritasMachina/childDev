@@ -2,40 +2,88 @@
 @inject NavigationManager Nav
 @inject IHttpContextAccessor HttpContextAccessor
 
-<MudThemeProvider />
+<MudThemeProvider Theme="_theme" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="1" Color="Color.Primary">
-        <MudIconButton Icon="@Icons.Material.Filled.Star" Color="Color.Inherit" Edge="Edge.Start" Href="/" />
-        <MudText Typo="Typo.h6" Class="ml-2">ChildDev Goals</MudText>
+    <MudAppBar Elevation="3" Color="Color.Primary">
+        @if (NickName is not null)
+        {
+            <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
+                               OnClick="ToggleDrawer" />
+            </MudHidden>
+        }
+        <MudLink Href="/" Underline="Underline.None" Color="Color.Inherit">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Style="gap:6px;">
+                <MudIcon Icon="@Icons.Material.Filled.RocketLaunch" Size="Size.Small" />
+                <MudText Typo="Typo.h6" Style="font-weight:700;letter-spacing:.3px;">ChildDev</MudText>
+            </MudStack>
+        </MudLink>
         <MudSpacer />
         @if (NickName is not null)
         {
-            <MudButton Color="Color.Inherit" Href="/"
-                       Variant="@(IsActive("/") ? Variant.Outlined : Variant.Text)">Goals</MudButton>
-            <MudButton Color="Color.Inherit" Href="/todos"
-                       Variant="@(IsActive("/todos") ? Variant.Outlined : Variant.Text)">Todos</MudButton>
-            <MudButton Color="Color.Inherit" Href="/journal"
-                       Variant="@(IsActive("/journal") ? Variant.Outlined : Variant.Text)">Journal</MudButton>
-            <MudButton Color="Color.Inherit" Href="/insights"
-                       Variant="@(IsActive("/insights") ? Variant.Outlined : Variant.Text)">Insights</MudButton>
-            <MudButton Color="Color.Inherit" Href="/settings"
-                       Variant="@(IsActive("/settings") ? Variant.Outlined : Variant.Text)">
-                <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" Class="mr-1" />@NickName
-            </MudButton>
-            <MudButton Color="Color.Inherit" Href="/logout">Logout</MudButton>
+            <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                <MudButton Color="Color.Inherit" Href="/"
+                           StartIcon="@Icons.Material.Filled.EmojiEvents"
+                           Variant="@(IsActive("/") ? Variant.Outlined : Variant.Text)">Goals</MudButton>
+                <MudButton Color="Color.Inherit" Href="/todos"
+                           StartIcon="@Icons.Material.Filled.CheckBox"
+                           Variant="@(IsActive("/todos") ? Variant.Outlined : Variant.Text)">Todos</MudButton>
+                <MudButton Color="Color.Inherit" Href="/journal"
+                           StartIcon="@Icons.Material.Filled.Book"
+                           Variant="@(IsActive("/journal") ? Variant.Outlined : Variant.Text)">Journal</MudButton>
+                <MudButton Color="Color.Inherit" Href="/insights"
+                           StartIcon="@Icons.Material.Filled.Insights"
+                           Variant="@(IsActive("/insights") ? Variant.Outlined : Variant.Text)">Insights</MudButton>
+            </MudHidden>
+            <MudMenu Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit"
+                     Label="@NickName" EndIcon="@Icons.Material.Filled.ExpandMore"
+                     AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight"
+                     Class="ml-1">
+                <MudMenuItem Icon="@Icons.Material.Filled.Settings" Href="/settings">Settings</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.Logout" Href="/logout">Log Out</MudMenuItem>
+            </MudMenu>
         }
         else
         {
-            <MudButton Color="Color.Inherit" Href="/login">Login</MudButton>
-            <MudButton Color="Color.Inherit" Href="/register">Register</MudButton>
+            <MudButton Color="Color.Inherit" Variant="Variant.Text" Href="/login">Log In</MudButton>
+            <MudButton Variant="Variant.Filled" Href="/register" Class="ml-2"
+                       Style="background:#FF8F00;color:#fff;font-weight:600;">Get Started</MudButton>
         }
     </MudAppBar>
+
+    @if (NickName is not null)
+    {
+        <MudDrawer @bind-Open="_drawerOpen" Elevation="2" Variant="DrawerVariant.Temporary"
+                   ClipMode="DrawerClipMode.Never">
+            <MudDrawerHeader>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Style="gap:6px;">
+                    <MudIcon Icon="@Icons.Material.Filled.RocketLaunch" Color="Color.Primary" />
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Style="font-weight:700;">ChildDev</MudText>
+                </MudStack>
+            </MudDrawerHeader>
+            <MudNavMenu>
+                <MudNavLink Href="/" Match="NavLinkMatch.All"
+                            Icon="@Icons.Material.Filled.EmojiEvents" OnClick="CloseDrawer">Goals</MudNavLink>
+                <MudNavLink Href="/todos"
+                            Icon="@Icons.Material.Filled.CheckBox" OnClick="CloseDrawer">Todos</MudNavLink>
+                <MudNavLink Href="/journal"
+                            Icon="@Icons.Material.Filled.Book" OnClick="CloseDrawer">Journal</MudNavLink>
+                <MudNavLink Href="/insights"
+                            Icon="@Icons.Material.Filled.Insights" OnClick="CloseDrawer">Insights</MudNavLink>
+                <MudDivider Class="my-2" />
+                <MudNavLink Href="/settings"
+                            Icon="@Icons.Material.Filled.Settings" OnClick="CloseDrawer">Settings</MudNavLink>
+                <MudNavLink Href="/logout" Icon="@Icons.Material.Filled.Logout">Log Out</MudNavLink>
+            </MudNavMenu>
+        </MudDrawer>
+    }
+
     <MudMainContent Class="pt-4">
-        <MudContainer MaxWidth="MaxWidth.Large">
+        <MudContainer MaxWidth="MaxWidth.Large" Class="pb-8">
             @Body
         </MudContainer>
     </MudMainContent>
@@ -43,11 +91,44 @@
 
 @code {
     private string? NickName;
+    private bool _drawerOpen;
+
+    private readonly MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#3949AB",
+            PrimaryDarken = "#283593",
+            PrimaryLighten = "#7986CB",
+            Secondary = "#F57C00",
+            SecondaryDarken = "#E65100",
+            SecondaryLighten = "#FFB74D",
+            AppbarBackground = "#3949AB",
+            AppbarText = "#FFFFFF",
+            Success = "#43A047",
+            Info = "#0288D1",
+            Warning = "#F9A825",
+            Error = "#E53935",
+            Surface = "#FFFFFF",
+            Background = "#F5F5F7",
+            DrawerBackground = "#FFFFFF",
+            DrawerText = "#212121",
+            TextPrimary = "#212121",
+            TextSecondary = "#616161",
+        },
+        LayoutProperties = new LayoutProperties
+        {
+            AppbarHeight = "64px",
+        }
+    };
 
     protected override void OnInitialized()
     {
         NickName = HttpContextAccessor.HttpContext?.Session.GetString("NickName");
     }
+
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+    private void CloseDrawer() => _drawerOpen = false;
 
     private bool IsActive(string path)
     {

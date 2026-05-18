@@ -9,21 +9,67 @@
 
 @if (AccountGuid is null)
 {
-    <MudGrid Justify="Justify.Center" Class="mt-12">
-        <MudItem xs="12" sm="8" md="6" Class="text-center">
-            <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Style="font-size:5rem;" Color="Color.Primary" />
-            <MudText Typo="Typo.h4" Class="mt-4 mb-2">Set Goals. Achieve Them.</MudText>
-            <MudText Typo="Typo.body1" Class="mb-6" Color="Color.Secondary">
-                ChildDev helps you set goals and track your progress — one step at a time.
-            </MudText>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/login" Size="Size.Large" Class="mr-3">
-                Login
-            </MudButton>
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/register" Size="Size.Large">
-                Get Started
-            </MudButton>
-        </MudItem>
-    </MudGrid>
+    <div style="min-height:80vh;display:flex;align-items:center;padding:2rem 0;">
+        <MudGrid Spacing="6" Justify="Justify.Center" Style="align-items:center;">
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.overline" Color="Color.Primary" Style="font-weight:600;letter-spacing:2px;">
+                    Goal Achievement for Kids
+                </MudText>
+                <MudText Typo="Typo.h3" Class="mt-2 mb-4" Style="line-height:1.2;">
+                    Set Goals.<br />
+                    Track Progress.<br />
+                    <span style="color:var(--mud-palette-primary);">Celebrate Wins.</span>
+                </MudText>
+                <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-6"
+                         Style="max-width:480px;line-height:1.75;font-size:1.1rem;">
+                    ChildDev helps kids and caregivers set meaningful goals, track every step forward, and
+                    celebrate achievements along the way.
+                </MudText>
+                <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/login"
+                               Size="Size.Large" Style="font-weight:600;min-width:130px;">
+                        Log In
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Href="/register" Size="Size.Large"
+                               Style="background:#F57C00;color:#fff;font-weight:600;min-width:160px;">
+                        Get Started Free
+                    </MudButton>
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudGrid Spacing="3">
+                    <MudItem xs="6">
+                        <MudPaper Elevation="4" Class="pa-4 text-center" Style="border-radius:16px;">
+                            <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Primary" Style="font-size:2.5rem;" />
+                            <MudText Typo="Typo.subtitle2" Class="mt-2">Track Goals</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Set and achieve meaningful milestones</MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudPaper Elevation="4" Class="pa-4 text-center" Style="border-radius:16px;">
+                            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="Color.Success" Style="font-size:2.5rem;" />
+                            <MudText Typo="Typo.subtitle2" Class="mt-2">See Progress</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Log notes and celebrate each step</MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudPaper Elevation="4" Class="pa-4 text-center" Style="border-radius:16px;">
+                            <MudIcon Icon="@Icons.Material.Filled.Book" Color="Color.Info" Style="font-size:2.5rem;" />
+                            <MudText Typo="Typo.subtitle2" Class="mt-2">Journal</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Record observations and growth</MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudPaper Elevation="4" Class="pa-4 text-center" Style="border-radius:16px;">
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Warning" Style="font-size:2.5rem;" />
+                            <MudText Typo="Typo.subtitle2" Class="mt-2">Manage Tasks</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Turn goals into actionable todos</MudText>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudItem>
+        </MudGrid>
+    </div>
     return;
 }
 
