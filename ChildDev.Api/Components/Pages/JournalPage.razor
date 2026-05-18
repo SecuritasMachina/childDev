@@ -40,6 +40,33 @@
     }
 </MudStack>
 
+@* Tag cloud — appears only when entries have tags *@
+@if (AllTags.Count > 0)
+{
+    <MudStack Row="true" Wrap="Wrap.Wrap" AlignItems="AlignItems.Center" Class="mb-4" Spacing="1">
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="margin-right:4px;">Filter by tag:</MudText>
+        @foreach (var (tag, count) in AllTags)
+        {
+            var isSelected = TagFilter == tag;
+            <MudChip T="string"
+                     Variant="@(isSelected ? Variant.Filled : Variant.Outlined)"
+                     Color="@(isSelected ? Color.Primary : Color.Default)"
+                     Size="Size.Small"
+                     OnClick="() => OnTagFilterChanged(tag)"
+                     Style="cursor:pointer;">
+                @tag <span style="opacity:.6;margin-left:4px;">@count</span>
+            </MudChip>
+        }
+        @if (TagFilter is not null)
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Text"
+                     OnClick="() => OnTagFilterChanged(null)" Style="cursor:pointer;">
+                ✕ Clear
+            </MudChip>
+        }
+    </MudStack>
+}
+
 @if (!AllEntries.Any())
 {
     <MudText Typo="Typo.body2" Color="Color.Secondary">No journal entries yet. Write the first one!</MudText>
@@ -175,6 +202,8 @@ else
     private List<Journal> Entries = [];
     private string FilterText = string.Empty;
     private string DateFilter = "All";
+    private string? TagFilter;
+    private List<(string Tag, int Count)> AllTags = [];
     private bool ShowAddDialog;
     private string NewNotes = string.Empty;
     private string NewActivity = string.Empty;
@@ -204,7 +233,31 @@ else
             .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null)
             .OrderByDescending(j => j.EnteredDate)
             .ToListAsync();
+        BuildTagCloud();
         ApplyFilter();
+    }
+
+    private void BuildTagCloud()
+    {
+        AllTags = AllEntries
+            .Where(j => !string.IsNullOrWhiteSpace(j.Tags))
+            .SelectMany(j => j.Tags!.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .GroupBy(t => t, StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(g => g.Count())
+            .ThenBy(g => g.Key)
+            .Select(g => (g.Key, g.Count()))
+            .ToList();
+        // Clear tag filter if the selected tag no longer exists
+        if (TagFilter is not null && !AllTags.Any(t => t.Tag.Equals(TagFilter, StringComparison.OrdinalIgnoreCase)))
+            TagFilter = null;
+    }
+
+    private void OnTagFilterChanged(string? tag)
+    {
+        TagFilter = TagFilter == tag ? null : tag;
+        ApplyFilter();
+        if (tag is not null && AccountGuid is not null)
+            _ = Analytics.TrackAsync("journal_tag_filter", AccountGuid, "journal", tag);
     }
 
     private void OnFilterChanged(string value)
@@ -241,6 +294,14 @@ else
                 (j.Activity?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (j.Mood?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (j.Tags?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false));
+        }
+
+        if (TagFilter is not null)
+        {
+            filtered = filtered.Where(j =>
+                j.Tags != null &&
+                j.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Any(t => t.Equals(TagFilter, StringComparison.OrdinalIgnoreCase)));
         }
 
         Entries = filtered.ToList();
