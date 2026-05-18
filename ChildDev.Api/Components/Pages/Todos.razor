@@ -217,29 +217,60 @@ else
 @if (CompletedTodos.Any())
 {
     <MudExpansionPanels Class="mt-6">
-        <MudExpansionPanel Text="@($"Completed ({CompletedTodos.Count})")">
-            <MudList T="Todo" Dense="true">
-                @foreach (var t in CompletedTodos)
-                {
-                    var completedOn = DateTimeOffset.FromUnixTimeMilliseconds(t.CompletedAt!.Value).LocalDateTime;
-                    <MudListItem>
-                        <MudStack Row="true" AlignItems="AlignItems.Center">
-                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
-                            <MudStack Spacing="0" Style="flex:1">
-                                <MudText Typo="Typo.body2" Class="text-decoration-line-through">@t.Title</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">Done @completedOn.ToString("MMM d")</MudText>
+        <MudExpansionPanel>
+            <TitleContent>
+                <MudStack Row="true" AlignItems="AlignItems.Center">
+                    <MudText Style="flex:1">Completed (@CompletedTodos.Count)</MudText>
+                    <div @onclick:stopPropagation="true">
+                        <MudButton Size="Size.Small" Color="Color.Error" Variant="Variant.Text"
+                                   StartIcon="@Icons.Material.Filled.DeleteSweep"
+                                   OnClick="() => _confirmClearCompleted = true">Delete All</MudButton>
+                    </div>
+                </MudStack>
+            </TitleContent>
+            <ChildContent>
+                <MudList T="Todo" Dense="true">
+                    @foreach (var t in CompletedTodos)
+                    {
+                        var completedOn = DateTimeOffset.FromUnixTimeMilliseconds(t.CompletedAt!.Value).LocalDateTime;
+                        <MudListItem>
+                            <MudStack Row="true" AlignItems="AlignItems.Center">
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                                <MudStack Spacing="0" Style="flex:1">
+                                    <MudText Typo="Typo.body2" Class="text-decoration-line-through">@t.Title</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Done @completedOn.ToString("MMM d")</MudText>
+                                </MudStack>
+                                <MudIconButton Icon="@Icons.Material.Filled.Undo" Size="Size.Small"
+                                               Color="Color.Default" OnClick="() => UncompleteTodo(t.Guid)"
+                                               aria-label="Undo completion" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                                               Color="Color.Error" OnClick="() => _confirmDeleteGuid = t.Guid"
+                                               aria-label="Delete todo" />
                             </MudStack>
-                            <MudIconButton Icon="@Icons.Material.Filled.Undo" Size="Size.Small"
-                                           Color="Color.Default" OnClick="() => UncompleteTodo(t.Guid)" />
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
-                                           Color="Color.Error" OnClick="() => _confirmDeleteGuid = t.Guid" />
-                        </MudStack>
-                    </MudListItem>
-                }
-            </MudList>
+                        </MudListItem>
+                    }
+                </MudList>
+            </ChildContent>
         </MudExpansionPanel>
     </MudExpansionPanels>
 }
+
+@* Clear All Completed Confirmation *@
+<MudDialog @bind-Visible="_confirmClearCompleted">
+    <TitleContent>
+        <MudText Typo="Typo.h6" Color="Color.Error">
+            <MudIcon Icon="@Icons.Material.Filled.DeleteSweep" Class="mr-2" />
+            Delete All Completed?
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText>This will permanently remove all @CompletedTodos.Count completed todo@(CompletedTodos.Count == 1 ? "" : "s"). This cannot be undone.</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _confirmClearCompleted = false">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ClearAllCompleted">Delete All</MudButton>
+    </DialogActions>
+</MudDialog>
 
 @* Delete Todo Confirmation *@
 <MudDialog Visible="@(_confirmDeleteGuid is not null)" VisibleChanged="@((bool v) => { if (!v) _confirmDeleteGuid = null; })">
@@ -322,6 +353,7 @@ else
     private string? EditNotes;
     private DateTime? EditDueDate;
     private string? _confirmDeleteGuid;
+    private bool _confirmClearCompleted;
 
     protected override async Task OnInitializedAsync()
     {
@@ -452,6 +484,21 @@ else
         if (rows == 0) return;
         await Analytics.TrackAsync("todo_uncomplete", AccountGuid, "todos");
         Snackbar.Add("Todo moved back to pending.", Severity.Info);
+        await LoadTodos();
+    }
+
+    private async Task ClearAllCompleted()
+    {
+        _confirmClearCompleted = false;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guids = CompletedTodos.Select(t => t.Guid).ToList();
+        await Db.Todos
+            .Where(t => guids.Contains(t.Guid) && t.AccountFk == AccountGuid && t.DeletedAt == null)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.DeletedAt, now)
+                .SetProperty(t => t.UpdatedOn, now));
+        await Analytics.TrackAsync("todo_clear_completed", AccountGuid, "todos", guids.Count.ToString());
+        Snackbar.Add($"{guids.Count} completed todo{(guids.Count == 1 ? "" : "s")} deleted.", Severity.Info);
         await LoadTodos();
     }
 
