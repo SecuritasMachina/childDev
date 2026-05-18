@@ -52,6 +52,21 @@
     </MudItem>
 </MudGrid>
 
+@if (GoalsTotalAllTime > 0)
+{
+    var completionPct = GoalsTotalAllTime == 0 ? 0 : (int)(GoalsCompletedAllTime * 100.0 / GoalsTotalAllTime);
+    var rateColor = completionPct >= 75 ? Color.Success : completionPct >= 40 ? Color.Warning : Color.Default;
+    <MudPaper Elevation="1" Class="pa-4 mb-4" Style="border-radius:12px;">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+            <MudIcon Icon="@Icons.Material.Filled.PieChart" Color="@rateColor" Size="Size.Small" Class="mr-1" />
+            <MudText Typo="Typo.body2" Style="flex:1">Goal Completion Rate</MudText>
+            <MudText Typo="Typo.body2" Style="font-weight:600;">@GoalsCompletedAllTime of @GoalsTotalAllTime</MudText>
+            <MudChip T="string" Size="Size.Small" Color="@rateColor" Class="ml-2">@completionPct%</MudChip>
+        </MudStack>
+        <MudProgressLinear Value="@completionPct" Color="@rateColor" Rounded="true" Size="Size.Medium" />
+    </MudPaper>
+}
+
 @if (!string.IsNullOrWhiteSpace(TopMood))
 {
     <MudPaper Elevation="1" Class="pa-3 mb-6 d-flex align-items-center" Style="border-radius:12px;gap:12px;">
@@ -213,6 +228,7 @@
 
     // Domain entity stats
     private int GoalsCompletedAllTime;
+    private int GoalsTotalAllTime;
     private int TodosCompletedAllTime;
     private int JournalTotal;
     private int GoalProgressTotal;
@@ -239,6 +255,8 @@
     {
         GoalsCompletedAllTime = await Db.Goals
             .CountAsync(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate != null);
+        GoalsTotalAllTime = await Db.Goals
+            .CountAsync(g => g.AccountFk == AccountGuid && g.DeletedAt == null);
 
         TodosCompletedAllTime = await Db.Todos
             .CountAsync(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt != null);
