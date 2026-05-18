@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-18 — Perf: TodoListViewModel CompleteAsync updates in-memory instead of re-fetching (iter 413)
+
+**File:** `ChildDev.Mobile/ViewModels/TodoListViewModel.cs`
+
+**Change:** `CompleteAsync` was calling `GetAccountAsync()` + `GetCompletedAsync()` after every todo completion — loading all completed todos from SQLite just to refresh the list. Replaced with an in-memory update: remove from pending lists, update `todo.CompletedAt` and `todo.UpdatedOn`, insert at front of `CompletedTodos` (newest-first ordering), and update the count/flag directly.
+
+**Why:** Eliminates 2 unnecessary DB round trips per completion. The sorted position is correct since the newly-completed item has the latest `CompletedAt` and belongs at index 0 of the `ORDER BY CompletedAt DESC` list.
+
+**Impact:** 243 mobile tests — all passing.
+
+---
+
 ## 2026-05-18 — Perf: Settings OnInit projects NickName+CreatedOn instead of full entity (iter 412)
 
 **File:** `ChildDev.Api/Components/Pages/Settings.razor`

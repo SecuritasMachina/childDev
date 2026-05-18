@@ -158,10 +158,12 @@ public partial class TodoListViewModel(
         await repo.CompleteAsync(todo.Guid);
         _allTodos.Remove(todo);
         Todos.Remove(todo);
-        var refreshed = await repo.GetCompletedAsync((await accountService.GetAccountAsync())!.Guid);
-        CompletedTodoCount = refreshed.Count;
-        HasCompletedTodos = CompletedTodoCount > 0;
-        CompletedTodos = new ObservableCollection<Todo>(refreshed);
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        todo.CompletedAt = now;
+        todo.UpdatedOn = now;
+        CompletedTodos.Insert(0, todo);
+        CompletedTodoCount = CompletedTodos.Count;
+        HasCompletedTodos = true;
         UpdateOverdueCount(_allTodos);
     }
 
