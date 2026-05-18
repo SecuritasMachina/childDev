@@ -128,10 +128,24 @@ resolve_default_ref() {
   exit 1
 }
 
+has_remote() {
+  git -C "$CHILDDEV_DIR" remote get-url "$GIT_REMOTE" >/dev/null 2>&1
+}
+
 checkout_requested_ref() {
   local requested_ref="$1"
   local default_branch
   local commit_sha
+
+  if ! has_remote; then
+    if [[ -n "$requested_ref" ]]; then
+      log_error "--ref requires a configured git remote; none found for '$GIT_REMOTE'"
+      exit 1
+    fi
+    commit_sha="$(git -C "$CHILDDEV_DIR" rev-parse --short HEAD)"
+    log_warn "No git remote '$GIT_REMOTE' configured — building from current commit: $commit_sha"
+    return 0
+  fi
 
   log_info "Fetching remote refs from $GIT_REMOTE"
   git -C "$CHILDDEV_DIR" fetch "$GIT_REMOTE" --prune --tags
