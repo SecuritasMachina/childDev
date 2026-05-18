@@ -344,17 +344,31 @@ else
         }
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var meetingMs = NewMeetingDate.HasValue
+            ? new DateTimeOffset(DateTime.SpecifyKind(NewMeetingDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
+            : (long?)null;
+
         Db.GoalProgresses.Add(new GoalProgress
         {
             Guid = System.Guid.NewGuid().ToString(),
             AccountFk = AccountGuid!,
             GoalFk = GoalGuid,
             NextStepItems = string.IsNullOrWhiteSpace(steps) ? null : steps,
-            NextMeetingDate = NewMeetingDate.HasValue
-                ? new DateTimeOffset(DateTime.SpecifyKind(NewMeetingDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
-                : null,
+            NextMeetingDate = meetingMs,
             UpdatedOn = now
         });
+
+        // Propagate new meeting date to Goal so the card header stays in sync (matches mobile behaviour)
+        if (meetingMs.HasValue && Goal is not null)
+        {
+            await Db.Goals
+                .Where(g => g.Guid == GoalGuid && g.AccountFk == AccountGuid)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(g => g.NextMeetingDate, meetingMs)
+                    .SetProperty(g => g.UpdatedOn, now));
+            Goal.NextMeetingDate = meetingMs;
+        }
+
         await Db.SaveChangesAsync();
         await Analytics.TrackAsync("progress_add", AccountGuid, "goal_detail", GoalGuid);
 
