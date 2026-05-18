@@ -198,10 +198,14 @@
                         @if (g.NextMeetingDate.HasValue)
                         {
                             var mtg = DateTimeOffset.FromUnixTimeMilliseconds(g.NextMeetingDate.Value).LocalDateTime;
-                            var mtgPast = mtg.Date < DateTime.Today;
-                            <MudText Typo="Typo.caption" Color="@(mtgPast ? Color.Warning : Color.Info)">
-                                📅 @(mtgPast ? "Missed meeting" : "Next meeting"): @mtg.ToString("MMM d")
-                            </MudText>
+                            var mtgDays = (mtg.Date - DateTime.Today).Days;
+                            string mtgLabel2;
+                            Color mtgColor2;
+                            if (mtgDays < 0) { mtgLabel2 = mtgDays == -1 ? "📅 Missed yesterday" : $"📅 Missed {-mtgDays}d ago"; mtgColor2 = Color.Warning; }
+                            else if (mtgDays == 0) { mtgLabel2 = "📅 Meeting today!"; mtgColor2 = Color.Success; }
+                            else if (mtgDays == 1) { mtgLabel2 = "📅 Meeting tomorrow"; mtgColor2 = Color.Info; }
+                            else { mtgLabel2 = $"📅 Meeting in {mtgDays} days"; mtgColor2 = Color.Info; }
+                            <MudText Typo="Typo.caption" Color="@mtgColor2">@mtgLabel2</MudText>
                         }
                     </CardHeaderContent>
                 </MudCardHeader>
