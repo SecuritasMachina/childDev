@@ -60,6 +60,52 @@
     </MudPaper>
 }
 
+@* Month-over-month trends *@
+<MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2" Style="text-transform:uppercase;letter-spacing:1px;">
+    This Month vs Last Month
+</MudText>
+<MudPaper Elevation="1" Class="pa-0 mb-6" Style="border-radius:12px;overflow:hidden;">
+    @{
+        static (Color color, string icon, string label) Trend(int curr, int prev)
+        {
+            if (prev == 0 && curr == 0) return (Color.Default, "→", "—");
+            if (prev == 0) return (Color.Success, "↑", $"+{curr} new");
+            var pct = (int)((curr - prev) * 100.0 / prev);
+            return pct > 0
+                ? (Color.Success, "↑", $"+{pct}%")
+                : pct < 0
+                    ? (Color.Error, "↓", $"{pct}%")
+                    : (Color.Default, "→", "same");
+        }
+        var (gColor, gIcon, gLabel) = Trend(ThisMonthGoals, LastMonthGoals);
+        var (tColor, tIcon, tLabel) = Trend(ThisMonthTodos, LastMonthTodos);
+        var (jColor, jIcon, jLabel) = Trend(ThisMonthJournal, LastMonthJournal);
+    }
+    <MudStack Spacing="0">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="pa-3" Style="border-bottom:1px solid rgba(0,0,0,.06);">
+            <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Size="Size.Small" Class="mr-2" />
+            <MudText Typo="Typo.body2" Style="flex:1">Goals completed</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mr-4">@LastMonthGoals last mo.</MudText>
+            <MudText Typo="Typo.body2" Style="font-weight:600;min-width:28px;text-align:right">@ThisMonthGoals</MudText>
+            <MudText Typo="Typo.caption" Color="@gColor" Style="min-width:52px;text-align:right">@gIcon @gLabel</MudText>
+        </MudStack>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="pa-3" Style="border-bottom:1px solid rgba(0,0,0,.06);">
+            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Class="mr-2" />
+            <MudText Typo="Typo.body2" Style="flex:1">Todos completed</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mr-4">@LastMonthTodos last mo.</MudText>
+            <MudText Typo="Typo.body2" Style="font-weight:600;min-width:28px;text-align:right">@ThisMonthTodos</MudText>
+            <MudText Typo="Typo.caption" Color="@tColor" Style="min-width:52px;text-align:right">@tIcon @tLabel</MudText>
+        </MudStack>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="pa-3">
+            <MudIcon Icon="@Icons.Material.Filled.Book" Color="Color.Info" Size="Size.Small" Class="mr-2" />
+            <MudText Typo="Typo.body2" Style="flex:1">Journal entries</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mr-4">@LastMonthJournal last mo.</MudText>
+            <MudText Typo="Typo.body2" Style="font-weight:600;min-width:28px;text-align:right">@ThisMonthJournal</MudText>
+            <MudText Typo="Typo.caption" Color="@jColor" Style="min-width:52px;text-align:right">@jIcon @jLabel</MudText>
+        </MudStack>
+    </MudStack>
+</MudPaper>
+
 <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2 mt-2" Style="text-transform:uppercase;letter-spacing:1px;">
     Usage Activity
 </MudText>
@@ -173,6 +219,14 @@
     private string? TopMood;
     private int TopMoodCount;
 
+    // Month-over-month trends
+    private int ThisMonthGoals;
+    private int LastMonthGoals;
+    private int ThisMonthTodos;
+    private int LastMonthTodos;
+    private int ThisMonthJournal;
+    private int LastMonthJournal;
+
     protected override async Task OnInitializedAsync()
     {
         AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
@@ -206,6 +260,31 @@
             TopMood = moods.Mood;
             TopMoodCount = moods.Count;
         }
+
+        // Month-over-month windows (calendar months, local time)
+        var today = DateTimeOffset.Now.LocalDateTime;
+        var thisMonthStart = new DateTimeOffset(new DateTime(today.Year, today.Month, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
+        var lastMonthStart = new DateTimeOffset(new DateTime(today.Year, today.Month, 1).AddMonths(-1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
+
+        ThisMonthGoals = await Db.Goals
+            .CountAsync(g => g.AccountFk == AccountGuid && g.DeletedAt == null
+                          && g.CompletionDate != null && g.CompletionDate >= thisMonthStart);
+        LastMonthGoals = await Db.Goals
+            .CountAsync(g => g.AccountFk == AccountGuid && g.DeletedAt == null
+                          && g.CompletionDate != null && g.CompletionDate >= lastMonthStart && g.CompletionDate < thisMonthStart);
+
+        ThisMonthTodos = await Db.Todos
+            .CountAsync(t => t.AccountFk == AccountGuid && t.DeletedAt == null
+                          && t.CompletedAt != null && t.CompletedAt >= thisMonthStart);
+        LastMonthTodos = await Db.Todos
+            .CountAsync(t => t.AccountFk == AccountGuid && t.DeletedAt == null
+                          && t.CompletedAt != null && t.CompletedAt >= lastMonthStart && t.CompletedAt < thisMonthStart);
+
+        ThisMonthJournal = await Db.Journals
+            .CountAsync(j => j.AccountFk == AccountGuid && j.DeletedAt == null && j.EnteredDate >= thisMonthStart);
+        LastMonthJournal = await Db.Journals
+            .CountAsync(j => j.AccountFk == AccountGuid && j.DeletedAt == null
+                          && j.EnteredDate >= lastMonthStart && j.EnteredDate < thisMonthStart);
     }
 
     private async Task LoadInsights()
