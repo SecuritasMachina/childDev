@@ -302,12 +302,21 @@
                 @foreach (var g in CompletedGoals)
                 {
                     var completedOn = DateTimeOffset.FromUnixTimeMilliseconds(g.CompletionDate!.Value).LocalDateTime;
+                    var daysAgo = (int)(DateTime.Now - completedOn).TotalDays;
+                    string completedLabel;
+                    if (daysAgo == 0) completedLabel = "Completed today!";
+                    else if (daysAgo == 1) completedLabel = "Completed yesterday";
+                    else if (daysAgo < 7) completedLabel = $"Completed {daysAgo} days ago";
+                    else if (daysAgo < 14) completedLabel = "Completed 1 week ago";
+                    else if (daysAgo < 60) completedLabel = $"Completed {daysAgo / 7} weeks ago";
+                    else if (daysAgo < 365) completedLabel = $"Completed {daysAgo / 30} months ago";
+                    else completedLabel = $"Completed {completedOn:MMM d, yyyy}";
                     <MudListItem>
                         <MudStack Row="true" AlignItems="AlignItems.Center">
                             <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
                             <MudStack Spacing="0" Style="flex:1">
                                 <MudText Typo="Typo.body2" Class="text-decoration-line-through">@g.GoalText</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">Completed @completedOn.ToString("MMM d, yyyy")</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@completedLabel</MudText>
                             </MudStack>
                             <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
                                        Href="@($"/goals/{g.Guid}")">View</MudButton>
