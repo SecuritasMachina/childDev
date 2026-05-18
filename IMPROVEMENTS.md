@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-18 — Perf: Settings OnInit projects NickName+CreatedOn instead of full entity (iter 412)
+
+**File:** `ChildDev.Api/Components/Pages/Settings.razor`
+
+**Change:** `OnInitializedAsync` was loading the full `Account` entity (including `PinHash`, `ServerJwt`, `ServerUrl`, etc.) to display `NickName` and `CreatedOn`. Replaced with a projection `Select(a => new { a.NickName, a.CreatedOn })` that fetches only the two needed columns.
+
+**Why:** Loading `PinHash` and `ServerJwt` is unnecessary and avoids moving sensitive data through the EF change tracker when they aren't needed.
+
+**Impact:** Build: 0 warnings, 0 errors.
+
+---
+
 ## 2026-05-17 — Tests: completed-record blank-field exemption coverage (iter 411)
 
 **Files:** `ChildDev.Api.Tests/GoalSyncTests.cs`, `ChildDev.Api.Tests/TodoSyncTests.cs`
