@@ -2,6 +2,31 @@
 
 ---
 
+## 2026-05-18 — Invocation 5 Iter 430 Fresh Brainstorm
+
+Step 0b refresh (every 3rd iteration).
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Todos — "Delete all completed" button in completed expansion panel | UI | Domain: data hygiene; completed todos accumulate indefinitely | Medium | S | Low | One-click cleanup; zero new queries — soft-deletes all via ExecuteUpdateAsync | Permanent; warn user | No |
+| 2 | Web: Insights — goal completion rate card ("4 of 7 goals completed") | Func | Domain: progress visualization | Medium | S | Low | Percentage view of overall achievement vs just absolute counts | Denominator grows; rate looks low for active users | No |
+| 3 | Web: Journal — activity filter chips (parallel to mood filter, iter 425) | UI | Domain: finding records quickly | Medium | S | Low | One-click "reading" activity filter; zero DB change | Only useful if activity field is used consistently | No |
+| 4 | API: Validate NextMeetingDate not > 5 years in future on sync | Stability | Domain: input validation at boundaries | Low | S | Low | Prevents corrupted dates (year 9999 etc) from propagating | Edge case | No |
+| 5 | Web: Completed goals on home — show completion date relative ("3 months ago") | UI | Domain: progress motivation | Low | S | Low | "You finished this 2 weeks ago!" is more motivating than "May 5, 2026" | Minor copy change | No |
+| 6 | Mobile: TodoEntryViewModel — cache account GUID (proven pattern from iter 414) | Perf | Domain: perf | Very Low | S | Low | Eliminates 1 GetAccountAsync per save | Single save per entry; negligible benefit | No |
+| 7 | Web: Insights — "This week" column in month-over-month table | Func | Domain: progress visualization | Medium | S | Low | More granular: this week vs last week vs this month | Adds 3 more queries; overlap with existing "week" filter | No |
+| 8 | Web: GoalDetail — link journal entries via activity (search journal for goal text) | Func | Domain: goal-centric view | High | M | Low | "3 journal entries mention this goal" — makes goal the hub of all data | Fuzzy text search; may be noisy | No |
+| 9 | API: Health endpoint — include DB connectivity check | Stability | Domain: ops | Low | S | Low | /health currently just returns 200; adding DB ping catches silent DB failures | Adds 1 DB round trip to every sync health check | No |
+| 10 | Web: Register page — Enter key support for form submission | UI | Domain: data-entry friction | Low | S | Low | Mirror of login Enter key support; already done for login | Narrow benefit | No |
+
+**Selection iter 430:** Item #3 — Journal activity filter chips.
+- Zero DB changes; exact same pattern as mood filter (iter 425) — low implementation risk
+- High user value: activity field (e.g. "reading", "math", "soccer") is a primary categorization tool
+- Together with tag and mood filters, creates a three-axis discovery system for journal entries
+- Fast to implement because the pattern is already written; just duplicate and adapt
+
+---
+
 ## 2026-05-18 — Invocation 5 Iter 424 Fresh Brainstorm
 
 Step 0b refresh (every 3rd iteration): Domain notes re-evaluated.
