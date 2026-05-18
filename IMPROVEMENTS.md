@@ -2,6 +2,32 @@
 
 ---
 
+## 2026-05-18 — Invocation 5 Iter 424 Fresh Brainstorm
+
+Step 0b refresh (every 3rd iteration): Domain notes re-evaluated.
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Todos — grouped date sections (Overdue/Today/Upcoming/No Date) when filter=All | UI | Domain: due-date visibility; kids need to see "what's urgent now" vs "later" at a glance | High | S | Low | Zero new queries; groups existing list; reduces cognitive load; overdue stands out red | Replaces flat list mental model; must hide sections with zero items | No |
+| 2 | Mobile: AccountService.GetAccountAsync memoization (cache after first load, invalidate on sync) | Perf | Domain: perf; every ViewModel calls this on every load | Medium | S | Medium | Eliminates 1 DB round trip per ViewModel lifecycle | Cache invalidation on sync/logout is tricky; medium risk of stale data | No |
+| 3 | Web: GoalDetail — show progress note count in header ("5 progress notes") | UI | Domain: progress visibility | Low | S | Low | Quick sense of how active the goal is | Only useful at 3+ notes | No |
+| 4 | Web: Journal — filter by mood (add mood chips alongside tag chips) | UI | Domain: finding records quickly; mood field exists but no quick filter | Medium | S | Low | One-click "😊 Happy" filter; parallel to tag cloud | Only useful if user uses mood field | No |
+| 5 | API: Integration test — goal sync round-trip (create on web, verify in sync response) | Stability | Domain: sync correctness | Medium | M | Low | Catches regressions in LWW logic before they reach users | BCrypt/JWT setup overhead in test fixture | No |
+| 6 | Web: Home — "Add Todo" quick shortcut card (mirrors journal/goal quick-add on dashboard) | UI | Domain: data-entry friction | Medium | S | Low | One fewer click for the most common action (adding a todo) | Minor; only matters for power users | No |
+| 7 | Mobile: JournalListViewModel — cache account GUID (same pattern as iter 414/415) | Perf | Domain: perf | Very Low | S | Low | Eliminates 1 DB query on LoadAsync; RefreshAsync still fetches full account for sync | Negligible benefit; already very fast | No |
+| 8 | Web: GoalDetail — "next meeting" countdown badge in header ("Meeting in 3 days") | UI | Domain: meeting visibility | Medium | S | Low | At-a-glance reminder without reading full date | Only useful if next meeting is set | No |
+| 9 | Web: Todos — keyboard shortcut (Enter in add dialog submits) | UI | Domain: data-entry friction | Low | S | Low | Standard UX; MudDialog + form handles via button focus or @onkeydown | Very narrow use case | No |
+| 10 | Web: Aria-labels on all remaining icon-only buttons (Todos, GoalDetail, Goals list) | A11y | Domain: accessibility | Low | S | Low | WCAG 2.1 AA compliance sweep; screen-reader usable | Purely tedious; no visual change | No |
+
+**Selection iter 424:** Item #1 — Todos grouped date sections.
+- Highest impact-to-effort: zero DB changes, purely visual reorganization of already-loaded data
+- Direct service to the app mission: kids see "what's on fire today" vs. "what can wait"
+- Overdue in red, Today in amber, Upcoming neutral, No Date muted — natural urgency gradient
+- Only show sections that have items (hide empty sections) to avoid visual clutter
+- Works alongside existing filter chips — chips still function to focus a single category
+
+---
+
 ## 2026-05-18 — Invocation 5 Iter 420 Fresh Brainstorm
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
