@@ -125,14 +125,32 @@ else
                         }
                         <MudSpacer />
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                       aria-label="Edit entry"
                                        OnClick="() => OpenEditEntry(j)" />
                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
-                                       Color="Color.Error" OnClick="() => _confirmDeleteGuid = j.Guid" />
+                                       Color="Color.Error" aria-label="Delete entry"
+                                       OnClick="() => _confirmDeleteGuid = j.Guid" />
                     </MudCardActions>
                 </MudCard>
             </MudItem>
         }
     </MudGrid>
+    @if (_filteredEntries.Count > _displayCount)
+    {
+        <MudStack AlignItems="AlignItems.Center" Class="mt-4">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.ExpandMore"
+                       OnClick="LoadMore">
+                Load more (@(_filteredEntries.Count - _displayCount) remaining)
+            </MudButton>
+        </MudStack>
+    }
+    else if (_filteredEntries.Count > PageSize)
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-center mt-3 d-block">
+            All @_filteredEntries.Count entries shown
+        </MudText>
+    }
 }
 
 @* Delete Entry Confirmation *@
@@ -197,9 +215,12 @@ else
 </MudDialog>
 
 @code {
+    private const int PageSize = 20;
     private string? AccountGuid;
     private List<Journal> AllEntries = [];
+    private List<Journal> _filteredEntries = [];
     private List<Journal> Entries = [];
+    private int _displayCount = PageSize;
     private string FilterText = string.Empty;
     private string DateFilter = "All";
     private string? TagFilter;
@@ -304,7 +325,15 @@ else
                     .Any(t => t.Equals(TagFilter, StringComparison.OrdinalIgnoreCase)));
         }
 
-        Entries = filtered.ToList();
+        _filteredEntries = filtered.ToList();
+        _displayCount = PageSize;
+        Entries = _filteredEntries.Take(_displayCount).ToList();
+    }
+
+    private void LoadMore()
+    {
+        _displayCount += PageSize;
+        Entries = _filteredEntries.Take(_displayCount).ToList();
     }
 
     private void OpenAddDialog()

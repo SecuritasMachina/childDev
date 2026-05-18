@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 5 Iter 420 Fresh Brainstorm
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | JournalPage: virtual pagination (show 20, load-more button) | Perf/UI | Domain: long-term accumulation; users with 100+ entries | Medium-High | S | Low | Reduces initial DOM size from N cards to 20; faster first paint; ~60% DOM reduction at 50 entries | Breaks "see all at once" for power users; adds UI state variable | No |
+| 2 | GoalProgressRepository: add lean UpdatedOn-only query for DashboardViewModel | Perf | Domain: perf; loads NextStepItems strings dashboard never uses | Low | S | Low | Avoids materializing NextStepItems (can be long) for stale-goal check | Adds second method to repo; split logic between two use cases | No |
+| 3 | Web: Insights month-over-month entity counts (goals completed this vs last 30d) | Func | Domain: progress visualization differentiator | Medium | S | Low | "3 goals vs 0 last month" — first real productivity trend data | 2 extra DB queries; only meaningful after 30+ days of use | No |
+| 4 | Web: Missing aria-label on icon-only buttons (delete, edit, complete) | A11y | Domain: accessibility | Low | S | Low | Screen-reader usable; WCAG 2.1 AA compliance | Tedious; doesn't affect visual users | No |
+| 5 | Web: GoalDetail progress note — update Goal.NextMeetingDate when progress note has meeting | Sync | Domain: mobile-web parity; mobile GoalEntryViewModel does this | Medium | S | Low | Setting meeting date on a progress note propagates to Goal header | Small risk of overwriting a manually-set meeting date | No |
+| 6 | Mobile: JournalListViewModel — cache account GUID (minor repeat of iter 412 pattern) | Perf | Domain: perf | Very Low | S | Low | Eliminates 1 GetAccountAsync per refresh | GetAccountAsync is just 1 fast query; benefit tiny | No |
+| 7 | Web: Todos — sort by priority (overdue first, then by due date, then no-date) | UI | Domain: due-date visibility | Medium | S | Low | Already done! Let me check… | Already in LoadTodos | Done |
+| 8 | Web: Home — show goal expiration countdown badge on goal cards | UI | Unsolved: data-entry friction / quick status | Medium | S | Low | "2 days left" badge eliminates needing to open GoalDetail | Extra date formatting per goal card | No |
+| 9 | API: Validate GoalProgress.NextMeetingDate reasonability (not year 9999) | Stability | Domain: input validation | Low | S | Low | Prevents bad data from reaching DB | Very edge case | No |
+| 10 | Web: Login page — support Enter key to submit | UI | Unsolved: data-entry friction | Low | S | Low | Standard web UX expectation; reduces clicks | Blazor Server forms handle this with proper form element | No |
+
+**Selection iter 420:** Item #1 — JournalPage pagination.
+- Most visible perf improvement for power users (people who journal daily)
+- Zero DB change — already loads all entries, just display fewer
+- Negative: "load all" breaks but "load more" is standard UX
+- Item #5 (Goal.NextMeetingDate update) is medium-value but narrow use case
+
+---
+
 ## 2026-05-18 — Invocation 5 Brainstorm (iter 416+)
 
 Step 0a: Unsolved Problems already captured in prior invocation — reused (see line 475).
