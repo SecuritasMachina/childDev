@@ -75,6 +75,7 @@ var app = builder.Build();
 
 app.UseResponseCompression();
 app.UseRequestTimeouts();
+app.UseStaticFiles();
 app.UseCors();
 
 app.Use(async (ctx, next) =>
