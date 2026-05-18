@@ -82,37 +82,133 @@ else
     <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">No todos matching the current filter.</MudText>
 }
 
-<MudList T="Todo" Dense="false">
-    @foreach (var t in PendingTodos)
+@if (StatusFilter == "All" && string.IsNullOrWhiteSpace(FilterText) && PendingTodos.Any())
+{
+    var todayEndMs = TodayStartMs + 86_400_000L;
+    var overdueTodos  = PendingTodos.Where(t => t.DueDate.HasValue && t.DueDate.Value < TodayStartMs).ToList();
+    var todayTodos    = PendingTodos.Where(t => t.DueDate.HasValue && t.DueDate.Value >= TodayStartMs && t.DueDate.Value < todayEndMs).ToList();
+    var upcomingTodos = PendingTodos.Where(t => t.DueDate.HasValue && t.DueDate.Value >= todayEndMs).ToList();
+    var noDateTodos   = PendingTodos.Where(t => !t.DueDate.HasValue).ToList();
+
+    @if (overdueTodos.Any())
     {
-        var isOverdue = t.DueDate.HasValue && t.DueDate.Value < TodayStartMs;
-        <MudListItem>
-            <MudStack Row="true" AlignItems="AlignItems.Center">
-                <MudIconButton Icon="@Icons.Material.Filled.RadioButtonUnchecked"
-                               Color="Color.Primary" Size="Size.Small"
-                               OnClick="() => CompleteTodo(t.Guid)" />
-                <MudStack Spacing="0" Style="flex:1">
-                    <MudText Typo="Typo.body1" Color="@(isOverdue ? Color.Error : Color.Default)">@t.Title</MudText>
-                    @if (t.DueDate.HasValue)
-                    {
-                        var due = DateTimeOffset.FromUnixTimeMilliseconds(t.DueDate.Value).LocalDateTime;
-                        <MudText Typo="Typo.caption" Color="@(isOverdue ? Color.Error : Color.Secondary)">
-                            Due @due.ToString("MMM d")@(isOverdue ? " — overdue" : "")
-                        </MudText>
-                    }
-                    @if (!string.IsNullOrWhiteSpace(t.Notes))
-                    {
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">@t.Notes</MudText>
-                    }
-                </MudStack>
-                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
-                               OnClick="() => OpenEditTodo(t)" />
-                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
-                               Color="Color.Error" OnClick="() => _confirmDeleteGuid = t.Guid" />
-            </MudStack>
-        </MudListItem>
+        <MudText Typo="Typo.subtitle2" Color="Color.Error" Class="mt-2 mb-1">⚠ Overdue</MudText>
+        <MudList T="Todo" Dense="false">
+            @foreach (var t in overdueTodos)
+            {
+                <MudListItem>
+                    <MudStack Row="true" AlignItems="AlignItems.Center">
+                        <MudIconButton Icon="@Icons.Material.Filled.RadioButtonUnchecked" Color="Color.Primary" Size="Size.Small" OnClick="() => CompleteTodo(t.Guid)" aria-label="Complete todo" />
+                        <MudStack Spacing="0" Style="flex:1">
+                            <MudText Typo="Typo.body1" Color="Color.Error">@t.Title</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Error">Due @DateTimeOffset.FromUnixTimeMilliseconds(t.DueDate!.Value).LocalDateTime.ToString("MMM d") — overdue</MudText>
+                            @if (!string.IsNullOrWhiteSpace(t.Notes)) { <MudText Typo="Typo.caption" Color="Color.Secondary">@t.Notes</MudText> }
+                        </MudStack>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditTodo(t)" aria-label="Edit todo" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => _confirmDeleteGuid = t.Guid" aria-label="Delete todo" />
+                    </MudStack>
+                </MudListItem>
+            }
+        </MudList>
     }
-</MudList>
+    @if (todayTodos.Any())
+    {
+        <MudText Typo="Typo.subtitle2" Color="Color.Warning" Class="mt-3 mb-1">📅 Due Today</MudText>
+        <MudList T="Todo" Dense="false">
+            @foreach (var t in todayTodos)
+            {
+                <MudListItem>
+                    <MudStack Row="true" AlignItems="AlignItems.Center">
+                        <MudIconButton Icon="@Icons.Material.Filled.RadioButtonUnchecked" Color="Color.Primary" Size="Size.Small" OnClick="() => CompleteTodo(t.Guid)" aria-label="Complete todo" />
+                        <MudStack Spacing="0" Style="flex:1">
+                            <MudText Typo="Typo.body1">@t.Title</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Warning">Due today</MudText>
+                            @if (!string.IsNullOrWhiteSpace(t.Notes)) { <MudText Typo="Typo.caption" Color="Color.Secondary">@t.Notes</MudText> }
+                        </MudStack>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditTodo(t)" aria-label="Edit todo" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => _confirmDeleteGuid = t.Guid" aria-label="Delete todo" />
+                    </MudStack>
+                </MudListItem>
+            }
+        </MudList>
+    }
+    @if (upcomingTodos.Any())
+    {
+        <MudText Typo="Typo.subtitle2" Color="Color.Default" Class="mt-3 mb-1">📌 Upcoming</MudText>
+        <MudList T="Todo" Dense="false">
+            @foreach (var t in upcomingTodos)
+            {
+                var due = DateTimeOffset.FromUnixTimeMilliseconds(t.DueDate!.Value).LocalDateTime;
+                <MudListItem>
+                    <MudStack Row="true" AlignItems="AlignItems.Center">
+                        <MudIconButton Icon="@Icons.Material.Filled.RadioButtonUnchecked" Color="Color.Primary" Size="Size.Small" OnClick="() => CompleteTodo(t.Guid)" aria-label="Complete todo" />
+                        <MudStack Spacing="0" Style="flex:1">
+                            <MudText Typo="Typo.body1">@t.Title</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Due @due.ToString("MMM d")</MudText>
+                            @if (!string.IsNullOrWhiteSpace(t.Notes)) { <MudText Typo="Typo.caption" Color="Color.Secondary">@t.Notes</MudText> }
+                        </MudStack>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditTodo(t)" aria-label="Edit todo" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => _confirmDeleteGuid = t.Guid" aria-label="Delete todo" />
+                    </MudStack>
+                </MudListItem>
+            }
+        </MudList>
+    }
+    @if (noDateTodos.Any())
+    {
+        <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mt-3 mb-1">🗒 No Date</MudText>
+        <MudList T="Todo" Dense="false">
+            @foreach (var t in noDateTodos)
+            {
+                <MudListItem>
+                    <MudStack Row="true" AlignItems="AlignItems.Center">
+                        <MudIconButton Icon="@Icons.Material.Filled.RadioButtonUnchecked" Color="Color.Primary" Size="Size.Small" OnClick="() => CompleteTodo(t.Guid)" aria-label="Complete todo" />
+                        <MudStack Spacing="0" Style="flex:1">
+                            <MudText Typo="Typo.body1">@t.Title</MudText>
+                            @if (!string.IsNullOrWhiteSpace(t.Notes)) { <MudText Typo="Typo.caption" Color="Color.Secondary">@t.Notes</MudText> }
+                        </MudStack>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditTodo(t)" aria-label="Edit todo" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => _confirmDeleteGuid = t.Guid" aria-label="Delete todo" />
+                    </MudStack>
+                </MudListItem>
+            }
+        </MudList>
+    }
+}
+else
+{
+    <MudList T="Todo" Dense="false">
+        @foreach (var t in PendingTodos)
+        {
+            var isOverdue = t.DueDate.HasValue && t.DueDate.Value < TodayStartMs;
+            <MudListItem>
+                <MudStack Row="true" AlignItems="AlignItems.Center">
+                    <MudIconButton Icon="@Icons.Material.Filled.RadioButtonUnchecked"
+                                   Color="Color.Primary" Size="Size.Small"
+                                   OnClick="() => CompleteTodo(t.Guid)" aria-label="Complete todo" />
+                    <MudStack Spacing="0" Style="flex:1">
+                        <MudText Typo="Typo.body1" Color="@(isOverdue ? Color.Error : Color.Default)">@t.Title</MudText>
+                        @if (t.DueDate.HasValue)
+                        {
+                            var due = DateTimeOffset.FromUnixTimeMilliseconds(t.DueDate.Value).LocalDateTime;
+                            <MudText Typo="Typo.caption" Color="@(isOverdue ? Color.Error : Color.Secondary)">
+                                Due @due.ToString("MMM d")@(isOverdue ? " — overdue" : "")
+                            </MudText>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(t.Notes))
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@t.Notes</MudText>
+                        }
+                    </MudStack>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                   OnClick="() => OpenEditTodo(t)" aria-label="Edit todo" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                                   Color="Color.Error" OnClick="() => _confirmDeleteGuid = t.Guid" aria-label="Delete todo" />
+                </MudStack>
+            </MudListItem>
+        }
+    </MudList>
+}
 
 <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-2"
            StartIcon="@Icons.Material.Filled.Add"
