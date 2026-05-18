@@ -9,61 +9,108 @@
 
 @if (AccountGuid is null)
 {
-    <div style="min-height:80vh;display:flex;align-items:center;padding:2rem 0;">
-        <MudGrid Spacing="6" Justify="Justify.Center" Style="align-items:center;">
+    <div class="hero-section" style="min-height:72vh;display:flex;align-items:center;">
+        <MudGrid Spacing="6" Justify="Justify.Center" Style="align-items:center;width:100%;">
             <MudItem xs="12" md="6">
-                <MudText Typo="Typo.overline" Color="Color.Primary" Style="font-weight:600;letter-spacing:2px;">
-                    Goal Achievement for Kids
+                <MudText Typo="Typo.overline" Color="Color.Primary" Style="font-weight:700;letter-spacing:2.5px;">
+                    🚀 Goal Achievement for Kids
                 </MudText>
-                <MudText Typo="Typo.h3" Class="mt-2 mb-4" Style="line-height:1.2;">
+                <MudText Typo="Typo.h3" Class="mt-2 mb-4" Style="line-height:1.15;font-weight:800;">
                     Set Goals.<br />
                     Track Progress.<br />
-                    <span style="color:var(--mud-palette-primary);">Celebrate Wins.</span>
+                    <span style="color:#F57C00;">Celebrate Wins! 🎉</span>
                 </MudText>
                 <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-6"
-                         Style="max-width:480px;line-height:1.75;font-size:1.1rem;">
+                         Style="max-width:480px;line-height:1.8;font-size:1.05rem;">
                     ChildDev helps kids and caregivers set meaningful goals, track every step forward, and
                     celebrate achievements along the way.
                 </MudText>
                 <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/login"
-                               Size="Size.Large" Style="font-weight:600;min-width:130px;">
+                               Size="Size.Large" Style="font-weight:700;min-width:130px;border-radius:12px;">
                         Log In
                     </MudButton>
                     <MudButton Variant="Variant.Filled" Href="/register" Size="Size.Large"
-                               Style="background:#F57C00;color:#fff;font-weight:600;min-width:160px;">
-                        Get Started Free
+                               Style="background:#F57C00;color:#fff;font-weight:700;min-width:160px;border-radius:12px;">
+                        Get Started Free ✨
                     </MudButton>
                 </MudStack>
             </MudItem>
             <MudItem xs="12" md="6">
-                <MudGrid Spacing="3">
+                <div class="growth-graphic">
+                    <!-- Inline SVG: child growth journey illustration -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 300" width="360" height="300" aria-label="Child growth journey">
+                        <!-- Ground -->
+                        <rect x="0" y="260" width="360" height="40" rx="4" fill="#e8eaf6"/>
+                        <!-- Path/steps going upward -->
+                        <rect x="40"  y="240" width="50" height="20" rx="4" fill="#c5cae9"/>
+                        <rect x="110" y="210" width="50" height="50" rx="4" fill="#9fa8da"/>
+                        <rect x="180" y="175" width="50" height="85" rx="4" fill="#7986cb"/>
+                        <rect x="250" y="140" width="50" height="120" rx="4" fill="#3949ab"/>
+                        <!-- Stars above each step -->
+                        <!-- Step 1 star -->
+                        <text x="65"  y="228" text-anchor="middle" font-size="18" class="star-pop">⭐</text>
+                        <!-- Step 2 star -->
+                        <text x="135" y="198" text-anchor="middle" font-size="20" class="star-pop" style="animation-delay:.1s">⭐</text>
+                        <!-- Step 3 star -->
+                        <text x="205" y="163" text-anchor="middle" font-size="22" class="star-pop" style="animation-delay:.2s">⭐</text>
+                        <!-- Step 4 star (trophy) -->
+                        <text x="275" y="125" text-anchor="middle" font-size="30" class="star-pop" style="animation-delay:.3s">🏆</text>
+                        <!-- Kid figure at top step -->
+                        <!-- Body -->
+                        <circle cx="275" cy="100" r="14" fill="#FFB74D" stroke="#F57C00" stroke-width="2"/>
+                        <!-- Smile -->
+                        <path d="M269 103 Q275 108 281 103" stroke="#E65100" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                        <!-- Eyes -->
+                        <circle cx="271" cy="98" r="2" fill="#333"/>
+                        <circle cx="279" cy="98" r="2" fill="#333"/>
+                        <!-- Arms raised (celebrating) -->
+                        <line x1="261" y1="107" x2="251" y2="95" stroke="#F57C00" stroke-width="3" stroke-linecap="round"/>
+                        <line x1="289" y1="107" x2="299" y2="95" stroke="#F57C00" stroke-width="3" stroke-linecap="round"/>
+                        <!-- Body -->
+                        <rect x="265" y="114" width="20" height="22" rx="4" fill="#3949AB"/>
+                        <!-- Legs -->
+                        <line x1="269" y1="136" x2="265" y2="155" stroke="#3949AB" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="281" y1="136" x2="285" y2="155" stroke="#3949AB" stroke-width="4" stroke-linecap="round"/>
+                        <!-- Floating stars decoration -->
+                        <text x="20"  y="180" font-size="14" opacity=".5">✨</text>
+                        <text x="330" y="200" font-size="12" opacity=".4">✨</text>
+                        <text x="150" y="60"  font-size="10" opacity=".35">⭐</text>
+                        <text x="310" y="80"  font-size="16" opacity=".4">🌟</text>
+                        <!-- Labels on steps -->
+                        <text x="65"  y="253" text-anchor="middle" font-size="9" fill="#5c6bc0" font-weight="600">Start</text>
+                        <text x="135" y="253" text-anchor="middle" font-size="9" fill="#5c6bc0" font-weight="600">Learn</text>
+                        <text x="205" y="253" text-anchor="middle" font-size="9" fill="#fff" font-weight="600">Grow</text>
+                        <text x="275" y="253" text-anchor="middle" font-size="9" fill="#fff" font-weight="600">Win!</text>
+                    </svg>
+                </div>
+                <MudGrid Spacing="2" Class="mt-3">
                     <MudItem xs="6">
-                        <MudPaper Elevation="4" Class="pa-4 text-center" Style="border-radius:16px;">
-                            <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Primary" Style="font-size:2.5rem;" />
-                            <MudText Typo="Typo.subtitle2" Class="mt-2">Track Goals</MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">Set and achieve meaningful milestones</MudText>
+                        <MudPaper Elevation="3" Class="pa-3 text-center feature-card">
+                            <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Primary" Style="font-size:2rem;" />
+                            <MudText Typo="Typo.subtitle2" Class="mt-1">Track Goals</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Meaningful milestones</MudText>
                         </MudPaper>
                     </MudItem>
                     <MudItem xs="6">
-                        <MudPaper Elevation="4" Class="pa-4 text-center" Style="border-radius:16px;">
-                            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="Color.Success" Style="font-size:2.5rem;" />
-                            <MudText Typo="Typo.subtitle2" Class="mt-2">See Progress</MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">Log notes and celebrate each step</MudText>
+                        <MudPaper Elevation="3" Class="pa-3 text-center feature-card">
+                            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="Color.Success" Style="font-size:2rem;" />
+                            <MudText Typo="Typo.subtitle2" Class="mt-1">See Progress</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Celebrate each step</MudText>
                         </MudPaper>
                     </MudItem>
                     <MudItem xs="6">
-                        <MudPaper Elevation="4" Class="pa-4 text-center" Style="border-radius:16px;">
-                            <MudIcon Icon="@Icons.Material.Filled.Book" Color="Color.Info" Style="font-size:2.5rem;" />
-                            <MudText Typo="Typo.subtitle2" Class="mt-2">Journal</MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">Record observations and growth</MudText>
+                        <MudPaper Elevation="3" Class="pa-3 text-center feature-card">
+                            <MudIcon Icon="@Icons.Material.Filled.Book" Color="Color.Info" Style="font-size:2rem;" />
+                            <MudText Typo="Typo.subtitle2" Class="mt-1">Journal</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Record growth moments</MudText>
                         </MudPaper>
                     </MudItem>
                     <MudItem xs="6">
-                        <MudPaper Elevation="4" Class="pa-4 text-center" Style="border-radius:16px;">
-                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Warning" Style="font-size:2.5rem;" />
-                            <MudText Typo="Typo.subtitle2" Class="mt-2">Manage Tasks</MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">Turn goals into actionable todos</MudText>
+                        <MudPaper Elevation="3" Class="pa-3 text-center feature-card">
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Warning" Style="font-size:2rem;" />
+                            <MudText Typo="Typo.subtitle2" Class="mt-1">Manage Tasks</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Goals into action</MudText>
                         </MudPaper>
                     </MudItem>
                 </MudGrid>
@@ -75,7 +122,7 @@
 
 <MudGrid Class="mb-6">
     <MudItem xs="12" sm="4">
-        <MudPaper Elevation="2" Class="pa-4 text-center" Style="cursor:default;">
+        <MudPaper Elevation="2" Class="pa-4 text-center stat-card-goals" Style="cursor:default;border-radius:12px;">
             <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Primary" Style="font-size:2rem;" />
             <MudText Typo="Typo.h4" Class="mt-1">@AllActiveGoals.Count</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary">Active Goal@(AllActiveGoals.Count == 1 ? "" : "s")</MudText>
@@ -83,7 +130,7 @@
     </MudItem>
     <MudItem xs="12" sm="4">
         <MudLink Href="/todos" Underline="Underline.None" Style="display:block;">
-            <MudPaper Elevation="2" Class="pa-4 text-center" Style="cursor:pointer;">
+            <MudPaper Elevation="2" Class="pa-4 text-center stat-card-todos" Style="cursor:pointer;border-radius:12px;">
                 <MudIcon Icon="@Icons.Material.Filled.CheckBox" Color="@(OverdueTodoCount > 0 ? Color.Error : Color.Primary)" Style="font-size:2rem;" />
                 <MudText Typo="Typo.h4" Class="mt-1">
                     @PendingTodoCount
@@ -98,7 +145,7 @@
     </MudItem>
     <MudItem xs="12" sm="4">
         <MudLink Href="/journal" Underline="Underline.None" Style="display:block;">
-            <MudPaper Elevation="2" Class="pa-4 text-center" Style="cursor:pointer;">
+            <MudPaper Elevation="2" Class="pa-4 text-center stat-card-journal" Style="cursor:pointer;border-radius:12px;">
                 <MudIcon Icon="@Icons.Material.Filled.Book" Color="Color.Primary" Style="font-size:2rem;" />
                 <MudText Typo="Typo.h4" Class="mt-1">@JournalThisWeek</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">Journal Entr@(JournalThisWeek == 1 ? "y" : "ies") This Week</MudText>
@@ -259,7 +306,7 @@
 <MudDialog @bind-Visible="ShowCelebration" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
     <DialogContent>
         <MudStack AlignItems="AlignItems.Center" Spacing="3" Class="pa-4">
-            <MudText Typo="Typo.h2">🎉</MudText>
+            <MudText Typo="Typo.h2" Class="celeb-emoji">🎉</MudText>
             <MudText Typo="Typo.h5" Align="Align.Center" Color="Color.Success">Goal Achieved!</MudText>
             <MudText Typo="Typo.body1" Align="Align.Center" Color="Color.Secondary">@CelebratedGoalText</MudText>
             <MudText Typo="Typo.body2" Align="Align.Center">

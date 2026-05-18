@@ -1,0 +1,67 @@
+/* ChildDev custom styles */
+
+/* Smooth page transitions */
+.mud-main-content { animation: fadeIn .25s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Fun card hover lift */
+.mud-card { transition: transform .18s ease, box-shadow .18s ease; }
+.mud-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(57,73,171,.15) !important; }
+
+/* Gradient hero background */
+.hero-section {
+    background: linear-gradient(135deg, #e8eaf6 0%, #fce8d0 100%);
+    border-radius: 24px;
+    padding: 3rem 2rem;
+    position: relative;
+    overflow: hidden;
+}
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(57,73,171,.12) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+/* Stat cards with colored left border accent */
+.stat-card-goals  { border-left: 4px solid #3949AB; }
+.stat-card-todos  { border-left: 4px solid #E53935; }
+.stat-card-journal{ border-left: 4px solid #43A047; }
+
+/* Feature cards on landing page */
+.feature-card {
+    border-radius: 16px !important;
+    transition: transform .18s ease, box-shadow .18s ease;
+    background: linear-gradient(145deg, #fff 0%, #f8f9ff 100%);
+}
+.feature-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(57,73,171,.18) !important; }
+
+/* Goal cards */
+.goal-card-active { border-top: 3px solid #3949AB; }
+.goal-card-stale  { border-top: 3px solid #F9A825; }
+
+/* Growth graphic container */
+.growth-graphic { display: flex; justify-content: center; align-items: center; }
+.growth-graphic svg { max-width: 100%; height: auto; filter: drop-shadow(0 6px 16px rgba(57,73,171,.15)); }
+
+/* Bouncy star animation */
+@keyframes starPop {
+    0%   { transform: scale(0) rotate(-30deg); opacity: 0; }
+    60%  { transform: scale(1.2) rotate(5deg);  opacity: 1; }
+    100% { transform: scale(1)   rotate(0deg);  opacity: 1; }
+}
+.star-pop { animation: starPop .4s ease forwards; }
+
+/* Add goal dashed card hover */
+.add-goal-card { transition: background .15s ease; }
+.add-goal-card:hover { background: rgba(57,73,171,.05) !important; }
+
+/* Celebration emoji bounce */
+@keyframes celebBounce {
+    0%, 100% { transform: translateY(0);   }
+    40%       { transform: translateY(-12px); }
+    60%       { transform: translateY(-6px);  }
+}
+.celeb-emoji { display: inline-block; animation: celebBounce .8s ease infinite; }
