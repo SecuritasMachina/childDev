@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-18 — Invocation 5 Brainstorm (iter 416+)
+
+Step 0a: Unsolved Problems already captured in prior invocation — reused (see line 475).
+Step 0b: Domain Notes already captured — reused (see line 492).
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Insights: Add domain entity stats (goals completed, todos completion rate, journal total, mood breakdown) | Func/UI | Domain Note: progress visualization is #1 differentiator | High | S | Low | "12 goals completed!" — meaningful achievement vs "you clicked 47 times"; zero risk additive | 3 extra indexed DB queries per page load | No |
+| 2 | Journal: Tag cloud filter (parse Tags CSV, show clickable chips to filter) | UI | Unsolved: finding records quickly; tags field exists but no visual discovery | High | S | Low | One-click "speech" filter vs typing in search box; ~50% friction reduction for tagged data | Only useful if user actually uses tags | No |
+| 3 | JournalPage: Virtual pagination (show 20, load-more) | Perf | Domain: long-term accumulation | Medium | S | Low | Prevents slow initial loads at 100+ entries; smaller DOM | Breaks "see all" mental model; adds UI state | No |
+| 4 | Todos: Weekly completion progress bar | UI | Domain: due-date visibility; motivation | Medium | S | Low | Gamified "6/10 done this week" bar; motivational signal | 1 extra query; only meaningful with many todos | No |
+| 5 | Insights: Week-over-week real entity counts (goals/journal/todos) | Func | Domain: progress visualization | Medium | S | Low | Actionable "3 goals completed vs 1 last month" | More complex SQL; 2 extra queries | No |
+| 6 | Mobile: DashboardViewModel projects only needed Todo fields | Perf | Domain: perf | Low | S | Low | Reduces SQLite data transfer for todo count query | Need to verify current query fields | No |
+| 7 | API test: Auth endpoint login happy path + wrong PIN test | Stability | Domain: auth coverage gap | Medium | M | Low | Confidence in auth flow beyond what sync tests cover | BCrypt in test is slow (~100ms) | No |
+| 8 | Web: Add aria-label to icon-only buttons across pages | UI/A11y | Domain: accessibility | Low | S | Low | Screen-reader usable delete/edit buttons | Manual audit needed; tedious | No |
+| 9 | Mobile: SettingsViewModel.TestConnectionAsync — limit URL scheme to http/https | Stability | Domain: input validation at boundaries | Low | S | Low | Prevents SSRF-like calls to arbitrary schemes | Minor; users control their own URL | No |
+| 10 | Web: Insights streak color threshold tuning | UI | Domain: motivation | Low | S | Low | 3-day streak is "warm" but feels arbitrary | Purely cosmetic | No |
+
+**Selection iter 416:** Item #1 — Insights domain stats. Highest impact-to-effort. Pure additive read-only queries. Transforms insights from "click counters" into "accomplishment visualization" — the #1 differentiator in comparable tools. Negative cost (3 queries) is negligible; all use existing indexed columns.
+
+---
+
 ## 2026-05-18 — Perf: DashboardViewModel caches account GUID for QuickAddJournal (iter 415)
 
 **File:** `ChildDev.Mobile/ViewModels/DashboardViewModel.cs`

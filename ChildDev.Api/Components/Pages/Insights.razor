@@ -17,6 +17,53 @@
     My Activity Insights
 </MudText>
 
+@* Domain achievement stats *@
+<MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2" Style="text-transform:uppercase;letter-spacing:1px;">
+    Achievements
+</MudText>
+<MudGrid Class="mb-6">
+    <MudItem xs="6" sm="3">
+        <MudPaper Elevation="2" Class="pa-4 text-center stat-card-goals" Style="border-radius:12px;">
+            <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Style="font-size:2rem;" />
+            <MudText Typo="Typo.h4" Class="mt-1">@GoalsCompletedAllTime</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Goal@(GoalsCompletedAllTime == 1 ? "" : "s") Completed</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="6" sm="3">
+        <MudPaper Elevation="2" Class="pa-4 text-center stat-card-todos" Style="border-radius:12px;">
+            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Style="font-size:2rem;" />
+            <MudText Typo="Typo.h4" Class="mt-1">@TodosCompletedAllTime</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Todo@(TodosCompletedAllTime == 1 ? "" : "s") Done</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="6" sm="3">
+        <MudPaper Elevation="2" Class="pa-4 text-center stat-card-journal" Style="border-radius:12px;">
+            <MudIcon Icon="@Icons.Material.Filled.Book" Color="Color.Info" Style="font-size:2rem;" />
+            <MudText Typo="Typo.h4" Class="mt-1">@JournalTotal</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Journal Entries</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="6" sm="3">
+        <MudPaper Elevation="2" Class="pa-4 text-center" Style="border-radius:12px;border-left:4px solid #7986CB;">
+            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="Color.Primary" Style="font-size:2rem;" />
+            <MudText Typo="Typo.h4" Class="mt-1">@GoalProgressTotal</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Progress Notes</MudText>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@if (!string.IsNullOrWhiteSpace(TopMood))
+{
+    <MudPaper Elevation="1" Class="pa-3 mb-6 d-flex align-items-center" Style="border-radius:12px;gap:12px;">
+        <MudIcon Icon="@Icons.Material.Filled.Mood" Color="Color.Secondary" />
+        <MudText Typo="Typo.body2">Most journaled mood: <strong>@TopMood</strong> (@TopMoodCount @(TopMoodCount == 1 ? "time" : "times"))</MudText>
+    </MudPaper>
+}
+
+<MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2 mt-2" Style="text-transform:uppercase;letter-spacing:1px;">
+    Usage Activity
+</MudText>
+
 @{
     var weekTrend = TotalLastWeek == 0 ? 0 : (int)((TotalThisWeek - TotalLastWeek) * 100.0 / TotalLastWeek);
     var trendColor = weekTrend >= 0 ? Color.Success : Color.Error;
@@ -118,12 +165,47 @@
     private Dictionary<string, int> TopEvents = new();
     private Dictionary<string, int> PageViews = new();
 
+    // Domain entity stats
+    private int GoalsCompletedAllTime;
+    private int TodosCompletedAllTime;
+    private int JournalTotal;
+    private int GoalProgressTotal;
+    private string? TopMood;
+    private int TopMoodCount;
+
     protected override async Task OnInitializedAsync()
     {
         AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
         if (AccountGuid is null) return;
-        await LoadInsights();
+        await Task.WhenAll(LoadInsights(), LoadDomainStats());
         await Analytics.TrackAsync("page_view", AccountGuid, "insights");
+    }
+
+    private async Task LoadDomainStats()
+    {
+        GoalsCompletedAllTime = await Db.Goals
+            .CountAsync(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate != null);
+
+        TodosCompletedAllTime = await Db.Todos
+            .CountAsync(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt != null);
+
+        JournalTotal = await Db.Journals
+            .CountAsync(j => j.AccountFk == AccountGuid && j.DeletedAt == null);
+
+        GoalProgressTotal = await Db.GoalProgresses
+            .CountAsync(p => p.AccountFk == AccountGuid && p.DeletedAt == null);
+
+        var moods = await Db.Journals
+            .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null && j.Mood != null && j.Mood != "")
+            .GroupBy(j => j.Mood!)
+            .Select(g => new { Mood = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count)
+            .FirstOrDefaultAsync();
+        if (moods is not null)
+        {
+            TopMood = moods.Mood;
+            TopMoodCount = moods.Count;
+        }
     }
 
     private async Task LoadInsights()
