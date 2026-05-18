@@ -1,0 +1,19 @@
+services:
+  traefik:
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+    ports:
+      - "8081:8080"   # Traefik dashboard at http://localhost:8081
+
+  childdev-api:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.childdev.rule=Host(`${CHILDDEV_HOST:-childdev.localhost}`)"
+      - "traefik.http.routers.childdev.entrypoints=web"
+      - "traefik.http.services.childdev.loadbalancer.server.port=8080"
