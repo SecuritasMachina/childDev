@@ -38,6 +38,17 @@ public class TodoRepository(SQLiteAsyncConnection db)
             "ORDER BY (DueDate IS NULL), DueDate",
             accountFk);
 
+    public Task<int> GetPendingCountAsync(string accountFk) =>
+        db.Table<Todo>()
+          .Where(t => t.AccountFk == accountFk && t.DeletedAt == null && t.CompletedAt == null)
+          .CountAsync();
+
+    public Task<int> GetOverdueCountAsync(string accountFk, long beforeMs) =>
+        db.Table<Todo>()
+          .Where(t => t.AccountFk == accountFk && t.DeletedAt == null && t.CompletedAt == null
+                   && t.DueDate != null && t.DueDate < beforeMs)
+          .CountAsync();
+
     public Task<List<Todo>> GetAllActiveAsync(string accountFk) =>
         db.Table<Todo>()
           .Where(t => t.AccountFk == accountFk && t.DeletedAt == null)
