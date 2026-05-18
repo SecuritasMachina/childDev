@@ -34,6 +34,8 @@ public partial class DashboardViewModel(
     [ObservableProperty] private string quickJournalText = string.Empty;
     [ObservableProperty] private bool quickJournalSaved;
 
+    private string _accountGuid = string.Empty;
+
     [RelayCommand]
     private async Task LoadAsync()
     {
@@ -41,6 +43,7 @@ public partial class DashboardViewModel(
         {
             var account = await accountService.GetAccountAsync();
             if (account is null) return;
+            _accountGuid = account.Guid;
 
             LastSyncDisplay = account.LastSyncAt == 0
                 ? "Never synced"
@@ -142,13 +145,12 @@ public partial class DashboardViewModel(
     {
         var text = QuickJournalText?.Trim();
         if (string.IsNullOrWhiteSpace(text)) return;
-        var account = await accountService.GetAccountAsync();
-        if (account is null) return;
+        if (string.IsNullOrEmpty(_accountGuid)) return;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         await journalRepo.SaveAsync(new Journal
         {
             Guid = System.Guid.NewGuid().ToString(),
-            AccountFk = account.Guid,
+            AccountFk = _accountGuid,
             Notes = text,
             EnteredDate = now,
             UpdatedOn = now
@@ -157,7 +159,7 @@ public partial class DashboardViewModel(
         QuickJournalSaved = true;
         await Task.Delay(1500);
         QuickJournalSaved = false;
-        var journals = await journalRepo.GetRecentAsync(account.Guid, 3);
+        var journals = await journalRepo.GetRecentAsync(_accountGuid, 3);
         RecentJournals = new ObservableCollection<Journal>(journals);
     }
 

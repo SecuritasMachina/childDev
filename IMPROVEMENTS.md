@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-18 — Perf: DashboardViewModel caches account GUID for QuickAddJournal (iter 415)
+
+**File:** `ChildDev.Mobile/ViewModels/DashboardViewModel.cs`
+
+**Change:** Added `_accountGuid` private field set in `LoadAsync`. `QuickAddJournalAsync` now uses the cached GUID instead of calling `GetAccountAsync()` on every quick-add.
+
+**Why:** The dashboard is loaded once on app open. Every quick journal add from the dashboard was fetching account data unnecessarily.
+
+**Impact:** 243 mobile tests — all passing.
+
+---
+
 ## 2026-05-18 — Perf: TodoListViewModel caches account GUID to avoid repeated GetAccountAsync calls (iter 414)
 
 **File:** `ChildDev.Mobile/ViewModels/TodoListViewModel.cs`
