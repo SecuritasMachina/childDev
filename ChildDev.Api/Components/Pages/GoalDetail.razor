@@ -49,11 +49,22 @@
 @if (Goal.NextMeetingDate.HasValue)
 {
     var mtgDate = DateTimeOffset.FromUnixTimeMilliseconds(Goal.NextMeetingDate.Value).LocalDateTime;
-    var mtgPast = mtgDate.Date < DateTime.Today;
-    <MudText Typo="Typo.body2" Color="@(mtgPast ? Color.Warning : Color.Secondary)" Class="mb-1">
-        <MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Small" />
-        @(mtgPast ? "Missed meeting" : "Next meeting"): @mtgDate.ToString("MMM d, yyyy")
-    </MudText>
+    var mtgDays = (mtgDate.Date - DateTime.Today).Days;
+    string mtgLabel;
+    Color mtgColor;
+    if (mtgDays < 0)
+    {
+        mtgLabel = mtgDays == -1 ? "Missed yesterday" : $"Missed {-mtgDays} days ago";
+        mtgColor = Color.Warning;
+    }
+    else if (mtgDays == 0) { mtgLabel = "Meeting today!"; mtgColor = Color.Success; }
+    else if (mtgDays == 1) { mtgLabel = "Meeting tomorrow"; mtgColor = Color.Info; }
+    else { mtgLabel = $"Meeting in {mtgDays} days"; mtgColor = Color.Info; }
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-1" Spacing="1">
+        <MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Small" Color="@mtgColor" />
+        <MudText Typo="Typo.body2" Color="@mtgColor">@mtgLabel</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">(@mtgDate.ToString("MMM d"))</MudText>
+    </MudStack>
 }
 @if (Goal.ExpirationDate.HasValue && Goal.CompletionDate is null)
 {
