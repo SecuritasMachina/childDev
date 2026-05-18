@@ -102,12 +102,15 @@
         AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
         if (AccountGuid is null) return;
 
-        var account = await Db.Accounts.FirstOrDefaultAsync(a => a.Guid == AccountGuid);
-        if (account is null) { Nav.NavigateTo("/login"); return; }
+        var display = await Db.Accounts
+            .Where(a => a.Guid == AccountGuid)
+            .Select(a => new { a.NickName, a.CreatedOn })
+            .FirstOrDefaultAsync();
+        if (display is null) { Nav.NavigateTo("/login"); return; }
 
-        CurrentNickName = account.NickName;
-        NewNickName = account.NickName;
-        CreatedOnDisplay = DateTimeOffset.FromUnixTimeMilliseconds(account.CreatedOn).LocalDateTime.ToString("MMMM d, yyyy");
+        CurrentNickName = display.NickName;
+        NewNickName = display.NickName;
+        CreatedOnDisplay = DateTimeOffset.FromUnixTimeMilliseconds(display.CreatedOn).LocalDateTime.ToString("MMMM d, yyyy");
         await Analytics.TrackAsync("page_view", AccountGuid, "settings");
     }
 
