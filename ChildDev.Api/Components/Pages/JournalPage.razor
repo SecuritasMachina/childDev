@@ -43,7 +43,7 @@
 @* Tag cloud — appears only when entries have tags *@
 @if (AllTags.Count > 0)
 {
-    <MudStack Row="true" Wrap="Wrap.Wrap" AlignItems="AlignItems.Center" Class="mb-4" Spacing="1">
+    <MudStack Row="true" Wrap="Wrap.Wrap" AlignItems="AlignItems.Center" Class="mb-2" Spacing="1">
         <MudText Typo="Typo.caption" Color="Color.Secondary" Style="margin-right:4px;">Filter by tag:</MudText>
         @foreach (var (tag, count) in AllTags)
         {
@@ -61,6 +61,33 @@
         {
             <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Text"
                      OnClick="() => OnTagFilterChanged(null)" Style="cursor:pointer;">
+                ✕ Clear
+            </MudChip>
+        }
+    </MudStack>
+}
+
+@* Mood cloud — appears only when entries have moods *@
+@if (AllMoods.Count > 0)
+{
+    <MudStack Row="true" Wrap="Wrap.Wrap" AlignItems="AlignItems.Center" Class="mb-4" Spacing="1">
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="margin-right:4px;">Filter by mood:</MudText>
+        @foreach (var (mood, count) in AllMoods)
+        {
+            var isSelected = MoodFilter == mood;
+            <MudChip T="string"
+                     Variant="@(isSelected ? Variant.Filled : Variant.Outlined)"
+                     Color="@(isSelected ? Color.Tertiary : Color.Default)"
+                     Size="Size.Small"
+                     OnClick="() => OnMoodFilterChanged(mood)"
+                     Style="cursor:pointer;">
+                @mood <span style="opacity:.6;margin-left:4px;">@count</span>
+            </MudChip>
+        }
+        @if (MoodFilter is not null)
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Text"
+                     OnClick="() => OnMoodFilterChanged(null)" Style="cursor:pointer;">
                 ✕ Clear
             </MudChip>
         }
@@ -224,7 +251,9 @@ else
     private string FilterText = string.Empty;
     private string DateFilter = "All";
     private string? TagFilter;
+    private string? MoodFilter;
     private List<(string Tag, int Count)> AllTags = [];
+    private List<(string Mood, int Count)> AllMoods = [];
     private bool ShowAddDialog;
     private string NewNotes = string.Empty;
     private string NewActivity = string.Empty;
@@ -255,6 +284,7 @@ else
             .OrderByDescending(j => j.EnteredDate)
             .ToListAsync();
         BuildTagCloud();
+        BuildMoodCloud();
         ApplyFilter();
     }
 
@@ -279,6 +309,27 @@ else
         ApplyFilter();
         if (tag is not null && AccountGuid is not null)
             _ = Analytics.TrackAsync("journal_tag_filter", AccountGuid, "journal", tag);
+    }
+
+    private void BuildMoodCloud()
+    {
+        AllMoods = AllEntries
+            .Where(j => !string.IsNullOrWhiteSpace(j.Mood))
+            .GroupBy(j => j.Mood!, StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(g => g.Count())
+            .ThenBy(g => g.Key)
+            .Select(g => (g.Key, g.Count()))
+            .ToList();
+        if (MoodFilter is not null && !AllMoods.Any(m => m.Mood.Equals(MoodFilter, StringComparison.OrdinalIgnoreCase)))
+            MoodFilter = null;
+    }
+
+    private void OnMoodFilterChanged(string? mood)
+    {
+        MoodFilter = MoodFilter == mood ? null : mood;
+        ApplyFilter();
+        if (mood is not null && AccountGuid is not null)
+            _ = Analytics.TrackAsync("journal_mood_filter", AccountGuid, "journal", mood);
     }
 
     private void OnFilterChanged(string value)
@@ -324,6 +375,9 @@ else
                 j.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                     .Any(t => t.Equals(TagFilter, StringComparison.OrdinalIgnoreCase)));
         }
+
+        if (MoodFilter is not null)
+            filtered = filtered.Where(j => j.Mood != null && j.Mood.Equals(MoodFilter, StringComparison.OrdinalIgnoreCase));
 
         _filteredEntries = filtered.ToList();
         _displayCount = PageSize;
