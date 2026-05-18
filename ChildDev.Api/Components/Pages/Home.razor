@@ -333,6 +333,29 @@
     </DialogActions>
 </MudDialog>
 
+@* Quick Add Todo *@
+<MudPaper Elevation="1" Class="pa-4 mt-4">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+        <MudText Typo="Typo.subtitle2">
+            <MudIcon Icon="@Icons.Material.Filled.CheckBox" Class="mr-1" Size="Size.Small" />
+            Quick Add Todo
+        </MudText>
+        <MudSpacer />
+        <MudButton Href="/todos" Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small">View All</MudButton>
+    </MudStack>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <MudTextField @bind-Value="QuickTodoText"
+                      Label="What needs to be done?"
+                      Variant="Variant.Outlined" Margin="Margin.Dense"
+                      Style="flex:1" Immediate="true"
+                      @onkeydown="@(async (e) => { if (e.Key == "Enter") await SaveQuickTodo(); })" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   Disabled="@string.IsNullOrWhiteSpace(QuickTodoText)"
+                   OnClick="SaveQuickTodo">Add</MudButton>
+    </MudStack>
+</MudPaper>
+
 @* Recent journal entries + quick-add *@
 <MudPaper Elevation="1" Class="pa-4 mt-6">
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
@@ -464,6 +487,7 @@
     private int OverdueTodoCount;
     private int JournalThisWeek;
     private string QuickJournalText = string.Empty;
+    private string QuickTodoText = string.Empty;
     private List<Journal> RecentJournals = [];
     private bool ShowCelebration;
     private string? CelebratedGoalText;
@@ -644,6 +668,25 @@
         QuickNoteText = string.Empty;
         Snackbar.Add("Progress note saved!", Severity.Success);
         await LoadGoals();
+    }
+
+    private async Task SaveQuickTodo()
+    {
+        var title = QuickTodoText.Trim();
+        if (string.IsNullOrWhiteSpace(title)) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        Db.Todos.Add(new Todo
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = AccountGuid!,
+            Title = title,
+            UpdatedOn = now
+        });
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("todo_quickadd", AccountGuid, "home");
+        QuickTodoText = string.Empty;
+        PendingTodoCount++;
+        Snackbar.Add("Todo added!", Severity.Success);
     }
 
     private async Task SaveQuickJournal()
