@@ -70,7 +70,7 @@
 @* Mood cloud — appears only when entries have moods *@
 @if (AllMoods.Count > 0)
 {
-    <MudStack Row="true" Wrap="Wrap.Wrap" AlignItems="AlignItems.Center" Class="mb-4" Spacing="1">
+    <MudStack Row="true" Wrap="Wrap.Wrap" AlignItems="AlignItems.Center" Class="mb-2" Spacing="1">
         <MudText Typo="Typo.caption" Color="Color.Secondary" Style="margin-right:4px;">Filter by mood:</MudText>
         @foreach (var (mood, count) in AllMoods)
         {
@@ -88,6 +88,33 @@
         {
             <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Text"
                      OnClick="() => OnMoodFilterChanged(null)" Style="cursor:pointer;">
+                ✕ Clear
+            </MudChip>
+        }
+    </MudStack>
+}
+
+@* Activity cloud — appears only when entries have activities *@
+@if (AllActivities.Count > 0)
+{
+    <MudStack Row="true" Wrap="Wrap.Wrap" AlignItems="AlignItems.Center" Class="mb-4" Spacing="1">
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="margin-right:4px;">Filter by activity:</MudText>
+        @foreach (var (activity, count) in AllActivities)
+        {
+            var isSelected = ActivityFilter == activity;
+            <MudChip T="string"
+                     Variant="@(isSelected ? Variant.Filled : Variant.Outlined)"
+                     Color="@(isSelected ? Color.Success : Color.Default)"
+                     Size="Size.Small"
+                     OnClick="() => OnActivityFilterChanged(activity)"
+                     Style="cursor:pointer;">
+                @activity <span style="opacity:.6;margin-left:4px;">@count</span>
+            </MudChip>
+        }
+        @if (ActivityFilter is not null)
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Text"
+                     OnClick="() => OnActivityFilterChanged(null)" Style="cursor:pointer;">
                 ✕ Clear
             </MudChip>
         }
@@ -252,8 +279,10 @@ else
     private string DateFilter = "All";
     private string? TagFilter;
     private string? MoodFilter;
+    private string? ActivityFilter;
     private List<(string Tag, int Count)> AllTags = [];
     private List<(string Mood, int Count)> AllMoods = [];
+    private List<(string Activity, int Count)> AllActivities = [];
     private bool ShowAddDialog;
     private string NewNotes = string.Empty;
     private string NewActivity = string.Empty;
@@ -285,6 +314,7 @@ else
             .ToListAsync();
         BuildTagCloud();
         BuildMoodCloud();
+        BuildActivityCloud();
         ApplyFilter();
     }
 
@@ -330,6 +360,27 @@ else
         ApplyFilter();
         if (mood is not null && AccountGuid is not null)
             _ = Analytics.TrackAsync("journal_mood_filter", AccountGuid, "journal", mood);
+    }
+
+    private void BuildActivityCloud()
+    {
+        AllActivities = AllEntries
+            .Where(j => !string.IsNullOrWhiteSpace(j.Activity))
+            .GroupBy(j => j.Activity!, StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(g => g.Count())
+            .ThenBy(g => g.Key)
+            .Select(g => (g.Key, g.Count()))
+            .ToList();
+        if (ActivityFilter is not null && !AllActivities.Any(a => a.Activity.Equals(ActivityFilter, StringComparison.OrdinalIgnoreCase)))
+            ActivityFilter = null;
+    }
+
+    private void OnActivityFilterChanged(string? activity)
+    {
+        ActivityFilter = ActivityFilter == activity ? null : activity;
+        ApplyFilter();
+        if (activity is not null && AccountGuid is not null)
+            _ = Analytics.TrackAsync("journal_activity_filter", AccountGuid, "journal", activity);
     }
 
     private void OnFilterChanged(string value)
@@ -378,6 +429,9 @@ else
 
         if (MoodFilter is not null)
             filtered = filtered.Where(j => j.Mood != null && j.Mood.Equals(MoodFilter, StringComparison.OrdinalIgnoreCase));
+
+        if (ActivityFilter is not null)
+            filtered = filtered.Where(j => j.Activity != null && j.Activity.Equals(ActivityFilter, StringComparison.OrdinalIgnoreCase));
 
         _filteredEntries = filtered.ToList();
         _displayCount = PageSize;
