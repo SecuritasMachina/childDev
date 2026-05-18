@@ -88,6 +88,7 @@ app.Use(async (ctx, next) =>
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseAntiforgery();
 
 app.MapGet("/api/health", async (AppDbContext db) =>
 {
