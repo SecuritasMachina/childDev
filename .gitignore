@@ -24,10 +24,6 @@ appsettings.*.json
 !appsettings.Development.json
 *.env
 !*.env.example
-.env
-.env.dev
-.env.staging
-.env.prod
 
 # OS
 .DS_Store
