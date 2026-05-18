@@ -25,6 +25,23 @@
     </MudAlert>
 }
 
+@if (WeekCompletedCount > 0)
+{
+    var total = Math.Max(WeekDueCount, WeekCompletedCount);
+    var pct = total == 0 ? 100 : (int)(WeekCompletedCount * 100.0 / total);
+    var weekLabel = WeekCompletedCount == 1
+        ? "1 todo completed this week"
+        : $"{WeekCompletedCount} todos completed this week";
+    var emoji = pct >= 100 ? "🏆" : pct >= 75 ? "🌟" : pct >= 50 ? "💪" : "👍";
+    <MudPaper Elevation="1" Class="pa-3 mb-4" Style="border-radius:12px;border-left:4px solid #43A047;">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-1">
+            <MudText Typo="Typo.body2" Style="flex:1">@emoji @weekLabel</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@WeekCompletedCount / @total</MudText>
+        </MudStack>
+        <MudProgressLinear Value="@pct" Color="Color.Success" Rounded="true" Size="Size.Medium" />
+    </MudPaper>
+}
+
 @if (!AllPendingTodos.Any() && !CompletedTodos.Any())
 {
     <MudAlert Severity="Severity.Info" Class="mb-4" Icon="@Icons.Material.Filled.CheckCircle">
@@ -192,6 +209,8 @@ else
     private List<Todo> AllPendingTodos = [];
     private List<Todo> CompletedTodos = [];
     private int OverdueCount;
+    private int WeekCompletedCount;
+    private int WeekDueCount;
     private long NowMs;
     private long TodayStartMs;
     private string FilterText = string.Empty;
@@ -227,9 +246,13 @@ else
             .ThenByDescending(t => t.UpdatedOn)
             .ToListAsync();
 
+        var weekStartMs = TodayStartMs - 7L * 86_400_000L;
         AllPendingTodos = todos.Where(t => t.CompletedAt == null).ToList();
         CompletedTodos = todos.Where(t => t.CompletedAt != null).ToList();
         OverdueCount = AllPendingTodos.Count(t => t.DueDate.HasValue && t.DueDate.Value < TodayStartMs);
+        WeekCompletedCount = CompletedTodos.Count(t => t.CompletedAt >= weekStartMs);
+        WeekDueCount = todos.Count(t =>
+            t.DueDate.HasValue && t.DueDate.Value >= weekStartMs && t.DueDate.Value < TodayStartMs + 86_400_000L);
         ApplyFilter();
     }
 
