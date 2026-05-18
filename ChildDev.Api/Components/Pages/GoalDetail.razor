@@ -22,15 +22,15 @@
 }
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
-    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Href="/" />
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Href="/" aria-label="Back to goals" />
     <MudText Typo="Typo.h5" Style="flex:1">@Goal.GoalText</MudText>
     @if (Goal.CompletionDate is null)
     {
         <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" Size="Size.Small"
-                       OnClick="OpenEditDialog" />
+                       OnClick="OpenEditDialog" aria-label="Edit goal" />
     }
     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
-                   OnClick="() => _confirmDeleteGoal = true" />
+                   OnClick="() => _confirmDeleteGoal = true" aria-label="Delete goal" />
 </MudStack>
 
 @if (Goal.CompletionDate.HasValue)
@@ -131,9 +131,9 @@ else
                                 <MudText Typo="Typo.caption" Color="Color.Secondary">@enteredDate.ToString("MMM d, yyyy h:mm tt")</MudText>
                             </MudStack>
                             <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
-                                           Color="Color.Default" OnClick="() => OpenEditProgress(p)" />
+                                           Color="Color.Default" OnClick="() => OpenEditProgress(p)" aria-label="Edit progress note" />
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
-                                           Color="Color.Error" OnClick="() => _confirmDeleteProgressGuid = p.Guid" />
+                                           Color="Color.Error" OnClick="() => _confirmDeleteProgressGuid = p.Guid" aria-label="Delete progress note" />
                         </MudStack>
                     </MudPaper>
                 </ItemContent>
