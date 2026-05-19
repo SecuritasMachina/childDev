@@ -134,11 +134,15 @@
             {
                 <MudText Typo="Typo.caption" Color="Color.Warning">🔥 @GoalStreaks.Count on a streak</MudText>
             }
+            @if (TotalProgressNotes > 0)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Primary">📝 @TotalProgressNotes total progress note@(TotalProgressNotes == 1 ? "" : "s")</MudText>
+            }
             @if (AllActiveGoals.Count >= 2)
             {
                 var totalNotesAll = AllActiveGoals.Sum(g => ProgressCounts.GetValueOrDefault(g.Guid));
                 var avgNotesPerGoal = (double)totalNotesAll / AllActiveGoals.Count;
-                <MudText Typo="Typo.caption" Color="Color.Secondary">📝 avg @avgNotesPerGoal.ToString("F1") notes/goal</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">avg @avgNotesPerGoal.ToString("F1") notes/goal</MudText>
             }
         </MudPaper>
     </MudItem>
@@ -931,6 +935,7 @@
     private int NotesLastMonth;
     private int YtdProgressNotes;
     private int YtdGoalsCompleted;
+    private int TotalProgressNotes;
     private bool ShowAddDialog;
     private string NewGoalText = string.Empty;
     private string? NewMeasurableOutcome;
@@ -1060,6 +1065,7 @@
         var yearStartMs = new DateTimeOffset(new DateTime(localNow.Year, 1, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
         YtdProgressNotes = allTimestamps.Count(p => p.UpdatedOn >= yearStartMs);
         YtdGoalsCompleted = CompletedGoals.Count(g => g.CompletionDate.HasValue && g.CompletionDate.Value >= yearStartMs);
+        TotalProgressNotes = await Db.GoalProgresses.CountAsync(p => p.AccountFk == AccountGuid && p.DeletedAt == null);
 
         // Sort: goals with no progress first (needs attention), then by oldest-update-first
         AllActiveGoals = AllActiveGoals
