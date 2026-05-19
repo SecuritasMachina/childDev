@@ -164,6 +164,11 @@
                 var totalNotesAll = AllActiveGoals.Sum(g => ProgressCounts.GetValueOrDefault(g.Guid));
                 var avgNotesPerGoal = (double)totalNotesAll / AllActiveGoals.Count;
                 <MudText Typo="Typo.caption" Color="Color.Secondary">avg @avgNotesPerGoal.ToString("F1") notes/goal</MudText>
+                var deepestCount = ProgressCounts.Count > 0 ? ProgressCounts.Values.Max() : 0;
+                if (deepestCount >= 10)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Info">⭐ Deepest goal: @deepestCount notes!</MudText>
+                }
             }
             @{
                 var stale14Ms = DateTimeOffset.UtcNow.AddDays(-14).ToUnixTimeMilliseconds();
