@@ -219,7 +219,7 @@
         <MudText Typo="Typo.caption" Color="Color.Secondary">
             @curLvlEmoji @curLvlName — @notesToNext more note@(notesToNext == 1 ? "" : "s") to reach @nextLvlEmoji @nextLvlName
         </MudText>
-        <MudProgressLinear Value="@lvlPct" Color="Color.Primary" Rounded="true" Size="Size.Small" />
+        <MudProgressLinear Value="@_animLvlPct" Color="Color.Primary" Rounded="true" Size="Size.Small" Class="level-anim-bar" />
     }
 </MudStack>
 
@@ -542,6 +542,25 @@ else
     private bool ShowMilestone;
     private string MilestoneEmoji = "⭐";
     private string MilestoneMessage = string.Empty;
+    private int _animLvlPct = 0;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && ProgressEntries.Count > 0)
+        {
+            var count = ProgressEntries.Count;
+            var (lvlStart, lvlEnd) = count switch
+            {
+                >= 1 and < 5  => (1,  5),
+                >= 5 and < 10 => (5,  10),
+                >= 10 and < 25=> (10, 25),
+                >= 25 and < 50=> (25, 50),
+                _             => (50, 50)
+            };
+            _animLvlPct = count >= 50 ? 100 : (int)((double)(count - lvlStart) / (lvlEnd - lvlStart) * 100);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
 
     private List<string> NextStepSuggestions
     {
