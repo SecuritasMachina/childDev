@@ -293,6 +293,17 @@
         }
         bestGoalStreak = bestRun;
     }
+    // Longest gap between consecutive progress notes
+    int longestGapDays = 0;
+    if (ProgressEntries.Count >= 2)
+    {
+        var sortedMs = ProgressEntries.Select(p => p.UpdatedOn).OrderBy(ms => ms).ToList();
+        for (int gi = 1; gi < sortedMs.Count; gi++)
+        {
+            var gapDays = (int)((sortedMs[gi] - sortedMs[gi - 1]) / 86_400_000L);
+            if (gapDays > longestGapDays) longestGapDays = gapDays;
+        }
+    }
 }
 <MudStack Spacing="0" Class="mb-3">
     @if (isMaxLevel)
@@ -322,9 +333,16 @@
 }
 else if (bestGoalStreak >= 2 && goalStreak < bestGoalStreak)
 {
-    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">
         🏆 Best streak ever: <strong>@bestGoalStreak days</strong> — can you beat it?
     </MudText>
+}
+@if (longestGapDays >= 7 && ProgressEntries.Count >= 3)
+{
+    var gapMsg = longestGapDays >= 30
+        ? $"🌱 You once had a {longestGapDays}-day gap — but you came back! Persistence is everything."
+        : $"📌 Longest gap between notes: {longestGapDays} days — every return to a goal shows real commitment!";
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">@gapMsg</MudText>
 }
 
 @{
