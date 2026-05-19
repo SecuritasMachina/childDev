@@ -105,6 +105,19 @@
                 <MudPaper Elevation="0" Class="pa-2 text-center" Style="border-radius:8px;background:rgba(63,81,181,.08);">
                     <MudText Typo="Typo.h5" Color="Color.Primary">@ProgressEntries.Count</MudText>
                     <MudText Typo="Typo.caption" Color="Color.Secondary">Progress note@(ProgressEntries.Count == 1 ? "" : "s")</MudText>
+                    @{
+                        var (effortEmoji, effortLabel) = ProgressEntries.Count >= 200 ? ("🌟", "Legend")
+                            : ProgressEntries.Count >= 100 ? ("🏆", "Master")
+                            : ProgressEntries.Count >= 60  ? ("💎", "Expert")
+                            : ProgressEntries.Count >= 30  ? ("⭐", "Skilled")
+                            : ProgressEntries.Count >= 15  ? ("🚀", "Apprentice")
+                            : ProgressEntries.Count >= 5   ? ("🌱", "Beginner")
+                            : ("", "");
+                    }
+                    @if (!string.IsNullOrEmpty(effortLabel))
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Warning">@effortEmoji @effortLabel</MudText>
+                    }
                 </MudPaper>
             </MudItem>
             @if (totalWords522 >= 10)

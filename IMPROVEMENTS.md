@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-19 — Invocation 8 Iter 603 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Note quality growth": compare avg word count of last 5 vs first 5 progress notes (>= 10 notes); show "Your notes are getting richer!" | UX/Encourage | Domain: note depth evolution | Medium | S | Low | NextStepItems.Split(' ').Length; two groups of 5; compare avg; need >= 10 notes | Meaningful quality signal; long-deferred | No |
+| 2 | Web: Home — "Overdue goal expiration notice": beyond 7-day window, if a goal is past ExpirationDate, show a gentle "goal expired — reflect on it!" | UX | Domain: expired goal reflection | Medium | XS | Low | ExpirationDate < nowMs && CompletionDate is null; show for first expired goal | Closes the loop on expired goals | No |
+| 3 | Web: GoalDetail — "Milestone countdown extended": when within 10 of {25, 50, 100} milestone, show "X more notes to [milestone]!" | UX/Encourage | Domain: broader proximity motivation | High | XS | Low | Widen nmMilestone window; already have nmHit logic | Simple window widening; high visibility | No |
+| 4 | Web: Journal — "Most active time of day for journaling": group AllEntries.EnteredDate by hour; find mode when >= 5 entries; show "You journal most around Xpm!" | UX | Domain: scheduling self-awareness | Low | XS | Low | AllEntries.EnteredDate ms → hour; group; mode; show | Mirrors BestProgressDayOfWeek pattern for journals | No |
+| 5 | Web: GoalDetail — "Upcoming anniversary heads up": if anniversary milestone is 5-7 days away, show "Your [X] days milestone is almost here — 5 more notes before it arrives?" | UX/Encourage | Domain: upcoming milestone hype | Medium | XS | Low | daysSince + 5..7 crosses ageMilestone value; show teaser | Forward-looking excitement; easy calculation | No |
+| 6 | Web: Home — "Total goals age across all goals" combined stat: sum of all active goal ages in weeks; "You've put X combined weeks into your goals!" | UX/Encourage | Domain: total effort appreciation | Low | XS | Low | AllActiveGoals sum of (nowMs - EnteredDate) / week; show when >= 4 weeks total | Fun aggregate stat | No |
+| 7 | Web: Insights — "Goal completion rate": completed / total goals ever * 100%; "You've completed X% of all goals you set!" when completedAllTime >= 3 | UX/Encourage | Domain: goal completion ratio | Medium | XS | Low | GoalsCompletedAllTime / GoalsTotalAllTime; show as percentage | Completion rate awareness | No |
+| 8 | Web: GoalDetail — "Cumulative effort label": categorize progress count into beginner/apprentice/skilled/expert/master/legend labels; show as a fun badge | UX/Encourage | Domain: gamified effort recognition | High | XS | Low | ProgressEntries.Count >= thresholds: 5=Beginner, 15=Apprentice, 30=Skilled, 60=Expert, 100=Master, 200=Legend | Fun gamification; zero extra queries | No |
+| 9 | Web: Home — "Weekly engagement score": combination of notes this week + active goals + goals progressed; simple 0-100 score shown as a caption | UX | Domain: weekly effort summary | Low | M | Low | Complex scoring; unclear meaning to kids | Too abstract | No |
+| 10 | Web: GoalDetail — "Time since last breakthrough": if latest note was >= 200 words, show "Your last detailed note was X days ago — what's happened since?" | UX/Encourage | Domain: detailed note recency | Low | M | Med | Word count per note; define "breakthrough"; complex | Too complex | No |
+
+**Selection iter 603:** Item #8 — "Cumulative effort label" badge on GoalDetail.
+- Map `ProgressEntries.Count` to tiers: 5=Beginner, 15=Apprentice, 30=Skilled, 60=Expert, 100=Master, 200=Legend
+- Show as a fun badge near the note count, e.g. "🚀 Expert Level (60+ notes)"
+- Zero extra queries; purely from already-loaded data
+
+---
+
 ## 2026-05-19 — Invocation 8 Iter 600 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
