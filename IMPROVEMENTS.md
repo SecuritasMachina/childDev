@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-19 — Invocation 8 Iter 582 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "100-day club" banner: at day 98-107 with 8+ notes, celebrate the 100-day milestone | UX/Encourage | Domain: long-term persistence celebration | High | XS | Low | daysSince in [98,107]; ProgressEntries.Count >= 8; show "You're in the 100-day club!" | Strong long-term milestone; rare enough to feel special | No |
+| 2 | Web: Home — "Total goals ever" fun fact: AllActiveGoals.Count + CompletedGoals.Count; show "📚 X goals set on your journey" when >= 10 | UX/Encourage | Domain: cumulative goal-setting pride | Low | XS | Low | Quick count add; show as extra caption in stat card | Cumulative scope encouragement; minimal effort | No |
+| 3 | Web: GoalDetail — "Note quality growth": compare avg word count of first 5 vs most recent 5 progress notes; show "Your notes are getting richer!" when recent avg > first avg | UX/Encourage | Domain: effort depth feedback | Medium | S | Low | NextStepItems split(); word count comparison; >= 10 notes required | Meaningful quality signal; needs 10+ entries | No |
+| 4 | Web: Insights — "Most active hour of day": group allProgressEver by hour of day; show "You're most active around Xpm" when mode >= 5 entries | UX | Domain: scheduling self-awareness | Low | XS | Low | ms → Hour; group count; find mode; show "🕒 You're most active around Xpm!" | Interesting scheduling insight; needs time zone awareness | No |
+| 5 | Web: GoalDetail — "Rotating inspirational affirmation": pick one of 12 short sentences by GUID hash + day shift; show subtly at page bottom | UX/Encourage | Domain: motivational micro-content | Medium | XS | Low | Static string array; (GUID hash + dayOfYear) % 12; shown as MudText caption | Warm and personal-feeling; zero data needed | No |
+| 6 | Web: Home — "Goal ages at a glance": show oldest and newest active goal ages in stat card when 3+ goals | UX | Domain: portfolio age diversity | Low | XS | Low | AllActiveGoals min/max EnteredDate; compute days; "oldest: Xd, newest: Yd" | Minor insight; quick computation | No |
+| 7 | Web: Journal — "Longest gap between entries": find max consecutive days without journaling in AllEntries; show "You once went X days without journaling — keep that streak short!" | UX/Encourage | Domain: gap awareness + motivation | Low | XS | Low | AllEntries dates sorted; max gap between consecutive dates; show when >= 14 days | Gentle awareness without shaming | No |
+| 8 | Web: GoalDetail — "Consistency percentage": what % of calendar weeks (since goal start) had at least 1 note; show "You've written in X% of weeks on this goal" | UX/Encourage | Domain: consistency visualization | Medium | XS | Low | ProgressEntries ms → week number; distinct weeks / total elapsed weeks; show as % | Meaningful consistency metric; purely from loaded data | No |
+| 9 | Web: Home — "Longest goal ever" fun fact: most notes on a single active goal; show "⭐ Your deepest goal has X notes — keep going!" when >= 10 | UX/Encourage | Domain: depth appreciation | Medium | XS | Low | ProgressCounts.Values.Max(); show when max >= 10 | Celebrates depth on a single goal | No |
+| 10 | Web: Insights — "Todos completed this year" celebratory stat: filter completedTodos by year start; show "🎯 X todos completed this year!" when >= 5 | UX/Encourage | Domain: annual todo achievement | Medium | XS | Low | Need CompletedAt on todos; may need query; year filter | Annual achievement stat; needs to verify todos have CompletedAt | No |
+
+**Selection iter 582:** Item #8 — "Consistency percentage" on GoalDetail.
+- Group `ProgressEntries` by ISO week number; count distinct weeks with at least 1 note
+- Divide by total elapsed weeks since goal start to get a percentage
+- Show "You've logged notes in X% of weeks on this goal!" when >= 10 days and >= 3 distinct weeks
+- Zero extra queries; purely from already-loaded `ProgressEntries` and `Goal.EnteredDate`
+
+---
+
 ## 2026-05-19 — Invocation 7 Iter 579 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |

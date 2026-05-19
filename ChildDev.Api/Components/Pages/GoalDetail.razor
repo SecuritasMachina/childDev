@@ -435,6 +435,19 @@
             🏅 Best day on this goal: <strong>@pbdGroup.Count() notes</strong> on @pbdGroup.Key.ToString("MMM d, yyyy") — can you top it?
         </MudText>
     }
+    var cpTotalWeeks = (int)Math.Max(Math.Ceiling(daysSince / 7.0), 1);
+    var cpActiveWeeks = ProgressEntries
+        .Select(p => System.Globalization.ISOWeek.GetWeekOfYear(DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime) * 10000
+                   + DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).Year)
+        .Distinct().Count();
+    if (cpTotalWeeks >= 4 && cpActiveWeeks >= 3)
+    {
+        var cpPct = (int)Math.Round(cpActiveWeeks * 100.0 / cpTotalWeeks);
+        var cpMsg = cpPct >= 80 ? $"🔥 <strong>{cpPct}% weekly consistency</strong> — you show up week after week. That's what champions do!"
+                  : cpPct >= 60 ? $"⭐ <strong>{cpPct}% weekly consistency</strong> — notes in {cpActiveWeeks} of {cpTotalWeeks} weeks. Solid habit!"
+                  :               $"📅 Notes in {cpActiveWeeks} of {cpTotalWeeks} weeks ({cpPct}% consistency) — every week you log counts!";
+        <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.CalendarMonth" Dense="true" Class="mb-3">@((MarkupString)cpMsg)</MudAlert>
+    }
 }
 @{
     // Rule-based goal insight narrative
