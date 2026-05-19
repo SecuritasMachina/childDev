@@ -240,6 +240,7 @@
         var (gColor, gIcon, gLabel) = Trend(ThisMonthGoals, LastMonthGoals);
         var (tColor, tIcon, tLabel) = Trend(ThisMonthTodos, LastMonthTodos);
         var (jColor, jIcon, jLabel) = Trend(ThisMonthJournal, LastMonthJournal);
+        var (pColor, pIcon, pLabel) = Trend(ThisMonthProgress, LastMonthProgress);
     }
     <MudStack Spacing="0">
         <MudStack Row="true" AlignItems="AlignItems.Center" Class="pa-3" Style="border-bottom:1px solid rgba(0,0,0,.06);">
@@ -248,6 +249,13 @@
             <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mr-4">@LastMonthGoals last mo.</MudText>
             <MudText Typo="Typo.body2" Style="font-weight:600;min-width:28px;text-align:right">@ThisMonthGoals</MudText>
             <MudText Typo="Typo.caption" Color="@gColor" Style="min-width:52px;text-align:right">@gIcon @gLabel</MudText>
+        </MudStack>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="pa-3" Style="border-bottom:1px solid rgba(0,0,0,.06);">
+            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="Color.Primary" Size="Size.Small" Class="mr-2" />
+            <MudText Typo="Typo.body2" Style="flex:1">Progress notes</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mr-4">@LastMonthProgress last mo.</MudText>
+            <MudText Typo="Typo.body2" Style="font-weight:600;min-width:28px;text-align:right">@ThisMonthProgress</MudText>
+            <MudText Typo="Typo.caption" Color="@pColor" Style="min-width:52px;text-align:right">@pIcon @pLabel</MudText>
         </MudStack>
         <MudStack Row="true" AlignItems="AlignItems.Center" Class="pa-3" Style="border-bottom:1px solid rgba(0,0,0,.06);">
             <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Class="mr-2" />
@@ -427,6 +435,8 @@
     private int LastMonthTodos;
     private int ThisMonthJournal;
     private int LastMonthJournal;
+    private int ThisMonthProgress;
+    private int LastMonthProgress;
 
     protected override async Task OnInitializedAsync()
     {
@@ -506,6 +516,12 @@
         LastMonthJournal = await Db.Journals
             .CountAsync(j => j.AccountFk == AccountGuid && j.DeletedAt == null
                           && j.EnteredDate >= lastMonthStart && j.EnteredDate < thisMonthStart);
+
+        ThisMonthProgress = await Db.GoalProgresses
+            .CountAsync(p => p.AccountFk == AccountGuid && p.DeletedAt == null && p.UpdatedOn >= thisMonthStart);
+        LastMonthProgress = await Db.GoalProgresses
+            .CountAsync(p => p.AccountFk == AccountGuid && p.DeletedAt == null
+                          && p.UpdatedOn >= lastMonthStart && p.UpdatedOn < thisMonthStart);
 
         // Progress heatmap: notes per day for last 35 days
         var day35Ms = DateTimeOffset.UtcNow.AddDays(-35).ToUnixTimeMilliseconds();
