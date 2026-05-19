@@ -258,6 +258,20 @@
         goalStreak++;
         streakCheckDay = streakCheckDay.AddDays(-1);
     }
+    var bestGoalStreak = 0;
+    if (goalActiveDates.Count > 0)
+    {
+        var sortedDates = goalActiveDates.OrderBy(d => d).ToList();
+        var bestRun = 1;
+        var curRun = 1;
+        for (int di = 1; di < sortedDates.Count; di++)
+        {
+            if (sortedDates[di] == sortedDates[di - 1].AddDays(1)) curRun++;
+            else curRun = 1;
+            if (curRun > bestRun) bestRun = curRun;
+        }
+        bestGoalStreak = bestRun;
+    }
 }
 <MudStack Spacing="0" Class="mb-3">
     @if (isMaxLevel)
@@ -275,8 +289,20 @@
 </MudStack>
 @if (goalStreak >= 2)
 {
-    <MudText Typo="Typo.caption" Color="@(goalStreak >= 7 ? Color.Error : goalStreak >= 4 ? Color.Warning : Color.Success)" Class="mb-2">
+    <MudText Typo="Typo.caption" Color="@(goalStreak >= 7 ? Color.Error : goalStreak >= 4 ? Color.Warning : Color.Success)" Class="mb-1">
         🔥 @goalStreak-day streak on this goal — incredible consistency! Keep it going!
+    </MudText>
+}
+@if (bestGoalStreak >= 2 && goalStreak == bestGoalStreak)
+{
+    <MudText Typo="Typo.caption" Color="Color.Warning" Class="mb-2">
+        🏆 Personal best! This is your longest streak ever on this goal!
+    </MudText>
+}
+else if (bestGoalStreak >= 2 && goalStreak < bestGoalStreak)
+{
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">
+        🏆 Best streak ever: <strong>@bestGoalStreak days</strong> — can you beat it?
     </MudText>
 }
 
