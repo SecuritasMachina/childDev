@@ -208,6 +208,21 @@
         <MudText Typo="Typo.caption" Color="Color.Secondary">(@mtgDate.ToString("MMM d"))</MudText>
     </MudStack>
 }
+@{
+    var psmNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    var psmLastMeeting = ProgressEntries.FirstOrDefault(p => p.NextMeetingDate.HasValue && p.NextMeetingDate.Value < psmNowMs);
+}
+@if (psmLastMeeting is not null && Goal.CompletionDate is null)
+{
+    var psmLastMs = psmLastMeeting.NextMeetingDate!.Value;
+    var psmCount = ProgressEntries.Count(p => p.UpdatedOn > psmLastMs);
+    if (psmCount >= 2)
+    {
+        <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.CheckCircle" Dense="true" Class="mb-3">
+            ✅ <strong>@psmCount notes since your last meeting!</strong> Great work between sessions — you're showing up and making progress!
+        </MudAlert>
+    }
+}
 @if (Goal.ExpirationDate.HasValue && Goal.CompletionDate is null)
 {
     var expDate = DateTimeOffset.FromUnixTimeMilliseconds(Goal.ExpirationDate.Value).LocalDateTime;
