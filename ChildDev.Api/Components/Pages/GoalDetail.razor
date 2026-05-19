@@ -650,6 +650,24 @@
             📆 Best month on this goal: <strong>@bmGroup.Count() notes</strong> in @bmLabel — can you beat it?
         </MudText>
     }
+    if (bmDistinctMonths >= 2)
+    {
+        var bmNow = new { DateTime.Today.Year, DateTime.Today.Month };
+        var bmMonthStart = new DateTimeOffset(new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1)).ToUnixTimeMilliseconds();
+        var bmThisMonthCount = ProgressEntries.Count(p => DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime.Year == bmNow.Year
+                                                       && DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime.Month == bmNow.Month);
+        var bmBestPrev = ProgressEntries
+            .GroupBy(p => { var d = DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime; return new { d.Year, d.Month }; })
+            .Where(g => !(g.Key.Year == bmNow.Year && g.Key.Month == bmNow.Month))
+            .Select(g => g.Count())
+            .DefaultIfEmpty(0).Max();
+        if (bmThisMonthCount >= 3 && bmThisMonthCount > bmBestPrev)
+        {
+            <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.TrendingUp" Dense="true" Class="mb-3">
+                🌟 <strong>This is your best month on this goal!</strong> @bmThisMonthCount notes and counting — you're setting a new personal record!
+            </MudAlert>
+        }
+    }
     if (ProgressEntries.Count >= 5)
     {
         var dowGroup = ProgressEntries
