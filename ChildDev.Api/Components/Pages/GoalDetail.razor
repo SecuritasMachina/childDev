@@ -419,6 +419,16 @@
             🚀 <strong>You're accelerating!</strong> @mmThisWeek notes this week vs @mmLastWeek last week — +@accGain! Keep this energy going!
         </MudAlert>
     }
+    var pbdGroup = ProgressEntries
+        .GroupBy(p => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime))
+        .OrderByDescending(g => g.Count())
+        .FirstOrDefault();
+    if (pbdGroup is not null && pbdGroup.Count() >= 2)
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-3">
+            🏅 Best day on this goal: <strong>@pbdGroup.Count() notes</strong> on @pbdGroup.Key.ToString("MMM d, yyyy") — can you top it?
+        </MudText>
+    }
 }
 @{
     // Rule-based goal insight narrative
