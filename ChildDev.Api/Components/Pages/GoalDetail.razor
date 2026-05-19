@@ -300,6 +300,16 @@
         : $"📝 <strong>{pdTodayCount} notes today</strong> on this goal — you're showing up strong!";
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.LocalFireDepartment" Dense="true" Class="mb-3">@((MarkupString)pdMsg)</MudAlert>
 }
+@{
+    var nmfMilestones = new HashSet<int> { 5, 10, 15, 25, 50, 75, 100 };
+    var nmfCount = ProgressEntries.Count;
+}
+@if (nmfCount % 5 == 0 && nmfCount >= 20 && !nmfMilestones.Contains(nmfCount) && pdTodayCount >= 1 && Goal.CompletionDate is null)
+{
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Celebration" Dense="true" Class="mb-3">
+        🎊 <strong>Just hit @nmfCount notes</strong> on this goal today — every milestone counts! Keep building!
+    </MudAlert>
+}
 @if (ProgressEntries.Count >= 1 && Goal.CompletionDate is null)
 {
     var dslLastMs = ProgressEntries.First().UpdatedOn;
