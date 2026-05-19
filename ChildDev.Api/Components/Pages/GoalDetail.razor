@@ -252,9 +252,16 @@
 @{
     var nmMilestones = new[] { 100, 50, 25, 10, 5 };
     int? nmHit = null;
+    int? nmClose = null;
+    int nmCloseLeft = 0;
     foreach (var nm in nmMilestones)
     {
         if (ProgressEntries.Count >= nm && ProgressEntries.Count < nm + 3) { nmHit = nm; break; }
+        if (nmHit is null && nmClose is null && ProgressEntries.Count < nm && nm - ProgressEntries.Count <= 10)
+        {
+            nmClose = nm;
+            nmCloseLeft = nm - ProgressEntries.Count;
+        }
     }
 }
 @if (nmHit.HasValue && Goal.CompletionDate is null)
@@ -265,6 +272,13 @@
               : nmHit.Value >= 10  ? $"⭐ <strong>{nmHit.Value} notes</strong> on this goal — double digits! You're showing up consistently and it shows!"
               :                       $"🌱 <strong>{nmHit.Value} notes</strong> on this goal — great start! Your journey is underway!";
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mb-3">@((MarkupString)nmMsg)</MudAlert>
+}
+@if (nmHit is null && nmClose.HasValue && Goal.CompletionDate is null)
+{
+    var nmCloseMsg = nmCloseLeft == 1
+        ? $"🎯 <strong>Just 1 more note</strong> to reach <strong>{nmClose.Value}</strong>! This is your moment!"
+        : $"🎯 Just <strong>{nmCloseLeft} more notes</strong> to reach <strong>{nmClose.Value}</strong> — you're so close!";
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Upcoming" Dense="true" Class="mb-3">@((MarkupString)nmCloseMsg)</MudAlert>
 }
 @if (ProgressEntries.Count >= 1 && Goal.CompletionDate is null)
 {
