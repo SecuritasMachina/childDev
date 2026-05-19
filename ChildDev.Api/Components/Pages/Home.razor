@@ -167,6 +167,10 @@
                 <MudIcon Icon="@Icons.Material.Filled.Book" Color="Color.Primary" Style="font-size:2rem;" />
                 <MudText Typo="Typo.h4" Class="mt-1">@JournalThisWeek</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">Journal Entr@(JournalThisWeek == 1 ? "y" : "ies") This Week</MudText>
+                @if (TodosCompletedThisWeek > 0)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Success">✅ @TodosCompletedThisWeek quick win@(TodosCompletedThisWeek == 1 ? "" : "s") this week</MudText>
+                }
             </MudPaper>
         </MudLink>
     </MudItem>
@@ -986,6 +990,7 @@
     private int PendingTodoCount;
     private int OverdueTodoCount;
     private int JournalThisWeek;
+    private int TodosCompletedThisWeek;
     private string QuickJournalText = string.Empty;
     private string QuickTodoText = string.Empty;
     private List<Journal> RecentJournals = [];
@@ -1019,6 +1024,8 @@
         var weekStartMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
         JournalThisWeek = await Db.Journals
             .CountAsync(j => j.AccountFk == AccountGuid && j.DeletedAt == null && j.EnteredDate >= weekStartMs);
+        TodosCompletedThisWeek = await Db.Todos
+            .CountAsync(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt != null && t.CompletedAt >= weekStartMs);
 
         RecentJournals = await Db.Journals
             .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null)
