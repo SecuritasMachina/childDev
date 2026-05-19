@@ -147,7 +147,6 @@
 }
 @if (TotalWordsWritten >= 100)
 {
-    var wordsMilestone = TotalWordsWritten >= 10000 ? "📚 10,000+ words!" : TotalWordsWritten >= 5000 ? "📖 5,000+ words!" : TotalWordsWritten >= 1000 ? "✍️ 1,000+ words!" : null;
     var wordsMsg = TotalWordsWritten >= 10000
         ? $"📚 You've written over {TotalWordsWritten:N0} words in your journal — that's a whole book! Your story is truly remarkable!"
         : TotalWordsWritten >= 5000
@@ -156,6 +155,19 @@
                 ? $"✍️ You've written {TotalWordsWritten:N0} words in your journal — incredible! Every word is part of your growth story!"
                 : $"✍️ You've written {TotalWordsWritten:N0} words so far — you're building a wonderful reflection habit!";
     <MudAlert Severity="Severity.Success" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.Create">@wordsMsg</MudAlert>
+    {
+        var ewcEntries = AllEntries.Where(j => !string.IsNullOrWhiteSpace(j.Notes)).ToList();
+        var ewcAvg = ewcEntries.Count > 0
+            ? (int)Math.Round(ewcEntries.Average(j => j.Notes!.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length))
+            : 0;
+        if (ewcEntries.Count >= 5 && ewcAvg >= 20)
+        {
+            var ewcLabel = ewcAvg >= 100 ? $"✍️ Your entries average <strong>{ewcAvg} words</strong> — you're writing deeply and thoughtfully!"
+                         : ewcAvg >= 50  ? $"✍️ Your entries average <strong>{ewcAvg} words</strong> — rich, detailed reflections. Keep going!"
+                         :                 $"✍️ Your entries average <strong>{ewcAvg} words</strong> — solid depth of reflection!";
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-3">@((MarkupString)ewcLabel)</MudText>
+        }
+    }
 }
 @{
     var moodEmojis = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)

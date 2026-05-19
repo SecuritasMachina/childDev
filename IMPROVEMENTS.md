@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-19 — Invocation 8 Iter 630 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Personal note length average": avg words per note from NextStepItems.Split(' ') (null-safe); show "Your notes average X words" when >= 10 notes and avg >= 10 words | UX | Domain: note depth | Low | S | Low | NextStepItems nullable; null-safe split; avg; simple filter | Deferred many times; now implement | No |
+| 2 | Web: Home — "Day-of-week context": show "Midweek momentum!" on Wed or "Make today count!" on Sunday | UX | Domain: weekly time context | Low | XS | Low | DateTime.Today.DayOfWeek; simple conditional | Adds weekly time awareness | No |
+| 3 | Web: Insights — "Journal consistency score this year": distinct journal days this year / days elapsed; show as %; "You've journaled on X% of days this year!" | UX | Domain: annual journal rate | Medium | XS | Low | Need JournalDaysThisYear on Insights; or compute from allJournalEver | Extend existing pattern | No |
+| 4 | Web: GoalDetail — "Notes quality growth indicator": compare total words in first half vs second half of notes (when >= 10); show "Your notes have grown from X to Y words on average!" | UX/Encourage | Domain: improvement over time | Medium | S | Low | Split entries into first/last halves; avg words per entry; compare | Motivating personal growth indicator | No |
+| 5 | Web: Home — "Today is a goal milestone day" preview: check if any goal's EnteredDate + [30,60,90,180,365] is today; show "Today is [Goal]'s [N]-day milestone!" | UX/Celebrate | Domain: real-time milestone awareness | High | XS | Low | daysSince == milestone for any active goal; similar to anniversary logic | Already covered by AnniversaryGoalName but could be per-goal | No |
+| 6 | Web: GoalDetail — "Days until goal's next round number age": when daysSince is within 5 of a multiple of 30, show "Just X days until [goal] turns N months old!" | UX/Celebrate | Domain: upcoming age milestone | Medium | XS | Low | daysSince % 30 == 0 or within 5; rounds to next 30-multiple | Bridges the gap between milestone alerts | No |
+| 7 | Web: Insights — "Todos completed vs created ratio this year": YtdTodosCompleted vs YtdTodosCreated; show "You complete X% of todos you create!" | UX | Domain: follow-through rate | Medium | M | Med | Need YtdTodosCreated field; extra query | Not worth extra query | No |
+| 8 | Web: Journal — "Entry word count average": average words per journal entry across all entries with Notes; show "Your entries average X words — great depth!" when avg >= 20 | UX | Domain: journaling depth | Low | XS | Low | AllEntries where Notes not null; Split count; avg; simple | Mirrors goal note length; easy to implement | No |
+| 9 | Web: Home — "Celebrate consistent morning routine": if ProgressNotesToday >= 1 and it's before noon, show "Morning check-in — you're starting the day with purpose!" | UX/Encourage | Domain: morning motivation | Low | XS | Low | ProgressNotesToday >= 1 && DateTime.Now.Hour < 12 | Momentary motivational call-out | No |
+| 10 | Web: GoalDetail — "Goal target date progress arc": when ExpirationDate is set, show a visual progress arc (% time elapsed with days left); already shown as bar — add "X weeks until deadline!" text | UX | Domain: deadline urgency | Low | XS | Low | Already shown as progress bar; add textual countdown | Extends existing deadline bar with week-count context | No |
+
+**Selection iter 630:** Item #8 — "Entry word count average" on JournalPage.
+- Average words across all entries with Notes content; show "Your entries average X words" when avg >= 20
+- XS effort — AllEntries already loaded; Notes.Split(' ').Length avg; simple
+- Gives kids context on the depth of their journaling
+
+---
+
 ## 2026-05-19 — Invocation 8 Iter 627 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
