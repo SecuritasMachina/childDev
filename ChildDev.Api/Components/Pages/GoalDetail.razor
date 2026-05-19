@@ -395,6 +395,19 @@
             </MudStack>
         </MudStack>
     </MudPaper>
+    var gsActiveDates = ProgressEntries
+        .Select(p => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime))
+        .ToHashSet();
+    var gsCount = 0;
+    var gsDay = DateOnly.FromDateTime(DateTime.Today);
+    while (gsActiveDates.Contains(gsDay)) { gsCount++; gsDay = gsDay.AddDays(-1); }
+    if (gsCount >= 2)
+    {
+        var gsLabel = gsCount >= 7 ? $"🔥 {gsCount}-day streak on this goal — incredible!"
+                    : gsCount >= 3 ? $"🔥 {gsCount}-day streak on this goal — keep it going!"
+                    :                $"⭐ {gsCount}-day streak on this goal — great start!";
+        <MudText Typo="Typo.caption" Color="@(gsCount >= 7 ? Color.Warning : Color.Success)" Class="mb-3">@gsLabel</MudText>
+    }
 }
 @if (ProgressEntries.Count >= 3 && Goal.CompletionDate is null)
 {
