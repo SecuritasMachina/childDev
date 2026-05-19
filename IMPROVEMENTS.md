@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 513 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Previous milestone date": show when the last milestone was achieved (date of 5th/10th/25th/50th note) | UX/Encourage | Domain: milestone history with real dates | High | S | Low | Sort ProgressEntries; pick entry at index 4,9,24,49; show its date | Tangible date markers make achievement feel real | No |
+| 2 | Web: Home — "Quick wins this week": completed todo count this week shown in journal stat card | UX/Encourage | Domain: weekly momentum visibility | Medium | XS | Low | `CompletedTodosThisWeek` count added to LoadStats; inline caption on journal card | Easy query; positive framing of small wins | No |
+| 3 | Web: Insights — "Goal momentum index": % of active goals worked on in last 7 days | UX | Domain: portfolio-level engagement KPI | Medium | S | Low | Count goals with LastProgressAt >= 7d ago; show as % with bar | Useful bird's-eye view; needs GoalCount from Home or extra query | No |
+| 4 | Web: GoalDetail — "Previous milestone date" PLUS days since ("You hit Champion 23 days ago!") | UX/Encourage | Domain: motivate next tier with distance from last win | High | S | Low | Build on item #1 above with days-ago calculation | Adds emotional depth to milestone date | No |
+| 5 | Web: Home — Stale goal count: how many active goals haven't had a note in 14+ days | UX | Domain: portfolio health signal | Medium | XS | Low | Count AllActiveGoals where LastProgressAt < 14d ago or missing; show in goals card | Useful but could feel negative; frame as "need a visit" | No |
+| 6 | Web: Insights — "Consistency score": % of last 30 days that had any activity | UX/Encourage | Domain: habit strength signal | Medium | XS | Low | Already have ActiveDaysLast30 / 30; show as percentage with color | Simple reuse of existing data; useful consistency metric | No |
+| 7 | Web: GoalDetail — "Top days of week" for this goal: which 2-3 days does the kid usually log? | UX | Domain: personalized habit insight per goal | Low | S | Low | Group ProgressEntries by DayOfWeek; show top days | Cute pattern insight; lower priority than other items | No |
+| 8 | Web: Todos — "On fire!" banner: if 3+ todos completed today, show celebration | UX/Encourage | Domain: celebrate productive todo days | High | XS | Low | Count CompletedTodos where CompletedAt >= today; if >= 3 show banner | Strong positive reinforcement for productive days | No |
+| 9 | Web: Home — "Goals worked this week" progress ring: X of Y active goals updated this week | UX | Domain: weekly portfolio engagement visual | Medium | S | Low | GoalsProgressedThisWeek / AllActiveGoals.Count as visual; already have both | Nice progress ring; moderate visual impact | No |
+| 10 | Web: Journal — "Most used tag" callout: tag with most entries shown as a highlight | UX/Encourage | Domain: dominant interest/theme recognition | Medium | XS | Low | Already have AllTags sorted by count; just highlight first tag more prominently | Simple reuse; kids love knowing their "signature" theme | No |
+
+**Selection iter 513:** Item #8 — "On fire!" banner on Todos when 3+ todos completed today.
+- Count `CompletedTodos` where `CompletedAt >= todayStartMs` — uses already-loaded `CompletedTodos` list
+- Show a celebration MudAlert: "🔥 On fire! You've completed X todos today — incredible productivity!"
+- Zero extra queries; high positive reinforcement for productive todo days
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 510 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
