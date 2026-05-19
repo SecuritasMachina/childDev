@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-19 — Invocation 8 Iter 615 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Hour of day pattern": group notes by morning (<12) / afternoon (12-17) / evening (17+); show "You tend to reflect on this goal in the [time]!" when >= 5 notes | UX/Insight | Domain: daily rhythm | Low | XS | Low | DateTimeOffset.LocalDateTime.Hour; 3 buckets; find max | Personalizes; behavioral self-awareness | No |
+| 2 | Web: Home — "Goals with notes this week" breadth: when GoalsProgressedThisWeek >= 2 and AllActiveGoals.Count > 2, show "You gave attention to @GoalsProgressedThisWeek of @AllActiveGoals.Count goals this week!" | UX/Encourage | Domain: breadth of engagement | Medium | XS | Low | GoalsProgressedThisWeek already computed; simple comparison | Reinforces multi-goal attention; already has field | No |
+| 3 | Web: GoalDetail — "Total effort hours" fun estimate: at 3 min per note, show "You've put in roughly X hours of reflection on this goal!" when >= 10 notes | UX/Inspire | Domain: effort appreciation | Low | XS | Low | ProgressEntries.Count * 3 / 60; simple math | Fun metric; makes effort feel real | No |
+| 4 | Web: Journal — "Tag streak": if the user has used any tag in every entry for the last 5+ entries, show "You've tagged every entry with '[tag]' — great consistency!" | UX/Encourage | Domain: journaling habit depth | Low | M | Med | Complex tag parsing across entries; variable | Too complex; skip | No |
+| 5 | Web: Insights — "Goal with most consistent weekly engagement": of goals with >= 4 weeks history, which has the highest % of weeks with at least one note? Show "Your most consistently tracked goal: [Name]!" | UX/Encourage | Domain: per-goal consistency spotlight | Medium | M | Med | Needs per-goal history; extra query | Too complex | No |
+| 6 | Web: GoalDetail — "Longest positive streak" detail: show the exact date range of the longest active streak (start date → end date) when streak >= 7 | UX | Domain: streak date context | Low | XS | Low | gsActiveDates sorted; find longest run; format dates | Contextualizes the streak with real dates | No |
+| 7 | Web: Home — "Goal without a next step": when any active goal's most recent progress note has null NextStepItems, show "Add a next step to [Goal] — knowing what's next keeps you moving!" | UX/Encourage | Domain: goal momentum nudge | High | M | Med | Needs ProgressEntries per goal on Home; too much extra data | Worth implementing but needs per-goal notes query | No |
+| 8 | Web: GoalDetail — "Comeback momentum": when the goal had a gap ≥ 14 days historically but now has >= 5 notes since latest return, show "You came back and logged X notes — real resilience!" | UX/Encourage | Domain: recovery recognition | Medium | S | Low | Sort ProgressEntries by date; find gap; count after; show when >= 5 | Validates returning to a goal after a long pause | No |
+| 9 | Web: Home — "Today's goals touched": when AllActiveGoals.Count >= 2 and ProgressNotesToday >= 1, show how many different goals got notes today | UX/Encourage | Domain: daily breadth | Low | M | Med | Needs per-goal today breakdown; extra query or grouping | Nice breadth metric but needs more data | No |
+| 10 | Web: Insights — "Average notes per goal": TotalProgressNotes / GoalsTotalAllTime (when >= 3 goals ever); show "On average, each goal gets X notes from you!" | UX | Domain: effort depth per goal | Low | XS | Low | GoalProgressTotal / GoalsTotalAllTime; simple division | Simple aggregate; gives effort-per-goal context | No |
+
+**Selection iter 615:** Item #3 — "Total effort hours" fun estimate on GoalDetail.
+- At 3 minutes per note, X notes = roughly Y hours of reflection time
+- Show when >= 10 notes: "You've put in roughly X hours of reflection on this goal!"
+- XS effort, uses existing ProgressEntries.Count, no extra queries needed
+
+---
+
 ## 2026-05-19 — Invocation 8 Iter 612 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
