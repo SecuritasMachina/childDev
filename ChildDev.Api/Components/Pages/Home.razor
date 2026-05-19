@@ -443,6 +443,47 @@
     </MudItem>
 </MudGrid>
 
+@{
+    var nowMsAttn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    var needsAttn = AllActiveGoals.Where(g => {
+        var p2 = ProgressCounts.GetValueOrDefault(g.Guid);
+        var l2 = LastProgressAt.GetValueOrDefault(g.Guid);
+        var d2 = p2 > 0 ? (int)((nowMsAttn - l2) / 86_400_000L) : -1;
+        return p2 == 0 || d2 >= 14;
+    }).ToList();
+}
+@if (needsAttn.Any() && string.IsNullOrWhiteSpace(FilterText))
+{
+    <MudExpansionPanels Class="mt-4 mb-2">
+        <MudExpansionPanel Text="@($"Goals Needing Attention ({needsAttn.Count})")"
+                           Icon="@Icons.Material.Filled.NotificationsActive"
+                           IconColor="Color.Warning">
+            <MudList T="Goal" Dense="true">
+                @foreach (var sg in needsAttn)
+                {
+                    var sgP = ProgressCounts.GetValueOrDefault(sg.Guid);
+                    var sgL = LastProgressAt.GetValueOrDefault(sg.Guid);
+                    var sgD = sgP > 0 ? (int)((nowMsAttn - sgL) / 86_400_000L) : -1;
+                    var sgLabel = sgP == 0 ? "No notes yet" : $"{sgD} day{(sgD == 1 ? "" : "s")} since last note";
+                    <MudListItem>
+                        <MudStack Row="true" AlignItems="AlignItems.Center">
+                            <MudIcon Icon="@(sgP == 0 ? Icons.Material.Filled.FiberNew : Icons.Material.Filled.AccessTime)"
+                                     Color="@(sgP == 0 ? Color.Info : Color.Warning)" Size="Size.Small" />
+                            <MudStack Spacing="0" Style="flex:1">
+                                <MudText Typo="Typo.body2">@sg.GoalText</MudText>
+                                <MudText Typo="Typo.caption" Color="@(sgP == 0 ? Color.Info : Color.Warning)">@sgLabel</MudText>
+                            </MudStack>
+                            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Add"
+                                       OnClick="() => OpenQuickNote(sg.Guid)">Add Note</MudButton>
+                        </MudStack>
+                    </MudListItem>
+                }
+            </MudList>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+}
+
 @if (CompletedGoals.Any())
 {
     <MudExpansionPanels Class="mt-6">
