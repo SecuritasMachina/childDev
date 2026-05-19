@@ -1075,7 +1075,11 @@ else if (bestGoalStreak >= 2 && goalStreak < bestGoalStreak)
 }
 @if (longestGapDays >= 7 && ProgressEntries.Count >= 3)
 {
-    var gapMsg = longestGapDays >= 30
+    var lgNowMs2 = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    var lgCurrentGapDays = (int)((lgNowMs2 - ProgressEntries.First().UpdatedOn) / 86_400_000L);
+    var gapMsg = lgCurrentGapDays <= 2 && longestGapDays >= 14
+        ? $"💪 You once had a {longestGapDays}-day gap — but look at you now! Showing up consistently takes real strength!"
+        : longestGapDays >= 30
         ? $"🌱 You once had a {longestGapDays}-day gap — but you came back! Persistence is everything."
         : $"📌 Longest gap between notes: {longestGapDays} days — every return to a goal shows real commitment!";
     <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">@gapMsg</MudText>
