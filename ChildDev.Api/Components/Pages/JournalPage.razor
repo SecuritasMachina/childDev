@@ -64,13 +64,14 @@
         @foreach (var (tag, count) in AllTags)
         {
             var isSelected = TagFilter == tag;
+            var isTopTag = AllTags.Count > 0 && tag == AllTags[0].Tag && count > 1;
             <MudChip T="string"
-                     Variant="@(isSelected ? Variant.Filled : Variant.Outlined)"
-                     Color="@(isSelected ? Color.Primary : Color.Default)"
-                     Size="Size.Small"
+                     Variant="@(isSelected ? Variant.Filled : isTopTag ? Variant.Filled : Variant.Outlined)"
+                     Color="@(isSelected ? Color.Primary : isTopTag ? Color.Warning : Color.Default)"
+                     Size="@(isTopTag ? Size.Medium : Size.Small)"
                      OnClick="() => OnTagFilterChanged(tag)"
-                     Style="cursor:pointer;">
-                @tag <span style="opacity:.6;margin-left:4px;">@count</span>
+                     Style="@(isTopTag ? "cursor:pointer;font-weight:700;" : "cursor:pointer;")">
+                @(isTopTag ? "⭐ " : "")@tag <span style="opacity:.6;margin-left:4px;">@count</span>
             </MudChip>
         }
         @if (TagFilter is not null)
