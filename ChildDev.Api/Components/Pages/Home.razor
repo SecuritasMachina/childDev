@@ -400,7 +400,23 @@
         }
     }
 }
-@if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWhiteSpace(FilterText))
+@if (TotalProgressNotes == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWhiteSpace(FilterText))
+{
+    var firstGoal = AllActiveGoals.First();
+    var firstGoalName = firstGoal.GoalText?.Length > 50 ? firstGoal.GoalText[..50] + "…" : firstGoal.GoalText;
+    <MudPaper Elevation="3" Class="pa-4 mb-3" Style="border-radius:16px;background:linear-gradient(135deg,rgba(76,175,80,.12) 0%,rgba(255,255,255,0) 100%);border:2px solid var(--mud-palette-success);">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudText Typo="Typo.h4" Style="line-height:1;">🌱</MudText>
+            <MudStack Spacing="0" Style="flex:1">
+                <MudText Typo="Typo.subtitle2" Color="Color.Success" Style="font-weight:700;">Your journey starts NOW!</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Add your first progress note on "@firstGoalName" — every great achievement begins with one small step! 🚀</MudText>
+            </MudStack>
+            <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small"
+                       Href="@($"/goals/{firstGoal.Guid}")">Add first note</MudButton>
+        </MudStack>
+    </MudPaper>
+}
+else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWhiteSpace(FilterText))
 {
     <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Lightbulb" Dense="true" Class="mb-3">
         You haven't logged any progress this week yet — pick a goal and add a note! You've got this. 💪
