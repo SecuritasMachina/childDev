@@ -508,6 +508,24 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                    Href="@proximityGoalHref" Class="ml-1">Add a note</MudButton>
     </MudAlert>
 }
+@{
+    var ngNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    var newGoal3dMs = ngNowMs - 3L * 86_400_000L;
+    Goal? ngNewest = string.IsNullOrWhiteSpace(FilterText)
+        ? AllActiveGoals.OrderByDescending(g => g.EnteredDate).FirstOrDefault(g => g.EnteredDate >= newGoal3dMs)
+        : null;
+}
+@if (ngNewest is not null)
+{
+    var ngDaysAgo = (int)((ngNowMs - ngNewest.EnteredDate) / 86_400_000L);
+    var ngWhen = ngDaysAgo == 0 ? "today" : ngDaysAgo == 1 ? "yesterday" : $"{ngDaysAgo} days ago";
+    var ngName = ngNewest.GoalText?.Length > 55 ? ngNewest.GoalText[..55] + "…" : ngNewest.GoalText;
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.FiberNew" Dense="true" Class="mb-3">
+        🌱 <strong>New goal added @ngWhen!</strong> "@ngName" — you're already off to a great start. Log your first note to build momentum!
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Success"
+                   Href="@($"/goals/{ngNewest.Guid}")" Class="ml-1">View goal</MudButton>
+    </MudAlert>
+}
 @if (ComebackGoalName is not null && string.IsNullOrWhiteSpace(FilterText))
 {
     var cbSeverity = ComebackGapDays >= 30 ? Severity.Success : Severity.Info;
