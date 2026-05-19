@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 462 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — show active todos created within a week of goal creation ("Related Todos") | Func | Domain: goal-todo connection; todos should serve goals | High | M | Low | Heuristic: todos in same account with no GoalFk; show 3 most recent | False positives; all todos would show if many unlinked | No |
+| 2 | Web: GoalDetail — "copy achievement text" to clipboard (JS interop) | UI/Encourage | Domain: social sharing | Medium | S | Low | Browser clipboard API; "I reached Champion on [Goal]! 🏆" | JS interop complexity; clipboard permission | No |
+| 3 | Web: Todos — "Pin to goal" button to link an existing todo to a goal | Func | Domain: goal-todo linking | High | M | Low | Opens goal picker dialog; stores GoalFk on Todo | Medium effort; requires goal picker dialog | No |
+| 4 | Web: Home — "Goal note summary this week" on Focus Goal card | UI | Domain: focus card context | Medium | S | Low | Below Focus Goal card: "3 notes added this week on this goal" | Requires additional per-goal week count | No |
+| 5 | Web: GoalDetail — "Reopen" button for completed goals (already exists but subtle) | UX | Domain: discoverability | Low | XS | Low | Make Reopen button more prominent; already implemented | Already done | No |
+| 6 | Web: Todos — goal-aware filtering ("Show todos linked to [Goal]") | Func | Domain: goal-centric todo view | High | M | Low | Add goal filter chip to Todos page | Medium effort | No |
+| 7 | API: Input validation — reject GoalText > 500 chars on sync | Stability | Domain: data integrity | Low | S | Low | Guard against very long goal text from mobile | Already validates on mobile but not server-side? | No |
+| 8 | Web: GoalDetail — progress note "mood" reaction after adding (emoji quick-tap) | Func | Domain: self-assessment | Medium | M | Low | Show 5 reaction emojis after saving; store in Context field | Hacky if using Context field; medium effort | No |
+| 9 | Web: Insights — "goal commitment score" (weighted combo of notes/week, streak, days active) | Func | Domain: gamified engagement metric | High | M | Low | Single 0-100 score shown as a progress bar | Arbitrary formula; medium effort | No |
+| 10 | Web: GoalDetail — "suggest next step" from keywords in goal text | UX | Domain: blank-page help for adding notes | Medium | M | Low | Rule-based suggestions: "read" → "Log pages read today", etc. | Limited to keyword matching | No |
+
+**Selection iter 462:** Item #9 — Goal Commitment Score on Insights.
+- Weighted formula: streak_bonus + notes_per_week*10 + recent_activity_bonus, capped at 100
+- Shows as a single progress bar with label like "Your commitment score: 72/100 — Champion effort!"
+- Zero new queries: all data available in Insights page code already
+- Direct goal engagement metric; gamified but grounded in real activity
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 459 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
