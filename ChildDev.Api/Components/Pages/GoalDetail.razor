@@ -124,6 +124,18 @@
                         var tehHours = tehMins / 60;
                         var tehLabel = tehHours >= 1 ? $"~{tehHours}h of reflection" : $"~{tehMins} min of effort";
                         <MudText Typo="Typo.caption" Color="Color.Info">⏱ @tehLabel</MudText>
+                        {
+                            var nqgSorted = ProgressEntries.OrderBy(p => p.UpdatedOn).ToList();
+                            var nqgHalf = nqgSorted.Count / 2;
+                            var nqgFirst = nqgSorted.Take(nqgHalf).Where(p => !string.IsNullOrWhiteSpace(p.NextStepItems)).ToList();
+                            var nqgLast = nqgSorted.Skip(nqgHalf).Where(p => !string.IsNullOrWhiteSpace(p.NextStepItems)).ToList();
+                            var nqgAvgFirst = nqgFirst.Count > 0 ? (int)nqgFirst.Average(p => p.NextStepItems!.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length) : 0;
+                            var nqgAvgLast = nqgLast.Count > 0 ? (int)nqgLast.Average(p => p.NextStepItems!.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length) : 0;
+                            if (nqgAvgFirst >= 5 && nqgAvgLast > nqgAvgFirst)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Success">📝 Notes getting deeper! (~@nqgAvgLast words avg vs ~@nqgAvgFirst before)</MudText>
+                            }
+                        }
                     }
                     @{
                         var ntmMonthStart = new DateTimeOffset(new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1)).ToUnixTimeMilliseconds();
