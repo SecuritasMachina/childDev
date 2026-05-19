@@ -125,6 +125,18 @@
         🏷️ <strong>Tag of the week:</strong> "@totwTag.Tag" — you used it @totwTag.Count times this week!
     </MudAlert>
 }
+@{
+    var mtdPositiveMoods = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "happy", "excited", "grateful", "calm", "proud", "focused" };
+    var mtdRecent = AllEntries.Where(j => !string.IsNullOrWhiteSpace(j.Mood)).Take(5).ToList();
+    var mtdPositiveCount = mtdRecent.Count(j => mtdPositiveMoods.Contains(j.Mood!.Trim()));
+}
+@if (mtdRecent.Count >= 5 && mtdPositiveCount >= 4)
+{
+    var mtdMsg = mtdPositiveCount == 5
+        ? "🌟 <strong>All 5 recent entries show a positive mood</strong> — you're in a great headspace! Keep nurturing that energy!"
+        : "😊 <strong>Your recent entries show a mostly positive trend</strong> — 4 of your last 5 moods are upbeat! That's something to be proud of!";
+    <MudAlert Severity="Severity.Success" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.SentimentVerySatisfied">@((MarkupString)mtdMsg)</MudAlert>
+}
 @if (TotalWordsWritten >= 100)
 {
     var wordsMilestone = TotalWordsWritten >= 10000 ? "📚 10,000+ words!" : TotalWordsWritten >= 5000 ? "📖 5,000+ words!" : TotalWordsWritten >= 1000 ? "✍️ 1,000+ words!" : null;
