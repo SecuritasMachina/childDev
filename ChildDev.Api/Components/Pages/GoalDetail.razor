@@ -291,6 +291,12 @@
     var pdTodayStartMs = new DateTimeOffset(DateTime.Today).ToUnixTimeMilliseconds();
     var pdTodayCount = ProgressEntries.Count(p => p.UpdatedOn >= pdTodayStartMs);
 }
+@if (pdTodayCount == 1 && Goal.CompletionDate is null)
+{
+    <MudText Typo="Typo.caption" Color="Color.Success" Class="mb-3">
+        ✅ First note on this goal today — great start! Keep going!
+    </MudText>
+}
 @if (pdTodayCount >= 2 && Goal.CompletionDate is null)
 {
     var pdMsg = pdTodayCount >= 5

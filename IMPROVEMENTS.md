@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-19 — Invocation 8 Iter 621 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Longest positive streak" date range: show exact start→end dates of the longest active streak when >= 7 days | UX | Domain: streak date context | Low | XS | Low | gsActiveDates sorted; longest run; format start/end DateOnly | Contextualizes the streak with real calendar dates | No |
+| 2 | Web: Home — "Today's date context": show "Midweek check-in!" on Wednesday or "Last day to hit your weekly goals!" on Sunday near the week progress section | UX | Domain: day-of-week awareness | Low | XS | Low | DateTime.Today.DayOfWeek; show conditionally | Adds time context to weekly progress | No |
+| 3 | Web: GoalDetail — "Goals this month progress": show "X notes this month on this goal!" as a summary when >= 5 notes in current month | UX | Domain: monthly engagement | Low | XS | Low | ProgressEntries.Count where UpdatedOn >= monthStart; show when >= 5 | Monthly summary; simple filter | No |
+| 4 | Web: Insights — "Longest active streak across all goals": find the goal with the longest running streak (consecutive active days); show "Your longest goal streak: X days on [Goal]!" | UX/Celebrate | Domain: peak streak recognition | High | M | Low | Need per-goal active streaks; complex cross-goal computation | Too complex for current architecture | No |
+| 5 | Web: Home — "Comparison to last month": ProgressThisMonth vs ProgressLastMonth; show "📈 X more notes than last month!" or "📉 Match last month's X notes!" | UX | Domain: month-over-month comparison | Medium | S | Low | Need ProgressThisMonth and ProgressLastMonth fields; extra computation in LoadInsights | Worth implementing; follow same pattern as WoW | No |
+| 6 | Web: GoalDetail — "Notes across all goals cross-reference": when ProgressEntries.Count is in the top 20% of all goals, show "This is one of your most active goals!" | UX/Encourage | Domain: cross-goal context | Medium | M | Med | Needs cross-goal count data not currently loaded; extra query | Too complex without extra data | No |
+| 7 | Web: Journal — "Entries this month vs last month": JournalThisMonth (already computed) vs JournalLastMonth; show "📈 More active this month than last!" | UX | Domain: journal MoM comparison | Low | XS | Low | JournalThisMonth already computed; need JournalLastMonth (one-line filter) | Simple extension of existing month tracking | No |
+| 8 | Web: GoalDetail — "First note of today" special alert: when pdTodayCount == 1 (exactly first note added today), show "First note on this goal today — great start!" as a small encouraging caption | UX/Encourage | Domain: daily first-note | Medium | XS | Low | pdTodayCount == 1; one-line condition | Micro-celebration for getting started each day | No |
+| 9 | Web: Home — "Todos due today" urgency: when TodosDueToday > 0 (already loaded), add a nudge "📌 @TodosDueToday todo@(s) due today — check them off!" | UX | Domain: daily todo awareness | Medium | XS | Low | Need TodosDueToday field; check todos due today | Practical daily reminder | No |
+| 10 | Web: GoalDetail — "This month is your best month so far": when this month's note count already surpasses all previous months (and it's before end of month), show "This month is your best month on this goal!" | UX/Celebrate | Domain: peak month recognition | High | XS | Low | bmGroup already computed; compare with current month group; show when current > best historical | Real-time peak recognition | No |
+
+**Selection iter 621:** Item #8 — "First note of today" special caption on GoalDetail.
+- When pdTodayCount == 1 (exactly the first note on this goal today), show a small encouraging caption
+- XS effort — pdTodayCount already computed; just adds a new `@if` for `== 1` case
+- Micro-celebration for getting started each day on a specific goal
+
+---
+
 ## 2026-05-19 — Invocation 8 Iter 618 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
