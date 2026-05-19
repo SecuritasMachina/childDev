@@ -152,6 +152,12 @@
             {
                 <MudText Typo="Typo.caption" Color="Color.Warning">⏰ @staleCount awaiting your visit</MudText>
             }
+            @if (AllActiveGoals.Count >= 2 && GoalsProgressedThisWeek > 0)
+            {
+                <MudText Typo="Typo.caption" Color="@(GoalsProgressedThisWeek >= AllActiveGoals.Count ? Color.Success : Color.Info)">
+                    📊 @GoalsProgressedThisWeek of @AllActiveGoals.Count goals worked this week
+                </MudText>
+            }
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="4">
