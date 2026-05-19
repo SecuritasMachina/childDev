@@ -40,6 +40,15 @@
     }
 </MudStack>
 
+@if (JournalStreak >= 2)
+{
+    var jsMsg = JournalStreak >= 14 ? $"🌟 {JournalStreak}-day journaling streak — absolutely legendary! You're a journaling champion!"
+              : JournalStreak >= 7  ? $"🔥 {JournalStreak}-day journaling streak — incredible consistency! Keep it going!"
+              : JournalStreak >= 4  ? $"💪 {JournalStreak}-day journaling streak — you're building a great habit!"
+              :                       $"⭐ {JournalStreak}-day journaling streak — you're on a roll!";
+    <MudAlert Severity="@(JournalStreak >= 7 ? Severity.Success : Severity.Info)" Dense="true" Class="mb-3">@jsMsg</MudAlert>
+}
+
 @* Tag cloud — appears only when entries have tags *@
 @if (AllTags.Count > 0)
 {
@@ -297,6 +306,7 @@ else
     private string EditTags = string.Empty;
     private DateTime? EditEnteredDate;
     private string? _confirmDeleteGuid;
+    private int JournalStreak;
 
     protected override async Task OnInitializedAsync()
     {
@@ -312,6 +322,16 @@ else
             .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null)
             .OrderByDescending(j => j.EnteredDate)
             .ToListAsync();
+        var journalDates = AllEntries
+            .Select(j => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime))
+            .ToHashSet();
+        JournalStreak = 0;
+        var jsDay = DateOnly.FromDateTime(DateTime.Today);
+        while (journalDates.Contains(jsDay))
+        {
+            JournalStreak++;
+            jsDay = jsDay.AddDays(-1);
+        }
         BuildTagCloud();
         BuildMoodCloud();
         BuildActivityCloud();
