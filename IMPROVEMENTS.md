@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-19 — Invocation 8 Iter 597 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Notes this week vs personal average" pace: compare mmThisWeek to cfPace (avg/week); show "Above pace!" or "Below pace — one note today changes that!" | UX/Encourage | Domain: pace relative to personal avg | High | XS | Low | mmThisWeek already computed; cfPace = Count/cfWeeks already computed; compare | Very personalized and actionable; all data in scope | No |
+| 2 | Web: Journal — "Longest gap between entries" awareness: find max days between consecutive entries; show "Your longest dry spell: X days — keep streaks shorter!" when >= 14 days | UX/Motivate | Domain: gap awareness | Low | XS | Low | AllEntries sorted dates; max consecutive gap; show when >= 14 | Gentle gap awareness; no extra queries | No |
+| 3 | Web: Home — "Goals by age bucket" quick stat: count goals in <30d, 30-90d, 90d+ buckets; show "X new, Y growing, Z established" | UX | Domain: portfolio age health | Low | S | Med | AllActiveGoals EnteredDate ranges; 3 buckets | Interesting portfolio snapshot; moderate effort for low value | No |
+| 4 | Web: GoalDetail — "Note quality growth": compare avg word count of last 5 vs first 5 progress notes (>= 10 notes); show "Your notes are getting richer!" | UX/Encourage | Domain: note depth growth | Medium | S | Low | NextStepItems.Split(' ').Length; two groups; needs >= 10 notes; compare | Meaningful depth signal; only for engaged users | No |
+| 5 | Web: Home — "Notes per goal this week": show breakdown "Goal A: 3 notes, Goal B: 1 note" when 2+ goals were updated this week | UX | Domain: per-goal weekly breakdown | Low | M | Low | Needs per-goal timestamp counting; complex render | Too complex for value | No |
+| 6 | Web: GoalDetail — "Streak recovery message": if yesterday had 0 notes but today has 1+, show "Great — you kept it alive! Consistency wins over perfection." | UX/Encourage | Domain: imperfect streak encouragement | High | XS | Low | ProgressEntries dates; check yesterday in set; check today; show when today=yes and yesterday=no | Normalizes imperfect consistency; very human | No |
+| 7 | Web: Insights — "Average days between progress notes" globally: mean time between consecutive allProgressEver sorted; show "On average you log every X days" | UX | Domain: global note cadence | Low | XS | Low | allProgressEver sorted; consecutive diffs; mean | Minor insight; cadence context | No |
+| 8 | Web: GoalDetail — "Milestone countdown": when within 10 notes of {25, 50, 100} milestone, show "Just X notes to [milestone]! Keep going!" | UX/Encourage | Domain: proximity motivation | High | XS | Low | nmMilestones already scanned; extend to 10-note proximity; show countdown | Widening nmMilestone window from 3 to 10 gives more visibility | No |
+| 9 | Web: Home — "This time last week" comparison: ProgressThisWeek vs ProgressLastWeek with trend arrow | UX/Encourage | Domain: WoW momentum comparison | Medium | XS | Low | ProgressThisWeek/ProgressLastWeek already computed; show "X this week vs Y last week" | Direct WoW comparison; quick from loaded data | No |
+| 10 | Web: Journal — "Journal entry length trend": if avg word count of last 5 entries > first 5 entries, show "Your entries are getting richer!" | UX/Encourage | Domain: writing depth growth | Medium | S | Low | AllEntries Notes split; group first 5/last 5; compare avg; >= 10 entries | Writing depth feedback; needs 10+ entries | No |
+
+**Selection iter 597:** Item #1 — "Notes this week vs personal average" pace comparison on GoalDetail.
+- `mmThisWeek` is already computed; `cfWeeks` and `ProgressEntries.Count` are in scope
+- Compute `cfPaceAvg = ProgressEntries.Count / cfWeeks` (notes per week average)
+- Compare `mmThisWeek` to `cfPaceAvg`: above = celebrate, below = nudge
+- Show as a motivating caption near the weekly momentum section
+
+---
+
 ## 2026-05-19 — Invocation 8 Iter 594 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
