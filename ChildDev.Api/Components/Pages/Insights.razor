@@ -109,6 +109,39 @@
     </MudPaper>
 }
 
+@{
+    var commitScore = Math.Min(
+        Math.Min(CurrentStreak * 3, 30) +
+        Math.Min(ActiveDaysLast30 * 2, 40) +
+        Math.Min(GoalProgressTotal, 30),
+        100);
+    var (commitLabel, commitColor, commitEmoji) = commitScore switch {
+        >= 91 => ("Legendary",         Color.Warning, "🌟"),
+        >= 76 => ("Champion",          Color.Success, "🏆"),
+        >= 51 => ("Dedicated",         Color.Primary, "⭐"),
+        >= 26 => ("Building Momentum", Color.Info,    "🚀"),
+        _     => ("Getting Started",   Color.Default, "🌱")
+    };
+    var streakPts      = Math.Min(CurrentStreak * 3, 30);
+    var activeDaysPts  = Math.Min(ActiveDaysLast30 * 2, 40);
+    var notesPts       = Math.Min(GoalProgressTotal, 30);
+}
+<MudPaper Elevation="2" Class="pa-4 mb-6"
+          Style="border-radius:16px;background:linear-gradient(135deg,rgba(57,73,171,.06) 0%,rgba(255,255,255,0) 100%);">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2" Spacing="2">
+        <MudText Typo="Typo.h5" Style="line-height:1">@commitEmoji</MudText>
+        <MudStack Spacing="0" Style="flex:1">
+            <MudText Typo="Typo.overline" Color="Color.Primary" Style="font-weight:700;letter-spacing:1.5px;">Commitment Score</MudText>
+            <MudText Typo="Typo.h6">@commitScore / 100 — @commitLabel!</MudText>
+        </MudStack>
+        <MudChip T="string" Color="@commitColor" Size="Size.Medium" Style="font-weight:700;">@commitScore pts</MudChip>
+    </MudStack>
+    <MudProgressLinear Value="@commitScore" Color="@commitColor" Rounded="true" Size="Size.Large" Class="mb-2" />
+    <MudText Typo="Typo.caption" Color="Color.Secondary">
+        Day streak: @streakPts pts &nbsp;·&nbsp; Active days: @activeDaysPts pts &nbsp;·&nbsp; Progress notes: @notesPts pts
+    </MudText>
+</MudPaper>
+
 @* Month-over-month trends *@
 <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2" Style="text-transform:uppercase;letter-spacing:1px;">
     This Month vs Last Month
