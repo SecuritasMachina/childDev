@@ -217,6 +217,26 @@
         </MudStack>
     </MudPaper>
 }
+@if (daysSince >= 14 && daysSince < 30 && Goal.CompletionDate is null && ProgressEntries.Count >= 3)
+{
+    var obstaclePrompts = new[] {
+        "What's the biggest thing getting in the way right now?",
+        "What one small action could move this forward this week?",
+        "If this goal were easier, what would you do differently?",
+        "Who could help you make progress on this goal?"
+    };
+    var obstaclePrompt = obstaclePrompts[ProgressEntries.Count % obstaclePrompts.Length];
+    <MudPaper Elevation="1" Class="pa-3 mb-3" Style="border-radius:12px;border-left:4px solid var(--mud-palette-warning);background:linear-gradient(135deg,rgba(255,152,0,.06) 0%,rgba(255,255,255,0) 100%);">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+            <MudText Typo="Typo.h5" Style="line-height:1;">🤔</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Warning" Style="font-weight:700;letter-spacing:0.5px;">QUICK REFLECTION — @daysSince DAYS IN</MudText>
+        </MudStack>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-1"><strong>@obstaclePrompt</strong></MudText>
+        <MudText Typo="Typo.caption" Color="Color.Warning">
+            💡 Answering this question honestly in a progress note can unlock your next breakthrough!
+        </MudText>
+    </MudPaper>
+}
 @if (daysSince >= 30 && Goal.CompletionDate is null && ProgressEntries.Count >= 2)
 {
     var reflectDurLabel = daysSince >= 365
