@@ -570,6 +570,24 @@
                   :               $"📅 Notes in {cpActiveWeeks} of {cpTotalWeeks} weeks ({cpPct}% consistency) — every week you log counts!";
         <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.CalendarMonth" Dense="true" Class="mb-3">@((MarkupString)cpMsg)</MudAlert>
     }
+    var cwrCurrentKey = System.Globalization.ISOWeek.GetWeekOfYear(DateTime.Today) * 10000 + DateTime.Today.Year;
+    var cwrWeekGroups = ProgressEntries
+        .GroupBy(p => System.Globalization.ISOWeek.GetWeekOfYear(DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime) * 10000
+                    + DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).Year)
+        .ToDictionary(g => g.Key, g => g.Count());
+    if (cwrWeekGroups.Count >= 3 && mmThisWeek > 0)
+    {
+        cwrWeekGroups[cwrCurrentKey] = mmThisWeek;
+        var cwrSorted = cwrWeekGroups.Values.OrderByDescending(c => c).ToList();
+        var cwrRank = cwrSorted.IndexOf(mmThisWeek) + 1;
+        if (cwrRank <= 3)
+        {
+            var cwrLabel = cwrRank == 1 ? "🥇 <strong>This is your best week ever</strong> on this goal — incredible! Keep going!"
+                         : cwrRank == 2 ? $"🥈 <strong>Your 2nd best week</strong> on this goal so far — you're close to your all-time best of {cwrSorted[0]}!"
+                         :               $"🥉 <strong>Your 3rd best week</strong> on this goal — top-3 performance! You're on fire!";
+            <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mb-3">@((MarkupString)cwrLabel)</MudAlert>
+        }
+    }
     var bmGroup = ProgressEntries
         .GroupBy(p => { var d = DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime; return new { d.Year, d.Month }; })
         .OrderByDescending(g => g.Count())
