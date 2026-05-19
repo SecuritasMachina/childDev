@@ -579,6 +579,12 @@
                     <MudChip T="string" Size="Size.Small" Color="@lvlColor" Class="mr-1" Style="font-size:0.72rem;">
                         @lvlEmoji @lvlLabel
                     </MudChip>
+                    @if (daysSinceProgress >= 2 && daysSinceProgress <= 7)
+                    {
+                        <MudChip T="string" Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Class="mr-1" Style="font-size:0.72rem;">
+                            Active this week! ✅
+                        </MudChip>
+                    }
                     @if (GoalStreaks.TryGetValue(g.Guid, out var streak))
                     {
                         <MudChip T="string" Icon="@Icons.Material.Filled.LocalFireDepartment" Color="Color.Warning" Size="Size.Small" Class="mr-1">
