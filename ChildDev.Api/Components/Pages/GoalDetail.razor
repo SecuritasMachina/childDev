@@ -130,6 +130,19 @@
     }
 }
 
+@if (ProgressEntries.Any() && !string.IsNullOrWhiteSpace(ProgressEntries.First().NextStepItems) && Goal.CompletionDate is null)
+{
+    var pinnedStep = ProgressEntries.First().NextStepItems!;
+    <MudPaper Elevation="2" Class="pa-3 mb-3" Style="border-radius:12px;border-left:4px solid var(--mud-palette-primary);background:linear-gradient(135deg,rgba(63,81,181,.06) 0%,rgba(255,255,255,0) 100%);">
+        <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Color="Color.Primary" Size="Size.Small" Style="margin-top:2px;" />
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.caption" Color="Color.Primary" Style="font-weight:600;letter-spacing:0.5px;">📌 Next Step</MudText>
+                <MudText Typo="Typo.body2">@pinnedStep</MudText>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+}
 @{
     // Focus score: recency (0-40) + frequency (0-40) + streak (0-20)
     var nowMsFS = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();

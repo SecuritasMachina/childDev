@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 510 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Previous milestone date" display: when you hit the last milestone | UX/Encourage | Domain: celebrate milestone history with specific dates | Medium | S | Low | Find which milestone was last crossed; show date it was hit using UpdatedOn of 5th/10th/25th/50th note | Shows tangible milestones as real achievements | No |
+| 2 | Web: GoalDetail — "Weekly note quota" visual: 7 mini dots showing days with notes this week | UX/Encourage | Domain: visual habit tracker per goal | High | M | Low | Check ProgressEntries for current Mon-Sun; show filled/empty dots for each day | Very visual and motivating; like a mini habit tracker | No |
+| 3 | Web: Home — "Quick wins this week" count: show completed todos count alongside journal stat | UX/Encourage | Domain: visible weekly momentum | Medium | XS | Low | Query CompletedAt >= weekAgoMs for todos; show in journal stat card or after | Simple reuse of existing query pattern | No |
+| 4 | Web: Insights — "Total activity score" overview card: todos + journal + progress in one place | UI | Domain: overall engagement summary | Medium | S | Low | Three-column stat with all-time totals; single visual card | Quick orientation for heavy users; simple computation | No |
+| 5 | Web: GoalDetail — "Encouragement mode": for goals with 0 notes, show more prominent CTA | UX/Encourage | Domain: onboarding encouragement for new goals | High | S | Low | If ProgressEntries.Count == 0, show a large friendly nudge card with tips | Addresses the "empty state" which is critical for engagement | No |
+| 6 | Web: Home — Sort option: sort goals by focus score (most-engaged first) | UX | Domain: surface most-active goals | Medium | M | Low | Compute focus score per goal using existing data; add sort chip | Useful but adds complexity to sort logic | No |
+| 7 | Web: Insights — "Goal momentum index": percentage of active goals worked on in last 7 days | UX | Domain: portfolio-level engagement signal | Medium | S | Low | GoalsProgressedThisWeek / AllActiveGoals.Count if available; else query | Good high-level KPI; requires data from Home or extra query | No |
+| 8 | Web: GoalDetail — "Next step commitment": if next step text exists, show as prominent pinned card at top | UX/Encourage | Domain: keep next action visible and motivating | High | S | Low | Check LatestNextStep for the goal; display as action card before progress timeline | High value — the next step is the most important thing | No |
+| 9 | Web: Home — Show count of goals with stale progress (7+ days) as a gentle reminder | UX | Domain: portfolio health signal | Medium | XS | Low | Count goals where LastProgressAt < 7d ago (or no progress); show in goals stat card | Useful but could feel negative; frame as "needs attention" | No |
+| 10 | Web: Journal — "Tag frequency trend": show if a tag is being used more or less this month vs last | UX | Domain: evolving interest tracking | Low | M | Low | GroupBy tag by month; compare this vs last month count; show trend icon on each tag chip | Complex but interesting; low usage payoff | No |
+
+**Selection iter 510:** Item #8 — "Next step commitment" pinned card at top of GoalDetail.
+- If the most recent progress note has `NextStepItems` text, display it as a prominent pinned action card at the top
+- This makes the next action visible without having to scroll down to the timeline
+- Uses `ProgressEntries.First().NextStepItems` (already loaded) — zero extra queries
+- High visibility feature; addresses the core purpose of progress notes
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 507 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
