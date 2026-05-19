@@ -442,6 +442,22 @@
         }
     </MudAlert>
 }
+@if (AnniversaryGoalName is not null && string.IsNullOrWhiteSpace(FilterText))
+{
+    var annivMsg = AnniversaryDaysUntil == 0
+        ? $"🎂 <strong>Today is day {AnniversaryDays}!</strong> Congratulations on \"{AnniversaryGoalName}\" — {AnniversaryDays} days of real commitment! 🎉"
+        : AnniversaryDaysUntil > 0
+            ? $"🎂 <strong>{AnniversaryDays}-day milestone in {AnniversaryDaysUntil} day{(AnniversaryDaysUntil == 1 ? "" : "s")}!</strong> Nearly {AnniversaryDays} days on \"{AnniversaryGoalName}\" — the finish line is close!"
+            : $"🎉 <strong>{AnniversaryDays}-day milestone reached!</strong> \"{AnniversaryGoalName}\" just hit {AnniversaryDays} days — that's incredible dedication! Celebrate this! 🌟";
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Celebration" Dense="true" Class="mb-3">
+        @((MarkupString)annivMsg)
+        @if (!string.IsNullOrWhiteSpace(AnniversaryGoalGuid))
+        {
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Success"
+                       Href="@($"/goals/{AnniversaryGoalGuid}")" Class="ml-1">View goal</MudButton>
+        }
+    </MudAlert>
+}
 @if (NextMeetingGoalName is not null && string.IsNullOrWhiteSpace(FilterText))
 {
     var mtgDaysLabel = NextMeetingDaysAway == 0 ? "today!" : NextMeetingDaysAway == 1 ? "tomorrow" : $"in {NextMeetingDaysAway} days";
@@ -1116,6 +1132,10 @@
     private string? StreakAtRiskGoalName;
     private int StreakAtRiskWeeks;
     private string? StreakAtRiskGoalGuid;
+    private string? AnniversaryGoalName;
+    private string? AnniversaryGoalGuid;
+    private int AnniversaryDays;
+    private int AnniversaryDaysUntil;
 
     protected override async Task OnInitializedAsync()
     {
@@ -1293,6 +1313,36 @@
                     break;
                 }
             }
+        }
+
+        // Goal anniversaries: find first goal approaching or just reaching 30/60/90/180/365 day milestone
+        var nowMsAnniv = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var anniversaryMilestones = new[] { 365, 180, 90, 60, 30 };
+        AnniversaryGoalName = null; AnniversaryGoalGuid = null; AnniversaryDays = 0; AnniversaryDaysUntil = -1;
+        foreach (var ag in AllActiveGoals)
+        {
+            var agDaysSince = (int)((nowMsAnniv - ag.EnteredDate) / 86_400_000L);
+            foreach (var milestone in anniversaryMilestones)
+            {
+                var daysUntil = milestone - agDaysSince;
+                if (daysUntil >= 0 && daysUntil <= 3)
+                {
+                    AnniversaryGoalName = ag.GoalText?.Length > 50 ? ag.GoalText[..50] + "…" : ag.GoalText;
+                    AnniversaryGoalGuid = ag.Guid;
+                    AnniversaryDays = milestone;
+                    AnniversaryDaysUntil = daysUntil;
+                    break;
+                }
+                if (daysUntil < 0 && daysUntil >= -7)
+                {
+                    AnniversaryGoalName = ag.GoalText?.Length > 50 ? ag.GoalText[..50] + "…" : ag.GoalText;
+                    AnniversaryGoalGuid = ag.Guid;
+                    AnniversaryDays = milestone;
+                    AnniversaryDaysUntil = daysUntil;
+                    break;
+                }
+            }
+            if (AnniversaryGoalName is not null) break;
         }
 
         // Next meeting countdown: find first active goal with meeting within 7 calendar days
