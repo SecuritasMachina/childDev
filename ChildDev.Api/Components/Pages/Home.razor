@@ -328,6 +328,21 @@
         @cgLabel
     </MudAlert>
 }
+@{
+    var jnyAllGoals = AllActiveGoals.Concat(CompletedGoals).ToList();
+    var jnyNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    var jnyEarliestMs = jnyAllGoals.Count > 0 ? jnyAllGoals.Min(g => g.EnteredDate) : 0L;
+    var jnyDays = jnyEarliestMs > 0 ? (int)((jnyNowMs - jnyEarliestMs) / 86_400_000L) : 0;
+}
+@if (jnyDays >= 90 && string.IsNullOrWhiteSpace(FilterText))
+{
+    var jnyLabel = jnyDays >= 365
+        ? $"🗓️ <strong>You've been on this journey for over a year!</strong> {jnyDays} days of growth — look how far you've come!"
+        : jnyDays >= 180
+        ? $"🗓️ <strong>6 months in!</strong> {jnyDays} days of setting and chasing goals — this is who you're becoming!"
+        : $"🗓️ <strong>{jnyDays} days into your goal journey</strong> — you're building habits that last!";
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Celebration" Dense="true" Class="mb-3">@((MarkupString)jnyLabel)</MudAlert>
+}
 
 @if (CompletedGoals.Any() && string.IsNullOrWhiteSpace(FilterText))
 {
