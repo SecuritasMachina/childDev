@@ -604,6 +604,20 @@
             📆 Best month on this goal: <strong>@bmGroup.Count() notes</strong> in @bmLabel — can you beat it?
         </MudText>
     }
+    if (ProgressEntries.Count >= 5)
+    {
+        var dowGroup = ProgressEntries
+            .GroupBy(p => DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime.DayOfWeek)
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+        if (dowGroup is not null && dowGroup.Count() >= 2)
+        {
+            var dowName = dowGroup.Key.ToString();
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-3">
+                📅 You tend to reflect on this goal most on <strong>@dowName</strong> — that's your power day for this goal!
+            </MudText>
+        }
+    }
 }
 @{
     // Rule-based goal insight narrative
