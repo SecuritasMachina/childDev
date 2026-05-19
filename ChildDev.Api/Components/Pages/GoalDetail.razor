@@ -320,18 +320,23 @@ else
     </DialogActions>
 </MudDialog>
 
-@* Progress milestone encouragement *@
+@* Progress milestone / level-up encouragement *@
 <MudDialog @bind-Visible="ShowMilestone" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
     <DialogContent>
-        <MudStack AlignItems="AlignItems.Center" Spacing="3" Class="pa-4">
+        <div class="confetti-burst">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+        </div>
+        <MudStack AlignItems="AlignItems.Center" Spacing="2" Class="pa-4">
+            <MudText Typo="Typo.overline" Color="Color.Warning" Style="font-weight:700;letter-spacing:2px;">LEVEL UP!</MudText>
             <MudText Typo="Typo.h2" Class="celeb-emoji">@MilestoneEmoji</MudText>
-            <MudText Typo="Typo.h5" Align="Align.Center" Color="Color.Primary">You're making progress!</MudText>
-            <MudText Typo="Typo.body1" Align="Align.Center">@MilestoneMessage</MudText>
+            <MudText Typo="Typo.h5" Align="Align.Center" Color="Color.Primary">@MilestoneMessage</MudText>
         </MudStack>
     </DialogContent>
     <DialogActions>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
-                   OnClick="() => ShowMilestone = false">Thanks! 💪</MudButton>
+                   OnClick="() => ShowMilestone = false">Let's go! 💪</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -565,15 +570,15 @@ else
         ShowAddDialog = false;
         await LoadProgress();
 
-        // Check for encouragement milestones
+        // Check for encouragement milestones (each coincides with a level-up)
         var count = ProgressEntries.Count;
         (MilestoneEmoji, MilestoneMessage) = count switch
         {
-            1  => ("🌱", "First progress note! You've taken the first step — that's the hardest part!"),
-            5  => ("🚀", "5 progress notes! You're building real momentum. Keep it up!"),
-            10 => ("⭐", "10 notes! You're seriously committed to this goal. Amazing!"),
-            25 => ("🏆", "25 progress notes! You're a goal champion. Nothing can stop you!"),
-            50 => ("🌟", "50 notes! Legendary dedication. This goal doesn't stand a chance!"),
+            1  => ("🌱", "First note! You're now Getting Started ⚡ — the first step is always the hardest!"),
+            5  => ("🚀", "Level Up! You've reached Momentum 🚀 — 5 notes and you're building a real habit!"),
+            10 => ("⭐", "Level Up! You've reached Strong ⭐ — 10 notes means serious commitment. Amazing!"),
+            25 => ("🏆", "Level Up! You've reached Champion 🏆 — 25 notes! Nothing can stop you now!"),
+            50 => ("🌟", "LEVEL UP! LEGENDARY 🌟 — 50 notes! The greatest dedication. You are unstoppable!"),
             _  => (string.Empty, string.Empty)
         };
         if (!string.IsNullOrEmpty(MilestoneMessage))
