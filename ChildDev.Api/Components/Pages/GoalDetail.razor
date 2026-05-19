@@ -255,6 +255,35 @@ else
     </MudTimeline>
 }
 
+@if (ProgressEntries.Any())
+{
+    var oldest = ProgressEntries.Last();
+    var newest = ProgressEntries.First();
+    var firstDate = DateTimeOffset.FromUnixTimeMilliseconds(oldest.UpdatedOn).LocalDateTime;
+    var lastMs = newest.UpdatedOn;
+    var daysAgoLast = (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - lastMs) / 86_400_000L);
+    var lastLabel = daysAgoLast == 0 ? "today" : daysAgoLast == 1 ? "yesterday" : $"{daysAgoLast} days ago";
+    <MudPaper Elevation="0" Class="pa-3 mb-3"
+              Style="background:var(--mud-palette-background-grey);border-radius:12px;">
+        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="3" AlignItems="AlignItems.Center">
+            <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Started</MudText>
+                <MudText Typo="Typo.body2" Style="font-weight:600;">@firstDate.ToString("MMM d, yyyy")</MudText>
+            </MudStack>
+            <MudDivider Vertical="true" FlexItem="true" />
+            <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Total Notes</MudText>
+                <MudText Typo="Typo.body2" Style="font-weight:600;">@ProgressEntries.Count</MudText>
+            </MudStack>
+            <MudDivider Vertical="true" FlexItem="true" />
+            <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Last Update</MudText>
+                <MudText Typo="Typo.body2" Style="font-weight:600;">@lastLabel</MudText>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+}
+
 <MudStack Row="true" Spacing="2" Class="mt-2">
     <MudButton Variant="Variant.Outlined" Color="Color.Primary"
                StartIcon="@Icons.Material.Filled.Add"
