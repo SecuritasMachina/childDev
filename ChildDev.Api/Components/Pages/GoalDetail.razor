@@ -326,8 +326,10 @@ else
         </MudText>
     </TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="NewNextSteps" Label="Progress / next steps" Variant="Variant.Outlined"
-                      Lines="3" Class="mb-4" AutoFocus="true" />
+        <MudTextField @bind-Value="NewNextSteps"
+                      Label="What happened? What's the next step?"
+                      HelperText="@(string.IsNullOrWhiteSpace(NewNextSteps) ? "" : "Pre-filled from your last note — edit or replace as needed")"
+                      Variant="Variant.Outlined" Lines="3" Class="mb-4" AutoFocus="true" />
         <MudDatePicker @bind-Date="NewMeetingDate" Label="Next meeting date (optional)" Variant="Variant.Outlined" />
     </DialogContent>
     <DialogActions>
@@ -459,7 +461,9 @@ else
 
     private void OpenAddProgressDialog()
     {
-        NewNextSteps = string.Empty;
+        // Pre-fill with the most recent note's next steps to reduce blank-page friction
+        var lastNote = ProgressEntries.FirstOrDefault();
+        NewNextSteps = !string.IsNullOrWhiteSpace(lastNote?.NextStepItems) ? lastNote.NextStepItems : string.Empty;
         var todayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
         NewMeetingDate = Goal?.NextMeetingDate.HasValue == true && Goal.NextMeetingDate.Value >= todayStartMs
             ? DateTimeOffset.FromUnixTimeMilliseconds(Goal.NextMeetingDate.Value).LocalDateTime
