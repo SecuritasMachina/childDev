@@ -33,6 +33,37 @@
                    OnClick="() => _confirmDeleteGoal = true" aria-label="Delete goal" />
 </MudStack>
 
+@{
+    var growthQuotes = new[] {
+        "\"The secret of getting ahead is getting started.\" — Mark Twain",
+        "\"It always seems impossible until it's done.\" — Nelson Mandela",
+        "\"You don't have to be great to start, but you have to start to be great.\" — Zig Ziglar",
+        "\"Believe you can and you're halfway there.\" — Theodore Roosevelt",
+        "\"The only way to do great work is to love what you do.\" — Steve Jobs",
+        "\"Success is the sum of small efforts, repeated day in and day out.\" — Robert Collier",
+        "\"Don't watch the clock; do what it does. Keep going.\" — Sam Levenson",
+        "\"You are never too old to set another goal or dream a new dream.\" — C.S. Lewis",
+        "\"Every expert was once a beginner.\" — Helen Hayes",
+        "\"Dreams don't work unless you do.\" — John C. Maxwell",
+        "\"What you get by achieving your goals is not as important as what you become.\" — Thoreau",
+        "\"The best time to plant a tree was 20 years ago. The second best time is now.\" — Proverb",
+        "\"Small steps every day lead to big results.\" — Anonymous",
+        "\"Progress, not perfection.\" — Anonymous",
+        "\"You've got this. One note at a time.\" — ChildDev",
+        "\"Persistence is the key that unlocks every door.\" — Anonymous",
+        "\"Be proud of every step, no matter how small.\" — Anonymous",
+        "\"Hard things are hard because they're worth doing.\" — Anonymous",
+        "\"Keep going. Your future self will thank you.\" — Anonymous",
+        "\"Consistency beats intensity every time.\" — Anonymous"
+    };
+    var quoteIdx = Math.Abs(Goal.Guid.GetHashCode()) % growthQuotes.Length;
+    var todayQuoteShift = DateTime.Today.DayOfYear % growthQuotes.Length;
+    var selectedQuote = growthQuotes[(quoteIdx + todayQuoteShift) % growthQuotes.Length];
+}
+@if (Goal.CompletionDate is null && ProgressEntries.Count >= 1)
+{
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-3" Style="font-style:italic;opacity:.8;">💬 @selectedQuote</MudText>
+}
 @if (Goal.CompletionDate.HasValue)
 {
     var completedDate = DateTimeOffset.FromUnixTimeMilliseconds(Goal.CompletionDate.Value).LocalDateTime;
