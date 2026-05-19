@@ -172,6 +172,12 @@
         📅 You log the most progress notes on <strong>@BestProgressDayOfWeek</strong>s (@BestProgressDayOfWeekCount total) — that's your power day!
     </MudAlert>
 }
+@if (BestJournalDayOfWeek is not null)
+{
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.MenuBook" Dense="true" Class="mb-4">
+        📓 You journal most on <strong>@BestJournalDayOfWeek</strong>s (@BestJournalDayOfWeekCount entries total) — make that your reflection ritual!
+    </MudAlert>
+}
 @if (CompletionVelocityMsg is not null)
 {
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Speed" Dense="true" Class="mb-4">@CompletionVelocityMsg</MudAlert>
@@ -714,6 +720,8 @@
     private string? CompletionVelocityMsg;
     private string? BestProgressDayOfWeek;
     private int BestProgressDayOfWeekCount;
+    private string? BestJournalDayOfWeek;
+    private int BestJournalDayOfWeekCount;
 
     protected override async Task OnInitializedAsync()
     {
@@ -980,6 +988,17 @@
                 .First();
             BestProgressDayOfWeek = bestDow.Key.ToString();
             BestProgressDayOfWeekCount = bestDow.Count();
+        }
+
+        // Best day of week for journal entries
+        if (allJournalEver.Count >= 5)
+        {
+            var bestJDow = allJournalEver
+                .GroupBy(ms => DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime.DayOfWeek)
+                .OrderByDescending(g => g.Count())
+                .First();
+            BestJournalDayOfWeek = bestJDow.Key.ToString();
+            BestJournalDayOfWeekCount = bestJDow.Count();
         }
 
         // Journal streak: consecutive days ending today with at least one journal entry
