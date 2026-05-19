@@ -135,6 +135,24 @@
     </MudPaper>
 }
 
+@if (LongestActiveGoalDays >= 14 && !string.IsNullOrWhiteSpace(LongestActiveGoalName))
+{
+    var lgDuration = LongestActiveGoalDays >= 365
+        ? $"{LongestActiveGoalDays / 365} year{(LongestActiveGoalDays / 365 == 1 ? "" : "s")}"
+        : LongestActiveGoalDays >= 30
+            ? $"{LongestActiveGoalDays / 30} month{(LongestActiveGoalDays / 30 == 1 ? "" : "s")}"
+            : $"{LongestActiveGoalDays} days";
+    var lgName = LongestActiveGoalName.Length > 50 ? LongestActiveGoalName[..50] + "…" : LongestActiveGoalName;
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.AccessTime" Dense="true" Class="mb-4">
+        🌱 <strong>Long-term commitment!</strong> "@lgName" has been an active goal for <strong>@lgDuration</strong> — that kind of persistence is truly admirable!
+        @if (!string.IsNullOrWhiteSpace(LongestActiveGoalGuid))
+        {
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Success"
+                       Href="@($"/goals/{LongestActiveGoalGuid}")" Class="ml-1">View</MudButton>
+        }
+    </MudAlert>
+}
+
 @if (!string.IsNullOrWhiteSpace(TopMood))
 {
     <MudPaper Elevation="1" Class="pa-3 mb-6 d-flex align-items-center" Style="border-radius:12px;gap:12px;">
@@ -481,6 +499,9 @@
     private string? TopProgressWeekday;
     private int TopProgressWeekdayCount;
     private int DaysSinceLastProgress = -1;
+    private string? LongestActiveGoalName;
+    private int LongestActiveGoalDays;
+    private string? LongestActiveGoalGuid;
     private List<(string Day, int Count)> WeekdayLeaderboard = [];
     private List<ChartSeries> GoalNotesChartSeries = [];
     private string[] GoalNotesChartLabels = [];
@@ -518,6 +539,19 @@
 
         GoalProgressTotal = await Db.GoalProgresses
             .CountAsync(p => p.AccountFk == AccountGuid && p.DeletedAt == null);
+
+        // Longest active goal (oldest EnteredDate among non-completed active goals)
+        var longestGoal = await Db.Goals
+            .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate == null)
+            .OrderBy(g => g.EnteredDate)
+            .Select(g => new { g.Guid, g.GoalText, g.EnteredDate })
+            .FirstOrDefaultAsync();
+        if (longestGoal is not null)
+        {
+            LongestActiveGoalName = longestGoal.GoalText;
+            LongestActiveGoalGuid = longestGoal.Guid;
+            LongestActiveGoalDays = (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - longestGoal.EnteredDate) / 86_400_000L);
+        }
 
         var moods = await Db.Journals
             .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null && j.Mood != null && j.Mood != "")
