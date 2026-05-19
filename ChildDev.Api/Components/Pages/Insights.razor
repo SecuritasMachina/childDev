@@ -348,8 +348,14 @@
 
 @if (BestDayEverDate is not null)
 {
-    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Star" Dense="true" Class="mb-6">
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Star" Dense="true" Class="mb-4">
         🏅 <strong>All-time best day:</strong> @BestDayEverDate with <strong>@BestDayEverCount actions</strong>! That was an epic day — can you top it?
+    </MudAlert>
+}
+@if (BestMonthEver is not null)
+{
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mb-6">
+        🏆 <strong>Most productive month:</strong> @BestMonthEver with @BestMonthEverCount total actions! That month you were absolutely on fire — what made it so great?
     </MudAlert>
 }
 
@@ -643,6 +649,8 @@
     private List<(string Day, int Count)> WeekdayLeaderboard = [];
     private string? BestDayEverDate;
     private int BestDayEverCount;
+    private string? BestMonthEver;
+    private int BestMonthEverCount;
     private int JournalStreak;
     private int LongestProgressDayStreak;
     private int JournalConsistencyScore30;
@@ -949,6 +957,17 @@
             {
                 BestDayEverDate = bestDayGroup.Key.ToString("MMMM d, yyyy");
                 BestDayEverCount = bestDayGroup.Count();
+            }
+
+            var bestMonthGroup = allEver
+                .GroupBy(ms => DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime.ToString("yyyy-MM"))
+                .OrderByDescending(g => g.Count())
+                .FirstOrDefault();
+            if (bestMonthGroup is not null && bestMonthGroup.Count() >= 5)
+            {
+                if (DateTime.TryParseExact(bestMonthGroup.Key + "-01", "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out var bmd))
+                    BestMonthEver = bmd.ToString("MMMM yyyy");
+                BestMonthEverCount = bestMonthGroup.Count();
             }
         }
     }
