@@ -176,6 +176,18 @@
                     🔥 @ProgressNotesToday note@(ProgressNotesToday == 1 ? "" : "s") logged today!
                 </MudText>
             }
+            @{
+                var gcmLocalNow = DateTimeOffset.Now.LocalDateTime;
+                var gcmMonthStartMs = new DateTimeOffset(new DateTime(gcmLocalNow.Year, gcmLocalNow.Month, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
+                var goalsThisMonth = AllActiveGoals.Count(g => g.EnteredDate >= gcmMonthStartMs)
+                    + CompletedGoals.Count(g => g.EnteredDate >= gcmMonthStartMs);
+            }
+            @if (goalsThisMonth > 0)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Success">
+                    🆕 @goalsThisMonth new goal@(goalsThisMonth == 1 ? "" : "s") this month
+                </MudText>
+            }
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="4">
