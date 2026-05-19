@@ -188,6 +188,19 @@
                     🆕 @goalsThisMonth new goal@(goalsThisMonth == 1 ? "" : "s") this month
                 </MudText>
             }
+            @if (AllActiveGoals.Count >= 3)
+            {
+                var portNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                var portHot   = AllActiveGoals.Count(g => LastProgressAt.TryGetValue(g.Guid, out var pa) && pa >= portNowMs - 86_400_000L);
+                var portCold  = AllActiveGoals.Count(g => !LastProgressAt.TryGetValue(g.Guid, out var pa2) || pa2 < portNowMs - 13L * 86_400_000L);
+                var portWarm  = AllActiveGoals.Count - portHot - portCold;
+                @if (portHot > 0 || portCold > 0)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        @(portHot > 0 ? $"🔥{portHot} hot " : "")@(portWarm > 0 ? $"🟡{portWarm} warm " : "")@(portCold > 0 ? $"❄️{portCold} cold" : "")
+                    </MudText>
+                }
+            }
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="4">
