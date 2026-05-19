@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-19 — Invocation 7 Iter 567 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Insights — "Goal completion timeline": last 3 completed goals with name, date, and days to complete | UX/Encourage | Domain: celebrate achievement history | High | M | Low | CompletedGoals sorted by CompletionDate desc; take 3; duration in days; show as compact list | Strong celebration of completed work; needs CompletedGoals with both dates | No |
+| 2 | Web: Home — "Daily check-in streak": consecutive calendar days ending today where any goal got a note | UX/Encourage | Domain: daily habit building | High | S | Low | Sort allTimestamps by date; count consecutive days from today backward | Very motivating global habit metric; distinct from per-goal weekly streak | No |
+| 3 | Web: GoalDetail — "Completion forecast" nudge: if pace < 0.5/week and no deadline, show gentle "step it up!" | UX/Encourage | Domain: pacing self-awareness | High | XS | Low | weeksSince from daysSince; notesPerWeek; if < 0.5 and Goal.ExpirationDate is null: show nudge | Non-duplicative; existing velocity only shows for deadline goals | No |
+| 4 | Web: Journal — "Streak days label" in journal header area with flame icon | UX | Domain: journaling habit visibility | Medium | XS | Low | JournalStreak already computed; show "🔥 X-day streak" as a MudChip near the new entry button | Quick visibility upgrade; JournalStreak already loaded | No |
+| 5 | Web: GoalDetail — "Goal health score": composite metric (recency + frequency + diversity) shown as a letter grade | UX | Domain: goal engagement quality | Medium | M | Low | Already computing focusScore; just rename or expose more prominently | FocusScore already exists; could rename to health and move it up | No |
+| 6 | Web: Home — "Personal record nudge": if today any goal hit an all-time high week note count, celebrate | UX/Encourage | Domain: personal record celebration | High | S | Low | GoalStreaks from allTimestamps per goal; check if thisWeek equals maxWeek ever | Exciting PR moment; requires per-goal weekly window scan | No |
+| 7 | Web: Insights — "Notes written this week vs avg": how this week compares to weekly average | UX/Encourage | Domain: weekly effort self-awareness | Medium | XS | Low | NotesThisWeekProgress already computed; avg = TotalProgressNotes / weeksSinceFirst; compare | Quick self-comparison; uses already-computed fields | No |
+| 8 | Web: GoalDetail — "Recent activity summary": compact "last 7 days: X notes, last 30: Y notes" label | UX | Domain: recent engagement snapshot | Low | XS | Low | ProgressEntries filtered by 7d and 30d; two counts; show as compact text | Minor; partially covered by focus score and momentum meter | No |
+| 9 | Web: Journal — "Tag of the week": most-used tag in last 7 days, shown as a chip | UX | Domain: journaling theme awareness | Low | XS | Low | AllEntries filtered to last 7d; AllTags equivalent filter; mode tag; show chip | Quick theme awareness; AllEntries already loaded | No |
+| 10 | Web: Insights — "This week's activity vs last week" for progress notes: already have both numbers | UX/Encourage | Domain: week-over-week progress awareness | Medium | XS | Low | NotesThisWeekProgress and NotesLastWeekProgress already computed; show comparison message | Both values already computed; minimal new code | No |
+
+**Selection iter 567:** Item #10 — "This week vs last week" progress notes comparison on Insights.
+- `NotesThisWeekProgress` and `NotesLastWeekProgress` already computed in `LoadDomainStats`
+- Show a comparison alert: "This week: X notes, last week: Y notes — [rising/same/falling message]"
+- Placed in the goal stats section near the top
+- Zero extra computation — purely uses already-loaded fields
+
+---
+
 ## 2026-05-19 — Invocation 7 Iter 564 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
