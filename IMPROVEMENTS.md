@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 505 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Top days of week" for this goal (most common logging days shown as chips) | UX | Domain: personalized habit insight per goal | Medium | S | Low | Group ProgressEntries by DayOfWeek; show top 3 as chips with count | Lightweight; useful to reinforce habit on strong days | No |
+| 2 | Web: Home — "Comeback!" banner: goal was stale (14+ days) and was just updated (within 2 days) | UX/Encourage | Domain: celebrate returning to a neglected goal | High | M | Low | No need for render-delta tracking: check if LastProgressAt[g] within 2 days AND second-most-recent note was 14+ days before | Strong encouragement; manageable query complexity | No |
+| 3 | Web: Insights — "Goal age" distribution: show how long goals have been active on average | UX | Domain: goal lifecycle awareness | Low | XS | Low | `EnteredDate` avg diff from now; single sentence stat | Informational; modest value | No |
+| 4 | Web: GoalDetail — "Focus score" ribbon: composite score from recency + frequency + streak | UX/Encourage | Domain: gamified engagement signal | High | M | Low | Score formula: recency (0-40) + frequency (0-40) + streak (0-20) → letter grade A-F | Exciting gamification; motivates consistent engagement | No |
+| 5 | Web: Home — milestone proximity banner: if any active goal is within 1 note of next milestone (5/10/25/50) | UX/Encourage | Domain: "almost there!" motivation | High | XS | Low | Check ProgressCounts against 4, 9, 24, 49; show "You're 1 note away from [milestone]!" | Extremely motivating; zero extra queries | No |
+| 6 | Web: Todos — "Time-to-complete" insight: avg time from created to completed for recent todos | UX | Domain: personal efficiency insight | Medium | S | Low | `CompletedAt - CreatedAt` for last 10 completed todos; show avg in hours/days | Interesting meta-insight; requires CreatedAt field | No |
+| 7 | Web: Insights — "Longest active goal" callout: which goal has been running the longest | UX/Encourage | Domain: celebrate long-term commitment | High | XS | Low | Min(EnteredDate) across active goals; show name + duration | Strong celebration of persistence; trivial computation | No |
+| 8 | Web: Home — "Quick wins this week" count: completed todos in last 7 days shown in journal card | UX/Encourage | Domain: visible momentum from task completion | Medium | XS | Low | Already have AllCompletedTodos or can query CompletedAt >= weekAgoMs | Simple reuse; morale boost | No |
+| 9 | Web: GoalDetail — Celebration confetti animation on milestone hit: add CSS keyframe burst | UX/Encourage | Domain: visual dopamine on milestones | High | M | Low | Only shown when `achievedMs` is true; CSS-only, no JS deps | High delight; milestone moments deserve visual celebration | No |
+| 10 | Web: Insights — "All-time most productive day" callout: single best day by total activity | UX/Encourage | Domain: personal peak performance record | Medium | S | Low | Combine all entity timestamps; group by date; find max; "Your best day ever: May 3 with 12 actions!" | Strong "personal record" framing; requires 3 small queries | No |
+
+**Selection iter 505:** Item #5 — Milestone proximity banner on Home.
+- Check if any active goal's ProgressCount is at 4, 9, 24, or 49 (one note away from 5, 10, 25, 50 milestone)
+- Show: "🚀 You're just 1 progress note away from the [Milestone] milestone on [Goal]! Add a note now!"
+- Zero extra queries — `ProgressCounts` already loaded on Home
+- Extremely high motivational value, minimal implementation risk
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 498 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
