@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-19 — Invocation 7 Iter 579 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Note quality growth" badge: if avg word count of recent 5 notes > first 5, show "notes getting richer!" | UX/Encourage | Domain: effort quality growth | Medium | S | Low | NextStepItems word count; two groups; need >= 10 notes; compare avg | Engaging depth feedback; limited to goals with 10+ notes | No |
+| 2 | Web: Home — "You've set X goals total" fun fact in stat card when > 10 total | UX/Encourage | Domain: cumulative goal-setting motivation | Low | XS | Low | AllActiveGoals.Count + CompletedGoals.Count; show "📚 X goals set in total" when >= 10 | Fun cumulative stat; shows breadth of commitment | No |
+| 3 | Web: GoalDetail — "Inspire me" rotating affirmation: one of 12 short encouraging sentences shown at the bottom | UX/Encourage | Domain: motivational content | Medium | XS | Low | Static array of affirmations; pick by goal GUID hash + day shift; show subtly | Light and warm; no data needed; complements quote at top | No |
+| 4 | Web: Journal — "Mood improvement alert": if last 3 moods include an improving sequence (sad→good, tired→calm→happy), show encouragement | UX/Encourage | Domain: emotional progress awareness | Medium | M | Med | Complex mood sequence analysis; fragile heuristic; skip in favor of simpler features | Too complex and fragile | No |
+| 5 | Web: Insights — "Progress note activity by hour": which hour of day user is most active | UX | Domain: scheduling self-awareness | Low | XS | Low | allProgressEver ms → Hour; group count; find mode; show "You're most active around 3pm!" | Scheduling insight; requires time zone awareness | No |
+| 6 | Web: Home — "Goal ages at a glance": show oldest and newest active goal ages in the stat card | UX | Domain: portfolio age diversity | Low | XS | Low | AllActiveGoals min/max EnteredDate; compute days; show "oldest: 90d, newest: 3d" | Minor insight; quick computation | No |
+| 7 | Web: GoalDetail — "Personal best note count day": which day had the most notes for this goal | UX/Encourage | Domain: celebrate peak engagement | Medium | XS | Low | ProgressEntries grouped by date; find max count day; show "Your best day on this goal: X notes on [date]!" | Personal record for the goal; quick computation | No |
+| 8 | Web: Journal — "Longest journaling streak ever" under current streak | UX/Encourage | Domain: personal best awareness | Medium | S | Low | Scan AllEntries dates for max consecutive run; compare with JournalStreak | Personal record; needs date scan over AllEntries | No |
+| 9 | Web: Insights — "Todos completed this year" celebratory stat | UX/Encourage | Domain: annual todo achievement | Medium | XS | Low | Need CompletedTodos with CompletedAt; query already exists partially; filter by year start | Celebrates annual todo achievement; needs CompletedAt year filter | No |
+| 10 | Web: GoalDetail — "First month review": at exactly 30-day mark with 4+ notes, show "You've made it 1 month!" celebration | UX/Encourage | Domain: monthly goal milestone | High | XS | Low | daysSince == 30 and ProgressEntries.Count >= 4; already have daysSince | Precise celebration at 30-day milestone; zero extra queries | No |
+
+**Selection iter 579:** Item #7 — "Personal best note count day" on GoalDetail.
+- Group `ProgressEntries` by calendar date; find the date with the most entries
+- Show "Your best day on this goal: X notes on [date]!" when best day has >= 2 entries
+- Placed near the momentum meter / stats area
+- Zero extra queries; purely from already-loaded `ProgressEntries`
+
+---
+
 ## 2026-05-19 — Invocation 7 Iter 576 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
