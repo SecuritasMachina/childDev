@@ -123,6 +123,14 @@
     </MudAlert>
 }
 
+@if (JournalConsistencyScore30 >= 3)
+{
+    var jcsPct = (int)(JournalConsistencyScore30 * 100.0 / 30);
+    var jcsMsg = jcsPct >= 80 ? $"📓 <strong>{jcsPct}% journaling consistency</strong> last month — {JournalConsistencyScore30} active days! Exceptional habit building!"
+              : jcsPct >= 50 ? $"📓 <strong>{jcsPct}% journaling consistency</strong> — {JournalConsistencyScore30} active days this month. You're building a solid reflection habit!"
+              :                 $"📓 You journaled on {JournalConsistencyScore30} days last month ({jcsPct}% consistency) — every entry counts!";
+    <MudAlert Severity="@(jcsPct >= 80 ? Severity.Success : Severity.Info)" Icon="@Icons.Material.Filled.Book" Dense="true" Class="mb-4">@((MarkupString)jcsMsg)</MudAlert>
+}
 @if (LongestProgressDayStreak >= 3)
 {
     var lpsMsg = LongestProgressDayStreak >= 14 ? $"🌟 All-time best: <strong>{LongestProgressDayStreak} consecutive days</strong> logging progress — that's legendary dedication!"
@@ -610,6 +618,7 @@
     private int BestDayEverCount;
     private int JournalStreak;
     private int LongestProgressDayStreak;
+    private int JournalConsistencyScore30;
     private List<ChartSeries> GoalNotesChartSeries = [];
     private string[] GoalNotesChartLabels = [];
 
@@ -848,6 +857,14 @@
                 currentRun = 1;
             if (currentRun > LongestProgressDayStreak) LongestProgressDayStreak = currentRun;
         }
+
+        // Journal consistency score: distinct journaling days in last 30 days
+        var jcs30Ms = DateTimeOffset.UtcNow.AddDays(-30).ToUnixTimeMilliseconds();
+        JournalConsistencyScore30 = allJournalEver
+            .Where(ms => ms >= jcs30Ms)
+            .Select(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
+            .ToHashSet()
+            .Count;
 
         // Journal streak: consecutive days ending today with at least one journal entry
         var journalDateSet = allJournalEver
