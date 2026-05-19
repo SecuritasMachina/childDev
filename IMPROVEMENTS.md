@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-19 — Invocation 8 Iter 612 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Note quality growth": compare avg word count of last 5 vs first 5 notes (>= 10 notes); show "Your notes are getting richer!" | UX/Encourage | Domain: note depth evolution | Medium | S | Low | NextStepItems split; null safety needed | Deferred many times due to nullable complexity | No |
+| 2 | Web: Home — "Multi-goal day": when notes today span >= 3 different goals, show "Today you've touched X goals — well-rounded effort!" | UX/Encourage | Domain: cross-goal daily breadth | Medium | M | Med | Needs per-goal today counts; extra grouping | Nice positive reinforcement for productive days | No |
+| 3 | Web: Insights — "Average notes per week across all goals": totalProgressNotes / weeksActive; "Your average pace is X.X notes/week across all goals!" | UX | Domain: aggregate weekly pace | Low | XS | Low | Simple division; allActiveGoals weeks from earliest EnteredDate | Minor aggregate metric | No |
+| 4 | Web: GoalDetail — "Day of week pattern": which day does this kid log most notes on this goal? Show "You reflect on this goal most on [Day]!" when >= 5 notes and clear mode | UX/Insight | Domain: behavioral pattern | Medium | XS | Low | Group UpdatedOn ms by DayOfWeek; find mode; show when count >= 2 on that day | Personalizes the experience; shows self-awareness | No |
+| 5 | Web: Home — "First note of the week" celebration: when ProgressThisWeek == 1 and notes logged today == 1, show "Great start to the week — first note down, keep going!" | UX/Encourage | Domain: weekly kickoff | Medium | XS | Low | ProgressThisWeek == 1 && ProgressNotesToday >= 1; simple condition | Nice micro-celebration for starting the week | No |
+| 6 | Web: Insights — "Most productive quarter": group all progress notes by Q1/Q2/Q3/Q4; find max; show "Your most productive quarter: Q[N] — [months]!" when >= 2 quarters of data | UX | Domain: seasonal pattern | Low | XS | Low | Group by (month-1)/3; count; find max; simple | Interesting seasonal insight | No |
+| 7 | Web: GoalDetail — "Hour of day pattern": group notes by morning/afternoon/evening (before noon / noon-5pm / after 5pm); show "You tend to reflect on this goal in the [time]!" when >= 5 notes | UX/Insight | Domain: daily rhythm awareness | Low | XS | Low | DateTimeOffset.FromUnixTimeMilliseconds.Hour; bucket into 3; find mode | Personalized behavioral insight | No |
+| 8 | Web: GoalDetail — "Comeback momentum": when gap of 14+ days occurred historically but 5+ notes logged since latest return, show "You came back and logged X notes — that's real resilience!" | UX/Encourage | Domain: recovery recognition | Medium | S | Low | sortedDates scan for gap; count notes after gap; show when >= 5 since return | Validates sticking with a goal after a pause | No |
+| 9 | Web: Home — "Goals with notes this week": when >= 2 active goals had notes this week, show "X of your goals got attention this week — great balance!" | UX/Encourage | Domain: weekly breadth | Medium | XS | Low | GoalsProgressedThisWeek >= 2; simple existing field | Uses GoalsProgressedThisWeek already computed | No |
+| 10 | Web: Insights — "Goals set vs completed by year": show "In [year] you set X goals and completed Y" for current year when >= 2 goals set | UX | Domain: yearly self-review | Low | M | Med | Needs EnteredDate and CompletionDate per goal; extra grouping logic | Too complex for current data loaded | No |
+
+**Selection iter 612:** Item #4 — "Day of week pattern" on GoalDetail.
+- Group ProgressEntries by DayOfWeek, find the mode, show when >= 5 notes total and mode day has >= 2 entries
+- Simple computation using existing ProgressEntries; DayOfWeek enum to string
+- Personalizes the experience and builds self-awareness
+
+---
+
 ## 2026-05-19 — Invocation 8 Iter 609 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
