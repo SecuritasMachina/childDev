@@ -383,6 +383,18 @@
         }
     </MudAlert>
 }
+@if (NextMeetingGoalName is not null && string.IsNullOrWhiteSpace(FilterText))
+{
+    var mtgDaysLabel = NextMeetingDaysAway == 0 ? "today!" : NextMeetingDaysAway == 1 ? "tomorrow" : $"in {NextMeetingDaysAway} days";
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.CalendarToday" Dense="true" Class="mb-3">
+        📅 <strong>Meeting @mtgDaysLabel</strong> on "@NextMeetingGoalName" — time to prepare your update!
+        @if (!string.IsNullOrWhiteSpace(NextMeetingGoalGuid))
+        {
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Info"
+                       Href="@($"/goals/{NextMeetingGoalGuid}")" Class="ml-1">View goal</MudButton>
+        }
+    </MudAlert>
+}
 @{
     var burstTodayMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
     var allGoalsActiveToday = AllActiveGoals.Count >= 2 &&
@@ -1019,6 +1031,9 @@
     private string? QuickNoteGoalText;
     private string QuickNoteText = string.Empty;
     private string? _confirmDeleteGoalGuid;
+    private string? NextMeetingGoalName;
+    private int NextMeetingDaysAway;
+    private string? NextMeetingGoalGuid;
 
     protected override async Task OnInitializedAsync()
     {
@@ -1154,6 +1169,25 @@
                 {
                     ComebackGoalName = cg.GoalText?.Length > 50 ? cg.GoalText[..50] + "…" : cg.GoalText;
                     ComebackGoalGuid = cg.Guid;
+                    break;
+                }
+            }
+        }
+
+        // Next meeting countdown: find first active goal with meeting within 7 calendar days
+        var nowMsMtg = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        NextMeetingGoalName = null; NextMeetingGoalGuid = null; NextMeetingDaysAway = -1;
+        foreach (var mg in AllActiveGoals)
+        {
+            if (mg.NextMeetingDate.HasValue && mg.NextMeetingDate.Value > nowMsMtg)
+            {
+                var mtgDate = DateTimeOffset.FromUnixTimeMilliseconds(mg.NextMeetingDate.Value).LocalDateTime.Date;
+                var daysAway = (mtgDate - DateTime.Today).Days;
+                if (daysAway <= 7)
+                {
+                    NextMeetingGoalName = mg.GoalText?.Length > 50 ? mg.GoalText[..50] + "…" : mg.GoalText;
+                    NextMeetingGoalGuid = mg.Guid;
+                    NextMeetingDaysAway = daysAway;
                     break;
                 }
             }
