@@ -77,6 +77,7 @@ app.UseResponseCompression();
 app.UseRequestTimeouts();
 app.UseStaticFiles();
 app.UseCors();
+app.UseRouting();
 
 app.Use(async (ctx, next) =>
 {
