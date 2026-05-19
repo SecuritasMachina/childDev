@@ -99,6 +99,10 @@
                 var insightLevel = GoalProgressTotal >= 50 ? "🌟 Legendary" : GoalProgressTotal >= 25 ? "🏆 Champion" : GoalProgressTotal >= 10 ? "⭐ Strong" : GoalProgressTotal >= 5 ? "🚀 Momentum" : "⚡ Getting Started";
                 <MudText Typo="Typo.caption" Color="Color.Warning">@insightLevel pace!</MudText>
             }
+            @if (TotalActiveDaysEver >= 10)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Info">📅 Active on @TotalActiveDaysEver days ever!</MudText>
+            }
         </MudPaper>
     </MudItem>
 </MudGrid>
@@ -722,6 +726,7 @@
     private int BestProgressDayOfWeekCount;
     private string? BestJournalDayOfWeek;
     private int BestJournalDayOfWeekCount;
+    private int TotalActiveDaysEver;
 
     protected override async Task OnInitializedAsync()
     {
@@ -1032,6 +1037,9 @@
         }
 
         var allEver = allTodosEver.Concat(allJournalEver).Concat(allProgressEver).ToList();
+        TotalActiveDaysEver = allEver
+            .Select(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
+            .Distinct().Count();
         if (allEver.Count >= 5)
         {
             var bestDayGroup = allEver
