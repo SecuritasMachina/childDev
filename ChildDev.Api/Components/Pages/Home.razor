@@ -404,11 +404,17 @@
 }
 @if (ComebackGoalName is not null && string.IsNullOrWhiteSpace(FilterText))
 {
-    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.EmojiPeople" Dense="true" Class="mb-3">
-        🎉 <strong>Welcome back!</strong> You just returned to "@ComebackGoalName" after a break — that takes real courage. Keep going!
+    var cbSeverity = ComebackGapDays >= 30 ? Severity.Success : Severity.Info;
+    var cbMsg = ComebackGapDays >= 60
+        ? $"🌟 <strong>LEGENDARY COMEBACK!</strong> You returned to \"{ComebackGoalName}\" after {ComebackGapDays} days — that kind of persistence is extraordinary! 🏆"
+        : ComebackGapDays >= 30
+            ? $"🎊 <strong>Epic comeback!</strong> You returned to \"{ComebackGoalName}\" after {ComebackGapDays} days away — that takes serious determination! Keep going!"
+            : $"🎉 <strong>Welcome back!</strong> You just returned to \"{ComebackGoalName}\" after a break — that takes real courage. Keep going!";
+    <MudAlert Severity="@cbSeverity" Icon="@Icons.Material.Filled.EmojiPeople" Dense="true" Class="mb-3">
+        @((MarkupString)cbMsg)
         @if (!string.IsNullOrWhiteSpace(ComebackGoalGuid))
         {
-            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Info"
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="@(ComebackGapDays >= 30 ? Color.Success : Color.Info)"
                        Href="@($"/goals/{ComebackGoalGuid}")" Class="ml-1">View goal</MudButton>
         }
     </MudAlert>
@@ -1070,6 +1076,7 @@
     private int TotalProgressNotes;
     private string? ComebackGoalName;
     private string? ComebackGoalGuid;
+    private int ComebackGapDays;
     private bool ShowAddDialog;
     private string NewGoalText = string.Empty;
     private string? NewMeasurableOutcome;
@@ -1232,6 +1239,7 @@
         var comeback48hMs = now2dMs - 2L * 86_400_000L;
         ComebackGoalName = null;
         ComebackGoalGuid = null;
+        ComebackGapDays = 0;
         foreach (var cg in AllActiveGoals)
         {
             var cgTs = tsByGoal.GetValueOrDefault(cg.Guid, []);
@@ -1245,6 +1253,7 @@
                 {
                     ComebackGoalName = cg.GoalText?.Length > 50 ? cg.GoalText[..50] + "…" : cg.GoalText;
                     ComebackGoalGuid = cg.Guid;
+                    ComebackGapDays = gapDays;
                     break;
                 }
             }
