@@ -36,11 +36,71 @@
 @if (Goal.CompletionDate.HasValue)
 {
     var completedDate = DateTimeOffset.FromUnixTimeMilliseconds(Goal.CompletionDate.Value).LocalDateTime;
-    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Class="mb-1">
-        Completed on @completedDate.ToString("MMM d, yyyy")
-    </MudAlert>
-    <MudButton Size="Size.Small" Color="Color.Default" StartIcon="@Icons.Material.Filled.Undo"
-               OnClick="ReopenGoal" Class="mb-3">Reopen Goal</MudButton>
+    var startDate = DateTimeOffset.FromUnixTimeMilliseconds(Goal.EnteredDate).LocalDateTime;
+    var journeyTotalDays = Math.Max((int)(completedDate - startDate).TotalDays, 1);
+    var journeyDurText = journeyTotalDays >= 365
+        ? $"{journeyTotalDays / 365} year{(journeyTotalDays / 365 == 1 ? "" : "s")}"
+        : journeyTotalDays >= 30
+            ? $"{journeyTotalDays / 30} month{(journeyTotalDays / 30 == 1 ? "" : "s")}"
+            : $"{journeyTotalDays} day{(journeyTotalDays == 1 ? "" : "s")}";
+    var totalWords522 = ProgressEntries
+        .Where(p => !string.IsNullOrWhiteSpace(p.NextStepItems))
+        .Sum(p => p.NextStepItems!.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length);
+    var firstNoteDate = ProgressEntries.Count > 0
+        ? DateTimeOffset.FromUnixTimeMilliseconds(ProgressEntries.Last().UpdatedOn).LocalDateTime
+        : (DateTime?)null;
+    var lastNoteDate = ProgressEntries.Count > 0
+        ? DateTimeOffset.FromUnixTimeMilliseconds(ProgressEntries.First().UpdatedOn).LocalDateTime
+        : (DateTime?)null;
+    var noteRangeText = firstNoteDate.HasValue && lastNoteDate.HasValue && firstNoteDate.Value.Date != lastNoteDate.Value.Date
+        ? $"{firstNoteDate.Value.ToString("MMM d, yyyy")} → {lastNoteDate.Value.ToString("MMM d, yyyy")}"
+        : firstNoteDate.HasValue ? firstNoteDate.Value.ToString("MMM d, yyyy") : null;
+    <MudPaper Elevation="4" Class="pa-4 mb-4" Style="border-radius:16px;background:linear-gradient(135deg,rgba(76,175,80,.10) 0%,rgba(255,193,7,.06) 100%);border:2px solid var(--mud-palette-success);">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+            <MudText Typo="Typo.h3" Style="line-height:1;">🏆</MudText>
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.overline" Color="Color.Success" Style="font-weight:700;letter-spacing:1.5px;">GOAL ACHIEVED!</MudText>
+                <MudText Typo="Typo.h6" Color="Color.Success">Completed @completedDate.ToString("MMMM d, yyyy")</MudText>
+            </MudStack>
+        </MudStack>
+        <MudGrid Spacing="2" Class="mb-3">
+            <MudItem xs="6" sm="3">
+                <MudPaper Elevation="0" Class="pa-2 text-center" Style="border-radius:8px;background:rgba(76,175,80,.08);">
+                    <MudText Typo="Typo.h5" Color="Color.Success">@journeyDurText</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Journey length</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudPaper Elevation="0" Class="pa-2 text-center" Style="border-radius:8px;background:rgba(63,81,181,.08);">
+                    <MudText Typo="Typo.h5" Color="Color.Primary">@ProgressEntries.Count</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Progress note@(ProgressEntries.Count == 1 ? "" : "s")</MudText>
+                </MudPaper>
+            </MudItem>
+            @if (totalWords522 >= 10)
+            {
+                <MudItem xs="6" sm="3">
+                    <MudPaper Elevation="0" Class="pa-2 text-center" Style="border-radius:8px;background:rgba(156,39,176,.08);">
+                        <MudText Typo="Typo.h5" Style="color:var(--mud-palette-primary);">~@totalWords522</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Words written</MudText>
+                    </MudPaper>
+                </MudItem>
+            }
+            @if (noteRangeText is not null)
+            {
+                <MudItem xs="6" sm="3">
+                    <MudPaper Elevation="0" Class="pa-2 text-center" Style="border-radius:8px;background:rgba(255,152,0,.08);">
+                        <MudText Typo="Typo.caption" Color="Color.Warning" Style="font-weight:600;">📅 Note period</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@noteRangeText</MudText>
+                    </MudPaper>
+                </MudItem>
+            }
+        </MudGrid>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">
+            🌟 You set this goal and saw it through — that takes real dedication and grit. Be proud of this win!
+        </MudText>
+        <MudButton Size="Size.Small" Color="Color.Default" StartIcon="@Icons.Material.Filled.Undo"
+                   OnClick="ReopenGoal">Reopen Goal</MudButton>
+    </MudPaper>
 }
 @if (Goal.MeasurableOutcome is not null)
 {
