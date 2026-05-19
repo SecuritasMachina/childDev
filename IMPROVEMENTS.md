@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-19 — Invocation 8 Iter 627 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Personal note length average": avg words per note from NextStepItems (null-safe, >= 5 notes); show "Your notes average X words — rich reflection!" when avg >= 10 words | UX | Domain: note quality | Low | S | Low | NextStepItems?.Split(' ').Length default 0; avg; show when >= 10 avg | Complex null handling; deferred many times | No |
+| 2 | Web: Home — "Day-of-week context": show "Midweek check-in!" on Wednesday or "Make today count — it's the last day of the week!" on Sunday near week stats | UX | Domain: weekly time awareness | Low | XS | Low | DateTime.Today.DayOfWeek; conditional caption | Adds real-time weekly context | No |
+| 3 | Web: GoalDetail — "Longest streak date range": show start→end date of longest active streak when >= 7 days and gsCount >= 7 | UX | Domain: streak date context | Low | XS | Low | Sort gsActiveDates; scan for consecutive run; find max; format start/end | Contextualizes streak as a real achievement | No |
+| 4 | Web: Journal — "Total journal days this year": count distinct days with entries in current year; show "You've journaled on X different days this year!" when >= 10 | UX | Domain: annual engagement | Low | XS | Low | AllEntries.Select DateOnly.Year == today.Year.Distinct.Count | Simple distinct-day count; quick to add | No |
+| 5 | Web: Insights — "Todos completed this week": show "X todos done this week — action mode!" when >= 3 for a positive action-oriented callout | UX/Encourage | Domain: todo completion recognition | Medium | S | Low | Need TodosThisWeek field; filter completed todos by date | Useful cross-entity stat | No |
+| 6 | Web: GoalDetail — "Goal complexity score": based on word count of GoalText + MeasurableOutcome + NextStepItems avg; show a qualitative badge ("Simple/Focused/Detailed/Complex") | UX | Domain: goal depth awareness | Low | M | Low | Complex scoring; subjective | Too subjective; skip | No |
+| 7 | Web: Home — "Todos overdue count context": when OverdueTodoCount >= 3, add a gentle "You have @OverdueTodoCount overdue todos — take 5 minutes to tackle one!" | UX | Domain: overdue todo nudge | Medium | XS | Low | OverdueTodoCount already loaded; simple condition | Practical action nudge; OverdueTodoCount exists | No |
+| 8 | Web: GoalDetail — "Progress notes per week this month": compute notes in current month / weeks elapsed; show "X notes/week pace this month — great rhythm!" when >= 1 | UX | Domain: monthly weekly pace | Low | XS | Low | ntmCount / (daysSince in month / 7.0); simple pace | Fine-grained monthly pace; ntmCount already computed | No |
+| 9 | Web: Journal — "Longest run without a repeated mood": find the max streak of consecutive entries where each mood differs from previous; show "Your most varied streak: X entries, all different moods!" when >= 5 | UX | Domain: emotional range | Low | M | Med | Complex sequential scan; low value | Too niche | No |
+| 10 | Web: Home — "Most notes on a single day ever" callout: show "Your personal best day: X notes on [date]!" within a featured callout section when >= 5 notes that day | UX/Celebrate | Domain: peak day recognition | Low | XS | Low | Uses PersonalBestNotes field if available; or compute from allTimestamps | May need extra computation | No |
+
+**Selection iter 627:** Item #7 — "Todos overdue count context" nudge on Home.
+- When OverdueTodoCount >= 3, show "You have X overdue todos — take 5 minutes to tackle one!" 
+- XS effort — OverdueTodoCount is already loaded; simple `@if` block
+- Practical, actionable nudge that supports goal achievement (clearing blockers)
+
+---
+
 ## 2026-05-19 — Invocation 8 Iter 624 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
