@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 507 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Focus score" ribbon: composite A-F grade from recency + frequency + streak | UX/Encourage | Domain: gamified engagement signal | High | M | Low | Score = recency (0-40) + freq (0-40) + streak (0-20); show letter grade with color | Strong gamification; motivates daily engagement; memorable | No |
+| 2 | Web: Home — "Comeback!" alert: active goal was stale 14+ days but has note in last 48 hours | UX/Encourage | Domain: celebrate returning to a neglected goal | High | S | Low | Query second-to-last note per goal; if gap >= 14 days and latest note < 2 days, show banner | Great emotional hook; small query complexity | No |
+| 3 | Web: Insights — "All-time best day" callout: date with most total activity ever | UX/Encourage | Domain: personal peak performance record | Medium | S | Low | Combine all entity timestamps; group by date; find max; "Your best day: May 3 with 12 actions!" | Strong personal-record framing; modest effort | No |
+| 4 | Web: GoalDetail — "Weekly note quota" visual: 0-7 goal notes this week shown as progress dots | UX/Encourage | Domain: weekly habit encouragement | Medium | M | Low | Count ProgressEntries in current week; show 7 dots (filled = note logged that day) | Visual habit tracker per goal; more engaging than text | No |
+| 5 | Web: Todos — "Time to complete" insight: avg time from created to completed for recent todos | UX | Domain: personal efficiency insight | Medium | S | Low | CompletedAt - UpdatedOn as proxy (no CreatedAt field); show avg for last 10 completed | Requires checking if UpdatedOn is truly the create timestamp | No |
+| 6 | Web: Home — "Top 3 most-worked goals all time" section: goals by all-time progress note count | UX | Domain: long-term engagement map | High | S | Low | Join ProgressCounts + all goals (including completed); top 3 all-time sorted by notes | Motivating to see overall hierarchy; could show completed goals too | No |
+| 7 | Web: GoalDetail — "Previous milestone" date display: when you hit the last milestone | UX/Encourage | Domain: celebrate milestone history | Medium | S | Low | Find which milestone was last crossed; show date it was hit using UpdatedOn of nth note | Shows tangible date markers of achievement | No |
+| 8 | Web: Insights — "Notes per active goal" ratio: avg progress notes per currently active goal | UI | Domain: engagement depth across all goals | Low | XS | Low | GoalProgressTotal / GoalsTotalAllTime (need active goal count); single stat line | Simple computation; modest engagement value | No |
+| 9 | Web: GoalDetail — "Note frequency" chart: weekly note count for last 8 weeks | UX | Domain: activity trend visualization per goal | High | M | Low | Group ProgressEntries by ISO week (last 8 weeks); MudChart bar | Rich visual; shows peaks and valleys; good for engagement | No |
+| 10 | Web: Home — "Goals by category/priority" — allow goal categories (emoji tags) and show grouped | UX | Domain: goal organization and prioritization | High | L | Medium | Requires new tag/category field; would need schema change workaround | Very useful but complex; must avoid schema changes | No |
+
+**Selection iter 507:** Item #2 — "Comeback!" alert on Home (goal was stale 14+ days, now has note within 48h).
+- Query: for each active goal, get the two most recent UpdatedOn timestamps from GoalProgresses
+- If latest < 48h ago AND gap between latest and second-latest >= 14 days → show comeback banner
+- Uses a LINQ group by GoalFk, take 2, in a single query
+- High emotional impact; celebrates returning to a neglected goal
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 505 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |

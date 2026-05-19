@@ -350,6 +350,17 @@
                    Href="@proximityGoalHref" Class="ml-1">Add a note</MudButton>
     </MudAlert>
 }
+@if (ComebackGoalName is not null && string.IsNullOrWhiteSpace(FilterText))
+{
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.EmojiPeople" Dense="true" Class="mb-3">
+        🎉 <strong>Welcome back!</strong> You just returned to "@ComebackGoalName" after a break — that takes real courage. Keep going!
+        @if (!string.IsNullOrWhiteSpace(ComebackGoalGuid))
+        {
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Info"
+                       Href="@($"/goals/{ComebackGoalGuid}")" Class="ml-1">View goal</MudButton>
+        }
+    </MudAlert>
+}
 @{
     var burstTodayMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
     var allGoalsActiveToday = AllActiveGoals.Count >= 2 &&
@@ -967,6 +978,8 @@
     private int YtdProgressNotes;
     private int YtdGoalsCompleted;
     private int TotalProgressNotes;
+    private string? ComebackGoalName;
+    private string? ComebackGoalGuid;
     private bool ShowAddDialog;
     private string NewGoalText = string.Empty;
     private string? NewMeasurableOutcome;
@@ -1097,6 +1110,29 @@
         YtdProgressNotes = allTimestamps.Count(p => p.UpdatedOn >= yearStartMs);
         YtdGoalsCompleted = CompletedGoals.Count(g => g.CompletionDate.HasValue && g.CompletionDate.Value >= yearStartMs);
         TotalProgressNotes = await Db.GoalProgresses.CountAsync(p => p.AccountFk == AccountGuid && p.DeletedAt == null);
+
+        // Comeback detection: goals stale 14+ days that have a new note in the last 48h
+        var now2dMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var comeback48hMs = now2dMs - 2L * 86_400_000L;
+        ComebackGoalName = null;
+        ComebackGoalGuid = null;
+        foreach (var cg in AllActiveGoals)
+        {
+            var cgTs = tsByGoal.GetValueOrDefault(cg.Guid, []);
+            if (cgTs.Count >= 2)
+            {
+                var sortedCgTs = cgTs.OrderByDescending(t => t).ToList();
+                var latestNote = sortedCgTs[0];
+                var prevNote   = sortedCgTs[1];
+                var gapDays = (int)((latestNote - prevNote) / 86_400_000L);
+                if (latestNote >= comeback48hMs && gapDays >= 14)
+                {
+                    ComebackGoalName = cg.GoalText?.Length > 50 ? cg.GoalText[..50] + "…" : cg.GoalText;
+                    ComebackGoalGuid = cg.Guid;
+                    break;
+                }
+            }
+        }
 
         // Sort: goals with no progress first (needs attention), then by oldest-update-first
         AllActiveGoals = AllActiveGoals
