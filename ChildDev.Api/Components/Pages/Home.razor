@@ -141,6 +141,11 @@
                     <MudText Typo="Typo.caption" Color="Color.Info">📚 @totalGoalsEver goals set on your journey!</MudText>
                 }
             }
+            @if (AllActiveGoals.Count >= 5)
+            {
+                var acLabel = AllActiveGoals.Count >= 10 ? "🌟 Seriously ambitious!" : AllActiveGoals.Count >= 7 ? "🚀 Very ambitious!" : "💪 Ambitious!";
+                <MudText Typo="Typo.caption" Color="Color.Primary">@acLabel</MudText>
+            }
             @if (GoalStreaks.Count > 0)
             {
                 <MudText Typo="Typo.caption" Color="Color.Warning">🔥 @GoalStreaks.Count on a streak</MudText>
