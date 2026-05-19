@@ -330,6 +330,7 @@ else
     var lastMs = newest.UpdatedOn;
     var daysAgoLast = (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - lastMs) / 86_400_000L);
     var lastLabel = daysAgoLast == 0 ? "today" : daysAgoLast == 1 ? "yesterday" : $"{daysAgoLast} days ago";
+    var daysWorking = Math.Max(1, (int)((lastMs - oldest.UpdatedOn) / 86_400_000L) + 1);
     <MudPaper Elevation="0" Class="pa-3 mb-3"
               Style="background:var(--mud-palette-background-grey);border-radius:12px;">
         <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="3" AlignItems="AlignItems.Center">
@@ -341,6 +342,11 @@ else
             <MudStack Spacing="0" AlignItems="AlignItems.Center">
                 <MudText Typo="Typo.caption" Color="Color.Secondary">Total Notes</MudText>
                 <MudText Typo="Typo.body2" Style="font-weight:600;">@ProgressEntries.Count</MudText>
+            </MudStack>
+            <MudDivider Vertical="true" FlexItem="true" />
+            <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Time Invested</MudText>
+                <MudText Typo="Typo.body2" Style="font-weight:600;">@daysWorking day@(daysWorking == 1 ? "" : "s") ⏱</MudText>
             </MudStack>
             <MudDivider Vertical="true" FlexItem="true" />
             <MudStack Spacing="0" AlignItems="AlignItems.Center">
