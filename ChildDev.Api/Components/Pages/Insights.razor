@@ -228,16 +228,24 @@
     var trendText = TotalLastWeek == 0
         ? "no prior week"
         : weekTrend == 0 ? "same as last week" : $"{Math.Abs(weekTrend)}% vs last week";
+    var consistencyPct = (int)(ActiveDaysLast30 * 100.0 / 30);
+    var (consistencyColor, consistencyLabel) = consistencyPct >= 70
+        ? (Color.Success, "🔥 On fire!")
+        : consistencyPct >= 40
+            ? (Color.Info, "💪 Good habit")
+            : consistencyPct >= 20
+                ? (Color.Warning, "📈 Building up")
+                : (Color.Default, "🌱 Just starting");
 }
 <MudGrid Class="mb-6">
-    <MudItem xs="12" sm="3">
+    <MudItem xs="6" sm="3">
         <MudPaper Elevation="2" Class="pa-4 text-center">
             <MudIcon Icon="@Icons.Material.Filled.TouchApp" Color="Color.Primary" Style="font-size:2rem;" />
             <MudText Typo="Typo.h4" Class="mt-1">@TotalLast30</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary">Actions (30 days)</MudText>
         </MudPaper>
     </MudItem>
-    <MudItem xs="12" sm="3">
+    <MudItem xs="6" sm="3">
         <MudPaper Elevation="2" Class="pa-4 text-center">
             <MudIcon Icon="@trendIcon" Color="@trendColor" Style="font-size:2rem;" />
             <MudText Typo="Typo.h4" Class="mt-1">@TotalThisWeek</MudText>
@@ -245,11 +253,19 @@
             <MudText Typo="Typo.caption" Color="@trendColor">@trendText</MudText>
         </MudPaper>
     </MudItem>
-    <MudItem xs="12" sm="3">
+    <MudItem xs="6" sm="3">
         <MudPaper Elevation="2" Class="pa-4 text-center">
             <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Color="Color.Info" Style="font-size:2rem;" />
             <MudText Typo="Typo.h4" Class="mt-1">@ActiveDaysLast30</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary">Active days (30)</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="6" sm="3">
+        <MudPaper Elevation="2" Class="pa-4 text-center">
+            <MudIcon Icon="@Icons.Material.Filled.Verified" Color="@consistencyColor" Style="font-size:2rem;" />
+            <MudText Typo="Typo.h4" Class="mt-1">@consistencyPct%</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Consistency</MudText>
+            <MudText Typo="Typo.caption" Color="@consistencyColor">@consistencyLabel</MudText>
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="3">
