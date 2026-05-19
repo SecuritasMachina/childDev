@@ -69,6 +69,11 @@
             <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Style="font-size:2rem;" />
             <MudText Typo="Typo.h4" Class="mt-1">@GoalsCompletedAllTime</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary">Goal@(GoalsCompletedAllTime == 1 ? "" : "s") Completed</MudText>
+            @if (GoalsCompletedAllTime >= 3 && GoalsTotalAllTime > 0)
+            {
+                var gcPct = (int)Math.Round(GoalsCompletedAllTime * 100.0 / GoalsTotalAllTime);
+                <MudText Typo="Typo.caption" Color="@(gcPct >= 60 ? Color.Success : Color.Info)">@gcPct% completion rate</MudText>
+            }
         </MudPaper>
     </MudItem>
     <MudItem xs="6" sm="3">
