@@ -725,7 +725,8 @@
                         <MudChip T="string" Icon="@Icons.Material.Filled.CheckCircle" Color="@(isStale ? Color.Warning : Color.Success)" Size="Size.Small" Class="mr-1">
                             @if (daysSinceProgress == 0)
                             {
-                                @("Updated today")
+                                var todayGoalCount = TodayCountByGoal.GetValueOrDefault(g.Guid);
+                                @(todayGoalCount >= 2 ? $"Updated today ({todayGoalCount}x)" : "Updated today")
                             }
                             else if (daysSinceProgress == 1)
                             {
@@ -1076,6 +1077,7 @@
     private Dictionary<string, long> LastProgressAt = new();
     private Dictionary<string, string> LatestNextStep = new();
     private Dictionary<string, int> GoalStreaks = new();
+    private Dictionary<string, int> TodayCountByGoal = new();
     private int ProgressThisWeek;
     private int GoalsProgressedThisWeek;
     private string? GoalOfMonthGuid;
@@ -1207,6 +1209,10 @@
         // Progress notes logged today across all active goals
         var todayStartMsLocal = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
         ProgressNotesToday = allTimestamps.Count(p => p.UpdatedOn >= todayStartMsLocal);
+        TodayCountByGoal = allTimestamps
+            .Where(p => p.UpdatedOn >= todayStartMsLocal)
+            .GroupBy(p => p.GoalFk)
+            .ToDictionary(g => g.Key, g => g.Count());
 
         // Personal record week: compare ProgressThisWeek to max of prior 12 weeks
         var priorMaxWeeklyNotes = 0;
