@@ -438,6 +438,17 @@ else
         </MudText>
     </TitleContent>
     <DialogContent>
+        @if (string.IsNullOrWhiteSpace(NewNextSteps))
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">💡 Quick-start prompts:</MudText>
+            <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
+                @foreach (var s in NextStepSuggestions)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined"
+                             OnClick="@(() => NewNextSteps = s)">@s</MudChip>
+                }
+            </MudStack>
+        }
         <MudTextField @bind-Value="NewNextSteps"
                       Label="What happened? What's the next step?"
                       HelperText="@(string.IsNullOrWhiteSpace(NewNextSteps) ? "" : "Pre-filled from your last note — edit or replace as needed")"
@@ -520,6 +531,35 @@ else
     private bool ShowMilestone;
     private string MilestoneEmoji = "⭐";
     private string MilestoneMessage = string.Empty;
+
+    private List<string> NextStepSuggestions
+    {
+        get
+        {
+            var text = (Goal?.GoalText ?? "").ToLowerInvariant();
+            var suggestions = new List<string>();
+            if (text.Contains("read") || text.Contains("book"))
+                suggestions.Add("Log pages or chapters read today");
+            if (text.Contains("exercis") || text.Contains("run") || text.Contains("gym") || text.Contains("fitness") || text.Contains("sport"))
+                suggestions.Add("Note today's workout or activity");
+            if (text.Contains("practice") || text.Contains("skill") || text.Contains("train"))
+                suggestions.Add("Describe what I practiced today");
+            if (text.Contains("write") || text.Contains("essay") || text.Contains("story") || text.Contains("journal"))
+                suggestions.Add("Note how many words or pages I wrote");
+            if (text.Contains("draw") || text.Contains("art") || text.Contains("paint") || text.Contains("creat"))
+                suggestions.Add("Describe what I created today");
+            if (text.Contains("music") || text.Contains("instrument") || text.Contains("sing") || text.Contains("play"))
+                suggestions.Add("Note my music practice session");
+            if (text.Contains("math") || text.Contains("study") || text.Contains("homework") || text.Contains("school") || text.Contains("learn"))
+                suggestions.Add("Summarize what I studied today");
+            if (text.Contains("talk") || text.Contains("communicat") || text.Contains("friend") || text.Contains("social"))
+                suggestions.Add("Describe a conversation or social moment");
+            if (suggestions.Count == 0)
+                suggestions.Add("How did I work toward this goal today?");
+            suggestions.Add("What's my next step?");
+            return suggestions.Take(4).ToList();
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
