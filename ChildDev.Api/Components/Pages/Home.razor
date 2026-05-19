@@ -376,9 +376,28 @@
     if (bestGoal is not null && bestEntry.Value >= 2)
     {
         var truncName = bestGoal.GoalText?.Length > 50 ? bestGoal.GoalText[..50] + "…" : bestGoal.GoalText;
-        <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.LocalFireDepartment" Dense="true" Class="mb-2">
-            🔥 Best streak: <strong>@bestEntry.Value weeks</strong> on "@truncName" — keep it going!
-        </MudAlert>
+        if (bestEntry.Value >= 8)
+        {
+            <MudPaper Elevation="3" Class="pa-3 mb-2" Style="border-radius:14px;background:linear-gradient(135deg,rgba(255,152,0,.18) 0%,rgba(255,193,7,.10) 100%);border:2px solid var(--mud-palette-warning);">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudText Typo="Typo.h5" Style="line-height:1;">🏆</MudText>
+                    <MudStack Spacing="0" Style="flex:1">
+                        <MudText Typo="Typo.caption" Color="Color.Warning" Style="font-weight:700;letter-spacing:0.5px;">STREAK CHAMPION — @bestEntry.Value WEEKS!</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">"@truncName" — @bestEntry.Value consecutive weeks of progress. That's extraordinary dedication! 🌟</MudText>
+                    </MudStack>
+                    @if (!string.IsNullOrWhiteSpace(bestGoal.Guid))
+                    {
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" Href="@($"/goals/{bestGoal.Guid}")">View</MudButton>
+                    }
+                </MudStack>
+            </MudPaper>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.LocalFireDepartment" Dense="true" Class="mb-2">
+                🔥 Best streak: <strong>@bestEntry.Value weeks</strong> on "@truncName" — keep it going!
+            </MudAlert>
+        }
     }
 }
 @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWhiteSpace(FilterText))
