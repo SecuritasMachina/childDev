@@ -255,6 +255,12 @@
               Class="mb-4" />
 }
 
+@{
+    var bestNoteGuid = ProgressEntries
+        .Where(p => !string.IsNullOrWhiteSpace(p.NextStepItems) && p.NextStepItems.Length >= 30)
+        .OrderByDescending(p => p.NextStepItems!.Length)
+        .FirstOrDefault()?.Guid;
+}
 @if (!ProgressEntries.Any())
 {
     <MudPaper Elevation="0" Class="pa-6 mb-4 text-center"
@@ -275,9 +281,14 @@ else
         @foreach (var p in ProgressEntries)
         {
             var enteredDate = DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime;
-            <MudTimelineItem Color="Color.Primary" Size="Size.Small">
+            var isPersonalBest = bestNoteGuid is not null && p.Guid == bestNoteGuid;
+            <MudTimelineItem Color="@(isPersonalBest ? Color.Warning : Color.Primary)" Size="Size.Small">
                 <ItemContent>
-                    <MudPaper Elevation="1" Class="pa-3 mb-2">
+                    <MudPaper Elevation="1" Class="pa-3 mb-2" Style="@(isPersonalBest ? "border:1.5px solid var(--mud-palette-warning);" : "")">
+                        @if (isPersonalBest)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Class="mb-1" Style="font-size:0.7rem;">⭐ Your most detailed note!</MudChip>
+                        }
                         <MudStack Row="true" AlignItems="AlignItems.Start">
                             <MudStack Spacing="0" Style="flex:1">
                                 @if (!string.IsNullOrWhiteSpace(p.NextStepItems))
