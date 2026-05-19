@@ -167,6 +167,14 @@
     var adSeverity = ActiveDaysLastWeek == 0 || ActiveDaysThisWeek >= ActiveDaysLastWeek ? Severity.Info : Severity.Normal;
     <MudAlert Severity="@adSeverity" Icon="@Icons.Material.Filled.CalendarToday" Dense="true" Class="mb-4">@((MarkupString)adMsg)</MudAlert>
 }
+@if (TotalActiveDaysEver >= 7)
+{
+    var sphDotStr = string.Concat(Enumerable.Range(0, 7).Select(i => Last7DaysActive[i] ? "✅" : "⬜"));
+    var sphActiveCount = Last7DaysActive.Count(b => b);
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-4">
+        Your last 7 days: @sphDotStr (@sphActiveCount active)
+    </MudText>
+}
 @if (JournalStreak >= 2)
 {
     var jStreakMsg = JournalStreak >= 14 ? $"📓 Journal streak: {JournalStreak} days — that's exceptional consistency! Your reflections are building something meaningful. 🌟"
@@ -766,6 +774,7 @@
     private string? BestJournalDayOfWeek;
     private int BestJournalDayOfWeekCount;
     private int TotalActiveDaysEver;
+    private bool[] Last7DaysActive = new bool[7];
     private string? MostProductiveQuarter;
     private int MostProductiveQuarterCount;
 
@@ -1093,6 +1102,11 @@
         TotalActiveDaysEver = allEver
             .Select(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
             .Distinct().Count();
+        var allEverDateSet = allEver
+            .Select(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
+            .ToHashSet();
+        for (int spi = 0; spi < 7; spi++)
+            Last7DaysActive[spi] = allEverDateSet.Contains(DateOnly.FromDateTime(DateTime.Today.AddDays(-6 + spi)));
         if (allEver.Count >= 5)
         {
             var bestDayGroup = allEver
