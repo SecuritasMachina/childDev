@@ -99,6 +99,21 @@
     </MudItem>
 </MudGrid>
 
+@{
+    Severity freshSeverity = Severity.Normal;
+    string? freshMsg = null;
+    if (DaysSinceLastProgress == 0) { freshSeverity = Severity.Success; freshMsg = "🔥 You logged a progress note today — keep that momentum going!"; }
+    else if (DaysSinceLastProgress == 1) { freshSeverity = Severity.Success; freshMsg = "⭐ Last progress note was yesterday — great consistency!"; }
+    else if (DaysSinceLastProgress <= 3) { freshSeverity = Severity.Success; freshMsg = $"💪 Last progress note was {DaysSinceLastProgress} days ago — solid consistency!"; }
+    else if (DaysSinceLastProgress <= 7) { freshSeverity = Severity.Info; freshMsg = $"📝 It's been {DaysSinceLastProgress} days since your last progress note — ready to log another update?"; }
+    else if (DaysSinceLastProgress <= 13) { freshSeverity = Severity.Warning; freshMsg = $"⏰ {DaysSinceLastProgress} days since your last progress note — your goals are waiting!"; }
+    else if (DaysSinceLastProgress >= 14) { freshSeverity = Severity.Warning; freshMsg = $"🌱 It's been {DaysSinceLastProgress} days since your last progress note. Every note moves you forward — add one today!"; }
+}
+@if (freshMsg is not null)
+{
+    <MudAlert Severity="@freshSeverity" Class="mb-4" Dense="true">@freshMsg</MudAlert>
+}
+
 @if (GoalsTotalAllTime > 0)
 {
     var completionPct = GoalsTotalAllTime == 0 ? 0 : (int)(GoalsCompletedAllTime * 100.0 / GoalsTotalAllTime);
@@ -438,6 +453,7 @@
     private Dictionary<DateOnly, int> ProgressHeatmap = new();
     private string? TopProgressWeekday;
     private int TopProgressWeekdayCount;
+    private int DaysSinceLastProgress = -1;
     private List<ChartSeries> GoalNotesChartSeries = [];
     private string[] GoalNotesChartLabels = [];
 
@@ -557,6 +573,13 @@
         LastMonthProgress = await Db.GoalProgresses
             .CountAsync(p => p.AccountFk == AccountGuid && p.DeletedAt == null
                           && p.UpdatedOn >= lastMonthStart && p.UpdatedOn < thisMonthStart);
+
+        // Days since last progress note
+        var lastProgressMs = await Db.GoalProgresses
+            .Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null)
+            .MaxAsync(p => (long?)p.UpdatedOn);
+        if (lastProgressMs.HasValue)
+            DaysSinceLastProgress = (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - lastProgressMs.Value) / 86_400_000L);
 
         // Progress heatmap: notes per day for last 35 days
         var day35Ms = DateTimeOffset.UtcNow.AddDays(-35).ToUnixTimeMilliseconds();
