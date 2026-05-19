@@ -130,6 +130,37 @@
     }
 }
 
+@{
+    // Rule-based goal insight narrative
+    var nowMsI = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    var goaldAgeWeeks = Math.Max((nowMsI - Goal.EnteredDate) / (7.0 * 86_400_000.0), 0.1);
+    string goalInsightText;
+    if (ProgressEntries.Count == 0)
+    {
+        goalInsightText = "No progress notes yet. Every great achievement starts with one note — add yours today! 🌱";
+    }
+    else
+    {
+        var n = ProgressEntries.Count;
+        var lastMs = ProgressEntries.First().UpdatedOn;
+        var daysSinceLast = (int)((nowMsI - lastMs) / 86_400_000L);
+        var notesPerWeek = n / goaldAgeWeeks;
+        if (n >= 25)
+            goalInsightText = $"🏆 {n} notes — Champion-level commitment to this goal. Incredible!";
+        else if (n >= 10 && notesPerWeek >= 1)
+            goalInsightText = $"⭐ {n} notes at {notesPerWeek:F1}/week — strong, consistent progress. Keep going!";
+        else if (daysSinceLast == 0)
+            goalInsightText = $"🔥 Logged progress today! {n} total note{(n == 1 ? "" : "s")} — you're on a roll!";
+        else if (daysSinceLast <= 3)
+            goalInsightText = $"💪 Last updated {daysSinceLast} day{(daysSinceLast == 1 ? "" : "s")} ago — good consistency! {n} note{(n == 1 ? "" : "s")} total.";
+        else if (daysSinceLast >= 14)
+            goalInsightText = $"⏰ {n} note{(n == 1 ? "" : "s")} logged — it's been {daysSinceLast} days since the last one. Ready to continue?";
+        else
+            goalInsightText = $"📝 {n} progress note{(n == 1 ? "" : "s")} so far — every note moves you closer!";
+    }
+}
+<MudText Typo="Typo.body2" Color="Color.Primary" Class="mb-3" Style="font-style:italic;">@goalInsightText</MudText>
+
 @if (Goal.CompletionDate is null && ProgressEntries.Any())
 {
     var latestMs = ProgressEntries.Max(p => p.UpdatedOn);
