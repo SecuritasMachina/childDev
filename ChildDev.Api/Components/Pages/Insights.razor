@@ -123,6 +123,13 @@
     </MudAlert>
 }
 
+@if (LongestProgressDayStreak >= 3)
+{
+    var lpsMsg = LongestProgressDayStreak >= 14 ? $"🌟 All-time best: <strong>{LongestProgressDayStreak} consecutive days</strong> logging progress — that's legendary dedication!"
+              : LongestProgressDayStreak >= 7  ? $"🏆 Your longest daily streak ever: <strong>{LongestProgressDayStreak} days</strong> in a row — champion-level consistency!"
+              :                                   $"⭐ Your longest daily streak: <strong>{LongestProgressDayStreak} days</strong> in a row — every streak starts with one day!";
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.LocalFireDepartment" Dense="true" Class="mb-4">@((MarkupString)lpsMsg)</MudAlert>
+}
 @if (CompletionVelocityMsg is not null)
 {
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Speed" Dense="true" Class="mb-4">@CompletionVelocityMsg</MudAlert>
@@ -602,6 +609,7 @@
     private string? BestDayEverDate;
     private int BestDayEverCount;
     private int JournalStreak;
+    private int LongestProgressDayStreak;
     private List<ChartSeries> GoalNotesChartSeries = [];
     private string[] GoalNotesChartLabels = [];
 
@@ -823,6 +831,23 @@
         var wow14Ms = wowNowMs - 14L * 86_400_000L;
         NotesThisWeekProgress = allProgressEver.Count(ms => ms >= wow7Ms);
         NotesLastWeekProgress = allProgressEver.Count(ms => ms >= wow14Ms && ms < wow7Ms);
+
+        // Longest all-time consecutive day streak for progress notes
+        var allProgressDates = allProgressEver
+            .Select(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
+            .ToHashSet()
+            .OrderBy(d => d)
+            .ToList();
+        LongestProgressDayStreak = 0;
+        int currentRun = 0;
+        for (int pdi = 0; pdi < allProgressDates.Count; pdi++)
+        {
+            if (pdi == 0 || allProgressDates[pdi] == allProgressDates[pdi - 1].AddDays(1))
+                currentRun++;
+            else
+                currentRun = 1;
+            if (currentRun > LongestProgressDayStreak) LongestProgressDayStreak = currentRun;
+        }
 
         // Journal streak: consecutive days ending today with at least one journal entry
         var journalDateSet = allJournalEver
