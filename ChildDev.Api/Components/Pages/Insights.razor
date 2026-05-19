@@ -125,6 +125,18 @@
     var wowPSeverity = NotesLastWeekProgress == 0 || NotesThisWeekProgress >= NotesLastWeekProgress ? Severity.Success : Severity.Normal;
     <MudAlert Severity="@wowPSeverity" Icon="@Icons.Material.Filled.TrendingUp" Dense="true" Class="mb-4">@((MarkupString)wowPMsg)</MudAlert>
 }
+@if (ActiveDaysThisWeek > 0 || ActiveDaysLastWeek > 0)
+{
+    var adMsg = ActiveDaysLastWeek == 0
+        ? $"📅 You were active on <strong>{ActiveDaysThisWeek} day{(ActiveDaysThisWeek == 1 ? "" : "s")}</strong> this week — great consistency!"
+        : ActiveDaysThisWeek > ActiveDaysLastWeek
+            ? $"📅 <strong>{ActiveDaysThisWeek} active days this week</strong> vs {ActiveDaysLastWeek} last week — you're showing up more! 🌟"
+            : ActiveDaysThisWeek == ActiveDaysLastWeek
+                ? $"📅 <strong>{ActiveDaysThisWeek} active days</strong> this week and last — beautifully consistent!"
+                : $"📅 {ActiveDaysThisWeek} active day{(ActiveDaysThisWeek == 1 ? "" : "s")} this week vs {ActiveDaysLastWeek} last week — aim to match or beat last week!";
+    var adSeverity = ActiveDaysLastWeek == 0 || ActiveDaysThisWeek >= ActiveDaysLastWeek ? Severity.Info : Severity.Normal;
+    <MudAlert Severity="@adSeverity" Icon="@Icons.Material.Filled.CalendarToday" Dense="true" Class="mb-4">@((MarkupString)adMsg)</MudAlert>
+}
 @if (JournalStreak >= 2)
 {
     var jStreakMsg = JournalStreak >= 14 ? $"📓 Journal streak: {JournalStreak} days — that's exceptional consistency! Your reflections are building something meaningful. 🌟"
@@ -667,6 +679,8 @@
     private int ThisMonthProgress;
     private int LastMonthProgress;
     private int NotesThisWeekProgress;
+    private int ActiveDaysThisWeek;
+    private int ActiveDaysLastWeek;
     private int NotesLastWeekProgress;
     private string? CompletionVelocityMsg;
     private string? BestProgressDayOfWeek;
@@ -879,6 +893,19 @@
         var wow14Ms = wowNowMs - 14L * 86_400_000L;
         NotesThisWeekProgress = allProgressEver.Count(ms => ms >= wow7Ms);
         NotesLastWeekProgress = allProgressEver.Count(ms => ms >= wow14Ms && ms < wow7Ms);
+
+        // Active days this week vs last week (any progress or journal activity)
+        var allActivityEver = allProgressEver.Concat(allJournalEver).ToList();
+        ActiveDaysThisWeek = allActivityEver
+            .Where(ms => ms >= wow7Ms)
+            .Select(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
+            .Distinct()
+            .Count();
+        ActiveDaysLastWeek = allActivityEver
+            .Where(ms => ms >= wow14Ms && ms < wow7Ms)
+            .Select(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
+            .Distinct()
+            .Count();
 
         // Longest all-time consecutive day streak for progress notes
         var allProgressDates = allProgressEver
