@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-19 — Invocation 7 Iter 561 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Insights — "Goal completion timeline": show last 3 completed goals with name, date, and journey duration | UX/Encourage | Domain: celebrate achievement history | High | M | Low | CompletedGoals sorted by CompletionDate desc; take 3; duration = (CompletionDate - EnteredDate) in days | Strong historical celebration; needs both dates on CompletedGoals | No |
+| 2 | Web: GoalDetail — "Completion forecast": if pace < 0.5 notes/week, show encouraging "pick it up!" nudge | UX/Encourage | Domain: pacing self-awareness | High | XS | Low | notesPerWeek = Count / weeksSince; only shown if no ExpirationDate (to avoid duplication); < 0.5 = nudge | Low-effort complement to existing velocity label | No |
+| 3 | Web: Home — "Goals completed this year" count in stat card when > 0 | UX/Encourage | Domain: annual achievement summary | Medium | XS | Low | CompletedGoals.Count(g => g.CompletionDate >= yearStartMs); show "🏆 X completed this year!" | Quick filter; strong annual achievement framing | No |
+| 4 | Web: Journal — "Monthly journaling summary": "In [Month] you wrote X entries" as a caption | UX | Domain: monthly reflection habit | Medium | XS | Low | AllEntries filtered by current month; show count with motivating message | Simple filter of existing data; pleasant monthly milestone | No |
+| 5 | Web: GoalDetail — "First entry anniversary celebration": show if today matches the month/day of first note | UX/Encourage | Domain: personal milestone celebration | High | XS | Low | ProgressEntries.Last().UpdatedOn → extract month+day; compare to today; show "Happy anniversary!" | Charming personal milestone; zero extra queries | No |
+| 6 | Web: Insights — "Best day of week for progress notes": show which weekday user is most active | UX | Domain: scheduling self-awareness | Medium | XS | Low | allProgressEver ms → DayOfWeek; group count; find mode; show "You're most active on [Day]!" | Interesting scheduling insight; zero extra queries | No |
+| 7 | Web: Home — "Longest unbeaten streak" banner: if current active streak ties or beats any prior personal best, celebrate it | UX/Encourage | Domain: personal record celebration | High | S | Low | Track max prior streak per goal vs current streak; if equal show "PERSONAL BEST STREAK!" | Highly emotional PB moment; needs historical streak scan | No |
+| 8 | Web: GoalDetail — "Tag cloud" for this goal's progress notes: show most-used words/phrases in NextStepItems | UX | Domain: goal theme visibility | Low | M | High | Word frequency on NextStepItems text; high implementation complexity for low value | Risky and complex; skip | No |
+| 9 | Web: Journal — "Total words written" milestone chip: when hitting 500/1k/5k words, show congrats | UX/Encourage | Domain: celebrate writing volume milestones | Medium | XS | Low | TotalWordsWritten (already computed); check against thresholds; show chip at milestone range | Celebrates writing effort; TotalWordsWritten already loaded in JournalPage | No |
+| 10 | Web: Home — "Daily check-in streak": consecutive days (ending today) with ANY goal progress note | UX/Encourage | Domain: daily habit building | High | S | Low | Sort allTimestamps by calendar date; find consecutive run ending today; show as stat chip | Strong habit metric; differs from per-goal streak | No |
+
+**Selection iter 561:** Item #3 — "Goals completed this year" count in stat card on Home.
+- Filter `CompletedGoals` where `CompletionDate >= yearStartMs`
+- Show "🏆 X completed this year!" as a caption in the stats card
+- High impact, XS effort — celebrating annual achievement is powerful for motivation
+- Already have `CompletedGoals` loaded with `CompletionDate`; no extra queries
+
+---
+
 ## 2026-05-19 — Invocation 7 Iter 558 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |

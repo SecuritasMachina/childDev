@@ -128,7 +128,13 @@
             <MudText Typo="Typo.body2" Color="Color.Secondary">Active Goal@(AllActiveGoals.Count == 1 ? "" : "s")</MudText>
             @if (CompletedGoals.Count > 0)
             {
+                var yearStartMs = new DateTimeOffset(new DateTime(DateTime.Today.Year, 1, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
+                var completedThisYear = CompletedGoals.Count(g => g.CompletionDate.HasValue && g.CompletionDate.Value >= yearStartMs);
                 <MudText Typo="Typo.caption" Color="Color.Success">✅ @CompletedGoals.Count completed</MudText>
+                if (completedThisYear > 0)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Success">🏆 @completedThisYear completed this year!</MudText>
+                }
             }
             @if (GoalStreaks.Count > 0)
             {
