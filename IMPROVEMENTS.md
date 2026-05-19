@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-19 — Invocation 9 Iter 651 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Approaching X-month anniversary in 1 week": when daysSince is 7 days before a named milestone (30, 60, 90, 180, 365), show "⏳ One week until your [N]-month anniversary on this goal!" | UX/Encourage | Domain: near-milestone anticipation | High | XS | Low | milestones array; check daysSince == milestone - 7; not already showing upcomingMilestoneName within 7 | Warms up kids before each milestone arrives | No |
+| 2 | Web: Home — "Longest single-day note burst": show "📈 Your personal best: X notes in a single day!" in the stats area when PersonalBestNotes >= 5 | UX/Encourage | Domain: single-day peak recognition | Medium | XS | Low | PersonalBestNotes already computed; add display in stat card or as caption | Fun personal best callout; already have the field | No |
+| 3 | Web: Journal — "Total tags used ever": count distinct tags across all entries; show "You've used X unique tags!" when >= 5 | UX | Domain: organizational breadth | Low | XS | Low | AllEntries.SelectMany(j => Tags.Split).Distinct.Count; simple scan | Minor organizational awareness | No |
+| 4 | Web: GoalDetail — "Notes left until next achievement tier": show "X more notes until [Next Tier Name]!" using level progression; complement existing level bar | UX/Encourage | Domain: level-up proximity | High | XS | Low | curLvlThreshold/nextLvlThreshold already computed; notesToNext already used for bar; show as text below bar | Contextualizes level progression with explicit countdown | No |
+| 5 | Web: Insights — "First goal set date" anniversary: when account first goal is >= 1 year old, show "🗓️ You've been on this journey for X years!" | UX/Encourage | Domain: account anniversary | High | XS | Low | Min EnteredDate from allGoals; compute years; show when >= 1 year | Celebrates long-term app engagement | No |
+| 6 | Web: Journal — "Most active tagging week": find the 7-day window with most tag usage; show "Your most organized week had X tags!" when >= 5 tags in a week | UX | Domain: organizational peak | Low | M | Low | AllEntries with tags; 7-day windows; complex; low value | Too complex for value | No |
+| 7 | Web: GoalDetail — "Progress since last meeting": count notes added since the last NextMeetingDate was passed; show "X notes since your last meeting — great work between sessions!" | UX/Encourage | Domain: inter-meeting accountability | High | XS | Low | Goal.NextMeetingDate; notes with UpdatedOn >= last meeting ms | Celebrates self-directed work between meetings | No |
+| 8 | Web: Home — "Todos completed this week": count CompletedAt >= week start ms; show "🎯 X todos done this week — action-taker!" when >= 3 | UX/Encourage | Domain: weekly todo completion | Medium | S | Low | Need TodosCompletedThisWeek field; filter CompletedAt >= weekStartMs | Celebrates weekly todo output | No |
+| 9 | Web: GoalDetail — "Goal-specific streak": if >= 3-day streak on this goal, show "🔥 X-day streak on this specific goal!" prominently at the top near the streak dots | UX/Encourage | Domain: per-goal daily streak | High | XS | Low | goalStreak already computed (line ~1025); already shown as text at line 1058; make more prominent | Already exists; possibly make bigger | No |
+| 10 | Web: Insights — "Top 3 most-journaled moods chart": show the top 3 moods with bar widths based on count; textual mini-chart | UX | Domain: mood portfolio overview | Low | S | Low | TopMoods already computed (max 3); show mini bars using CSS width | Visual mood overview; S effort | No |
+
+**Selection iter 651:** Item #4 — "Notes left until next achievement tier" on GoalDetail.
+- `notesToNext` is already computed (used for the level progress bar label on line ~1052)
+- Show "X more notes to reach [Next Tier Name]!" as a motivating caption below the level bar
+- XS effort — all data is already in scope
+- High impact: explicit countdown to next level makes the gamification feel more real
+
+---
+
 ## 2026-05-19 — Invocation 9 Iter 648 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |

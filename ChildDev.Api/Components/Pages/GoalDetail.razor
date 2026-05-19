@@ -1090,6 +1090,13 @@
         <MudProgressLinear Value="@_animLvlPct" Color="Color.Primary" Rounded="true" Size="Size.Small" Class="level-anim-bar" />
     }
 </MudStack>
+@if (!isMaxLevel && notesToNext <= 3 && notesToNext >= 1 && Goal.CompletionDate is null)
+{
+    var ntnMsg = notesToNext == 1
+        ? $"⚡ <strong>Just 1 more note</strong> to unlock {nextLvlEmoji} {nextLvlName}! Log one right now!"
+        : $"⚡ <strong>Only {notesToNext} notes</strong> to unlock {nextLvlEmoji} {nextLvlName}! You're right on the edge!";
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.UploadFile" Dense="true" Class="mb-3">@((MarkupString)ntnMsg)</MudAlert>
+}
 @if (goalStreak >= 2)
 {
     <MudText Typo="Typo.caption" Color="@(goalStreak >= 7 ? Color.Error : goalStreak >= 4 ? Color.Warning : Color.Success)" Class="mb-1">
