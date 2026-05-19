@@ -135,6 +135,11 @@
                 {
                     <MudText Typo="Typo.caption" Color="Color.Success">🏆 @completedThisYear completed this year!</MudText>
                 }
+                var totalGoalsEver = AllActiveGoals.Count + CompletedGoals.Count;
+                if (totalGoalsEver >= 10)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Info">📚 @totalGoalsEver goals set on your journey!</MudText>
+                }
             }
             @if (GoalStreaks.Count > 0)
             {
