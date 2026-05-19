@@ -48,6 +48,11 @@
             <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="Color.Primary" Style="font-size:2rem;" />
             <MudText Typo="Typo.h4" Class="mt-1">@GoalProgressTotal</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary">Progress Notes</MudText>
+            @if (GoalProgressTotal >= 5)
+            {
+                var insightLevel = GoalProgressTotal >= 50 ? "🌟 Legendary" : GoalProgressTotal >= 25 ? "🏆 Champion" : GoalProgressTotal >= 10 ? "⭐ Strong" : GoalProgressTotal >= 5 ? "🚀 Momentum" : "⚡ Getting Started";
+                <MudText Typo="Typo.caption" Color="Color.Warning">@insightLevel pace!</MudText>
+            }
         </MudPaper>
     </MudItem>
 </MudGrid>
