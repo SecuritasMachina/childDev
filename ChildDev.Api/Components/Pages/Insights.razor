@@ -363,6 +363,17 @@
                   ChartOptions="@(new ChartOptions { YAxisTicks = 1 })" />
     </MudPaper>
 }
+@if (GoalNotesChartSeries.Count > 0)
+{
+    <MudPaper Elevation="1" Class="pa-4 mb-6">
+        <MudText Typo="Typo.subtitle2" Class="mb-3">Progress Notes by Goal (Top 5)</MudText>
+        <MudChart ChartType="ChartType.Bar"
+                  ChartSeries="@GoalNotesChartSeries"
+                  XAxisLabels="@GoalNotesChartLabels"
+                  Width="100%" Height="180px"
+                  ChartOptions="@(new ChartOptions { YAxisTicks = 1 })" />
+    </MudPaper>
+}
 
 <MudGrid>
     <MudItem xs="12" sm="6">
@@ -427,6 +438,8 @@
     private Dictionary<DateOnly, int> ProgressHeatmap = new();
     private string? TopProgressWeekday;
     private int TopProgressWeekdayCount;
+    private List<ChartSeries> GoalNotesChartSeries = [];
+    private string[] GoalNotesChartLabels = [];
 
     // Month-over-month trends
     private int ThisMonthGoals;
@@ -490,6 +503,28 @@
                 TopGoalGuid = topGoal.Guid;
                 TopGoalNoteCount = topGoalProgress.Count;
             }
+        }
+
+        // Top 5 goals by progress note count for bar chart
+        var top5GoalProgress = await Db.GoalProgresses
+            .Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null)
+            .GroupBy(p => p.GoalFk)
+            .Select(g => new { GoalFk = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count)
+            .Take(5)
+            .ToListAsync();
+        if (top5GoalProgress.Count >= 2)
+        {
+            var top5Guids = top5GoalProgress.Select(x => x.GoalFk).ToList();
+            var top5Goals = await Db.Goals
+                .Where(g => top5Guids.Contains(g.Guid) && g.DeletedAt == null)
+                .Select(g => new { g.Guid, g.GoalText })
+                .ToListAsync();
+            var goalNameDict = top5Goals.ToDictionary(g => g.Guid, g => g.GoalText ?? g.Guid);
+            GoalNotesChartLabels = top5GoalProgress
+                .Select(x => { var n = goalNameDict.GetValueOrDefault(x.GoalFk, "?"); return n.Length > 14 ? n[..14] + "…" : n; })
+                .ToArray();
+            GoalNotesChartSeries = [new ChartSeries { Name = "Progress Notes", Data = top5GoalProgress.Select(x => (double)x.Count).ToArray() }];
         }
 
         // Month-over-month windows (calendar months, local time)
