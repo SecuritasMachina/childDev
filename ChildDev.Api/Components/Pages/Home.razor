@@ -320,6 +320,37 @@
     </MudAlert>
 }
 @{
+    string? proximityGoalName = null;
+    string? proximityMilestoneEmoji = null;
+    string? proximityMilestoneLabel = null;
+    string? proximityGoalHref = null;
+    foreach (var pg in AllActiveGoals)
+    {
+        var pCount = ProgressCounts.GetValueOrDefault(pg.Guid);
+        if (pCount is 4 or 9 or 24 or 49)
+        {
+            proximityGoalName = pg.GoalText?.Length > 50 ? pg.GoalText[..50] + "…" : pg.GoalText;
+            proximityGoalHref = $"/goals/{pg.Guid}";
+            (proximityMilestoneEmoji, proximityMilestoneLabel) = pCount switch
+            {
+                4  => ("🚀", "Momentum"),
+                9  => ("⭐", "Strong"),
+                24 => ("🏆", "Champion"),
+                _  => ("🌟", "Legendary")
+            };
+            break;
+        }
+    }
+}
+@if (proximityGoalName is not null && string.IsNullOrWhiteSpace(FilterText))
+{
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Celebration" Dense="true" Class="mb-3">
+        🎯 <strong>So close!</strong> Just 1 progress note away from the @proximityMilestoneEmoji <strong>@proximityMilestoneLabel</strong> milestone on "@proximityGoalName"!
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Success"
+                   Href="@proximityGoalHref" Class="ml-1">Add a note</MudButton>
+    </MudAlert>
+}
+@{
     var burstTodayMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
     var allGoalsActiveToday = AllActiveGoals.Count >= 2 &&
         AllActiveGoals.All(g => LastProgressAt.TryGetValue(g.Guid, out var lat) && lat >= burstTodayMs);
