@@ -459,6 +459,17 @@
             🚀 <strong>You're accelerating!</strong> @mmThisWeek notes this week vs @mmLastWeek last week — +@accGain! Keep this energy going!
         </MudAlert>
     }
+    var wpaWeeks = Math.Max(daysSince / 7.0, 1.0);
+    var wpaAvg = ProgressEntries.Count / wpaWeeks;
+    if (daysSince >= 14 && wpaAvg >= 0.3)
+    {
+        var wpaLabel = mmThisWeek > wpaAvg
+            ? $"📈 <strong>{mmThisWeek} note{(mmThisWeek == 1 ? "" : "s")} this week</strong> — above your average of {wpaAvg:F1}/week. You're ahead of pace!"
+            : mmThisWeek > 0
+                ? $"📉 {mmThisWeek} note{(mmThisWeek == 1 ? "" : "s")} so far this week vs your {wpaAvg:F1}/week average — one more note puts you on track!"
+                : $"⏰ Your average is {wpaAvg:F1} notes/week — log one today to stay on pace!";
+        <MudText Typo="Typo.caption" Color="@(mmThisWeek > wpaAvg ? Color.Success : Color.Warning)" Class="mb-3">@((MarkupString)wpaLabel)</MudText>
+    }
     var pbdGroup = ProgressEntries
         .GroupBy(p => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime))
         .OrderByDescending(g => g.Count())
