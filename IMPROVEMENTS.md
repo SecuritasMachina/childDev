@@ -2,6 +2,30 @@
 
 ---
 
+## 2026-05-19 — Invocation 7 Iter 558 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Note milestone celebration": at 5/10/25/50/100 note milestones show a special congratulations banner | UX/Encourage | Domain: celebrate commitment milestones | High | XS | Low | Check ProgressEntries.Count against {5,10,25,50,100}; show "🎉 X notes on this goal — incredible dedication!" | Emotionally resonant at exact milestones; zero extra queries | No |
+| 2 | Web: Home — "Most consistent goal" callout: which goal has most notes per week on average | UX/Encourage | Domain: peer-self comparison, celebrate consistency | Medium | XS | Low | NotesPerWeek = ProgressCounts[guid] / max(1, weeksSince); find max; show "Your most consistent goal: [Name]" | Quick computation from already-loaded counts + EnteredDate | No |
+| 3 | Web: GoalDetail — "Completion forecast": at current pace, show "you're on track!" or "pick up the pace!" | UX/Encourage | Domain: pacing self-awareness | High | S | Low | notesPerWeek = Count / weeksSince; if >= 1/wk show "On track!"; if < 0.5/wk show encouragement | Needs reasonable threshold; high motivational value | No |
+| 4 | Web: Journal — "Top tags this month": show top 3 tags used this month as chips in a caption | UX | Domain: journaling theme awareness | Low | XS | Low | AllEntries filtered to this month; AllTags computed; show top 3 | Minor UX; quick filter of existing data | No |
+| 5 | Web: Insights — "Goal completion timeline": show last 3 completed goals with name, completion date, and duration | UX/Encourage | Domain: celebrate achievement history | High | M | Low | CompletedGoals sorted by CompletionDate desc; take 3; duration = (CompletionDate - EnteredDate) days | Strong historical celebration; needs CompletedGoals with both dates | No |
+| 6 | Web: GoalDetail — "Note quality growth": compare avg word count of most recent 5 notes vs first 5 notes; show "Your notes are getting richer!" if improving | UX/Encourage | Domain: effort quality self-awareness | Medium | S | Low | Split note text by spaces; avg word count; compare recent vs early group | Engaging; needs NextStepItems word count computation | No |
+| 7 | Web: Home — "Daily check-in streak": consecutive days with ANY goal note; shown as a global stat chip | UX/Encourage | Domain: daily habit building | High | S | Low | Sort allTimestamps by date; find longest run of consecutive calendar days ending today | High motivation; differs from per-goal streak (already shown) | No |
+| 8 | Web: Insights — "Best day of week for progress notes": which weekday user is most active | UX | Domain: scheduling self-awareness | Medium | XS | Low | allProgressEver ms → DayOfWeek; group count; find mode | Interesting pattern; zero extra queries; helps scheduling | No |
+| 9 | Web: GoalDetail — "Progress acceleration" indicator: if this week's note count > last week's, show "You're accelerating! 🚀" | UX/Encourage | Domain: upward momentum recognition | High | XS | Low | mmThisWeek already computed; count previous 7 days; compare; show badge if improving | Leverages mmThisWeek from momentum meter; very easy add-on | No |
+| 10 | Web: Home — "Weekend vs weekday" goal tracking pattern caption in stat card | UX | Domain: scheduling pattern awareness | Low | XS | Low | allTimestamps DayOfWeek; count weekday vs weekend hits; show "weekday tracker" or "weekend warrior" | Fun label; easy computation; low priority | No |
+
+**Selection iter 558:** Item #1 — "Note milestone celebration" on GoalDetail.
+- Check `ProgressEntries.Count` against milestones: {5, 10, 25, 50, 100}
+- If count exactly equals a milestone OR is within 2 above (so they see it for a few entries): show banner
+- "🎉 You've logged 10 notes on this goal — that's incredible dedication! Keep going!"
+- Place near top of GoalDetail, below streak/momentum area, only when not completed
+- Zero extra queries; `ProgressEntries` already loaded
+
+---
+
 ## 2026-05-19 — Invocation 6 Iter 555 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |

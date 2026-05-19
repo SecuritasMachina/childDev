@@ -188,6 +188,23 @@
         @ageMilestoneEmoji <strong>@ageMilestoneName on this goal!</strong> @daysSince days of working toward this — that's real long-term commitment! 🎉
     </MudAlert>
 }
+@{
+    var nmMilestones = new[] { 100, 50, 25, 10, 5 };
+    int? nmHit = null;
+    foreach (var nm in nmMilestones)
+    {
+        if (ProgressEntries.Count >= nm && ProgressEntries.Count < nm + 3) { nmHit = nm; break; }
+    }
+}
+@if (nmHit.HasValue && Goal.CompletionDate is null)
+{
+    var nmMsg = nmHit.Value >= 100 ? $"💯 <strong>{nmHit.Value} progress notes</strong> on this goal — absolutely legendary dedication! You are unstoppable! 🌟"
+              : nmHit.Value >= 50  ? $"🏆 <strong>{nmHit.Value} notes</strong> on this goal — that's extraordinary commitment! Keep this incredible momentum going!"
+              : nmHit.Value >= 25  ? $"🎉 <strong>{nmHit.Value} progress notes</strong> on this goal — you've built a real habit here! Every note moves you forward!"
+              : nmHit.Value >= 10  ? $"⭐ <strong>{nmHit.Value} notes</strong> on this goal — double digits! You're showing up consistently and it shows!"
+              :                       $"🌱 <strong>{nmHit.Value} notes</strong> on this goal — great start! Your journey is underway!";
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mb-3">@((MarkupString)nmMsg)</MudAlert>
+}
 @if (Goal.ExpirationDate.HasValue && Goal.CompletionDate is null)
 {
     var nowMs2 = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
