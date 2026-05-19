@@ -1,6 +1,8 @@
 @inherits LayoutComponentBase
 @inject NavigationManager Nav
 @inject IHttpContextAccessor HttpContextAccessor
+@inject AppDbContext Db
+@using Microsoft.EntityFrameworkCore
 
 <MudThemeProvider Theme="_theme" />
 <MudPopoverProvider />
@@ -29,9 +31,13 @@
                 <MudButton Color="Color.Inherit" Href="/"
                            StartIcon="@Icons.Material.Filled.EmojiEvents"
                            Variant="@(IsActive("/") ? Variant.Outlined : Variant.Text)">Goals</MudButton>
-                <MudButton Color="Color.Inherit" Href="/todos"
-                           StartIcon="@Icons.Material.Filled.CheckBox"
-                           Variant="@(IsActive("/todos") ? Variant.Outlined : Variant.Text)">Todos</MudButton>
+                <MudBadge Content="@(_overdueTodoCount > 0 ? _overdueTodoCount.ToString() : null)"
+                          Color="Color.Error" Overlap="true" Bordered="true"
+                          Visible="@(_overdueTodoCount > 0)">
+                    <MudButton Color="Color.Inherit" Href="/todos"
+                               StartIcon="@Icons.Material.Filled.CheckBox"
+                               Variant="@(IsActive("/todos") ? Variant.Outlined : Variant.Text)">Todos</MudButton>
+                </MudBadge>
                 <MudButton Color="Color.Inherit" Href="/journal"
                            StartIcon="@Icons.Material.Filled.Book"
                            Variant="@(IsActive("/journal") ? Variant.Outlined : Variant.Text)">Journal</MudButton>
@@ -69,7 +75,9 @@
                 <MudNavLink Href="/" Match="NavLinkMatch.All"
                             Icon="@Icons.Material.Filled.EmojiEvents" OnClick="CloseDrawer">Goals</MudNavLink>
                 <MudNavLink Href="/todos"
-                            Icon="@Icons.Material.Filled.CheckBox" OnClick="CloseDrawer">Todos</MudNavLink>
+                            Icon="@Icons.Material.Filled.CheckBox" OnClick="CloseDrawer">
+                    Todos@(_overdueTodoCount > 0 ? $" ({_overdueTodoCount} overdue)" : "")
+                </MudNavLink>
                 <MudNavLink Href="/journal"
                             Icon="@Icons.Material.Filled.Book" OnClick="CloseDrawer">Journal</MudNavLink>
                 <MudNavLink Href="/insights"
@@ -92,6 +100,7 @@
 @code {
     private string? NickName;
     private bool _drawerOpen;
+    private int _overdueTodoCount;
 
     private readonly MudTheme _theme = new()
     {
@@ -122,9 +131,20 @@
         }
     };
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         NickName = HttpContextAccessor.HttpContext?.Session.GetString("NickName");
+        if (NickName is not null)
+        {
+            var accountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
+            if (accountGuid is not null)
+            {
+                var todayStart = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+                _overdueTodoCount = await Db.Todos
+                    .CountAsync(t => t.AccountFk == accountGuid && t.DeletedAt == null
+                                  && t.CompletedAt == null && t.DueDate.HasValue && t.DueDate < todayStart);
+            }
+        }
     }
 
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
