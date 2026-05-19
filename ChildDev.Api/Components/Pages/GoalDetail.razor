@@ -437,6 +437,18 @@
                 🏅 <strong>Best week:</strong> @bestWeekGroup.Count() notes in the week of @bestWeekGroup.Key.ToString("MMM d, yyyy") — can you match it?
             </MudText>
         }
+        @{
+            var bestDayGroup = ProgressEntries
+                .GroupBy(p => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime))
+                .OrderByDescending(g => g.Count())
+                .FirstOrDefault();
+        }
+        @if (bestDayGroup is not null && bestDayGroup.Count() >= 3)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                ⚡ <strong>Best day ever:</strong> @bestDayGroup.Count() notes on @bestDayGroup.Key.ToString("MMM d, yyyy") — can you beat it?
+            </MudText>
+        }
         @if (firstSnip is not null && latestSnip is not null)
         {
             <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">

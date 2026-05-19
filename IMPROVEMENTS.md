@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 534 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Pace to next milestone" projection at current notes/week rate | UX | Domain: forward-looking motivation | Medium | M | Low | notesPerWeekFS from focus score block; extrapolate to next threshold; "At your pace, ~3 more weeks to Momentum!" | Concrete; uses data already computed; handle edge cases | No |
+| 2 | Web: Home — "Notes logged today" mini-stat on goal cards (badge showing today's count per goal) | UX | Domain: daily engagement visibility | Medium | S | Low | allTimestamps for today from this goal; show if > 0; "Updated today (X notes)" | Adds daily engagement detail to card | No |
+| 3 | Web: Insights — "Completion velocity": avg days between goal completions | UX | Domain: long-term achievement cadence | Medium | M | Low | CompletedGoals with CompletionDate, sorted; compute diffs for last 3; show "You complete a goal every ~X days" | Interesting rhythm insight; needs CompletedGoals from Db | No |
+| 4 | Web: GoalDetail — Show "Created X days ago" vs "Last updated X days ago" comparison | UX | Domain: progress freshness awareness | Low | XS | Low | Goal.EnteredDate + ProgressEntries.First().UpdatedOn already computed; show both side-by-side | Very simple; marginal added value beyond existing display | No |
+| 5 | Web: Home — "Goals expiring next 30 days" section (not just 7-day) | UX | Domain: medium-term deadline awareness | Medium | S | Low | Already have dueSoonGoals for 7 days; extend to 30 days in a secondary collapsible section | Useful buffer view; extend existing logic | No |
+| 6 | Web: Journal — "Entries by mood summary" — count per mood as mini leaderboard | UX/Encourage | Domain: emotional pattern awareness | Medium | S | Low | Group AllEntries by Mood; show top 3 as count badges | Nice emotional self-awareness; needs AllMoods already loaded | No |
+| 7 | Web: GoalDetail — "Shared with" or "Support network" — show goal observers/supporters | UX | Domain: accountability and social support | Low | M | High | Would need schema change or journal references; complex | Not supported by current schema; skip | No |
+| 8 | Web: Home — "Progress Notes Today" counter as a daily momentum tracker | UX | Domain: daily engagement count | Medium | XS | Low | allTimestamps where date == today; count across all goals; show in header or stat | Simple daily counter; uplifts daily usage motivation | No |
+| 9 | Web: Journal — "This week's journal count" vs last week (in existing journal stat card) | UX | Domain: week-over-week journaling trend | Medium | XS | Low | JournalThisWeek already in stats; query last week's count; add caption | Quick comparison; minor impact | No |
+| 10 | Web: GoalDetail — "Biggest jump": single day with most notes (if >= 3 in one day) | UX/Encourage | Domain: celebrate peak effort days | Medium | XS | Low | Group ProgressEntries by date; find max count; show "Your most productive day: X notes on MMM d" | Quick computation; motivates bursts of effort | No |
+
+**Selection iter 534:** Item #10 — "Biggest jump" (most notes in a single day) on GoalDetail.
+- Group `ProgressEntries` by date; find the day with max count; show only when >= 3 notes that day
+- Display: "⚡ Your most productive day: 4 notes on May 3 — can you beat it?"
+- Zero extra queries; zero extra fields; inside "Your Journey" section; XS effort
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 531 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
