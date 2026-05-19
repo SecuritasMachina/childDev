@@ -394,6 +394,22 @@
                 📅 You tend to work on this goal on <strong>@wdLabel</strong> — keep that habit going!
             </MudText>
         }
+        @{
+            var bestWeekGroup = ProgressEntries
+                .GroupBy(p => {
+                    var dt = DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime;
+                    var daysToMon = (int)dt.DayOfWeek == 0 ? 6 : (int)dt.DayOfWeek - 1;
+                    return dt.AddDays(-daysToMon).Date;
+                })
+                .OrderByDescending(g => g.Count())
+                .FirstOrDefault();
+        }
+        @if (bestWeekGroup is not null && bestWeekGroup.Count() >= 3)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                🏅 <strong>Best week:</strong> @bestWeekGroup.Count() notes in the week of @bestWeekGroup.Key.ToString("MMM d, yyyy") — can you match it?
+            </MudText>
+        }
         @if (firstSnip is not null && latestSnip is not null)
         {
             <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
