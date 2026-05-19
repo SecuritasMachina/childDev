@@ -187,11 +187,19 @@
     </MudAlert>
 }
 
-@if (!string.IsNullOrWhiteSpace(TopMood))
+@if (TopMoods.Count > 0)
 {
-    <MudPaper Elevation="1" Class="pa-3 mb-6 d-flex align-items-center" Style="border-radius:12px;gap:12px;">
-        <MudIcon Icon="@Icons.Material.Filled.Mood" Color="Color.Secondary" />
-        <MudText Typo="Typo.body2">Most journaled mood: <strong>@TopMood</strong> (@TopMoodCount @(TopMoodCount == 1 ? "time" : "times"))</MudText>
+    <MudPaper Elevation="1" Class="pa-3 mb-6" Style="border-radius:12px;">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
+            <MudIcon Icon="@Icons.Material.Filled.Mood" Color="Color.Secondary" />
+            <MudText Typo="Typo.body2" Style="font-weight:600;">Your top moods</MudText>
+        </MudStack>
+        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+            @foreach (var (mood, count) in TopMoods)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined">@mood (@count)</MudChip>
+            }
+        </MudStack>
     </MudPaper>
 }
 
@@ -605,6 +613,7 @@
     private int GoalProgressTotal;
     private string? TopMood;
     private int TopMoodCount;
+    private List<(string Mood, int Count)> TopMoods = [];
     private string? TopGoalName;
     private string? TopGoalGuid;
     private int TopGoalNoteCount;
@@ -680,16 +689,18 @@
             LongestActiveGoalDays = (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - longestGoal.EnteredDate) / 86_400_000L);
         }
 
-        var moods = await Db.Journals
+        var moodRows = await Db.Journals
             .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null && j.Mood != null && j.Mood != "")
             .GroupBy(j => j.Mood!)
             .Select(g => new { Mood = g.Key, Count = g.Count() })
             .OrderByDescending(x => x.Count)
-            .FirstOrDefaultAsync();
-        if (moods is not null)
+            .Take(3)
+            .ToListAsync();
+        TopMoods = moodRows.Select(m => (m.Mood, m.Count)).ToList();
+        if (moodRows.Count > 0)
         {
-            TopMood = moods.Mood;
-            TopMoodCount = moods.Count;
+            TopMood = moodRows[0].Mood;
+            TopMoodCount = moodRows[0].Count;
         }
 
         // Goal with the most progress notes ("Top Goal" spotlight)
