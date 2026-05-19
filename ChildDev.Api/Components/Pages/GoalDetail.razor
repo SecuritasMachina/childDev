@@ -188,6 +188,21 @@
         🎉 <strong>First week complete!</strong> You've already logged @ProgressEntries.Count note@(ProgressEntries.Count == 1 ? "" : "s") in your first week on this goal — that first week is the hardest, and you nailed it!
     </MudAlert>
 }
+@{
+    int? hmNextMilestone = null;
+    string? hmNextLabel = null;
+    foreach (var (hmT, hmL) in new[] { (30, "1 Month"), (60, "2 Months"), (90, "3 Months"), (180, "6 Months"), (365, "1 Year") })
+    {
+        if (daysSince < hmT) { hmNextMilestone = hmT; hmNextLabel = hmL; break; }
+    }
+    var hmHalf = hmNextMilestone.HasValue ? hmNextMilestone.Value / 2 : -1;
+}
+@if (hmNextMilestone.HasValue && daysSince >= hmHalf - 2 && daysSince <= hmHalf + 2 && Goal.CompletionDate is null && ProgressEntries.Count >= 1)
+{
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Timeline" Dense="true" Class="mb-3">
+        📍 <strong>Halfway to @hmNextLabel!</strong> @daysSince days in, @((hmNextMilestone!.Value - daysSince)) more to go — you're right on track!
+    </MudAlert>
+}
 @if (daysSince >= 28 && daysSince <= 34 && Goal.CompletionDate is null && ProgressEntries.Count >= 4)
 {
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Celebration" Dense="true" Class="mb-3">
