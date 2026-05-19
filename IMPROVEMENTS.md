@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-19 — Invocation 8 Iter 591 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Progress note word count growth": if avg word count of last 5 > first 5 notes (>= 10 notes), show "Your notes are getting richer and deeper!" | UX/Encourage | Domain: note quality growth | Medium | S | Low | NextStepItems.Split(' ').Length; two groups; compare avg; only for goals >= 10 notes | Meaningful depth signal; needs 10+ entries to trigger | No |
+| 2 | Web: Home — "You're on a roll" when 3+ notes logged today across all goals | UX/Encourage | Domain: daily output celebration | High | XS | Low | ProgressNotesToday already loaded; show when >= 3 with tiered messages | Real-time motivation for high-output days | No |
+| 3 | Web: Journal — "Most journaled mood this month": filter AllEntries by this month; find mode mood; show "This month your most common feeling is [mood] [emoji]" | UX/Encourage | Domain: current month emotional snapshot | Medium | XS | Low | AllEntries month filter; group by mood; find mode | Timely monthly emotional insight; zero extra queries | No |
+| 4 | Web: GoalDetail — "Great ending": when completing a goal (CompletionDate just set), show a big celebration prompt near the completion button | UX/Encourage | Domain: completion ceremony | High | M | Med | Needs state detection or snackbar-based approach; risky to coordinate | Too coupled to button logic | No |
+| 5 | Web: Insights — "Most productive journal day of week": group journalDates from allJournalEver by DayOfWeek; find mode when >= 5 entries; show "You journal most on [Day]" | UX | Domain: journaling habit scheduling | Low | XS | Low | journalDates/allJournalEver already loaded; extend for day-of-week analysis | Complements BestProgressDayOfWeek; low effort | No |
+| 6 | Web: Home — "Most notes added to any goal today": show when any goal has 2+ notes from today; "Wow, X notes on [Goal] today!" | UX/Encourage | Domain: real-time single-goal effort | Medium | XS | Low | LastProgressAt per goal vs today start ms; needs per-today count; may need rethink | Requires per-goal today count, not just total today | No |
+| 7 | Web: GoalDetail — "Halfway to next milestone" nudge: when Count is exactly milestone/2 (5, 12, 25, 50), encourage the halfway point | UX/Encourage | Domain: milestone proximity midpoint | Medium | XS | Low | nmMilestones / 2 checks; Count in {5, 12, 25, 50}; simple message | Halfway milestone is motivating | No |
+| 8 | Web: Journal — "Longest gap between journal entries" awareness: find max consecutive days without an entry in AllEntries; show gentle nudge when >= 14 days | UX/Motivate | Domain: gap awareness | Low | XS | Low | AllEntries dates sorted; max gap between consecutive dates; show when >= 14 days | Gentle awareness; allready-loaded dates | No |
+| 9 | Web: GoalDetail — "Active streak on this goal": consecutive calendar days with at least 1 note; show "🔥 X-day active streak on this goal!" | UX/Encourage | Domain: goal-level daily streak | High | XS | Low | ProgressEntries dates; scan backward from today; count consecutive; show when >= 2 | Per-goal streak; reuses daily streak pattern | No |
+| 10 | Web: Insights — "Total active days ever" stat: count distinct calendar days where any activity occurred; show "📅 Active on X distinct days!" | UX/Encourage | Domain: overall active day count | Low | XS | Low | allEver timestamps; .Select date.Distinct().Count(); show in stat card | Simple total active day count | No |
+
+**Selection iter 591:** Item #9 — "Active streak on this goal" on GoalDetail.
+- Scan `ProgressEntries` dates backward from today; count consecutive days with at least 1 note
+- Show "🔥 X-day active streak on this goal!" when streak >= 2
+- Same pattern as the daily streak on Home, but per-goal
+- Zero extra queries; purely from already-loaded `ProgressEntries`
+
+---
+
 ## 2026-05-19 — Invocation 8 Iter 588 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
