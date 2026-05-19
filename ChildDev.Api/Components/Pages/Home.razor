@@ -144,6 +144,14 @@
                 var avgNotesPerGoal = (double)totalNotesAll / AllActiveGoals.Count;
                 <MudText Typo="Typo.caption" Color="Color.Secondary">avg @avgNotesPerGoal.ToString("F1") notes/goal</MudText>
             }
+            @{
+                var stale14Ms = DateTimeOffset.UtcNow.AddDays(-14).ToUnixTimeMilliseconds();
+                var staleCount = AllActiveGoals.Count(g => !LastProgressAt.TryGetValue(g.Guid, out var lp) || lp < stale14Ms);
+            }
+            @if (staleCount > 0)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Warning">⏰ @staleCount awaiting your visit</MudText>
+            }
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="4">
