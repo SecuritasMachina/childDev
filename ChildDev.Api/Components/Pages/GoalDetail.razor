@@ -613,6 +613,27 @@ else if (bestGoalStreak >= 2 && goalStreak < bestGoalStreak)
     </MudStack>
 }
 
+@if (ProgressEntries.Count >= 3)
+{
+    var hmGoalToday = DateOnly.FromDateTime(DateTime.Today);
+    var hmGoalStart = hmGoalToday.AddDays(-34);
+    var hmGoalMap = ProgressEntries
+        .GroupBy(p => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime))
+        .ToDictionary(g => g.Key, g => g.Count());
+    <MudPaper Elevation="0" Class="pa-2 mb-3" Style="border-radius:10px;background:var(--mud-palette-background-grey);">
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-weight:600;" Class="mb-1">📅 Activity — last 5 weeks</MudText>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;max-width:220px;">
+            @for (int hdi = 0; hdi < 35; hdi++)
+            {
+                var hDay = hmGoalStart.AddDays(hdi);
+                var hCount = hmGoalMap.GetValueOrDefault(hDay, 0);
+                var hBg = hCount == 0 ? "#e8eaf6" : hCount == 1 ? "#90CAF9" : hCount <= 3 ? "#42A5F5" : "#1565C0";
+                var hTip = hCount == 0 ? hDay.ToString("MMM d") : $"{hDay:MMM d}: {hCount} note{(hCount == 1 ? "" : "s")}";
+                <div title="@hTip" style="width:100%;aspect-ratio:1;border-radius:2px;background:@hBg;cursor:default;"></div>
+            }
+        </div>
+    </MudPaper>
+}
 @{
     // Milestone achievement check (exact: 5, 10, 25, 50)
     var milestoneCount = ProgressEntries.Count;
