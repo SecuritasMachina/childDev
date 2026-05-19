@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-19 — Invocation 9 Iter 636 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Return momentum": if the most recent note before today was >= 5 days ago and there is >= 1 note today, show "🎉 Welcome back! You're picking up where you left off — keep it going!" | UX/Encourage | Domain: return after gap | High | XS | Low | ProgressEntries sorted; check gap between today's first note and prior note; only when gap >= 5 days | Celebrates re-engagement without shaming the gap | No |
+| 2 | Web: Insights — "Total active days ever": count distinct calendar days across allProgressEver + allJournalEver + allTodosEver; show "You've been active on X different days!" | UX/Encourage | Domain: cumulative engagement | Low | XS | Low | allEver sets already loaded; union dates; Distinct.Count | Simple total; reinforces long-term engagement | No |
+| 3 | Web: GoalDetail — "Note quality growth": compare avg word count of first half vs second half of ProgressEntries (>= 10 notes); show "Your notes have grown from ~X to ~Y words on average — deeper thinking!" | UX/Encourage | Domain: reflection depth growth | Medium | S | Low | NextStepItems nullable; split; two halves; avg; compare | Long-deferred; high signal of growth | No |
+| 4 | Web: Home — "Completed goals count achievement": show "🏆 You've completed X goals!" as a stat caption or badge when CompletedGoalCount >= 3 | UX/Encourage | Domain: completion milestone | Medium | XS | Low | CompletedGoalCount field if available; else quick query; show achievement badge | Celebrates achievement completion portfolio | No |
+| 5 | Web: Journal — "Consistent time of day": if >= 70% of AllEntries with moods are in same time bucket (morning/afternoon/evening), show "🌅/☀️/🌙 You tend to journal in the [time] — keep that routine!" | UX/Encourage | Domain: journaling habit time | Low | XS | Low | AllEntries; DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).Hour; bucket; find dominant | Reinforces a healthy journaling rhythm | No |
+| 6 | Web: GoalDetail — "Halfway to next note milestone": when ProgressEntries.Count is exactly halfway to {10, 25, 50, 100}, show "Halfway to [milestone] — you're making real progress!" | UX/Encourage | Domain: milestone halfway | High | XS | Low | Milestones/2 values: {5, 12, 25, 50}; check Count in set; show message | Motivates before the milestone is reached | No |
+| 7 | Web: Insights — "Goals completed this year vs started": count goals with EnteredDate >= yearStart and CompletionDate != null vs total with EnteredDate >= yearStart; show "You completed X of Y goals you started this year!" | UX/Encourage | Domain: annual completion rate | Medium | S | Low | allGoals already loaded; filter by year; count completed/started | Annual self-reflection stat | No |
+| 8 | Web: Home — "Most improved goal this week": the goal with most notes this week that previously had the fewest (when >= 2 goals active); "🌱 [Goal] is getting attention this week!" | UX/Encourage | Domain: portfolio balance celebration | Medium | M | Med | Needs per-goal WoW comparison; complex; risk of CS0136 | Too complex | No |
+| 9 | Web: GoalDetail — "Personal best single day": if any day has >= 3 notes, highlight "📈 Your best day on this goal: X notes on [date]!" | UX/Encourage | Domain: peak performance day | Medium | XS | Low | ProgressEntries grouped by date; Max group count; only when >= 3 | Celebrates intensity; zero extra queries | No |
+| 10 | Web: Journal — "Month with most entries": find the calendar month with the most journal entries across all time; show "Your best journaling month was [Month Year] — X entries!" when >= 3 months of data | UX/Encourage | Domain: peak journaling month | Low | XS | Low | AllEntries grouped by year-month; Max group; >= 3 months | Fun journaling peak stat; zero extra queries | No |
+
+**Selection iter 636:** Item #1 — "Return momentum" on GoalDetail.
+- If the most recent entry before today is >= 5 days ago AND today has >= 1 note, celebrate the return
+- XS effort — `ProgressEntries` already loaded; compute gap between today's earliest note and prior entry
+- High impact: re-engagement after a gap deserves recognition, not silence
+
+---
+
 ## 2026-05-19 — Invocation 8 Iter 630 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |

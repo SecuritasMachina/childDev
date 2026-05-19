@@ -339,6 +339,21 @@
         : $"📝 <strong>{pdTodayCount} notes today</strong> on this goal — you're showing up strong!";
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.LocalFireDepartment" Dense="true" Class="mb-3">@((MarkupString)pdMsg)</MudAlert>
 }
+@if (pdTodayCount >= 1 && Goal.CompletionDate is null)
+{
+    var rmtPriorEntry = ProgressEntries.FirstOrDefault(p => p.UpdatedOn < pdTodayStartMs);
+    if (rmtPriorEntry is not null)
+    {
+        var rmtGapDays = (int)((pdTodayStartMs - rmtPriorEntry.UpdatedOn) / 86_400_000L);
+        if (rmtGapDays >= 5)
+        {
+            var rmtMsg = rmtGapDays >= 14
+                ? $"🦋 <strong>Welcome back after {rmtGapDays} days!</strong> Picking up where you left off — this goal is still yours!"
+                : $"💪 <strong>You're back after {rmtGapDays} days!</strong> Every return counts — keep the momentum going!";
+            <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiPeople" Dense="true" Class="mb-3">@((MarkupString)rmtMsg)</MudAlert>
+        }
+    }
+}
 @{
     var nmfMilestones = new HashSet<int> { 5, 10, 15, 25, 50, 75, 100 };
     var nmfCount = ProgressEntries.Count;
