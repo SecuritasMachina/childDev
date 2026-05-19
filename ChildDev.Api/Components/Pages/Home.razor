@@ -162,6 +162,19 @@
     </MudItem>
 </MudGrid>
 
+@if ((YtdProgressNotes >= 5 || YtdGoalsCompleted >= 1) && string.IsNullOrWhiteSpace(FilterText))
+{
+    var yearLabel = $"{DateTime.Today.Year}";
+    var ytdMsg = YtdGoalsCompleted >= 1 && YtdProgressNotes >= 1
+        ? $"📅 {yearLabel} so far: {YtdProgressNotes} progress note{(YtdProgressNotes == 1 ? "" : "s")} + {YtdGoalsCompleted} goal{(YtdGoalsCompleted == 1 ? "" : "s")} completed"
+        : YtdGoalsCompleted >= 1
+            ? $"📅 {yearLabel} so far: {YtdGoalsCompleted} goal{(YtdGoalsCompleted == 1 ? "" : "s")} completed — incredible!"
+            : $"📅 {yearLabel} so far: {YtdProgressNotes} progress note{(YtdProgressNotes == 1 ? "" : "s")} logged — keep it going!";
+    <MudAlert Severity="Severity.Success" Dense="true" Class="mb-4" Icon="@Icons.Material.Filled.CalendarMonth">
+        @ytdMsg 🌟
+    </MudAlert>
+}
+
 @if (NotesThisMonth + NotesLastMonth > 0 && string.IsNullOrWhiteSpace(FilterText))
 {
     var diff = NotesThisMonth - NotesLastMonth;
@@ -910,6 +923,8 @@
     private int GoalOfMonthCount;
     private int NotesThisMonth;
     private int NotesLastMonth;
+    private int YtdProgressNotes;
+    private int YtdGoalsCompleted;
     private bool ShowAddDialog;
     private string NewGoalText = string.Empty;
     private string? NewMeasurableOutcome;
@@ -1034,6 +1049,11 @@
         var lastMonthStartMs = new DateTimeOffset(new DateTime(localNow.Year, localNow.Month, 1).AddMonths(-1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
         NotesThisMonth = allTimestamps.Count(p => p.UpdatedOn >= thisMonthStartMs);
         NotesLastMonth = allTimestamps.Count(p => p.UpdatedOn >= lastMonthStartMs && p.UpdatedOn < thisMonthStartMs);
+
+        // Year-to-date stats
+        var yearStartMs = new DateTimeOffset(new DateTime(localNow.Year, 1, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
+        YtdProgressNotes = allTimestamps.Count(p => p.UpdatedOn >= yearStartMs);
+        YtdGoalsCompleted = CompletedGoals.Count(g => g.CompletionDate.HasValue && g.CompletionDate.Value >= yearStartMs);
 
         // Sort: goals with no progress first (needs attention), then by oldest-update-first
         AllActiveGoals = AllActiveGoals

@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 492 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Insights — "Days since last progress note" freshness indicator | UX | Domain: engagement signal | Medium | XS | Low | From ProgressHeatmap max date; show how recent the last progress note was | Low effort, useful at-a-glance signal | No |
+| 2 | Web: GoalDetail — "Best streak ever" for this goal: longest consecutive day run | UX/Encourage | Domain: personal peak record | High | S | Low | Rolling window on ProgressEntries; show "Your all-time best: 7 days!" alongside current streak | Medium computation; strong motivational signal | No |
+| 3 | Web: Home — completion rate mini stat: "X of Y goals completed" shown as subtle text below stats | UI | Domain: overall completion context | Medium | XS | Low | `GoalsCompletedAllTime` isn't loaded on Home but could be computed from existing data | Requires extra query or field | No |
+| 4 | Web: GoalDetail — "What's new since your last visit?" section showing only newest note since LastViewedAt | Func | Domain: returning user orientation | High | S | Low | Store last-viewed timestamp per goal in Session | Requires session state management | No |
+| 5 | Web: Insights — chart showing total progress notes by goal (top 5 goals bar chart) | UI | Domain: cross-goal comparison | High | M | Low | Group GoalProgresses by GoalFk; join with Goal.GoalText; render bar chart | Medium effort; high visual impact | No |
+| 6 | Web: Home — "Goals created this month" count badge in the stats row | UI | Domain: goal creation momentum | Low | XS | Low | Count AllActiveGoals where CreatedAt or EnteredDate is in current month | Requires EnteredDate comparison; low value | No |
+| 7 | Web: GoalDetail — achievement share text: a pre-formatted "I reached level X!" message to clipboard | UX | Domain: celebration sharing | Medium | XS | Low | JS interop for clipboard; generate 1-line achievement text | Requires clipboard JS interop | No |
+| 8 | Web: Todos — "Productivity streak": how many consecutive weeks had at least 1 completed todo | UX/Encourage | Domain: todo completion habit | Medium | S | Low | Compute from CompletedTodos by weekly bucket; show streak | Medium computation; habit-forming message | No |
+| 9 | Web: GoalDetail — note export: list all notes as copyable plain text in a dialog | Func | Domain: notes portability/review | Low | S | Low | Aggregate NextStepItems into a text block in dialog | Low demand; moderate effort | No |
+| 10 | Web: Home — "Your growth this year": total progress notes + goals completed in current calendar year | UX/Encourage | Domain: yearly achievement overview | High | XS | Low | Filter by year from existing data; show as a compact "Year in review" card | High motivational value; low effort | No |
+
+**Selection iter 492:** Item #10 — "Your growth this year" card on Home.
+- Show total progress notes + goals completed in current calendar year
+- Filter from `allTimestamps` (already loaded) by year; CompletedGoals from `AllActiveGoals` completed date
+- Show as a compact motivational card: "This year: X notes + Y goals completed 🌟"
+- Zero extra DB queries; high emotional impact — shows cumulative yearly achievement
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 489 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
