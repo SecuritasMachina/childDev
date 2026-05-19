@@ -134,6 +134,12 @@
             {
                 <MudText Typo="Typo.caption" Color="Color.Warning">🔥 @GoalStreaks.Count on a streak</MudText>
             }
+            @if (AllActiveGoals.Count >= 2)
+            {
+                var totalNotesAll = AllActiveGoals.Sum(g => ProgressCounts.GetValueOrDefault(g.Guid));
+                var avgNotesPerGoal = (double)totalNotesAll / AllActiveGoals.Count;
+                <MudText Typo="Typo.caption" Color="Color.Secondary">📝 avg @avgNotesPerGoal.ToString("F1") notes/goal</MudText>
+            }
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="4">
