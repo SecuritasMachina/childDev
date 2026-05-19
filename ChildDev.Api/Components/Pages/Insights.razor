@@ -108,6 +108,11 @@
             {
                 <MudText Typo="Typo.caption" Color="Color.Info">📅 Active on @TotalActiveDaysEver days ever!</MudText>
             }
+            @if (GoalsTotalAllTime >= 3 && GoalProgressTotal >= 3)
+            {
+                var apgAvg = (GoalProgressTotal / (double)GoalsTotalAllTime);
+                <MudText Typo="Typo.caption" Color="Color.Secondary">avg @apgAvg.ToString("F1") notes/goal</MudText>
+            }
         </MudPaper>
     </MudItem>
 </MudGrid>
