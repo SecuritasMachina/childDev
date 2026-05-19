@@ -242,6 +242,15 @@
         You haven't logged any progress this week yet — pick a goal and add a note! You've got this. 💪
     </MudAlert>
 }
+@if (!string.IsNullOrWhiteSpace(GoalOfMonthText) && !string.IsNullOrWhiteSpace(GoalOfMonthGuid) && string.IsNullOrWhiteSpace(FilterText))
+{
+    var gotmTrunc = GoalOfMonthText.Length > 60 ? GoalOfMonthText[..60] + "…" : GoalOfMonthText;
+    <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mb-3">
+        🥇 <strong>Goal of the Month:</strong> "@gotmTrunc" — @GoalOfMonthCount notes this month!
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning"
+                   Href="@($"/goals/{GoalOfMonthGuid}")" Class="ml-1">View</MudButton>
+    </MudAlert>
+}
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
     <MudText Typo="Typo.h5">
@@ -822,6 +831,9 @@
     private Dictionary<string, int> GoalStreaks = new();
     private int ProgressThisWeek;
     private int GoalsProgressedThisWeek;
+    private string? GoalOfMonthGuid;
+    private string? GoalOfMonthText;
+    private int GoalOfMonthCount;
     private bool ShowAddDialog;
     private string NewGoalText = string.Empty;
     private string? NewMeasurableOutcome;
@@ -925,6 +937,20 @@
         var weekEntries = allTimestamps.Where(p => p.UpdatedOn >= weekAgoMs).ToList();
         ProgressThisWeek = weekEntries.Count;
         GoalsProgressedThisWeek = weekEntries.Select(p => p.GoalFk).Distinct().Count();
+
+        // Goal of the month: most progress notes in last 30 days
+        var monthAgoMs = nowMsStreak - 30L * 86_400_000L;
+        var monthTopEntry = allTimestamps
+            .Where(p => p.UpdatedOn >= monthAgoMs)
+            .GroupBy(p => p.GoalFk)
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+        if (monthTopEntry is not null && monthTopEntry.Count() >= 2)
+        {
+            GoalOfMonthGuid = monthTopEntry.Key;
+            GoalOfMonthText = AllActiveGoals.FirstOrDefault(g => g.Guid == monthTopEntry.Key)?.GoalText;
+            GoalOfMonthCount = monthTopEntry.Count();
+        }
 
         // Sort: goals with no progress first (needs attention), then by oldest-update-first
         AllActiveGoals = AllActiveGoals
