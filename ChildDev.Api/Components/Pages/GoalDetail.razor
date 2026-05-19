@@ -236,6 +236,16 @@
 <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">
     Set on @goalDate.ToString("MMM d, yyyy") — @durationText
 </MudText>
+@if (Goal.CompletionDate is null)
+{
+    var glpLabel = daysSince < 14 ? ("🌱", "Kickoff", "Getting started — every new goal begins here!")
+                 : daysSince < 60 ? ("🚀", "Building momentum", "You're in the growth zone — keep adding notes!")
+                 : daysSince < 180 ? ("💪", "Deep work", "Real commitment shows here — you're proving yourself!")
+                 : ("🏆", "Long-game player", "You're in elite territory — most goals don't make it this far!");
+    <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined" Class="mb-2">
+        @glpLabel.Item1 @glpLabel.Item2
+    </MudChip>
+}
 @{
     string? ageMilestoneEmoji = null;
     string? ageMilestoneName = null;
