@@ -65,3 +65,30 @@
     60%       { transform: translateY(-6px);  }
 }
 .celeb-emoji { display: inline-block; animation: celebBounce .8s ease infinite; }
+
+/* Confetti burst on goal completion */
+@keyframes confettiFall {
+    0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+    80%  { opacity: .7; }
+    100% { transform: translateY(90px) rotate(540deg) scale(.4); opacity: 0; }
+}
+.confetti-burst { position: relative; overflow: hidden; height: 50px; margin-bottom: 8px; }
+.confetti-burst span {
+    position: absolute;
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    animation: confettiFall 1.4s ease-in forwards;
+    top: 0;
+}
+.confetti-burst span:nth-child(1)  { left:  8%; background:#F44336; animation-delay:.00s; }
+.confetti-burst span:nth-child(2)  { left: 18%; background:#FF9800; animation-delay:.08s; border-radius:50%; }
+.confetti-burst span:nth-child(3)  { left: 28%; background:#FFEB3B; animation-delay:.15s; }
+.confetti-burst span:nth-child(4)  { left: 38%; background:#4CAF50; animation-delay:.05s; border-radius:50%; }
+.confetti-burst span:nth-child(5)  { left: 48%; background:#2196F3; animation-delay:.20s; }
+.confetti-burst span:nth-child(6)  { left: 58%; background:#9C27B0; animation-delay:.10s; border-radius:50%; }
+.confetti-burst span:nth-child(7)  { left: 68%; background:#FF5722; animation-delay:.18s; }
+.confetti-burst span:nth-child(8)  { left: 78%; background:#00BCD4; animation-delay:.03s; border-radius:50%; }
+.confetti-burst span:nth-child(9)  { left: 88%; background:#E91E63; animation-delay:.12s; }
+.confetti-burst span:nth-child(10) { left: 13%; background:#8BC34A; animation-delay:.22s; border-radius:50%; }
+.confetti-burst span:nth-child(11) { left: 43%; background:#FF4081; animation-delay:.07s; }
+.confetti-burst span:nth-child(12) { left: 73%; background:#FFC107; animation-delay:.16s; border-radius:50%; }

@@ -407,6 +407,11 @@
 @* Goal completion celebration *@
 <MudDialog @bind-Visible="ShowCelebration" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
     <DialogContent>
+        <div class="confetti-burst">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+        </div>
         <MudStack AlignItems="AlignItems.Center" Spacing="3" Class="pa-4">
             <MudText Typo="Typo.h2" Class="celeb-emoji">🎉</MudText>
             <MudText Typo="Typo.h5" Align="Align.Center" Color="Color.Success">Goal Achieved!</MudText>
