@@ -265,6 +265,18 @@
         🗓️ <strong>One month in!</strong> You've kept this goal alive for @daysSince days and have @ProgressEntries.Count notes to show for it. The first month is where most goals get abandoned — you didn't. That's huge!
     </MudAlert>
 }
+@if (Goal.ExpirationDate.HasValue && Goal.CompletionDate is null)
+{
+    var ch100Duration = (Goal.ExpirationDate.Value - Goal.EnteredDate) / 86_400_000L;
+    if (ch100Duration >= 95 && ch100Duration <= 105)
+    {
+        var ch100Label = daysSince >= 90 ? $"🔥 <strong>100-day challenge — final stretch!</strong> Day {daysSince} of {ch100Duration}! The finish line is in sight — push through!"
+                       : daysSince >= 50 ? $"🔥 <strong>100-day challenge — past halfway!</strong> Day {daysSince} of {ch100Duration}. You've committed to the long game. Stay the course!"
+                       : daysSince >= 10 ? $"🔥 <strong>100-day challenge underway!</strong> Day {daysSince} of {ch100Duration} — you accepted the challenge. Prove you can go all the way!"
+                       : $"🔥 <strong>100-day challenge accepted!</strong> Just getting started — day {daysSince}. Every single day adds up to something amazing!";
+        <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.LocalFireDepartment" Dense="true" Class="mb-3">@((MarkupString)ch100Label)</MudAlert>
+    }
+}
 @if (daysSince >= 98 && daysSince <= 107 && Goal.CompletionDate is null && ProgressEntries.Count >= 8)
 {
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mb-3">
