@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-19 — Invocation 8 Iter 618 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Longest positive streak" detail: show exact start→end date range of the longest active streak when gsCount >= 7 | UX | Domain: streak date context | Low | XS | Low | gsActiveDates sorted; find longest run; format start/end | Contextualizes streak with real calendar dates | No |
+| 2 | Web: Home — "Goals breadth this week" callout: when GoalsProgressedThisWeek >= 2, show "You gave attention to @GoalsProgressedThisWeek goals this week — well-rounded effort!" | UX/Encourage | Domain: weekly breadth reinforcement | Medium | XS | Low | GoalsProgressedThisWeek already computed; simple condition | Complements existing week summary; positive breadth nudge | No |
+| 3 | Web: GoalDetail — "Note editing pattern": if the user regularly updates the same-day note (multiple entries with same DateOnly), show "You often refine your notes on the same day — great depth!" | UX | Domain: note quality behavior | Low | S | Low | Group by DateOnly; count groups with Count > 1; show when >= 3 such days | Too niche; skip | No |
+| 4 | Web: Insights — "Journal-to-progress note ratio": JournalTotal / GoalProgressTotal; if >2 show "You reflect broadly in your journal"; if <0.5 show "Your progress notes lead your reflection" | UX | Domain: journaling vs tracking balance | Low | XS | Low | Simple ratio comparison; two fields already loaded | Minor insight; low value | No |
+| 5 | Web: GoalDetail — "Comeback momentum tracker": when a gap >= 14 days occurred historically but 5+ notes were logged after the return, show "You came back and wrote X notes — real resilience!" | UX/Encourage | Domain: recovery motivation | High | S | Low | Sort ProgressEntries by UpdatedOn asc; scan for gap >= 14d; count after; show when >= 5 | Validates returning to a goal after a pause | No |
+| 6 | Web: Home — "Total goals currently active" count context: when AllActiveGoals.Count >= 5, add "You're actively working on @AllActiveGoals.Count goals — ambitious!" caption | UX | Domain: ambition recognition | Low | XS | Low | AllActiveGoals.Count >= 5; simple caption | Minor positive note; quick to add | No |
+| 7 | Web: GoalDetail — "Same-week notes record": if the current week's note count equals all-time weekly best, show "This is your all-time best week on this goal — you are absolutely peaking!" | UX/Celebrate | Domain: peak performance | High | XS | Low | Uses cwrWeekGroups already computed in iter 611; check rank == 1 exactly | Extends the week rank logic already added | No |
+| 8 | Web: Insights — "Goals set per month this year": average goals set per month this year; "You're setting X new goals per month — great ambition!" when >= 0.5/mo | UX | Domain: goal creation pace | Low | S | Med | Needs EnteredDate per active goal; grouping by month | Not worth the complexity | No |
+| 9 | Web: GoalDetail — "Note milestone fan-out": when hitting a note count multiple of 5 (5, 10, 15...) within 1 day, show special burst "Just hit X notes on this goal today!" | UX/Celebrate | Domain: intraday milestone | Medium | XS | Low | ProgressEntries.Count % 5 == 0 && pdTodayCount >= 1 | Fun momentary celebration; extends milestone logic | No |
+| 10 | Web: Home — "Upcoming goal birthday": if any active goal's EnteredDate month/day matches within 7 days, show "🎂 [Goal]'s 1-year (or 2-year) goal birthday is in X days!" | UX/Celebrate | Domain: goal birthday preview | Medium | XS | Low | Similar to AnniversaryGoal but forward-looking on Home; check EnteredDate + 365*N within 7 days | Warm anticipation; complements existing anniversary alert | No |
+
+**Selection iter 618:** Item #5 — "Comeback momentum tracker" on GoalDetail.
+- Sort ProgressEntries ascending by UpdatedOn, scan for gaps >= 14 days, then count notes after the latest such return
+- Show "You came back and wrote X notes — real resilience!" when >= 5 notes since return
+- High impact: validates sticking with a goal after a long pause; actively encourages returning to goals
+
+---
+
 ## 2026-05-19 — Invocation 8 Iter 615 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
