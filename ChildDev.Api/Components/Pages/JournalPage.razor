@@ -76,6 +76,22 @@
     <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.CalendarMonth">@((MarkupString)jMonthMsg)</MudAlert>
 }
 
+@{
+    var totw7Ms = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - 7L * 86_400_000L;
+    var totwTag = AllEntries
+        .Where(j => j.EnteredDate >= totw7Ms && !string.IsNullOrWhiteSpace(j.Tags))
+        .SelectMany(j => j.Tags!.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        .GroupBy(t => t, StringComparer.OrdinalIgnoreCase)
+        .OrderByDescending(g => g.Count())
+        .Select(g => (Tag: g.Key, Count: g.Count()))
+        .FirstOrDefault();
+}
+@if (totwTag.Tag is not null && totwTag.Count >= 2)
+{
+    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.LocalOffer">
+        🏷️ <strong>Tag of the week:</strong> "@totwTag.Tag" — you used it @totwTag.Count times this week!
+    </MudAlert>
+}
 @if (TotalWordsWritten >= 100)
 {
     var wordsMilestone = TotalWordsWritten >= 10000 ? "📚 10,000+ words!" : TotalWordsWritten >= 5000 ? "📖 5,000+ words!" : TotalWordsWritten >= 1000 ? "✍️ 1,000+ words!" : null;
