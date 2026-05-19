@@ -158,6 +158,18 @@
                     📊 @GoalsProgressedThisWeek of @AllActiveGoals.Count goals worked this week
                 </MudText>
             }
+            @{
+                var nowMsMtgs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                var mtgsThisWeek = AllActiveGoals.Count(g => g.NextMeetingDate.HasValue
+                    && g.NextMeetingDate.Value > nowMsMtgs
+                    && (DateTimeOffset.FromUnixTimeMilliseconds(g.NextMeetingDate.Value).LocalDateTime.Date - DateTime.Today).Days <= 7);
+            }
+            @if (mtgsThisWeek > 0)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Info">
+                    📅 @mtgsThisWeek meeting@(mtgsThisWeek == 1 ? "" : "s") this week
+                </MudText>
+            }
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="4">

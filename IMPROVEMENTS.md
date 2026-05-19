@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 528 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Home — "Personal record week" alert: beat previous best week for progress notes | UX/Encourage | Domain: celebrate new highs | High | M | Low | Compute max notes/week over last 12 weeks; if ProgressThisWeek > that max, show "New record!" | Very motivating; needs a few extra computations from existing allTimestamps | No |
+| 2 | Web: GoalDetail — "Pace to next milestone" projection at current notes/week rate | UX | Domain: forward-looking motivation | Medium | M | Low | notesPerWeek from existing data; extrapolate to next threshold (5,10,25,50); "At your pace, ~3 weeks to Momentum" | Concrete and actionable; handles edge cases | No |
+| 3 | Web: Insights — "Longest gap" between any two progress notes as resilience callout | UX | Domain: persistence/comeback recognition | Medium | S | Low | allProgressEver sorted; max gap between consecutive timestamps; frame positively | Interesting retrospective; could feel negative if recent | No |
+| 4 | Web: Home — "All-active-today" burst bonus: escalate the existing banner with confetti count | UX/Encourage | Domain: daily portfolio completion celebration | Medium | XS | Low | Already have allGoalsActiveToday banner; add note count to message "all X goals active — that's a record day!" | Minor polish to existing feature | No |
+| 5 | Web: GoalDetail — "Quietest stretch" awareness: longest inactivity period callout when >= 14 days | UX | Domain: honest progress reflection | Low | XS | Low | longestGapDays already computed; if >= 14 show "Your longest quiet stretch was X days — but you came back!" | longestGapDays already exists in @{ } block | No |
+| 6 | Web: Insights — "Week-over-week" progress note velocity: this week vs prior week for notes only | UX | Domain: short-term trend visibility | Medium | XS | Low | allProgressEver timestamps; count notes in this week vs last 7-14 days ago | Complementary to monthly MoM; granular view | No |
+| 7 | Web: Todos — "Oldest pending todo" callout: surface the todo that has waited the longest | UX | Domain: aging task visibility | Medium | S | Low | Todos already loaded; find oldest by UpdatedOn or DueDate; show "Oldest: X, added Y days ago" | Useful if kid has backlog; no new queries | No |
+| 8 | Web: Home — Completion velocity insight: avg days between goal completions over last 3 completions | UX | Domain: long-term achievement cadence | Medium | M | Low | CompletedGoals ordered by CompletionDate; diff last 3; show "You complete a goal every ~X days" | Interesting long-term rhythm insight | No |
+| 9 | Web: GoalDetail — "Entry count by month" sparkline: show note frequency trend over months | UX | Domain: visual trend vs progress | Medium | M | Low | Group ProgressEntries by month; show as a simple text progress | More nuanced version of the bar chart already shown | No |
+| 10 | Web: Home — Show "Goals with meetings this week" count as a caption in stat card | UX | Domain: upcoming meeting awareness | Medium | XS | Low | Scan AllActiveGoals.NextMeetingDate for within 7 days; show count in goals stat card | Good complement to the banner; zero extra queries | No |
+
+**Selection iter 528:** Item #5 — "Quietest stretch" awareness on GoalDetail when longestGapDays >= 14.
+- `longestGapDays` is already computed in the existing `@{ }` block at lines 448-458
+- Show a brief line: "Your longest quiet stretch was X days — but you kept coming back! 💪"
+- Zero extra queries; zero extra fields; pure display of already-computed value
+- Frame positively as resilience (you came back!) not failure
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 525 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
