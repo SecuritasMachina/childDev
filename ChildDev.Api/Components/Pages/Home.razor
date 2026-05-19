@@ -311,6 +311,21 @@
                     {
                         <MudChip T="string" Icon="@Icons.Material.Filled.Schedule" Color="Color.Warning" Size="Size.Small">@expiryLabel</MudChip>
                     }
+                    @{
+                        var lvlCount = ProgressCounts.GetValueOrDefault(g.Guid);
+                        var (lvlEmoji, lvlLabel, lvlColor) = lvlCount switch
+                        {
+                            0             => ("🌱", "Seedling",   Color.Default),
+                            >= 1 and < 5  => ("⚡", "Getting Started", Color.Info),
+                            >= 5 and < 10 => ("🚀", "Momentum",  Color.Primary),
+                            >= 10 and < 25=> ("⭐", "Strong",    Color.Success),
+                            >= 25 and < 50=> ("🏆", "Champion",  Color.Warning),
+                            _             => ("🌟", "Legendary", Color.Error)
+                        };
+                    }
+                    <MudChip T="string" Size="Size.Small" Color="@lvlColor" Class="mr-1" Style="font-size:0.72rem;">
+                        @lvlEmoji @lvlLabel
+                    </MudChip>
                     @if (GoalStreaks.TryGetValue(g.Guid, out var streak))
                     {
                         <MudChip T="string" Icon="@Icons.Material.Filled.LocalFireDepartment" Color="Color.Warning" Size="Size.Small" Class="mr-1">

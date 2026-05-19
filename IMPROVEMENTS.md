@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 440 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Home — goal "level" badge on cards (Seedling→Momentum→Champion→Legendary) based on progress count | UI/Encourage | Domain: gamification drives kids to log more; visible reward for consistency | High | S | Low | Fun, visual, zero new queries — ProgressCounts already loaded; color-coded chips | May feel arbitrary; levels need to feel achievable | No |
+| 2 | Web: GoalDetail — "goal age" progress bar (% elapsed vs. target date) | UI | Domain: deadline urgency | Medium | S | Low | Visual "40% of the way to your deadline" | Only meaningful when ExpirationDate set | No |
+| 3 | Web: Home — weekly encouragement summary ("X notes logged this week 🌟") above goal list | UI/Encourage | Domain: positive reinforcement at session level | Medium | S | Low | Session-level celebration; reuses JournalThisWeek/ProgressCounts patterns | Could feel empty at 0 | No |
+| 4 | Web: GoalDetail — "first step" illustrated prompt when goal has 0 notes | UI/Encourage | Domain: onboarding friction for new goals | High | S | Low | Turns the empty state into a motivating call to action | Rare path; only shown once | No |
+| 5 | Web: Home — "Your best streak" stat card or banner | UI/Encourage | Domain: habit formation; summary of overall consistency | Medium | M | Low | Shows the kid's personal best across all goals | Requires streak data aggregation | No |
+| 6 | Web: GoalDetail — animated confetti burst on Mark as Complete | UI/Encourage | Domain: celebration; completing a goal deserves more than a dialog | High | S | Low | CSS-only confetti; pure additive delight | Minor CSS complexity | No |
+| 7 | Web: Home — progress heat indicator on each goal card (color scale by recency) | UI | Domain: at-a-glance goal health | Medium | S | Low | Card left-border color: green=active, yellow=2 weeks, red=stale | Subtle; may be missed | No |
+| 8 | Mobile: GoalListViewModel — level badge in list item subtitle | UI/Encourage | Domain: mobile parity with web | Low | S | Low | Kids on mobile also see their level progress | Mobile-only change; lower priority | No |
+| 9 | Web: Insights — "Most progress" goal card (goal with most notes + note count) | Func | Domain: achievement recognition | Medium | S | Low | Highlights the goal the kid has worked hardest on | Insights page is not heavily used (check analytics) | No |
+| 10 | Web: GoalDetail — "You're X% there!" progress meter based on count vs. milestone thresholds | UI/Encourage | Domain: progress visibility per goal | High | S | Low | "You're 60% to Champion! 4 more notes to go" — gamified milestone progress | Count-to-milestone mapping is arbitrary | No |
+
+**Selection iter 440:** Item #1 — Goal level badge on home cards.
+- Zero new DB queries (ProgressCounts already loaded)
+- Kids get immediate visual reward for logging notes — Seedling at 0, Growing at 1+, etc.
+- Color-coded chips reinforce progression (grey → blue → green → orange → gold)
+- Low risk: additive chip next to existing status chips
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 437 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 Step 0a: unsolved problems research running (background agent). Step 0b: domain notes reused from prior invocations. Focus: goal development, achievement, and encouragement per user direction.
