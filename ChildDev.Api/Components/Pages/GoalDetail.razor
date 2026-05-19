@@ -155,6 +155,12 @@ else
                                 }
                                 <MudText Typo="Typo.caption" Color="Color.Secondary">@enteredDate.ToString("MMM d, yyyy h:mm tt")</MudText>
                             </MudStack>
+                            @if (!string.IsNullOrWhiteSpace(p.NextStepItems))
+                            {
+                                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Success"
+                                           OnClick="() => CelebrateStep(p.NextStepItems!)"
+                                           aria-label="Mark step done">Done! 🎉</MudButton>
+                            }
                             <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
                                            Color="Color.Default" OnClick="() => OpenEditProgress(p)" aria-label="Edit progress note" />
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
@@ -376,6 +382,14 @@ else
 
         ProgressChartSeries = [new ChartSeries { Name = "Notes", Data = counts }];
         ProgressChartLabels = labels;
+    }
+
+    private async Task CelebrateStep(string stepText)
+    {
+        var short_ = stepText.Length > 60 ? stepText[..60] + "…" : stepText;
+        Snackbar.Add($"🎉 Step done: \"{short_}\" — amazing! What's your next step?", Severity.Success);
+        await Analytics.TrackAsync("step_celebrate", AccountGuid, "goal_detail", GoalGuid);
+        OpenAddProgressDialog();
     }
 
     private void OpenAddProgressDialog()
