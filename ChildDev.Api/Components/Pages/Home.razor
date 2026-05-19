@@ -553,6 +553,31 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                    Href="@($"/goals/{focusGoal.Guid}")" Class="ml-1">Add Note</MudButton>
     </MudAlert>
 }
+@{
+    var mcNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    Goal? mcBestGoal = null;
+    double mcBestRate = 0;
+    if (AllActiveGoals.Count >= 2 && string.IsNullOrWhiteSpace(FilterText))
+    {
+        foreach (var mcG in AllActiveGoals)
+        {
+            var mcCount = ProgressCounts.GetValueOrDefault(mcG.Guid);
+            var mcWeeks = Math.Max((mcNowMs - mcG.EnteredDate) / (7.0 * 86_400_000.0), 1.0);
+            var mcRate = mcCount / mcWeeks;
+            if (mcRate > mcBestRate) { mcBestRate = mcRate; mcBestGoal = mcG; }
+        }
+        if (mcBestRate < 1.0) mcBestGoal = null;
+    }
+}
+@if (mcBestGoal is not null)
+{
+    var mcName = mcBestGoal.GoalText?.Length > 55 ? mcBestGoal.GoalText[..55] + "…" : mcBestGoal.GoalText;
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Star" Dense="true" Class="mb-3">
+        ⭐ <strong>Most consistent goal:</strong> "@mcName" — @mcBestRate.ToString("F1") notes/week on average! Keep that momentum!
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Info"
+                   Href="@($"/goals/{mcBestGoal.Guid}")" Class="ml-1">View</MudButton>
+    </MudAlert>
+}
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
     <MudText Typo="Typo.h5">
         <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="mr-2" />
