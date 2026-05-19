@@ -163,7 +163,19 @@
     var wMsg = GoalsProgressedThisWeek == 1
         ? $"This week: {ProgressThisWeek} progress note{(ProgressThisWeek == 1 ? "" : "s")} on 1 goal! 💪 Keep going!"
         : $"This week: {ProgressThisWeek} progress note{(ProgressThisWeek == 1 ? "" : "s")} across {GoalsProgressedThisWeek} goals! 🌟 Amazing work!";
-    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.TrendingUp" Dense="true" Class="mb-3">@wMsg</MudAlert>
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.TrendingUp" Dense="true" Class="mb-2">@wMsg</MudAlert>
+}
+@if (GoalStreaks.Any() && string.IsNullOrWhiteSpace(FilterText))
+{
+    var bestEntry = GoalStreaks.MaxBy(kv => kv.Value);
+    var bestGoal = AllActiveGoals.FirstOrDefault(g => g.Guid == bestEntry.Key);
+    if (bestGoal is not null && bestEntry.Value >= 2)
+    {
+        var truncName = bestGoal.GoalText?.Length > 50 ? bestGoal.GoalText[..50] + "…" : bestGoal.GoalText;
+        <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.LocalFireDepartment" Dense="true" Class="mb-3">
+            🔥 Best streak: <strong>@bestEntry.Value weeks</strong> on "@truncName" — keep it going!
+        </MudAlert>
+    }
 }
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
