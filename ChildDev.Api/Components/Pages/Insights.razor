@@ -123,6 +123,10 @@
     </MudAlert>
 }
 
+@if (CompletionVelocityMsg is not null)
+{
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Speed" Dense="true" Class="mb-4">@CompletionVelocityMsg</MudAlert>
+}
 @if (GoalsTotalAllTime > 0)
 {
     var completionPct = GoalsTotalAllTime == 0 ? 0 : (int)(GoalsCompletedAllTime * 100.0 / GoalsTotalAllTime);
@@ -598,6 +602,7 @@
     private int LastMonthProgress;
     private int NotesThisWeekProgress;
     private int NotesLastWeekProgress;
+    private string? CompletionVelocityMsg;
 
     protected override async Task OnInitializedAsync()
     {
@@ -785,6 +790,28 @@
         JournalStreak = 0;
         var jStreakDay = DateOnly.FromDateTime(DateTime.Today);
         while (journalDateSet.Contains(jStreakDay)) { JournalStreak++; jStreakDay = jStreakDay.AddDays(-1); }
+
+        // Completion velocity: avg days between last 3 goal completions
+        var completionDates = await Db.Goals
+            .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate != null)
+            .OrderByDescending(g => g.CompletionDate)
+            .Take(4)
+            .Select(g => g.CompletionDate!.Value)
+            .ToListAsync();
+        CompletionVelocityMsg = null;
+        if (completionDates.Count >= 2)
+        {
+            var gaps = new List<long>();
+            for (int ci = 0; ci < completionDates.Count - 1; ci++)
+                gaps.Add(completionDates[ci] - completionDates[ci + 1]);
+            var avgDays = (int)(gaps.Average() / 86_400_000.0);
+            if (avgDays > 0)
+                CompletionVelocityMsg = avgDays <= 30
+                    ? $"🎯 You complete a goal every ~{avgDays} days — incredible pace! You're a goal-finishing machine!"
+                    : avgDays <= 90
+                        ? $"🎯 You complete a goal every ~{avgDays} days — solid, steady progress toward your dreams!"
+                        : $"🎯 You complete a goal every ~{avgDays} days — each one is a real achievement worth celebrating!";
+        }
 
         var allEver = allTodosEver.Concat(allJournalEver).Concat(allProgressEver).ToList();
         if (allEver.Count >= 5)
