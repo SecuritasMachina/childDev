@@ -143,6 +143,20 @@
 <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">
     Set on @goalDate.ToString("MMM d, yyyy") — @durationText
 </MudText>
+@{
+    string? ageMilestoneEmoji = null;
+    string? ageMilestoneName = null;
+    foreach (var (ageT, ageE, ageN) in new[] { (365, "🌟", "1 Year"), (180, "🏆", "6 Months"), (90, "⭐", "3 Months"), (60, "🚀", "2 Months"), (30, "💪", "1 Month") })
+    {
+        if (daysSince >= ageT && daysSince < ageT + 7) { ageMilestoneEmoji = ageE; ageMilestoneName = ageN; break; }
+    }
+}
+@if (ageMilestoneEmoji is not null && Goal.CompletionDate is null)
+{
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Celebration" Dense="true" Class="mb-3">
+        @ageMilestoneEmoji <strong>@ageMilestoneName on this goal!</strong> @daysSince days of working toward this — that's real long-term commitment! 🎉
+    </MudAlert>
+}
 @if (Goal.ExpirationDate.HasValue && Goal.CompletionDate is null)
 {
     var nowMs2 = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();

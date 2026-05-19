@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 531 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Home — "Personal record week" banner: when ProgressThisWeek beats prior best week | UX/Encourage | Domain: celebrate new high | High | M | Low | Compute max weekly notes from allTimestamps (12 prior weeks); if ProgressThisWeek > max → "New record!" | Very motivating; needs a few array operations on existing allTimestamps data | No |
+| 2 | Web: GoalDetail — Show percentage of days with activity (active rate) for this goal | UX | Domain: habit density insight | Medium | XS | Low | goalActiveDates.Count / journeyDays * 100; show "You've been active X% of days on this goal" | Simple ratio computation; already have both values | No |
+| 3 | Web: Insights — "Consistency streak for journaling + goals combined" multi-habit streak | UX/Encourage | Domain: holistic habit awareness | Medium | M | Low | Intersect daily active dates from journal + progress; count consecutive combined days | Complex intersection; interesting holistic view | No |
+| 4 | Web: GoalDetail — Display edit history: show "(edited)" for notes that have been updated | UX | Domain: authenticity / growth arc | Low | XS | Low | Already have UpdatedOn; compare to created date if available; or just show "last updated" if sync gap | Minor UX touch; low priority | No |
+| 5 | Web: Home — "Goal portfolio health score": single number combining active goals, progress freshness, streak | UX | Domain: portfolio-level KPI | High | M | Low | Composite: active goals * freshness * streak / formula → 0-100 score with grade | Nice overview metric; needs careful scoring | No |
+| 6 | Web: Journal — "Journaling cadence": avg days between entries (active frequency) | UX | Domain: self-awareness of writing rhythm | Low | S | Low | Sort AllEntries by EnteredDate; avg gap between consecutive entries | Useful mirror; low impact | No |
+| 7 | Web: Todos — "Completion rate this week" progress bar with label | UX | Domain: weekly task throughput visibility | Medium | XS | Low | WeekCompletedCount / (WeekCompletedCount + AllPendingTodos.Count) * 100 | WeekDueCount and WeekCompletedCount already computed; simple ratio | No |
+| 8 | Web: GoalDetail — "Goal age milestone" alert: celebrate 30, 60, 90, 180, 365 day goals | UX/Encourage | Domain: long-term commitment celebration | High | XS | Low | daysSince thresholds: 30→"1 Month In!", 60, 90, 180, 365; one-time banner per threshold | Very emotional; zero extra queries; high impact | No |
+| 9 | Web: Home — "Inspiration note count": total progress notes logged today across all goals | UX | Domain: daily engagement visibility | Medium | XS | Low | Scan allTimestamps (today's notes) that were already loaded; count entries from today | Simple daily stats; motivates daily logging | No |
+| 10 | Web: Insights — "All-time highest streak" record: show the longest streak ever achieved | UX/Encourage | Domain: all-time personal best | Medium | M | Low | Compute from analytics events; needs consecutive day streak across all time not just last 30 | Interesting historical data but needs full event scan | No |
+
+**Selection iter 531:** Item #8 — Goal age milestone alert on GoalDetail.
+- `daysSince` already computed in the page (days since goal was entered)
+- Check thresholds: 30, 60, 90, 180, 365
+- Show a celebration banner: "🎉 1 Month In! 30 days working toward this goal — that's real commitment!"
+- Zero extra queries; high emotional impact; encourages long-term engagement
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 528 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
