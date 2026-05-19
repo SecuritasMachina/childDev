@@ -83,6 +83,27 @@
 <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">
     Set on @goalDate.ToString("MMM d, yyyy") — @durationText
 </MudText>
+@if (Goal.ExpirationDate.HasValue && Goal.CompletionDate is null)
+{
+    var nowMs2 = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    var totalMs = Goal.ExpirationDate.Value - Goal.EnteredDate;
+    var elapsedMs = nowMs2 - Goal.EnteredDate;
+    var pct = totalMs > 0 ? (int)Math.Clamp((double)elapsedMs / totalMs * 100, 0, 100) : 100;
+    var daysElapsed2 = (int)(elapsedMs / 86_400_000L);
+    var totalDays = (int)(totalMs / 86_400_000L);
+    var daysLeft2 = totalDays - daysElapsed2;
+    var isOverdue2 = nowMs2 > Goal.ExpirationDate.Value;
+    Color barColor2 = pct < 50 ? Color.Success : pct < 80 ? Color.Warning : Color.Error;
+    string barLabel2 = isOverdue2
+        ? $"Past target — {-daysLeft2} days overdue"
+        : daysLeft2 == 0 ? "Last day to reach this goal! 💪"
+        : daysLeft2 == 1 ? "1 day left — you've got this! 💪"
+        : $"Day {daysElapsed2} of {totalDays} — {daysLeft2} days to go!";
+    <MudStack Spacing="1" Class="mb-3">
+        <MudText Typo="Typo.caption" Color="@barColor2">@barLabel2</MudText>
+        <MudProgressLinear Value="@pct" Color="@barColor2" Rounded="true" Size="Size.Small" />
+    </MudStack>
+}
 
 @if (Goal.CompletionDate is null && ProgressEntries.Any())
 {
