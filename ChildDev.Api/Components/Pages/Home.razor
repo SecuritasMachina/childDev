@@ -663,6 +663,27 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     </MudAlert>
 }
 @{
+    Goal? mxdGoal = null;
+    int mxdDaysLeft = 0;
+    if (ddGoal is null && string.IsNullOrWhiteSpace(FilterText))
+    {
+        foreach (var mxdG in AllActiveGoals.Where(g => g.ExpirationDate.HasValue && g.CompletionDate == null).OrderBy(g => g.ExpirationDate))
+        {
+            var mxdLeft = (int)Math.Ceiling((mxdG.ExpirationDate!.Value - ddNowMs) / 86_400_000.0);
+            if (mxdLeft > 7 && mxdLeft <= 30) { mxdGoal = mxdG; mxdDaysLeft = mxdLeft; break; }
+        }
+    }
+}
+@if (mxdGoal is not null)
+{
+    var mxdName = mxdGoal.GoalText?.Length > 50 ? mxdGoal.GoalText[..50] + "…" : mxdGoal.GoalText;
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.CalendarToday" Dense="true" Class="mb-3">
+        📋 <strong>"@mxdName"</strong> — target date in @mxdDaysLeft days. Steady progress matters — keep going!
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Info"
+                   Href="@($"/goals/{mxdGoal.Guid}")" Class="ml-1">View goal</MudButton>
+    </MudAlert>
+}
+@{
     Goal? odGoal = null;
     int odDaysOver = 0;
     if (string.IsNullOrWhiteSpace(FilterText))
