@@ -130,13 +130,42 @@
     }
 }
 
-<MudText Typo="Typo.subtitle1" Class="mb-2">
+<MudText Typo="Typo.subtitle1" Class="mb-1">
     Progress Notes
     @if (ProgressEntries.Any())
     {
         <MudChip T="string" Size="Size.Small" Color="Color.Primary" Class="ml-2">@ProgressEntries.Count</MudChip>
     }
 </MudText>
+@{
+    var noteCount = ProgressEntries.Count;
+    var (curLvlEmoji, curLvlName, nextLvlEmoji, nextLvlName, lvlStart, lvlEnd) = noteCount switch
+    {
+        0             => ("🌱", "Seedling",         "⚡", "Getting Started", 0,  1),
+        >= 1 and < 5  => ("⚡", "Getting Started",  "🚀", "Momentum",        1,  5),
+        >= 5 and < 10 => ("🚀", "Momentum",         "⭐", "Strong",          5,  10),
+        >= 10 and < 25=> ("⭐", "Strong",            "🏆", "Champion",        10, 25),
+        >= 25 and < 50=> ("🏆", "Champion",          "🌟", "Legendary",       25, 50),
+        _             => ("🌟", "Legendary",         "🌟", "Legendary",       50, 50)
+    };
+    var isMaxLevel = noteCount >= 50;
+    var lvlPct = isMaxLevel ? 100 : (int)((double)(noteCount - lvlStart) / (lvlEnd - lvlStart) * 100);
+    var notesToNext = isMaxLevel ? 0 : lvlEnd - noteCount;
+}
+<MudStack Spacing="0" Class="mb-3">
+    @if (isMaxLevel)
+    {
+        <MudText Typo="Typo.caption" Color="Color.Warning">🌟 Legendary — Maximum level reached! Incredible dedication!</MudText>
+        <MudProgressLinear Value="100" Color="Color.Warning" Rounded="true" Size="Size.Small" />
+    }
+    else
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            @curLvlEmoji @curLvlName — @notesToNext more note@(notesToNext == 1 ? "" : "s") to reach @nextLvlEmoji @nextLvlName
+        </MudText>
+        <MudProgressLinear Value="@lvlPct" Color="Color.Primary" Rounded="true" Size="Size.Small" />
+    }
+</MudStack>
 
 @if (ProgressEntries.Count >= 2)
 {
