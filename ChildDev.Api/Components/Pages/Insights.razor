@@ -412,6 +412,12 @@
         🏆 <strong>Most productive month:</strong> @BestMonthEver with @BestMonthEverCount total actions! That month you were absolutely on fire — what made it so great?
     </MudAlert>
 }
+@if (MostProductiveQuarter is not null && MostProductiveQuarterCount >= 3)
+{
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.CalendarMonth" Dense="true" Class="mb-6">
+        📊 <strong>Most productive quarter:</strong> @MostProductiveQuarter — @MostProductiveQuarterCount progress notes! That was your peak season of goal work!
+    </MudAlert>
+}
 
 @if (ThisMonthProgress > 0)
 {
@@ -732,6 +738,8 @@
     private string? BestJournalDayOfWeek;
     private int BestJournalDayOfWeekCount;
     private int TotalActiveDaysEver;
+    private string? MostProductiveQuarter;
+    private int MostProductiveQuarterCount;
 
     protected override async Task OnInitializedAsync()
     {
@@ -1066,6 +1074,19 @@
                 if (DateTime.TryParseExact(bestMonthGroup.Key + "-01", "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out var bmd))
                     BestMonthEver = bmd.ToString("MMMM yyyy");
                 BestMonthEverCount = bestMonthGroup.Count();
+            }
+
+            var quarterGroups = allProgressEver
+                .GroupBy(ms => { var d = DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime; return (d.Year * 10) + ((d.Month - 1) / 3 + 1); })
+                .ToList();
+            if (quarterGroups.Count >= 2)
+            {
+                var bestQ = quarterGroups.OrderByDescending(g => g.Count()).First();
+                var qNum = bestQ.Key % 10;
+                var qYear = bestQ.Key / 10;
+                string[] qLabels = ["Q1 (Jan–Mar)", "Q2 (Apr–Jun)", "Q3 (Jul–Sep)", "Q4 (Oct–Dec)"];
+                MostProductiveQuarter = $"{qLabels[qNum - 1]} {qYear}";
+                MostProductiveQuarterCount = bestQ.Count();
             }
         }
     }
