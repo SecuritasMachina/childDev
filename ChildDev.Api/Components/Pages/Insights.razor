@@ -113,6 +113,14 @@
                 var apgAvg = (GoalProgressTotal / (double)GoalsTotalAllTime);
                 <MudText Typo="Typo.caption" Color="Color.Secondary">avg @apgAvg.ToString("F1") notes/goal</MudText>
             }
+            @if (TotalActiveDaysEver >= 14 && TotalLast30 >= 3)
+            {
+                var vtAllTimePace = GoalProgressTotal / (double)TotalActiveDaysEver;
+                var vtRecentPace = TotalLast30 / 30.0;
+                var vtPct = (int)Math.Round(vtRecentPace / vtAllTimePace * 100);
+                var vtLabel = vtPct >= 120 ? $"📈 {vtPct}% of avg pace — accelerating!" : vtPct >= 80 ? $"✅ {vtPct}% of avg pace — on track!" : $"📉 {vtPct}% of avg pace — pick it up!";
+                <MudText Typo="Typo.caption" Color="@(vtPct >= 80 ? Color.Success : Color.Warning)">@vtLabel</MudText>
+            }
         </MudPaper>
     </MudItem>
 </MudGrid>
