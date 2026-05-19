@@ -145,6 +145,29 @@
         : "😊 <strong>Your recent entries show a mostly positive trend</strong> — 4 of your last 5 moods are upbeat! That's something to be proud of!";
     <MudAlert Severity="Severity.Success" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.SentimentVerySatisfied">@((MarkupString)mtdMsg)</MudAlert>
 }
+@{
+    var ctdEntries = AllEntries.Count;
+    int ctdMorning = 0, ctdAfternoon = 0, ctdEvening = 0;
+    foreach (var ctdJ in AllEntries)
+    {
+        var ctdHour = DateTimeOffset.FromUnixTimeMilliseconds(ctdJ.EnteredDate).LocalDateTime.Hour;
+        if (ctdHour < 12) ctdMorning++;
+        else if (ctdHour < 17) ctdAfternoon++;
+        else ctdEvening++;
+    }
+}
+@if (ctdEntries >= 10)
+{
+    var ctdMax = Math.Max(ctdMorning, Math.Max(ctdAfternoon, ctdEvening));
+    var ctdPct = (int)(ctdMax * 100.0 / ctdEntries);
+    if (ctdPct >= 60)
+    {
+        var ctdLabel = ctdMorning == ctdMax ? "🌅 <strong>Morning journaler!</strong> Most of your entries are written in the morning — that's a powerful way to start the day!"
+                     : ctdAfternoon == ctdMax ? "☀️ <strong>Afternoon reflector!</strong> You tend to journal in the afternoon — great way to process the day's events!"
+                     : "🌙 <strong>Evening writer!</strong> You journal most in the evening — perfect for capturing the day before you rest!";
+        <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.Schedule">@((MarkupString)ctdLabel)</MudAlert>
+    }
+}
 @if (TotalWordsWritten >= 100)
 {
     var wordsMsg = TotalWordsWritten >= 10000
