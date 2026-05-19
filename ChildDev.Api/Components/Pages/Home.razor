@@ -492,6 +492,10 @@
                     </CardHeaderAvatar>
                     <CardHeaderContent>
                         <MudText Typo="Typo.body1">@g.GoalText</MudText>
+                        @if (!string.IsNullOrWhiteSpace(GoalOfMonthGuid) && g.Guid == GoalOfMonthGuid)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Style="font-size:0.68rem;height:20px;" Class="mb-1">🥇 Month's Top Goal</MudChip>
+                        }
                         @if (g.MeasurableOutcome is not null)
                         {
                             <MudText Typo="Typo.caption" Color="Color.Secondary">📏 @g.MeasurableOutcome</MudText>
