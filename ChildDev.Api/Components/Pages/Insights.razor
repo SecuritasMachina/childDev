@@ -126,6 +126,12 @@
             <MudChip T="string" Size="Size.Small" Color="@rateColor" Class="ml-2">@completionPct%</MudChip>
         </MudStack>
         <MudProgressLinear Value="@completionPct" Color="@rateColor" Rounded="true" Size="Size.Medium" />
+        @if (completionPct >= 75 && GoalsTotalAllTime >= 3)
+        {
+            <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mt-3">
+                🏆 <strong>Completionist!</strong> You complete @completionPct% of your goals — that's extraordinary follow-through! Keep setting and conquering!
+            </MudAlert>
+        }
     </MudPaper>
 }
 

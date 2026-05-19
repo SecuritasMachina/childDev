@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 498 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Monthly activity" list: calendar months that had notes, shown as chips | UX | Domain: long-running goal engagement map | Medium | S | Low | Group ProgressEntries by YYYY-MM; show month chips; see how many months active | Useful for goals spanning many months | No |
+| 2 | Web: Home — "Notes per goal" ratio: avg progress notes per active goal shown as inline stat | UI | Domain: engagement depth signal | Medium | XS | Low | `ProgressCounts.Values.Average()` on Home; single sentence: "avg X notes/goal" | Requires extra query or passing data | No |
+| 3 | Web: Insights — "Completionist" badge: show if all-time completion rate >= 75% | UX/Encourage | Domain: celebrate goal completion excellence | Medium | XS | Low | Already have GoalsCompletedAllTime + GoalsTotalAllTime | Simple badge; strong encouragement for high achievers | No |
+| 4 | Web: Journal — "Best month" callout: month with most journal entries ever | UX/Encourage | Domain: peak journaling period recognition | Medium | S | Low | Group AllEntries by month; show "Your best month was May with 12 entries!" | Extra grouping computation; strong emotional hook | No |
+| 5 | Web: GoalDetail — "Top 3 days of the week" for this goal: when does the kid usually log? | UX | Domain: personalized habit insight | Low | S | Low | Group ProgressEntries by DayOfWeek; show most active days | Cute insight; lower value than streak/journey features | No |
+| 6 | Web: Home — "Comeback!" celebration: if a stale goal (14+ days quiet) now has a recent note | UX/Encourage | Domain: celebrate returning to a neglected goal | High | M | Medium | Compare LastProgressAt vs threshold per goal; show one-time celebration banner | Needs delta tracking; state between renders | No |
+| 7 | Web: Insights — "Goal age" stat: average age of active goals in days | UX | Domain: goal lifecycle insight | Low | XS | Low | `Goal.EnteredDate` diff from now; avg across active goals | Interesting context; low emotional impact | No |
+| 8 | Web: GoalDetail — "Longest gap" insight: biggest gap between consecutive progress notes | UX/Encourage | Domain: self-awareness about slumps | Medium | S | Low | Sort ProgressEntries by date; diff consecutive pairs; show max gap with empathy | Honest self-awareness feature; mild risk of discouragement | No |
+| 9 | Web: Home — progress note activity spark chart: 7-day mini bar chart per goal card | UX | Domain: visual activity trend per goal | High | M | Low | Daily note counts per goal last 7 days; MudChart inline on card | High visual impact; notable engineering | No |
+| 10 | Web: Insights — "Day of week" leaderboard for all activity (todos + journal + progress) | UX | Domain: habit pattern insight across everything | Medium | S | Low | Combine completion timestamps across entities; rank by weekday | Cross-entity aggregation; meaningful pattern insight | No |
+
+**Selection iter 498:** Item #3 — "Completionist" badge on Insights when completion rate >= 75%.
+- Already have `GoalsCompletedAllTime` and `GoalsTotalAllTime` — zero new queries
+- Show a prominent MudAlert/chip: "🏆 Completionist! You complete X% of your goals — remarkable!"
+- High encouragement value for kids who follow through, very low effort
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 495 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
