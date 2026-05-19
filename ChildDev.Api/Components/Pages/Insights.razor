@@ -80,6 +80,17 @@
     </MudPaper>
 }
 
+@if (!string.IsNullOrWhiteSpace(MostActiveDayName))
+{
+    <MudPaper Elevation="1" Class="pa-3 mb-4 d-flex align-items-center" Style="border-radius:12px;gap:12px;">
+        <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Color="Color.Primary" />
+        <MudText Typo="Typo.body2">
+            You're most active on <strong>@MostActiveDayName@(MostActiveDayName.EndsWith("s") ? "s" : "s")</strong>
+            — @MostActiveDayCount action@(MostActiveDayCount == 1 ? "" : "s") in the last 30 days. 📅
+        </MudText>
+    </MudPaper>
+}
+
 @if (!string.IsNullOrWhiteSpace(TopGoalName))
 {
     <MudPaper Elevation="2" Class="pa-4 mb-6"
@@ -260,6 +271,8 @@
     private string? TopGoalName;
     private string? TopGoalGuid;
     private int TopGoalNoteCount;
+    private string? MostActiveDayName;
+    private int MostActiveDayCount;
 
     // Month-over-month trends
     private int ThisMonthGoals;
@@ -393,6 +406,16 @@
             .ToDictionary(g => g.Key, g => g.Count());
 
         BuildDailyChart(last30, day14Ms, nowMs);
+
+        var dayGroups = last30
+            .GroupBy(e => DateTimeOffset.FromUnixTimeMilliseconds(e.Timestamp).LocalDateTime.DayOfWeek)
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+        if (dayGroups is not null && dayGroups.Count() >= 3)
+        {
+            MostActiveDayName = dayGroups.Key.ToString();
+            MostActiveDayCount = dayGroups.Count();
+        }
     }
 
     private void BuildDailyChart(List<AnalyticsEvent> events, long fromMs, long nowMs)
