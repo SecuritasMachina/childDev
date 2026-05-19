@@ -325,6 +325,12 @@
     <MudText Typo="Typo.body2" Color="Color.Secondary" Style="font-style:italic;">@todayQuote</MudText>
 </MudPaper>
 
+@if (IsNewWeeklyRecord && string.IsNullOrWhiteSpace(FilterText))
+{
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mb-2">
+        🎉 <strong>NEW PERSONAL RECORD!</strong> @ProgressThisWeek progress notes this week — your best week in months! Incredible! 🌟
+    </MudAlert>
+}
 @if (ProgressThisWeek > 0 && string.IsNullOrWhiteSpace(FilterText))
 {
     var wMsg = GoalsProgressedThisWeek == 1
@@ -1049,6 +1055,7 @@
     private string? QuickNoteGoalText;
     private string QuickNoteText = string.Empty;
     private string? _confirmDeleteGoalGuid;
+    private bool IsNewWeeklyRecord;
     private string? NextMeetingGoalName;
     private int NextMeetingDaysAway;
     private string? NextMeetingGoalGuid;
@@ -1141,6 +1148,17 @@
         var weekEntries = allTimestamps.Where(p => p.UpdatedOn >= weekAgoMs).ToList();
         ProgressThisWeek = weekEntries.Count;
         GoalsProgressedThisWeek = weekEntries.Select(p => p.GoalFk).Distinct().Count();
+
+        // Personal record week: compare ProgressThisWeek to max of prior 12 weeks
+        var priorMaxWeeklyNotes = 0;
+        for (int pw = 1; pw <= 12; pw++)
+        {
+            var priorWeekEnd   = nowMsStreak - (long)pw * 7 * 86_400_000L;
+            var priorWeekStart = priorWeekEnd - 7 * 86_400_000L;
+            var priorCount = allTimestamps.Count(p => p.UpdatedOn >= priorWeekStart && p.UpdatedOn < priorWeekEnd);
+            if (priorCount > priorMaxWeeklyNotes) priorMaxWeeklyNotes = priorCount;
+        }
+        IsNewWeeklyRecord = ProgressThisWeek > priorMaxWeeklyNotes && ProgressThisWeek >= 3;
 
         // Goal of the month: most progress notes in last 30 days
         var monthAgoMs = nowMsStreak - 30L * 86_400_000L;
