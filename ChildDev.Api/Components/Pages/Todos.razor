@@ -51,6 +51,16 @@
     <MudAlert Severity="@(ProductivityStreak >= 6 ? Severity.Success : Severity.Info)" Dense="true" Class="mb-4">@streakMsg</MudAlert>
 }
 
+@if (CompletedTodayCount >= 3)
+{
+    var fireMsg = CompletedTodayCount >= 7 ? $"🔥🔥 LEGENDARY! {CompletedTodayCount} todos completed today — absolutely unstoppable!"
+                : CompletedTodayCount >= 5 ? $"🔥 On fire! {CompletedTodayCount} todos crushed today — what a productive day!"
+                :                            $"🔥 On fire! You've completed {CompletedTodayCount} todos today — incredible momentum!";
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.LocalFireDepartment" Dense="true" Class="mb-4">
+        @fireMsg
+    </MudAlert>
+}
+
 @if (!AllPendingTodos.Any() && !CompletedTodos.Any())
 {
     <MudAlert Severity="Severity.Info" Class="mb-4" Icon="@Icons.Material.Filled.CheckCircle">
@@ -356,6 +366,7 @@ else
     private long NowMs;
     private long TodayStartMs;
     private int FocusCount;
+    private int CompletedTodayCount;
     private int ProductivityStreak;
     private string FilterText = string.Empty;
     private string StatusFilter = "All";
@@ -398,6 +409,7 @@ else
         var todayEndForFocus = TodayStartMs + 86_400_000L;
         FocusCount = AllPendingTodos.Count(t => t.DueDate.HasValue && t.DueDate.Value < todayEndForFocus);
         WeekCompletedCount = CompletedTodos.Count(t => t.CompletedAt >= weekStartMs);
+        CompletedTodayCount = CompletedTodos.Count(t => t.CompletedAt >= TodayStartMs);
         // Productivity streak: consecutive 7-day windows ending now with at least 1 completed todo
         ProductivityStreak = 0;
         for (int w = 0; w < 52; w++)
