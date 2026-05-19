@@ -248,6 +248,30 @@
 </MudStack>
 
 @{
+    // Milestone achievement check (exact: 5, 10, 25, 50)
+    var milestoneCount = ProgressEntries.Count;
+    var (achievedMs, achievedMsEmoji, achievedMsTitle, achievedMsMsg) = milestoneCount switch
+    {
+        5  => (true, "🚀", "Momentum Milestone!", "You've logged 5 progress notes — you're building real momentum! Keep it going!"),
+        10 => (true, "⭐", "Strong Progress!", "10 notes! You're a goal-chasing machine — you've reached the Strong tier!"),
+        25 => (true, "🏆", "Champion Milestone!", "25 notes! You are a CHAMPION! Your dedication is absolutely incredible!"),
+        50 => (true, "🌟", "Legendary Achievement!", "50 notes! You've reached LEGENDARY status! This kind of persistence is extraordinary!"),
+        _  => (false, "", "", "")
+    };
+}
+@if (achievedMs)
+{
+    <MudPaper Elevation="2" Class="pa-3 mb-3" Style="border-radius:14px;background:linear-gradient(135deg,rgba(249,168,37,.18) 0%,rgba(255,255,255,0) 100%);border:2px solid var(--mud-palette-warning);">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudText Typo="Typo.h5" Style="line-height:1;">@achievedMsEmoji</MudText>
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.subtitle2" Color="Color.Warning" Style="font-weight:700;">@achievedMsTitle</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">@achievedMsMsg</MudText>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+}
+@{
     // Next milestone teaser (1, 5, 10, 25, 50)
     var teaserCount = ProgressEntries.Count;
     var nextMilestone = teaserCount < 1 ? 1 : teaserCount < 5 ? 5 : teaserCount < 10 ? 10 : teaserCount < 25 ? 25 : teaserCount < 50 ? 50 : 0;
@@ -598,6 +622,8 @@ else
                 _             => (50, 50)
             };
             _animLvlPct = count >= 50 ? 100 : (int)((double)(count - lvlStart) / (lvlEnd - lvlStart) * 100);
+            if (count is 5 or 10 or 25 or 50)
+                await Analytics.TrackAsync("milestone_view", AccountGuid, "goal_detail", $"{GoalGuid}:{count}");
             await InvokeAsync(StateHasChanged);
         }
     }

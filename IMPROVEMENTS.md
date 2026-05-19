@@ -2,6 +2,30 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 478 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — milestone badges at 5/10/25/50 notes: show celebratory banner on load when just crossing threshold | UX/Encourage | Domain: milestone recognition | High | S | Low | Snackbar + banner for 5, 10, 25, 50 note milestones; big encouragement boost | Only triggers once per milestone crossing | No |
+| 2 | Web: Home — show "Your next step" from most recent progress note as subtitle on each goal card | UX | Domain: actionable goal reminders | High | S | Low | Kids see immediately what they planned to do next for each goal | Requires fetching latest NextStepItems per goal | No |
+| 3 | Web: GoalDetail — note filter chips: "This week", "This month", "All time" to narrow history list | UI | Domain: focused progress review | Medium | S | Low | Already have UpdatedOn timestamps; filter client-side | Minor UX convenience | No |
+| 4 | Web: Insights — 6-month progress bar chart: group notes by calendar month, show as mini bar chart | UI | Domain: trajectory visualization | High | M | Low | Computable from existing heatmap query; shows momentum over months | Medium complexity for chart rendering with CSS | No |
+| 5 | Web: Home — "Longest streak" banner: the single highest note-streak across all goals shown as a hero stat | UX/Encourage | Domain: celebrate personal best | Medium | S | Low | Pull max streak from streak tracking; show as hero card if ≥3 days | Only meaningful if user has consistent activity | No |
+| 6 | Web: GoalDetail — "Day count" hero: "You've been working on this for 47 days!" shown at top | UX/Encourage | Domain: sense of journey duration | Medium | XS | Low | Already implemented "Time Invested" in history strip; elevate to hero position | Could be redundant with existing strip stat | No |
+| 7 | Web: Home — goal progress sort option: "Sort by most active" (most notes last 7 days first) | UI | Domain: surface engaged goals | Medium | XS | Low | Compute 7-day note count per goal; add sort option chip | Minor re-sort of existing data | No |
+| 8 | Web: Insights — "Top active weekday": which day of the week had most progress notes historically | Func | Domain: personalized habit insight | Medium | XS | Low | Group existing ProgressHeatmap by DayOfWeek; find max; show insight card | Low engineering lift | No |
+| 9 | Web: GoalDetail — "You're X% of the way there" based on note count toward level thresholds | UX/Encourage | Domain: visible advancement | High | XS | Low | Already have level logic; express as friendly percentage text | Approximate (note count proxy for goal completion) | No |
+| 10 | Web: Home — "Focus Goal" pin: ability to mark one goal as today's focus (store in Session, not DB) | Func | Domain: daily intention setting | High | S | Low | Pinned goal shows at top with special border; session-only, no DB change | Session-only means resets on browser close | No |
+
+**Selection iter 478:** Item #2 — Show "Your next step" from the most recent progress note as subtitle on each goal card on the Home page.
+- Kids set next steps when logging progress — showing them on the goal card is a direct call-to-action
+- High motivation impact: kids see exactly what to do next without navigating into the goal
+- Fetch latest `NextStepItems` per goal from GoalProgress, keyed by GoalFk
+- Show as italic muted text beneath the goal title if NextStepItems is non-empty
+- Zero schema changes; uses existing data
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 475 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
