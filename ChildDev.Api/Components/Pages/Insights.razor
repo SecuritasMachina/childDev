@@ -203,6 +203,18 @@
     </MudPaper>
 }
 
+@if (!string.IsNullOrWhiteSpace(NeglectedGoalName))
+{
+    var neglectedName = NeglectedGoalName.Length > 60 ? NeglectedGoalName[..60] + "…" : NeglectedGoalName;
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Lightbulb" Dense="true" Class="mb-4">
+        💡 <strong>Ready for attention:</strong> "@neglectedName" hasn't had much love lately — could be your next big win!
+        @if (!string.IsNullOrWhiteSpace(NeglectedGoalGuid))
+        {
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Info"
+                       Href="@($"/goals/{NeglectedGoalGuid}")" Class="ml-1">Add a note</MudButton>
+        }
+    </MudAlert>
+}
 @{
     var commitScore = Math.Min(
         Math.Min(CurrentStreak * 3, 30) +
@@ -575,6 +587,8 @@
     private string? TopGoalName;
     private string? TopGoalGuid;
     private int TopGoalNoteCount;
+    private string? NeglectedGoalName;
+    private string? NeglectedGoalGuid;
     private string? MostActiveDayName;
     private int MostActiveDayCount;
     private Dictionary<DateOnly, int> ProgressHeatmap = new();
@@ -668,6 +682,33 @@
                 TopGoalName = topGoal.GoalText;
                 TopGoalGuid = topGoal.Guid;
                 TopGoalNoteCount = topGoalProgress.Count;
+            }
+        }
+
+        // Most-neglected active goal: active goal with fewest notes (excluding goals with 0 notes if any have notes)
+        var activeGoalGuids = await Db.Goals
+            .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate == null)
+            .Select(g => g.Guid)
+            .ToListAsync();
+        if (activeGoalGuids.Count >= 2)
+        {
+            var activeProgressCounts = await Db.GoalProgresses
+                .Where(p => activeGoalGuids.Contains(p.GoalFk) && p.DeletedAt == null)
+                .GroupBy(p => p.GoalFk)
+                .Select(g => new { GoalFk = g.Key, Count = g.Count() })
+                .ToListAsync();
+            var neglectedGuid = activeGoalGuids
+                .Where(guid => guid != TopGoalGuid)
+                .OrderBy(guid => activeProgressCounts.FirstOrDefault(x => x.GoalFk == guid)?.Count ?? 0)
+                .FirstOrDefault();
+            if (neglectedGuid is not null)
+            {
+                var neglectedGoal = await Db.Goals.FirstOrDefaultAsync(g => g.Guid == neglectedGuid && g.DeletedAt == null);
+                if (neglectedGoal is not null)
+                {
+                    NeglectedGoalName = neglectedGoal.GoalText;
+                    NeglectedGoalGuid = neglectedGoal.Guid;
+                }
             }
         }
 
