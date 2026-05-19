@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 450 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Insights — "Top goal" spotlight (goal with most progress notes) | UI/Encourage | Domain: achievement recognition; kids want to know which goal they've worked hardest on | High | S | Low | "Your most-worked goal: [Name] — 14 notes!" links to GoalDetail | Requires one extra GROUP BY query | No |
+| 2 | Web: Home — motivational quote of the day (rotating curated array, no DB) | UI/Encourage | Domain: encouragement | Low | XS | Low | Different uplifting message each visit; zero DB; based on DayOfYear | Feels generic; no personalization | No |
+| 3 | Web: GoalDetail — "reopen goal" prompt when completed goal is viewed again | UX | Domain: goals can be revisited after completion | Medium | S | Low | If kid views a completed goal, suggest "Want to set a new goal inspired by this?" | Narrow path; only for completed goals | No |
+| 4 | Web: Home — "best-streak goal" global display ("Your best streak: 4 weeks on [Goal]!") | UI/Encourage | Domain: habit recognition | High | XS | Low | Max of GoalStreaks dict; zero extra queries; prominently displayed | Only meaningful when streaks exist | No |
+| 5 | Web: GoalDetail — related journal entries (search journal text for goal keywords) | Func | Domain: goal-centric data hub | High | M | Medium | Shows how many journal entries mention this goal's keywords | Fuzzy search may be noisy; medium effort | No |
+| 6 | Web: Insights — total progress notes in achievement stat cards | Func | Domain: goal progress visibility | Medium | XS | Low | Already counted as GoalProgressTotal; just add level badge to the stat card | Minimal value add since it's already shown | No |
+| 7 | Web: Home — "Goals needing attention" expandable panel below completed section | UI/Encourage | Domain: caregiver action prompts | High | M | Low | Collects all stale (14+ days) + no-notes goals with Add Note buttons | Medium effort; overlaps with heat indicator | No |
+| 8 | Web: GoalDetail — auto-archive prompt when goal has been stale for 30+ days | UX | Domain: data hygiene + caregiver prompts | Medium | S | Low | "This goal hasn't been updated in 32 days. Mark complete or archive?" | Could feel intrusive | No |
+| 9 | Mobile: GoalListViewModel — progress note count badge on goal list items | UI | Domain: mobile parity | Low | S | Low | Kids see note count without tapping each goal on mobile | Mobile-only; lower priority given session focus | No |
+| 10 | Web: Home — onboarding wizard for users with 0 goals (step-by-step "Set your first goal") | UX | Domain: new user activation | High | M | Low | Replaces empty state with guided 3-step flow | Complex to implement well; only shown once | No |
+
+**Selection iter 450:** Item #1 — Insights "Top Goal" spotlight card.
+- One GROUP BY query; reuses existing `LoadDomainStats()` pattern
+- Achievement recognition: kids see which goal they've put the most work into
+- Links to GoalDetail; drives goal engagement
+- Low risk: purely additive section on Insights page
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 447 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |

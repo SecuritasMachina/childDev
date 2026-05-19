@@ -75,6 +75,24 @@
     </MudPaper>
 }
 
+@if (!string.IsNullOrWhiteSpace(TopGoalName))
+{
+    <MudPaper Elevation="2" Class="pa-4 mb-6"
+              Style="border-radius:16px;border:2px solid var(--mud-palette-warning);background:linear-gradient(135deg,rgba(255,193,7,.07) 0%,rgba(255,255,255,0) 100%);">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-1">
+            <MudText Typo="Typo.h4" Style="line-height:1">🏆</MudText>
+            <MudText Typo="Typo.overline" Color="Color.Warning" Style="font-weight:700;letter-spacing:1.5px;">Most Worked Goal</MudText>
+        </MudStack>
+        <MudText Typo="Typo.h6" Class="mb-1">@TopGoalName</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+            @TopGoalNoteCount progress note@(TopGoalNoteCount == 1 ? "" : "s") — your hardest-worked goal!
+        </MudText>
+        <MudButton Variant="Variant.Outlined" Color="Color.Warning" Size="Size.Small"
+                   Href="@($"/goals/{TopGoalGuid}")"
+                   StartIcon="@Icons.Material.Filled.TrendingUp">View Progress</MudButton>
+    </MudPaper>
+}
+
 @* Month-over-month trends *@
 <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2" Style="text-transform:uppercase;letter-spacing:1px;">
     This Month vs Last Month
@@ -234,6 +252,9 @@
     private int GoalProgressTotal;
     private string? TopMood;
     private int TopMoodCount;
+    private string? TopGoalName;
+    private string? TopGoalGuid;
+    private int TopGoalNoteCount;
 
     // Month-over-month trends
     private int ThisMonthGoals;
@@ -277,6 +298,24 @@
         {
             TopMood = moods.Mood;
             TopMoodCount = moods.Count;
+        }
+
+        // Goal with the most progress notes ("Top Goal" spotlight)
+        var topGoalProgress = await Db.GoalProgresses
+            .Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null)
+            .GroupBy(p => p.GoalFk)
+            .Select(g => new { GoalFk = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count)
+            .FirstOrDefaultAsync();
+        if (topGoalProgress is not null && topGoalProgress.Count > 0)
+        {
+            var topGoal = await Db.Goals.FirstOrDefaultAsync(g => g.Guid == topGoalProgress.GoalFk && g.DeletedAt == null);
+            if (topGoal is not null)
+            {
+                TopGoalName = topGoal.GoalText;
+                TopGoalGuid = topGoal.Guid;
+                TopGoalNoteCount = topGoalProgress.Count;
+            }
         }
 
         // Month-over-month windows (calendar months, local time)
