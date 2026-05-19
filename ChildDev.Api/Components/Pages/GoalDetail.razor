@@ -357,7 +357,9 @@
 {
     var mmNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
     var mm7Ms = mmNowMs - 7L * 86_400_000L;
+    var mm14Ms = mmNowMs - 14L * 86_400_000L;
     var mmThisWeek = ProgressEntries.Count(p => p.UpdatedOn >= mm7Ms);
+    var mmLastWeek = ProgressEntries.Count(p => p.UpdatedOn >= mm14Ms && p.UpdatedOn < mm7Ms);
     var mmBestWeek = 0;
     for (int mmW = 0; mmW < ProgressEntries.Count; mmW++)
     {
@@ -378,6 +380,13 @@
             </MudStack>
             <MudProgressLinear Value="@mmPct" Color="@mmColor" Rounded="true" Size="Size.Small" />
         </MudPaper>
+    }
+    @if (mmThisWeek >= 2 && mmThisWeek > mmLastWeek)
+    {
+        var accGain = mmThisWeek - mmLastWeek;
+        <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.TrendingUp" Dense="true" Class="mb-3">
+            🚀 <strong>You're accelerating!</strong> @mmThisWeek notes this week vs @mmLastWeek last week — +@accGain! Keep this energy going!
+        </MudAlert>
     }
 }
 @{
