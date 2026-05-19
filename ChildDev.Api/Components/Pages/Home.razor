@@ -272,9 +272,46 @@
 
 @if (!AllActiveGoals.Any() && string.IsNullOrWhiteSpace(FilterText))
 {
-    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Lightbulb" Class="mb-4">
-        <strong>Get started:</strong> Add your first goal below. Goals are the heart of ChildDev — everything else (progress notes, todos, and journal entries) ties back to helping you reach them.
-    </MudAlert>
+    @if (CompletedGoals.Count == 0)
+    {
+        @* First-time user onboarding *@
+        <MudPaper Elevation="3" Class="pa-6 mb-6 text-center" Style="border-radius:24px;background:linear-gradient(135deg,#e8eaf6 0%,#fce8d0 100%);">
+            <MudText Typo="Typo.h2" Style="font-size:3rem;">🎯</MudText>
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="mt-2 mb-1">Welcome! Let's set your first goal.</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4" Style="max-width:480px;margin:0 auto;">
+                Goals are the heart of ChildDev. Set a goal, track your progress, and celebrate every step forward!
+            </MudText>
+            <MudGrid Spacing="2" Justify="Justify.Center" Class="mb-4">
+                <MudItem xs="12" sm="4">
+                    <MudText Typo="Typo.h4">🎯</MudText>
+                    <MudText Typo="Typo.body2" Style="font-weight:600;">1. Set a Goal</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">What do you want to achieve?</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudText Typo="Typo.h4">📝</MudText>
+                    <MudText Typo="Typo.body2" Style="font-weight:600;">2. Track Progress</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Add notes as you work toward it</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudText Typo="Typo.h4">🎉</MudText>
+                    <MudText Typo="Typo.body2" Style="font-weight:600;">3. Celebrate Wins!</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Mark it complete and level up</MudText>
+                </MudItem>
+            </MudGrid>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large"
+                       StartIcon="@Icons.Material.Filled.Flag"
+                       OnClick="OpenAddGoalDialog" Style="border-radius:12px;font-weight:700;">
+                Set My First Goal! ✨
+            </MudButton>
+        </MudPaper>
+    }
+    else
+    {
+        @* User has completed all goals — ready for the next one *@
+        <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Class="mb-4">
+            <strong>All goals completed! 🎉</strong> You've achieved everything on your list — ready to set a new goal?
+        </MudAlert>
+    }
 }
 
 @* Goal of the Day — featured spotlight on the goal that needs attention most *@
