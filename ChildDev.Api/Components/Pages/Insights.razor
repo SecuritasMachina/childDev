@@ -171,6 +171,13 @@
     </MudPaper>
 }
 
+@if (TopProgressWeekday is not null)
+{
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.CalendarToday" Class="mb-6" Dense="true">
+        📅 Your most active progress day is <strong>@TopProgressWeekday</strong> — @TopProgressWeekdayCount notes logged on that day in the last 5 weeks! Keep the @TopProgressWeekday momentum going! 💪
+    </MudAlert>
+}
+
 @* Month-over-month trends *@
 <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2" Style="text-transform:uppercase;letter-spacing:1px;">
     This Month vs Last Month
@@ -352,6 +359,8 @@
     private string? MostActiveDayName;
     private int MostActiveDayCount;
     private Dictionary<DateOnly, int> ProgressHeatmap = new();
+    private string? TopProgressWeekday;
+    private int TopProgressWeekdayCount;
 
     // Month-over-month trends
     private int ThisMonthGoals;
@@ -449,6 +458,16 @@
         ProgressHeatmap = recentProgressTs
             .GroupBy(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
             .ToDictionary(g => g.Key, g => g.Count());
+
+        var topDayGroup = recentProgressTs
+            .GroupBy(ms => DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime.DayOfWeek)
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+        if (topDayGroup is not null && topDayGroup.Count() >= 2)
+        {
+            TopProgressWeekday = topDayGroup.Key.ToString();
+            TopProgressWeekdayCount = topDayGroup.Count();
+        }
     }
 
     private async Task LoadInsights()
