@@ -130,6 +130,10 @@
             {
                 <MudText Typo="Typo.caption" Color="Color.Success">✅ @CompletedGoals.Count completed</MudText>
             }
+            @if (GoalStreaks.Count > 0)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Warning">🔥 @GoalStreaks.Count on a streak</MudText>
+            }
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="4">
