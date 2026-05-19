@@ -409,6 +409,12 @@
                   :                           $"⭐ <strong>{ProgressNotesToday} notes today — you're on a roll!</strong> Keep this energy going for the rest of the day!";
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.LocalFireDepartment" Dense="true" Class="mb-3">@((MarkupString)rollingMsg)</MudAlert>
 }
+@if (ProgressThisWeek == 1 && ProgressNotesToday >= 1 && string.IsNullOrWhiteSpace(FilterText))
+{
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Flag" Dense="true" Class="mb-3">
+        🚀 <strong>First note of the week — you're off to a great start!</strong> Keep this momentum going and make it your best week yet!
+    </MudAlert>
+}
 @if (IsNewWeeklyRecord && string.IsNullOrWhiteSpace(FilterText))
 {
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mb-2">
