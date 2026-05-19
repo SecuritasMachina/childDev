@@ -539,6 +539,30 @@
     </MudPaper>
 }
 
+@{
+    var nseEntries = ProgressEntries
+        .Where(p => !string.IsNullOrWhiteSpace(p.NextStepItems))
+        .Take(4)
+        .ToList();
+}
+@if (nseEntries.Count >= 3 && Goal.CompletionDate is null)
+{
+    <MudPaper Elevation="0" Class="pa-2 mb-3" Style="border-radius:10px;background:var(--mud-palette-background-grey);">
+        <MudText Typo="Typo.caption" Color="Color.Primary" Style="font-weight:600;letter-spacing:0.5px;" Class="mb-1">📋 Your Plan Evolution</MudText>
+        @for (int nsei = 0; nsei < Math.Min(nseEntries.Count, 3); nsei++)
+        {
+            var nseEntry = nseEntries[nsei];
+            var nseDate = DateTimeOffset.FromUnixTimeMilliseconds(nseEntry.UpdatedOn).LocalDateTime;
+            var nseSnip = nseEntry.NextStepItems!.Length > 70 ? nseEntry.NextStepItems[..70] + "…" : nseEntry.NextStepItems;
+            var nseLabel = nsei == 0 ? "Latest" : nsei == 1 ? "Before" : "Earlier";
+            var nseColor = nsei == 0 ? "var(--mud-palette-primary)" : "var(--mud-palette-text-secondary)";
+            <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="1" Class="@(nsei > 0 ? "mt-1" : "")">
+                <MudText Typo="Typo.caption" Style="@($"color:{nseColor};font-weight:600;min-width:48px;")">@nseLabel</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@nseSnip <span style="opacity:.5;">(@nseDate.ToString("MMM d"))</span></MudText>
+            </MudStack>
+        }
+    </MudPaper>
+}
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-1">
     <MudText Typo="Typo.subtitle1">
         Progress Notes
