@@ -61,6 +61,25 @@
     </MudAlert>
 }
 
+@{
+    var oldestPending = AllPendingTodos.Count >= 2
+        ? AllPendingTodos.MinBy(t => t.UpdatedOn)
+        : null;
+    var oldestPendingDays = oldestPending is not null
+        ? (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - oldestPending.UpdatedOn) / 86_400_000L)
+        : 0;
+}
+@if (oldestPending is not null && oldestPendingDays >= 7)
+{
+    var oldestTitle = oldestPending.Title?.Length > 50 ? oldestPending.Title[..50] + "…" : oldestPending.Title;
+    var oldestDaysLabel = oldestPendingDays >= 30
+        ? $"{oldestPendingDays / 30} month{(oldestPendingDays / 30 == 1 ? "" : "s")}"
+        : $"{oldestPendingDays} days";
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.AccessTime" Dense="true" Class="mb-4">
+        ⏳ Oldest waiting: <strong>"@oldestTitle"</strong> — @oldestDaysLabel in your queue. Could today be the day?
+    </MudAlert>
+}
+
 @if (!AllPendingTodos.Any() && !CompletedTodos.Any())
 {
     <MudAlert Severity="Severity.Info" Class="mb-4" Icon="@Icons.Material.Filled.CheckCircle">
