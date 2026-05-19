@@ -371,6 +371,19 @@
             </MudText>
         }
         @{
+            var activeRateDates = ProgressEntries
+                .Select(p => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime))
+                .ToHashSet();
+            var activeRatePct = (int)(activeRateDates.Count * 100.0 / Math.Max(journeyDays, 1));
+        }
+        @if (journeyDays >= 7 && activeRatePct > 0)
+        {
+            var rateColor = activeRatePct >= 50 ? "var(--mud-palette-success)" : activeRatePct >= 20 ? "var(--mud-palette-primary)" : "var(--mud-palette-text-secondary)";
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">
+                📊 Active <strong style="color:@rateColor;">@activeRatePct%</strong> of days (@activeRateDates.Count of @journeyDays days with notes)
+            </MudText>
+        }
+        @{
             var activeMonths = ProgressEntries
                 .Select(p => DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime)
                 .GroupBy(d => new { d.Year, d.Month })
