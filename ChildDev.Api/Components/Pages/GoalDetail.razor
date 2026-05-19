@@ -167,6 +167,28 @@
     }
 </MudStack>
 
+@{
+    // Next milestone teaser (1, 5, 10, 25, 50)
+    var teaserCount = ProgressEntries.Count;
+    var nextMilestone = teaserCount < 1 ? 1 : teaserCount < 5 ? 5 : teaserCount < 10 ? 10 : teaserCount < 25 ? 25 : teaserCount < 50 ? 50 : 0;
+    var (msEmoji, msLabel) = nextMilestone switch
+    {
+        1  => ("🌱", "your first milestone!"),
+        5  => ("🚀", "Momentum milestone!"),
+        10 => ("⭐", "Strong Progress milestone!"),
+        25 => ("🏆", "Champion milestone!"),
+        50 => ("🌟", "Legendary milestone!"),
+        _  => ("", "")
+    };
+    var notesNeeded = nextMilestone - teaserCount;
+}
+@if (nextMilestone > 0 && notesNeeded > 0 && notesNeeded <= 3)
+{
+    <MudText Typo="Typo.caption" Color="Color.Warning" Class="mb-2">
+        @msEmoji Only @notesNeeded more note@(notesNeeded == 1 ? "" : "s") to unlock @msLabel 🎉
+    </MudText>
+}
+
 @if (ProgressEntries.Count >= 2)
 {
     <MudChart ChartType="ChartType.Bar"

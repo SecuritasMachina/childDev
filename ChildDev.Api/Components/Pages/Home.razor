@@ -126,6 +126,10 @@
             <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Primary" Style="font-size:2rem;" />
             <MudText Typo="Typo.h4" Class="mt-1">@AllActiveGoals.Count</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary">Active Goal@(AllActiveGoals.Count == 1 ? "" : "s")</MudText>
+            @if (CompletedGoals.Count > 0)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Success">✅ @CompletedGoals.Count completed</MudText>
+            }
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="4">
