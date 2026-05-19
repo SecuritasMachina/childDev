@@ -241,6 +241,27 @@
     </MudAlert>
 }
 
+@if (WeekdayLeaderboard.Count >= 3)
+{
+    <MudPaper Elevation="1" Class="pa-3 mb-6" Style="border-radius:12px;">
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-weight:600;letter-spacing:0.5px;" Class="mb-2">📊 Your Most Active Days (last 90 days, all activity)</MudText>
+        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1">
+            @for (int wdi = 0; wdi < Math.Min(WeekdayLeaderboard.Count, 7); wdi++)
+            {
+                var wdRank = wdi + 1;
+                var wdMedal = wdi == 0 ? "🥇" : wdi == 1 ? "🥈" : wdi == 2 ? "🥉" : $"{wdRank}.";
+                var wdColor = wdi == 0 ? Color.Warning : wdi == 1 ? Color.Primary : wdi == 2 ? Color.Success : Color.Default;
+                var wdDay = WeekdayLeaderboard[wdi].Day;
+                var wdCount = WeekdayLeaderboard[wdi].Count;
+                <MudChip T="string" Size="Size.Small" Color="@wdColor" Variant="@(wdi < 3 ? Variant.Filled : Variant.Outlined)"
+                         Style="font-size:0.72rem;">
+                    @wdMedal @wdDay <span style="opacity:.7;margin-left:3px;">@wdCount</span>
+                </MudChip>
+            }
+        </MudStack>
+    </MudPaper>
+}
+
 @* Month-over-month trends *@
 <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2" Style="text-transform:uppercase;letter-spacing:1px;">
     This Month vs Last Month
@@ -460,6 +481,7 @@
     private string? TopProgressWeekday;
     private int TopProgressWeekdayCount;
     private int DaysSinceLastProgress = -1;
+    private List<(string Day, int Count)> WeekdayLeaderboard = [];
     private List<ChartSeries> GoalNotesChartSeries = [];
     private string[] GoalNotesChartLabels = [];
 
@@ -605,6 +627,27 @@
         {
             TopProgressWeekday = topDayGroup.Key.ToString();
             TopProgressWeekdayCount = topDayGroup.Count();
+        }
+
+        // All-activity weekday leaderboard: combine todos, journals, progress notes (last 90 days)
+        var day90Ms = DateTimeOffset.UtcNow.AddDays(-90).ToUnixTimeMilliseconds();
+        var todoTs = await Db.Todos
+            .Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt != null && t.CompletedAt >= day90Ms)
+            .Select(t => t.CompletedAt!.Value).ToListAsync();
+        var journalTs = await Db.Journals
+            .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null && j.EnteredDate >= day90Ms)
+            .Select(j => j.EnteredDate).ToListAsync();
+        var progressTs = await Db.GoalProgresses
+            .Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null && p.UpdatedOn >= day90Ms)
+            .Select(p => p.UpdatedOn).ToListAsync();
+        var allTs = todoTs.Concat(journalTs).Concat(progressTs).ToList();
+        if (allTs.Count >= 7)
+        {
+            WeekdayLeaderboard = allTs
+                .GroupBy(ms => DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime.DayOfWeek)
+                .OrderByDescending(g => g.Count())
+                .Select(g => (g.Key.ToString(), g.Count()))
+                .ToList();
         }
     }
 
