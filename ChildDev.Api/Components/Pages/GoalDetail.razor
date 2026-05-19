@@ -423,6 +423,14 @@
                     :                $"⭐ {gsCount}-day streak on this goal — great start!";
         <MudText Typo="Typo.caption" Color="@(gsCount >= 7 ? Color.Warning : Color.Success)" Class="mb-3">@gsLabel</MudText>
     }
+    var gsToday = DateOnly.FromDateTime(DateTime.Today);
+    var gsYesterday = gsToday.AddDays(-1);
+    if (gsActiveDates.Contains(gsToday) && !gsActiveDates.Contains(gsYesterday) && ProgressEntries.Count >= 3)
+    {
+        <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Refresh" Dense="true" Class="mb-3">
+            💪 <strong>You came back!</strong> You didn't log yesterday, but you showed up today — consistency beats perfection every time. Keep going!
+        </MudAlert>
+    }
 }
 @if (ProgressEntries.Count >= 3 && Goal.CompletionDate is null)
 {
