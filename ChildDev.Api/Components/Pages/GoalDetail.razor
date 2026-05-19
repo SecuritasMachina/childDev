@@ -314,6 +314,29 @@
         <MudAlert Severity="@(dslDays >= 21 ? Severity.Warning : Severity.Info)" Icon="@Icons.Material.Filled.EditNote" Dense="true" Class="mb-3">@((MarkupString)dslMsg)</MudAlert>
     }
 }
+@if (ProgressEntries.Count >= 6)
+{
+    var cmSorted = ProgressEntries.OrderBy(p => p.UpdatedOn).ToList();
+    int cmReturnIdx = -1;
+    for (int cmi = 1; cmi < cmSorted.Count; cmi++)
+    {
+        var cmGap = (cmSorted[cmi].UpdatedOn - cmSorted[cmi - 1].UpdatedOn) / 86_400_000L;
+        if (cmGap >= 14) cmReturnIdx = cmi;
+    }
+    if (cmReturnIdx >= 0)
+    {
+        var cmCountAfter = cmSorted.Count - cmReturnIdx;
+        if (cmCountAfter >= 5)
+        {
+            var cmMsg = cmCountAfter >= 20
+                ? $"🦋 <strong>Comeback champion!</strong> After a pause you came back and wrote <strong>{cmCountAfter} notes</strong> — that's extraordinary resilience. You never truly quit!"
+                : cmCountAfter >= 10
+                ? $"💪 <strong>You came back strong!</strong> After a break you've logged <strong>{cmCountAfter} notes</strong> on this goal — real determination!"
+                : $"⚡ <strong>You made a comeback!</strong> After a gap you've added <strong>{cmCountAfter} notes</strong> to this goal — that's what persistence looks like!";
+            <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Replay" Dense="true" Class="mb-3">@((MarkupString)cmMsg)</MudAlert>
+        }
+    }
+}
 @if (ProgressEntries.Count >= 1 && Goal.CompletionDate is null)
 {
     var feaFirstDate = DateTimeOffset.FromUnixTimeMilliseconds(ProgressEntries.Last().UpdatedOn).LocalDateTime;
