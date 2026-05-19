@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-19 — Invocation 8 Iter 624 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Personal note length average": compute avg words per note from NextStepItems; show "Your notes average X words — keep that depth going!" when >= 5 notes and avg >= 5 words | UX | Domain: note quality awareness | Low | S | Low | NextStepItems?.Split(' ').Length; null safety; avg across entries | Complex null handling; deferred many times | No |
+| 2 | Web: Home — "Progress this month vs last month": ProgressThisMonth vs ProgressLastMonth fields; show MoM comparison like WoW | UX | Domain: MoM pace tracking | Medium | S | Low | Add ProgressThisMonth/ProgressLastMonth fields; compute in LoadInsights | Extends existing WoW pattern to monthly | No |
+| 3 | Web: GoalDetail — "Streak longest date range": display the exact start→end date of the longest streak when >= 7 days | UX | Domain: streak date context | Low | XS | Low | Sort gsActiveDates; find longest consecutive run; format dates | Very quick; contextualizes the streak | No |
+| 4 | Web: Journal — "Mood trend over time": if last 5 entries are predominantly positive moods (happy/excited/grateful/calm), show "Your recent entries show a positive trend!" | UX/Encourage | Domain: emotional wellness | Medium | XS | Low | AllEntries last 5 where Mood is not null; check positive set | Positive emotional reinforcement | No |
+| 5 | Web: Home — "Days with any activity this week": show "You've been active on X of 7 days this week!" when >= 3 active days, based on progress notes | UX | Domain: daily engagement rate | Low | XS | Low | Count distinct dates from ProgressEntries this week; simple computation | Tracks daily engagement breadth | No |
+| 6 | Web: GoalDetail — "Next meeting countdown" detail: when NextMeetingDate is set on the most recent progress note, show a countdown "Meeting in X days — prepare!" | UX | Domain: meeting preparation nudge | High | XS | Low | ProgressEntries.First().NextMeetingDate; compute days until; show when > 0 | Meeting-aware nudge; directly actionable | No |
+| 7 | Web: Insights — "Most notes in a single day ever": find the day with max combined progress notes; "Your most active day: [date] with X notes!" when >= 3 | UX/Celebrate | Domain: peak day recognition | Low | XS | Low | Already tracked via BestDayEverDate/BestDayEverCount; repurpose or show separately for progress only | Almost free — computation already done | No |
+| 8 | Web: Home — "Encourage today's first journal entry": when AllEntries (of type journal, today) == 0, show "Haven't journaled today — even one sentence captures your day!" | UX/Encourage | Domain: daily journal nudge | Medium | M | Low | Need journal count today on Home; extra query or field | Useful nudge but needs extra data | No |
+| 9 | Web: GoalDetail — "Notes on this goal this month": show "X notes on this goal in [month]!" as a monthly progress summary when >= 3 notes this month | UX | Domain: monthly goal engagement | Low | XS | Low | Filter ProgressEntries by month start; count; simple | Minor stat; quickly computable | No |
+| 10 | Web: Insights — "Progress note velocity trend": last-30-day average vs overall average; show "Your recent pace is X% of your all-time average" | UX | Domain: velocity trend | Low | XS | Low | TotalLast30 already loaded; compare with GoalProgressTotal/(TotalActiveDaysEver/30) | Simple ratio; quick computation | No |
+
+**Selection iter 624:** Item #6 — "Next meeting countdown" on GoalDetail.
+- The most recent progress note may have NextMeetingDate set; compute days until and show a nudge
+- Directly actionable: "Meeting in X days — time to prepare your update!"
+- High impact for goal meetings; XS effort using already-loaded ProgressEntries
+
+---
+
 ## 2026-05-19 — Invocation 8 Iter 621 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |

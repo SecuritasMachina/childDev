@@ -125,6 +125,14 @@
                         var tehLabel = tehHours >= 1 ? $"~{tehHours}h of reflection" : $"~{tehMins} min of effort";
                         <MudText Typo="Typo.caption" Color="Color.Info">⏱ @tehLabel</MudText>
                     }
+                    @{
+                        var ntmMonthStart = new DateTimeOffset(new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1)).ToUnixTimeMilliseconds();
+                        var ntmCount = ProgressEntries.Count(p => p.UpdatedOn >= ntmMonthStart);
+                    }
+                    @if (ntmCount >= 3)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Success">📅 @ntmCount this month!</MudText>
+                    }
                 </MudPaper>
             </MudItem>
             @if (totalWords522 >= 10)
