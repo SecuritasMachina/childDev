@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 459 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "copy achievement text" share button | UI/Encourage | Domain: social; kids want to share wins with teachers/family | High | S | Low | JS clipboard write: "I reached Champion level on [Goal]! 🏆"; analytics tracked | JS interop needed; clipboard API availability varies | No |
+| 2 | Web: Home — onboarding 3-step prompt for 0-goal users | UX | Domain: new user activation | High | M | Low | Step-by-step: "Name your goal → How will you measure it? → Set a target date" | Medium effort; only shown once | No |
+| 3 | Web: GoalDetail — "pin this note as current status" toggle | Func | Domain: goal clarity; current step vs. history | High | M | Low | One note marked as pinned; shown prominently at top of timeline | Requires new bool field or convention | No |
+| 4 | Web: Insights — "most active day of week" card | Func | Domain: behavioral analytics | Medium | S | Low | "You log most on Tuesdays!" from timestamp mod 7 on analytics events | Adds one complex GROUP BY query | No |
+| 5 | Web: GoalDetail — animated "done" checkmark when step is celebrated | UI/Encourage | Domain: micro-celebration | Low | S | Low | Brief CSS animation on the step text after "Done! 🎉" is clicked | Small delight; low effort | No |
+| 6 | Web: Home — "most recent win" banner (last completed goal) | UI/Encourage | Domain: recognition of past wins | Medium | S | Low | "🎉 Most recent win: [Goal] — completed X days ago!" | Only shown when CompletedGoals exists | No |
+| 7 | Web: GoalDetail — "share this goal as card image" (canvas screenshot) | UI | Domain: visual sharing | Low | L | High | JS canvas screenshot of goal card; complex | High effort; low priority | No |
+| 8 | API: GET /goals?page=&size= pagination for accounts with 20+ goals | Func | Domain: performance at scale | Low | M | Low | Pagination prevents loading 100+ goals into memory | Edge case; most accounts have <10 goals | No |
+| 9 | Web: Home — "Goal added today!" brief success animation when new goal is created | UI/Encourage | Domain: micro-celebration on creation | Low | S | Low | After AddGoal, briefly show a small bounce animation on the new card | Minor delight | No |
+| 10 | Web: GoalDetail — "Linked todos" section showing active todos that might relate | Func | Domain: goal-todo connection | High | M | Low | Show todos created same day as a goal note, or manual linking | Fuzzy matching; medium effort | No |
+
+**Selection iter 459:** Item #6 — "Most recent win" banner on home (zero new queries — CompletedGoals sorted by CompletionDate already).
+Zero extra queries: CompletedGoals is already loaded; find the most recent.
+Shows: "🎉 Most recent win: [Goal text] — completed X days ago!"
+High positive reinforcement; reminds kids they've already won before.
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 456 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |

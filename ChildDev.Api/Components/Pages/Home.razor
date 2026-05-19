@@ -162,6 +162,21 @@
     </MudItem>
 </MudGrid>
 
+@if (CompletedGoals.Any() && string.IsNullOrWhiteSpace(FilterText))
+{
+    var recentWin = CompletedGoals.MaxBy(g => g.CompletionDate ?? 0);
+    if (recentWin?.CompletionDate is not null)
+    {
+        var winDays = (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - recentWin.CompletionDate.Value) / 86_400_000L);
+        var winLabel = winDays == 0 ? "today!" : winDays == 1 ? "yesterday" : $"{winDays} days ago";
+        var winText = recentWin.GoalText?.Length > 60 ? recentWin.GoalText[..60] + "…" : recentWin.GoalText;
+        <MudPaper Elevation="0" Class="pa-3 mb-3"
+                  Style="border-left:3px solid var(--mud-palette-success);background:rgba(76,175,80,.05);border-radius:0 8px 8px 0;">
+            <MudText Typo="Typo.body2">🎉 <strong>Most recent win:</strong> "@winText" — completed @winLabel</MudText>
+        </MudPaper>
+    }
+}
+
 @{
     string[] _quotes = [
         "Every step forward is a step closer to your goal. 🌟",
