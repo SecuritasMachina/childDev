@@ -189,10 +189,21 @@
 {
     var expDate = DateTimeOffset.FromUnixTimeMilliseconds(Goal.ExpirationDate.Value).LocalDateTime;
     var isOverdue = expDate.Date < DateTime.Today;
+    var wklDaysLeft = (expDate.Date - DateTime.Today).Days;
+    var wklWeeksLeft = wklDaysLeft / 7;
     <MudText Typo="Typo.body2" Color="@(isOverdue ? Color.Error : Color.Secondary)" Class="mb-1">
         <MudIcon Icon="@Icons.Material.Filled.Flag" Size="Size.Small" />
         Target: @expDate.ToString("MMM d, yyyy")@(isOverdue ? " — overdue" : "")
     </MudText>
+    if (!isOverdue)
+    {
+        var wklCaption = wklWeeksLeft >= 4 ? $"⏳ {wklWeeksLeft} weeks to go — you've got this!"
+                       : wklWeeksLeft >= 2 ? $"🎯 {wklWeeksLeft} weeks left — keep pushing!"
+                       : wklDaysLeft >= 7 ? "⚡ Final week — give it everything!"
+                       : wklDaysLeft >= 1 ? $"🔥 {wklDaysLeft} day{(wklDaysLeft == 1 ? "" : "s")} left — finish strong!"
+                       : "🏁 Due today — make it count!";
+        <MudText Typo="Typo.caption" Color="Color.Primary" Class="mb-2">@wklCaption</MudText>
+    }
 }
 @{
     var goalDate = DateTimeOffset.FromUnixTimeMilliseconds(Goal.EnteredDate).LocalDateTime;
