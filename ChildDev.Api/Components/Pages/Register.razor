@@ -29,20 +29,19 @@
                 }
                 <MudTextField @bind-Value="NickName" Label="Nickname" Variant="Variant.Outlined"
                               Class="mb-4" HelperText="Choose a name (1–50 characters)"
-                              Immediate="true"
                               @onkeyup="@(async (e) => { if (e.Key == "Enter") await DoRegister(); })" />
                 <MudTextField @bind-Value="Pin" Label="PIN" Variant="Variant.Outlined"
                               InputType="@PinInputType"
                               Adornment="Adornment.End" AdornmentIcon="@PinEyeIcon"
                               OnAdornmentClick="TogglePinVisibility"
-                              Class="mb-4" Immediate="true"
+                              Class="mb-4"
                               HelperText="At least 4 characters — remember this to log back in"
                               @onkeyup="@(async (e) => { if (e.Key == "Enter") await DoRegister(); })" />
                 <MudTextField @bind-Value="ConfirmPin" Label="Confirm PIN" Variant="Variant.Outlined"
                               InputType="@ConfirmPinInputType"
                               Adornment="Adornment.End" AdornmentIcon="@ConfirmPinEyeIcon"
                               OnAdornmentClick="ToggleConfirmPinVisibility"
-                              Class="mb-4" Immediate="true"
+                              Class="mb-4"
                               Error="@PinMismatch" ErrorText="PINs do not match"
                               @onkeyup="@(async (e) => { if (e.Key == "Enter") await DoRegister(); })" />
                 <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center" Class="mt-1">
