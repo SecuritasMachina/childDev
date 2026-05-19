@@ -231,6 +231,17 @@
     var isMaxLevel = noteCount >= 50;
     var lvlPct = isMaxLevel ? 100 : (int)((double)(noteCount - lvlStart) / (lvlEnd - lvlStart) * 100);
     var notesToNext = isMaxLevel ? 0 : lvlEnd - noteCount;
+    // Goal-specific consecutive day streak
+    var goalActiveDates = ProgressEntries
+        .Select(p => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime))
+        .ToHashSet();
+    var goalStreak = 0;
+    var streakCheckDay = DateOnly.FromDateTime(DateTime.Today);
+    while (goalActiveDates.Contains(streakCheckDay))
+    {
+        goalStreak++;
+        streakCheckDay = streakCheckDay.AddDays(-1);
+    }
 }
 <MudStack Spacing="0" Class="mb-3">
     @if (isMaxLevel)
@@ -246,6 +257,12 @@
         <MudProgressLinear Value="@_animLvlPct" Color="Color.Primary" Rounded="true" Size="Size.Small" Class="level-anim-bar" />
     }
 </MudStack>
+@if (goalStreak >= 2)
+{
+    <MudText Typo="Typo.caption" Color="@(goalStreak >= 7 ? Color.Error : goalStreak >= 4 ? Color.Warning : Color.Success)" Class="mb-2">
+        🔥 @goalStreak-day streak on this goal — incredible consistency! Keep it going!
+    </MudText>
+}
 
 @{
     // Milestone achievement check (exact: 5, 10, 25, 50)
