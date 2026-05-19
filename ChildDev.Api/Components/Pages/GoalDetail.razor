@@ -80,9 +80,34 @@
     var daysSince = (int)(DateTime.Now - goalDate).TotalDays;
     var durationText = daysSince == 0 ? "today" : daysSince == 1 ? "1 day ago" : $"{daysSince} days ago";
 }
-<MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-4">
+<MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">
     Set on @goalDate.ToString("MMM d, yyyy") — @durationText
 </MudText>
+
+@if (Goal.CompletionDate is null && ProgressEntries.Any())
+{
+    var latestMs = ProgressEntries.Max(p => p.UpdatedOn);
+    var daysSinceNote = (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - latestMs) / 86_400_000L);
+    var totalNotes = ProgressEntries.Count;
+    string? nudgeText = null;
+    Color nudgeColor = Color.Success;
+    string nudgeIcon = Icons.Material.Filled.Celebration;
+    if (daysSinceNote == 0)
+    { nudgeText = $"You logged progress today — you're on a roll! 🔥 ({totalNotes} {(totalNotes == 1 ? "note" : "notes")} total)"; nudgeIcon = Icons.Material.Filled.LocalFireDepartment; }
+    else if (daysSinceNote <= 3)
+    { nudgeText = $"Great consistency! Last update {daysSinceNote}d ago. ({totalNotes} {(totalNotes == 1 ? "note" : "notes")} total) 💪"; nudgeIcon = Icons.Material.Filled.TrendingUp; }
+    else if (daysSinceNote <= 13)
+    { nudgeText = $"It's been {daysSinceNote} days — time to log your next update! You've got this!"; nudgeColor = Color.Warning; nudgeIcon = Icons.Material.Filled.NotificationsActive; }
+    else
+    { nudgeText = $"It's been {daysSinceNote} days since your last note. Let's get back on track! 💪"; nudgeColor = Color.Warning; nudgeIcon = Icons.Material.Filled.EmojiPeople; }
+    @if (nudgeText is not null)
+    {
+        <MudAlert Severity="@(nudgeColor == Color.Success ? Severity.Success : Severity.Warning)"
+                  Icon="@nudgeIcon" Class="mb-3" Dense="true">
+            @nudgeText
+        </MudAlert>
+    }
+}
 
 <MudText Typo="Typo.subtitle1" Class="mb-2">
     Progress Notes
