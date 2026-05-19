@@ -624,6 +624,19 @@
                 📅 You tend to reflect on this goal most on <strong>@dowName</strong> — that's your power day for this goal!
             </MudText>
         }
+        var hodGroups = ProgressEntries
+            .GroupBy(p => DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime.Hour < 12 ? "morning"
+                        : DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime.Hour < 17 ? "afternoon"
+                        : "evening")
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+        if (hodGroups is not null && hodGroups.Count() >= 2)
+        {
+            var hodEmoji = hodGroups.Key == "morning" ? "🌅" : hodGroups.Key == "afternoon" ? "☀️" : "🌙";
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-3">
+                @hodEmoji You tend to reflect on this goal in the <strong>@hodGroups.Key</strong> — that's your reflection time!
+            </MudText>
+        }
     }
 }
 @{
