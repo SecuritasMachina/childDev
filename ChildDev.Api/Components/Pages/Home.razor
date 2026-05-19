@@ -199,6 +199,10 @@
                             :                              $"⭐ {DailyProgressStreak}-day daily streak!";
                 <MudText Typo="Typo.caption" Color="@(DailyProgressStreak >= 7 ? Color.Warning : Color.Success)">@dsLabel</MudText>
             }
+            @if (BiggestDayDate is not null)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Secondary">🏅 Best day: @BiggestDayCount notes on @BiggestDayDate</MudText>
+            }
             @{
                 var gcmLocalNow = DateTimeOffset.Now.LocalDateTime;
                 var gcmMonthStartMs = new DateTimeOffset(new DateTime(gcmLocalNow.Year, gcmLocalNow.Month, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
@@ -1264,6 +1268,8 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private int YtdGoalsCompleted;
     private int TotalProgressNotes;
     private int DailyProgressStreak;
+    private string? BiggestDayDate;
+    private int BiggestDayCount;
     private string? ComebackGoalName;
     private string? ComebackGoalGuid;
     private int ComebackGapDays;
@@ -1401,6 +1407,17 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         DailyProgressStreak = 0;
         var dsDay = DateOnly.FromDateTime(DateTime.Today);
         while (dailyDates.Contains(dsDay)) { DailyProgressStreak++; dsDay = dsDay.AddDays(-1); }
+
+        // Biggest single day: most progress notes on any one calendar day
+        var biggestDayGroup = allTimestamps
+            .GroupBy(p => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime))
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+        if (biggestDayGroup is not null && biggestDayGroup.Count() >= 3)
+        {
+            BiggestDayDate = biggestDayGroup.Key.ToString("MMM d, yyyy");
+            BiggestDayCount = biggestDayGroup.Count();
+        }
 
         // Personal record week: compare ProgressThisWeek to max of prior 12 weeks
         var priorMaxWeeklyNotes = 0;
