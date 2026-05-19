@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-19 — Invocation 7 Iter 576 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Entry count this month" mini badge in the progress stats bar | UX | Domain: monthly engagement context | Low | XS | Low | ProgressEntries filtered by month start; count; show "X this month" next to total | Minor stat addition; quick computation | No |
+| 2 | Web: Home — "You're almost there!" prompt when goal progress is within 10% of a round milestone (100/50/25 notes) | UX/Encourage | Domain: proximity motivation | High | XS | Low | ProgressCounts[guid] in {23,24} for 25, {48-49} for 50, etc.; show "Just X more notes!" on card | Very motivating proximity nudge; ProgressCounts already loaded | No |
+| 3 | Web: Journal — "Longest journaling streak ever" comparison under current streak alert | UX/Encourage | Domain: personal best awareness | Medium | S | Low | Scan all journal entry dates for max consecutive run; compare with current JournalStreak | Meaningful personal record; needs scan over AllEntries dates | No |
+| 4 | Web: GoalDetail — "Note quality growth" badge: if avg word count of most recent 5 notes > first 5 notes, show "Your notes are getting richer!" | UX/Encourage | Domain: effort quality growth | Medium | S | Low | NextStepItems word count; group; compare two halves; need >= 10 notes | Engaging quality feedback; needs at least 10 notes to be meaningful | No |
+| 5 | Web: Insights — "Habit score": composite score from journaling consistency + active days + progress velocity shown as a fun letter grade | UX | Domain: overall habit health at a glance | High | M | Low | Use JournalConsistencyScore30, ActiveDaysThisWeek, NotesThisWeekProgress; weight and score | Interesting composite metric; could be confusing without clear explanation | No |
+| 6 | Web: Home — "Biggest single-day achievement": the day with most progress notes logged, shown as a fun fact | UX/Encourage | Domain: celebrate personal best | Medium | XS | Low | allTimestamps grouped by calendar date; find max count day; show "Your biggest day: X notes on [date]!" | Fun fact; allTimestamps already loaded; quick computation | No |
+| 7 | Web: GoalDetail — "How you'll feel when done": static positive affirmation shown near the goal text | UX/Encourage | Domain: future-self visualization | Medium | XS | Low | Static list of "You'll feel proud!", "Imagine celebrating this!"; pick by goal GUID hash | Warm emotional connection to goal completion | No |
+| 8 | Web: Journal — "Entry count by mood": show "You've journaled X times when happy, Y times when tired" for top 2 moods | UX | Domain: emotional context awareness | Low | XS | Low | AllMoods already computed; take top 2; show "X times when [mood1], Y times when [mood2]" | Minor insight; simple caption from already-loaded data | No |
+| 9 | Web: Insights — "Goals vs todos balance": ratio of goal progress notes to todos completed as a health indicator | UX | Domain: portfolio balance check | Low | M | Low | Needs both GoalProgressTotal and TodosCompletedAllTime; compute ratio | Minor metric; somewhat complex meaning | No |
+| 10 | Web: GoalDetail — "Celebrate your first week": if goal is 7-13 days old and has >= 2 notes, show "You made it through week 1!" | UX/Encourage | Domain: early momentum celebration | High | XS | Low | daysSince in [7,13] and ProgressEntries.Count >= 2; show special week-1 banner | Strong early habit reinforcement; day range already computed | No |
+
+**Selection iter 576:** Item #10 — "Celebrate your first week" banner on GoalDetail.
+- `daysSince` already computed; `ProgressEntries.Count` already available
+- Show when `daysSince >= 7 && daysSince <= 13 && ProgressEntries.Count >= 2 && Goal.CompletionDate is null`
+- "🎉 You made it through your first full week on this goal — with X notes already! That first week is the hardest. You've got this!"
+- Zero extra queries; purely from already-available data
+
+---
+
 ## 2026-05-19 — Invocation 7 Iter 573 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |

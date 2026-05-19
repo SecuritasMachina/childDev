@@ -182,6 +182,12 @@
         if (daysSince >= ageT && daysSince < ageT + 7) { ageMilestoneEmoji = ageE; ageMilestoneName = ageN; break; }
     }
 }
+@if (daysSince >= 7 && daysSince <= 13 && Goal.CompletionDate is null && ProgressEntries.Count >= 2)
+{
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Celebration" Dense="true" Class="mb-3">
+        🎉 <strong>First week complete!</strong> You've already logged @ProgressEntries.Count note@(ProgressEntries.Count == 1 ? "" : "s") in your first week on this goal — that first week is the hardest, and you nailed it!
+    </MudAlert>
+}
 @if (ageMilestoneEmoji is not null && Goal.CompletionDate is null)
 {
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Celebration" Dense="true" Class="mb-3">
