@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 466 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Share a win" sentence auto-generated from goal + note count | UX/Encourage | Domain: shareable milestone moment | High | S | Low | "I've added 12 progress notes on [Goal]! 🌟" shown as a callout when count crosses round numbers | Somewhat gimmicky; might not fit all goals | No |
+| 2 | Web: Home — progress calendar heatmap (7x5 grid showing last 35 days of activity) | UI | Domain: visual habit tracking | High | M | Low | Color-coded squares; already have analytics events with timestamps | Requires client-side date math; moderate effort | No |
+| 3 | Web: GoalDetail — "Days until goal expires" countdown ring/circle visual | UI | Domain: deadline urgency | Medium | M | Low | SVG circle showing % of time elapsed; ExpirationDate already used | SVG math complexity; medium effort | No |
+| 4 | Web: Journal — "Goal tag" display on journal list (show linked goal if any) | Func | Domain: journal-goal connection visibility | Medium | S | Low | Journal entries don't currently show goal tags; check if Journal has GoalFk | Depends on Journal model having GoalFk | No |
+| 5 | Web: Home — "Active goal count by type/category" tag cloud | UI | Domain: goal diversity view | Low | M | Low | Shows tag diversity of active goals | Goals have no category field currently | No |
+| 6 | Web: GoalDetail — animated progress bar that fills from 0 on page load | UI | Domain: visual dopamine on page load | Medium | XS | Low | CSS transition from 0→current on the level progress bar | Pure CSS; trivial effort | No |
+| 7 | Web: Insights — "Best week ever" — highlight the 7-day window with most progress notes | Func | Domain: peak performance recognition | Medium | M | Low | Group GoalProgresses by 7-day window; find max | Extra DB query; moderate | No |
+| 8 | Web: GoalDetail — "Who's cheering for you?" static encouragement message from "system" | UX/Encourage | Domain: caregiver encouragement simulation | Medium | XS | Low | Static rotating text like "ChildDev is cheering you on! 💪" under goal title | Not personalized; low value if static | No |
+| 9 | Web: Home — group goals by phase: "Just starting", "Building momentum", "Champion+" | UI | Domain: level-aware goal grouping | High | M | Low | Instead of flat grid, show three horizontal sections by level | Hides individual level chips; medium effort | No |
+| 10 | Web: GoalDetail — "Personal best" note: highlight the progress entry with the longest text | UX/Encourage | Domain: celebrate effort of detailed notes | Medium | XS | Low | Find entry with max NextStepItems.Length; show gold star on it | Could pick a not-very-impressive note | No |
+
+**Selection iter 466:** Item #10 — "Personal Best" note highlight on GoalDetail.
+- Find the progress entry with the longest NextStepItems text (most detailed/effortful note)
+- Show a "⭐ Your most detailed note!" gold chip/badge on that entry in the timeline
+- No new queries: ProgressEntries already loaded
+- Celebrates the kid's most invested progress note; encourages detailed writing
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 463 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
