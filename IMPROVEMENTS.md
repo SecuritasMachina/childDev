@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 469 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Time invested" counter: sum of days between first note and last note | UX | Domain: sense of journey duration | Medium | XS | Low | "You've been working on this for 47 days!" | Not all goals have that context | No |
+| 2 | Web: Home — "Notes written this week" stat in the summary card area | UI | Domain: weekly cadence visibility | High | XS | Low | Already computed as ProgressThisWeek; just add a stat card | Redundant with existing content | No |
+| 3 | Web: GoalDetail — "Longest gap" callout: show the biggest pause between notes | UX/Encourage | Domain: self-awareness of consistency | Medium | S | Low | "Your longest break was 12 days — you bounced back!" | Negative framing for some kids | No |
+| 4 | Web: Home — "Goal of the Month" card: the goal with most notes in the last 30 days | UX | Domain: monthly engagement recognition | High | M | Low | Query GoalProgress for last 30 days grouped by GoalFk | Extra query; medium effort | No |
+| 5 | Web: Journal — edit existing journal entries (currently read-only in list) | Func | Domain: journal correctability | Medium | M | Low | Add edit button to journal list items; opens edit dialog | Medium effort; need edit dialog | No |
+| 6 | Web: Insights — "Your fastest goal" — completed goal with fewest days from creation | UX/Encourage | Domain: celebrate quick wins | Medium | M | Low | Requires creation date on goals; check model | Depends on CreatedAt field | No |
+| 7 | Web: GoalDetail — "Note count badge" on the back-button breadcrumb to goal list | UX | Domain: at-a-glance progress without navigating | Low | XS | Low | Show "(12 notes)" in the page subtitle | Minor, low-effort polish | No |
+| 8 | Web: Home — "Weekend warrior" badge: flag if most of the kid's notes were on weekends | UX/Encourage | Domain: personalized insight | Low | S | Low | Compute day-of-week of all progress notes; show if >60% on Sat/Sun | Niche; low-value for many users | No |
+| 9 | Web: GoalDetail — "Progress since last meeting" summary: notes added since NextMeetingDate | Func | Domain: meeting prep context | High | S | Low | Show notes added after `max(previous meetings)` | Requires tracking previous meeting dates | No |
+| 10 | Web: Home — sort/group goals by "Due Soon" section when any goal has expiry <7 days | UI | Domain: deadline urgency at top of page | High | S | Low | Insert a "Due Soon" section before the main grid | Already have expiry data; easy to filter | No |
+
+**Selection iter 469:** Item #10 — "Due Soon" goals section on Home, pinning goals expiring within 7 days to a highlighted section before the main grid.
+- Goals with ExpirationDate within 7 days (not yet expired/completed) are pulled out of the normal grid
+- Shown in a distinct amber-bordered section before the main goals grid
+- Already have all data needed: `AllActiveGoals` + `ExpirationDate` field
+- Creates urgency and ensures near-deadline goals are visible without scrolling
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 466 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
