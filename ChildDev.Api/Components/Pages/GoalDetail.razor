@@ -173,6 +173,21 @@ else
     </DialogActions>
 </MudDialog>
 
+@* Progress milestone encouragement *@
+<MudDialog @bind-Visible="ShowMilestone" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
+    <DialogContent>
+        <MudStack AlignItems="AlignItems.Center" Spacing="3" Class="pa-4">
+            <MudText Typo="Typo.h2" Class="celeb-emoji">@MilestoneEmoji</MudText>
+            <MudText Typo="Typo.h5" Align="Align.Center" Color="Color.Primary">You're making progress!</MudText>
+            <MudText Typo="Typo.body1" Align="Align.Center">@MilestoneMessage</MudText>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                   OnClick="() => ShowMilestone = false">Thanks! 💪</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @* Delete Goal Confirmation *@
 <MudDialog @bind-Visible="_confirmDeleteGoal">
     <TitleContent>
@@ -292,6 +307,9 @@ else
     private DateTime? EditExpirationDate;
     private bool _confirmDeleteGoal;
     private string? _confirmDeleteProgressGuid;
+    private bool ShowMilestone;
+    private string MilestoneEmoji = "⭐";
+    private string MilestoneMessage = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -386,8 +404,28 @@ else
         NewNextSteps = string.Empty;
         NewMeetingDate = null;
         ShowAddDialog = false;
-        Snackbar.Add("Progress note saved!", Severity.Success);
         await LoadProgress();
+
+        // Check for encouragement milestones
+        var count = ProgressEntries.Count;
+        (MilestoneEmoji, MilestoneMessage) = count switch
+        {
+            1  => ("🌱", "First progress note! You've taken the first step — that's the hardest part!"),
+            5  => ("🚀", "5 progress notes! You're building real momentum. Keep it up!"),
+            10 => ("⭐", "10 notes! You're seriously committed to this goal. Amazing!"),
+            25 => ("🏆", "25 progress notes! You're a goal champion. Nothing can stop you!"),
+            50 => ("🌟", "50 notes! Legendary dedication. This goal doesn't stand a chance!"),
+            _  => (string.Empty, string.Empty)
+        };
+        if (!string.IsNullOrEmpty(MilestoneMessage))
+        {
+            ShowMilestone = true;
+            await Analytics.TrackAsync("progress_milestone", AccountGuid, "goal_detail", count.ToString());
+        }
+        else
+        {
+            Snackbar.Add("Progress note saved!", Severity.Success);
+        }
     }
 
     private async Task DeleteProgress(string guid)
