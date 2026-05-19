@@ -154,6 +154,14 @@
     </MudItem>
 </MudGrid>
 
+@if (ProgressThisWeek > 0 && string.IsNullOrWhiteSpace(FilterText))
+{
+    var wMsg = GoalsProgressedThisWeek == 1
+        ? $"This week: {ProgressThisWeek} progress note{(ProgressThisWeek == 1 ? "" : "s")} on 1 goal! 💪 Keep going!"
+        : $"This week: {ProgressThisWeek} progress note{(ProgressThisWeek == 1 ? "" : "s")} across {GoalsProgressedThisWeek} goals! 🌟 Amazing work!";
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.TrendingUp" Dense="true" Class="mb-3">@wMsg</MudAlert>
+}
+
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
     <MudText Typo="Typo.h5">
         <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="mr-2" />
@@ -586,6 +594,8 @@
     private Dictionary<string, long> LastProgressAt = new();
     private Dictionary<string, string> LatestNextStep = new();
     private Dictionary<string, int> GoalStreaks = new();
+    private int ProgressThisWeek;
+    private int GoalsProgressedThisWeek;
     private bool ShowAddDialog;
     private string NewGoalText = string.Empty;
     private string? NewMeasurableOutcome;
@@ -684,6 +694,11 @@
             }
             if (streak >= 2) GoalStreaks[goalGuid] = streak;
         }
+
+        var weekAgoMs = nowMsStreak - 7L * 86_400_000L;
+        var weekEntries = allTimestamps.Where(p => p.UpdatedOn >= weekAgoMs).ToList();
+        ProgressThisWeek = weekEntries.Count;
+        GoalsProgressedThisWeek = weekEntries.Select(p => p.GoalFk).Distinct().Count();
 
         // Sort: goals with no progress first (needs attention), then by oldest-update-first
         AllActiveGoals = AllActiveGoals
