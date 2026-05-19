@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 516 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Top days of week" for this goal: which 2-3 weekdays are most active | UX | Domain: personalized habit insight | Low | S | Low | Group ProgressEntries by DayOfWeek; show top 2-3 as chips | Nice habit insight; lower impact than other items | No |
+| 2 | Web: Home — "Goals worked this week" ring: X of Y active goals updated this week | UX | Domain: weekly portfolio engagement | Medium | S | Low | GoalsProgressedThisWeek / AllActiveGoals.Count; simple fraction display | Good bird's-eye view; already have GoalsProgressedThisWeek | No |
+| 3 | Web: Insights — "Goal momentum index": % of active goals worked on in last 7 days | UX | Domain: portfolio-level KPI | Medium | S | Low | Needs active goal count + goals worked this week; extra query or pass from Home | Useful engagement signal; needs a DB query | No |
+| 4 | Web: GoalDetail — "Note word count" stat: total words written across all progress notes | UX/Encourage | Domain: celebrate depth of reflection | Medium | S | Low | Sum word counts from NextStepItems; show "You've written ~X words on this goal!" | Fun stat; shows investment beyond just note count | No |
+| 5 | Web: Journal — "Entry length insight": avg characters per journal entry this month | UX | Domain: writing depth awareness | Low | XS | Low | Average AllEntries.Length for this month; single stat | Low impact; interesting but not motivating | No |
+| 6 | Web: Home — "Stale goals" alert: count of goals with no progress in 14+ days | UX | Domain: portfolio health signal | High | XS | Low | Count AllActiveGoals where LastProgressAt[g] < 14d ago (or missing); show gentle reminder | Useful; frame as "goals awaiting your visit" not neglect | No |
+| 7 | Web: GoalDetail — "Note sentiment trend": are recent notes more positive than older ones? | UX/Encourage | Domain: emotional progress arc | Medium | M | Medium | Keyword-based positivity score per note; track trend direction | Complex sentiment logic; risk of false signals | No |
+| 8 | Web: Insights — "Notes written this month" vs last: similar to todo/goal MoM but for progress quality | UI | Domain: engagement depth MoM comparison | Medium | XS | Low | Already have ThisMonthProgress and LastMonthProgress; show a sentence callout | Simple reuse of existing fields; useful context | No |
+| 9 | Web: GoalDetail — "Encouragement quotes": show a rotating inspirational quote at the top | UX/Encourage | Domain: extrinsic motivation | Low | S | Low | Static array of quotes; show based on hash of goal text or date | Adds warmth; risk of feeling generic/repetitive | No |
+| 10 | Web: Home — "All-time completed goals" celebration: prominent count when >= 5 completed | UX/Encourage | Domain: celebrate long-term achievement pattern | High | XS | Low | CompletedGoals.Count >= 5; show banner "You've completed X goals — remarkable achiever!" | Strong motivation; zero extra queries | No |
+
+**Selection iter 516:** Item #10 — "All-time completed goals" celebration on Home when >= 5 completed.
+- Already have `CompletedGoals.Count` loaded on Home
+- Show a warm celebration banner: "🏆 You've completed X goals — you're a remarkable achiever!"
+- Zero extra queries; high motivational value for kids who have finished many goals
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 513 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |

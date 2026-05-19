@@ -211,6 +211,16 @@
     </MudPaper>
 }
 
+@if (CompletedGoals.Count >= 5 && string.IsNullOrWhiteSpace(FilterText))
+{
+    var cgLabel = CompletedGoals.Count >= 25 ? $"🌟 LEGENDARY! {CompletedGoals.Count} goals completed — you are extraordinary!"
+                : CompletedGoals.Count >= 10 ? $"🏆 {CompletedGoals.Count} goals completed — you're a Champion-level achiever!"
+                :                               $"⭐ {CompletedGoals.Count} goals completed — you're someone who finishes what they start!";
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mb-3">
+        @cgLabel
+    </MudAlert>
+}
+
 @if (CompletedGoals.Any() && string.IsNullOrWhiteSpace(FilterText))
 {
     var recentWin = CompletedGoals.MaxBy(g => g.CompletionDate ?? 0);
