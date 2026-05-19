@@ -603,6 +603,32 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                    Href="@($"/goals/{mcBestGoal.Guid}")" Class="ml-1">View</MudButton>
     </MudAlert>
 }
+@{
+    var gotdTips = new[] {
+        "What's one small action you can take on this goal today?",
+        "Picture where you'll be when this goal is done — how does it feel?",
+        "What obstacle has been in your way, and how can you get around it?",
+        "Who could you tell about this goal to stay accountable?",
+        "What's the next step that would move this forward the most?",
+        "How have you already grown while working on this goal?",
+        "What would you do differently if you started fresh today?",
+        "Write down one thing that went well with this goal recently."
+    };
+    var gotdNowDay = DateTime.Today.DayOfYear + DateTime.Today.Year * 366;
+    Goal? gotdGoal = AllActiveGoals.Count >= 2 && string.IsNullOrWhiteSpace(FilterText)
+        ? AllActiveGoals[gotdNowDay % AllActiveGoals.Count]
+        : null;
+    var gotdTip = gotdTips[gotdNowDay % gotdTips.Length];
+}
+@if (gotdGoal is not null)
+{
+    var gotdName = gotdGoal.GoalText?.Length > 55 ? gotdGoal.GoalText[..55] + "…" : gotdGoal.GoalText;
+    <MudAlert Severity="Severity.Normal" Icon="@Icons.Material.Filled.WbSunny" Dense="true" Class="mb-3">
+        ☀️ <strong>Today's spotlight:</strong> "@gotdName" — @gotdTip
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Default"
+                   Href="@($"/goals/{gotdGoal.Guid}")" Class="ml-1">View goal</MudButton>
+    </MudAlert>
+}
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
     <MudText Typo="Typo.h5">
         <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="mr-2" />
