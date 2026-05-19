@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-19 — Invocation 8 Iter 600 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Extended milestone countdown": when within 10 notes of {25, 50, 100} show "Just X more notes to [milestone]!" (currently only shows within 3) | UX/Encourage | Domain: broader proximity motivation | High | XS | Low | Widen nmMilestone proximity from Count < nm+3 to Count < nm+10 | More visible milestone nudge; already have the logic | No |
+| 2 | Web: Home — "Longest active goal" callout: show the goal with the most days since EnteredDate; "Your most committed goal has been going for X days!" | UX/Encourage | Domain: long-term commitment recognition | Medium | XS | Low | AllActiveGoals.MaxBy(g => g.EnteredDate... wait, min EnteredDate = oldest); quick computation | Celebrates long-term commitment | No |
+| 3 | Web: Journal — "Longest gap between entries" gentle awareness: max gap in consecutive dates; show "Your longest dry spell was X days" when >= 14 days | UX/Motivate | Domain: gap awareness | Low | XS | Low | AllEntries dates sorted; max gap; simple scan | Already in brainstorm multiple times; implement now | No |
+| 4 | Web: GoalDetail — "Note quality growth": compare avg word count of last 5 vs first 5 (>= 10 notes) entries; show "Your notes are getting richer!" | UX/Encourage | Domain: depth quality signal | Medium | S | Low | NextStepItems.Split(' ').Length; two groups; >= 10 notes | Long-deferred item; implement now | No |
+| 5 | Web: Insights — "Total active days ever": count distinct calendar days with any activity (from allEver); "You've been active on X different days!" | UX/Encourage | Domain: cumulative active day count | Low | XS | Low | allEver already loaded (line 1008); .Select date.Distinct().Count() | Simple cumulative stat | No |
+| 6 | Web: Home — "Upcoming expiration this month": if any goal expires within the current month, show a lighter reminder | UX/Urgency | Domain: monthly deadline awareness | Medium | XS | Low | AllActiveGoals ExpirationDate within current month; complement the 7-day alert | Broader awareness than 7-day; lower urgency tone | No |
+| 7 | Web: GoalDetail — "Encourage next step": if LatestNextStep exists, show "Your next step: [NextStep] — ready to act on it?" | UX/Encourage | Domain: next-step activation | High | XS | Low | Goal's latest progress entry NextStepItems; already displayed but could be more prominent | Makes next step feel more actionable | No |
+| 8 | Web: Insights — "Goals completed vs started this year": ratio; "You completed X of Y goals started this year!" | UX/Encourage | Domain: annual completion rate | Medium | S | Low | Needs additional query or year-filter on allGoals; medium effort | Annual self-reflection stat | No |
+| 9 | Web: Home — "Lowest-activity goal nudge": show the active goal with the fewest progress notes (excluding zero-note goals already handled) as "Give some love to [Goal] — it only has X notes" | UX/Encourage | Domain: portfolio balance | Medium | XS | Low | AllActiveGoals with ProgressCounts.GetValueOrDefault > 0; find MinBy count; show when count is low | Balances focus across goals | No |
+| 10 | Web: GoalDetail — "Next milestone countdown to achievement": show "X more notes and you'll be at the [Champion Level]!" using milestone labels | UX/Encourage | Domain: labeled tier progress | High | XS | Low | nmMilestones; find closest above Count; compute gap; show "X more notes to [label]!" | Connects progress to named achievement tier | No |
+
+**Selection iter 600:** Item #3 — "Longest gap between journal entries" on JournalPage.
+- Scan `AllEntries` dates sorted ascending; find max gap between consecutive dates
+- Show "Your longest dry spell was X days — keep your streak shorter than that!" when >= 14 days
+- Zero extra queries; purely from already-loaded `AllEntries`
+- Gentle awareness message without shaming
+
+---
+
 ## 2026-05-19 — Invocation 8 Iter 597 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |

@@ -62,6 +62,13 @@
         🏅 Your best journaling month was <strong>@BestJournalMonth</strong> — @BestJournalMonthCount entries! Can you beat it?
     </MudAlert>
 }
+@if (LongestJournalGap >= 14)
+{
+    var lgDaysMsg = LongestJournalGap >= 60 ? $"Your longest journaling gap was <strong>{LongestJournalGap} days</strong> — a long pause. You came back though, and that's what matters!"
+                  : LongestJournalGap >= 30 ? $"Your longest journaling gap was <strong>{LongestJournalGap} days</strong> — see if you can keep future gaps shorter than that!"
+                  :                           $"Your longest journaling gap was <strong>{LongestJournalGap} days</strong> — aim to journal at least once a week so gaps stay small!";
+    <MudAlert Severity="Severity.Normal" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.HourglassEmpty">@((MarkupString)lgDaysMsg)</MudAlert>
+}
 @if (JournalThisWeek > 0 || JournalLastWeek > 0)
 {
     var jWowMsg = JournalLastWeek == 0
@@ -447,6 +454,7 @@ else
     private string? _confirmDeleteGuid;
     private int JournalStreak;
     private int LongestJournalStreak;
+    private int LongestJournalGap;
     private string? BestJournalMonth;
     private int BestJournalMonthCount;
     private int JournalThisWeek;
@@ -485,12 +493,17 @@ else
         var sortedJDates = journalDates.OrderBy(d => d).ToList();
         LongestJournalStreak = 0;
         var ljCurrent = 0;
+        LongestJournalGap = 0;
         for (int lji = 0; lji < sortedJDates.Count; lji++)
         {
             if (lji == 0 || sortedJDates[lji] == sortedJDates[lji - 1].AddDays(1))
                 ljCurrent++;
             else
+            {
+                var gap = (sortedJDates[lji].ToDateTime(TimeOnly.MinValue) - sortedJDates[lji - 1].ToDateTime(TimeOnly.MinValue)).Days;
+                if (gap > LongestJournalGap) LongestJournalGap = gap;
                 ljCurrent = 1;
+            }
             if (ljCurrent > LongestJournalStreak) LongestJournalStreak = ljCurrent;
         }
 
