@@ -413,6 +413,17 @@
         }
     </MudAlert>
 }
+@if (StreakAtRiskGoalName is not null && string.IsNullOrWhiteSpace(FilterText))
+{
+    <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.LocalFireDepartment" Dense="true" Class="mb-3">
+        ⚠️ <strong>Streak at risk!</strong> Your @StreakAtRiskWeeks-week streak on "@StreakAtRiskGoalName" is in danger — log a note today to keep it alive! 🔥
+        @if (!string.IsNullOrWhiteSpace(StreakAtRiskGoalGuid))
+        {
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning"
+                       Href="@($"/goals/{StreakAtRiskGoalGuid}")" Class="ml-1">Add Note</MudButton>
+        }
+    </MudAlert>
+}
 @if (NextMeetingGoalName is not null && string.IsNullOrWhiteSpace(FilterText))
 {
     var mtgDaysLabel = NextMeetingDaysAway == 0 ? "today!" : NextMeetingDaysAway == 1 ? "tomorrow" : $"in {NextMeetingDaysAway} days";
@@ -1066,6 +1077,9 @@
     private string? NextMeetingGoalName;
     private int NextMeetingDaysAway;
     private string? NextMeetingGoalGuid;
+    private string? StreakAtRiskGoalName;
+    private int StreakAtRiskWeeks;
+    private string? StreakAtRiskGoalGuid;
 
     protected override async Task OnInitializedAsync()
     {
@@ -1216,6 +1230,24 @@
                 {
                     ComebackGoalName = cg.GoalText?.Length > 50 ? cg.GoalText[..50] + "…" : cg.GoalText;
                     ComebackGoalGuid = cg.Guid;
+                    break;
+                }
+            }
+        }
+
+        // Streak at risk: find first goal with weekly streak ≥2 that hasn't been updated today
+        var todayStartMsStreak = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+        StreakAtRiskGoalName = null; StreakAtRiskGoalGuid = null; StreakAtRiskWeeks = 0;
+        foreach (var sag in AllActiveGoals)
+        {
+            if (GoalStreaks.TryGetValue(sag.Guid, out var sagStreak) && sagStreak >= 2)
+            {
+                var sagLastAt = LastProgressAt.GetValueOrDefault(sag.Guid);
+                if (sagLastAt < todayStartMsStreak)
+                {
+                    StreakAtRiskGoalName = sag.GoalText?.Length > 50 ? sag.GoalText[..50] + "…" : sag.GoalText;
+                    StreakAtRiskGoalGuid = sag.Guid;
+                    StreakAtRiskWeeks = sagStreak;
                     break;
                 }
             }
