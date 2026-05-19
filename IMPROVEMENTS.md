@@ -2,6 +2,50 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 522 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — Rich completed goal summary card at top when CompletionDate set | UX/Encourage | Domain: post-completion celebration | High | S | Low | Show journey duration, note count, word count, first vs last note date; celebrates the arc | Highly emotional; currently just a simple chip | No |
+| 2 | Web: GoalDetail — "How you've grown" reflection prompt when journeyDays >= 30 | UX/Encourage | Domain: self-reflection facilitation | High | S | Low | When journeyDays >= 30, show reflective prompt: "What's different now vs when you started?" | Deep emotional value; encourages metacognition | No |
+| 3 | Web: Insights — Journal writing streak alongside progress streak | UX/Encourage | Domain: cross-entity habit recognition | Medium | S | Low | Compute consecutive journal entry days; show as "📓 Journal streak: X days" | Nice holistic view; requires one extra query | No |
+| 4 | Web: Journal — Most used tag visually emphasized (badge or bold) in the tag list | UX | Domain: celebrate dominant interest/theme | Medium | XS | Low | Already have AllTags sorted by count; style first tag differently | Simple CSS/visual change; reinforces kid's identity | No |
+| 5 | Web: GoalDetail — "Top weekdays for this goal": which 2 days the kid usually logs | UX | Domain: habit insight per goal | Low | S | Low | Group ProgressEntries by DayOfWeek; show top 2 chips | Cute habit insight; lower priority | No |
+| 6 | Web: Home — "Personal record" alert when ProgressThisWeek beats any prior week | UX/Encourage | Domain: celebrate a new high | High | M | Low | Requires storing or computing prior-week max; check last 12 weeks for max | Very motivating; needs a bit of extra computation | No |
+| 7 | Web: Insights — "Most productive hour" for progress notes (group UpdatedOn by hour) | UX | Domain: productivity pattern insight | Low | M | Low | Group recentProgressTs by hour; show most common | Curiosity-driven; moderate compute; low impact | No |
+| 8 | Web: GoalDetail — "Pace insight": projected date to reach next milestone at current rate | UX | Domain: forward-looking motivation | Medium | M | Low | Current notes/week rate extrapolated to next threshold (5, 10, 25, 50) | Useful projection; complex calculation | No |
+| 9 | Web: Home — "All goals completed today" confetti/banner when all have a note today | UX/Encourage | Domain: daily completion celebration | High | XS | Low | Already have allGoalsActiveToday computed; make the banner more prominent (larger) | Already exists as a banner; could enhance visuals | No |
+| 10 | Web: Insights — "Longest gap" insight: longest stretch between any two progress notes | UX | Domain: resilience/persistence visibility | Medium | S | Low | Compute from allProgressEver timestamps sorted; gap = max(ts[i+1] - ts[i]) | Interesting retrospective insight; no new queries needed | No |
+
+**Selection iter 522:** Item #1 — Rich completed goal summary card on GoalDetail.
+- When `Goal.CompletionDate` is set, show a celebration card at top with: journey duration (CompletionDate - EnteredDate), total notes count, word count, and first/last note dates
+- High emotional impact; turns the completed goal view into a proper achievement showcase
+- Data all in-memory from existing `ProgressEntries` and `Goal` fields; zero extra queries
+
+---
+
+## 2026-05-18 — Invocation 6 Iter 519 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Insights — "Progress notes written this month" callout vs last month (like MoM but sentence) | UI | Domain: engagement depth visibility | Medium | XS | Low | Already have ThisMonthProgress and LastMonthProgress; sentence: "X notes this month vs Y last" | Simple reuse of existing data; useful framing | No |
+| 2 | Web: GoalDetail — "Top weekdays" for this goal: which 2-3 days the kid usually logs | UX | Domain: habit insight per goal | Low | S | Low | Group ProgressEntries by DayOfWeek; show top 2-3 | Cute; lower priority | No |
+| 3 | Web: Home — "Goals worked this week" fraction display: "X of Y active goals updated this week" | UX | Domain: weekly portfolio engagement | Medium | XS | Low | GoalsProgressedThisWeek / AllActiveGoals.Count; already have both | Clean metric; easy sentence display | No |
+| 4 | Web: Journal — "Most used tag" highlighted more prominently in tag cloud (badge/color) | UX/Encourage | Domain: celebrate dominant interest/theme | Medium | XS | Low | Already have AllTags sorted by count; make first tag more visually distinct | Simple CSS/color change; reinforces kid's identity | No |
+| 5 | Web: GoalDetail — Show a "summary card" at the top of completed goals with celebration and stats | UX/Encourage | Domain: post-completion celebration view | High | S | Low | When CompletionDate set, show rich card with notes count, journey duration, achievement | Highly emotional; currently just shows a simple alert | No |
+| 6 | Web: Insights — "Your most used word in progress notes" as a curiosity callout | UX | Domain: creative reflection | Low | M | Low | Split all note text, count word frequency, remove stopwords; show most common | Fun but complex; risk of odd results | No |
+| 7 | Web: Home — "Next meeting countdown" banner: if any goal has NextMeetingDate within 7 days | UX | Domain: meeting preparation urgency | High | XS | Low | Scan AllActiveGoals for NextMeetingDate within 7d; show banner "Meeting in X days on [goal]!" | Very practical; helps kids prepare | No |
+| 8 | Web: GoalDetail — "How you've grown": if notes span 30+ days, show reflection prompt | UX/Encourage | Domain: self-reflection facilitation | High | S | Low | When journeyDays >= 30, show prompt: "Look how far you've come! What's different now vs when you started?" | Deep emotional value; encourages metacognition | No |
+| 9 | Web: Todos — "Most productive hour" of the day based on completion timestamps | UX | Domain: productivity pattern insight | Low | M | Low | GroupBy hour from CompletedAt; show most common completion hour | Complex; marginal value | No |
+| 10 | Web: Insights — "Journal writing streak" synced: show journaling streak alongside progress streak | UX/Encourage | Domain: cross-entity habit recognition | Medium | S | Low | Query most recent journal entries; compute streak same way; show alongside existing | Nice holistic view; requires extra query | No |
+
+**Selection iter 519:** Item #7 — "Next meeting countdown" banner on Home.
+- Scan `AllActiveGoals` for `NextMeetingDate` within 7 days — already loaded, zero extra queries
+- Show banner: "📅 Meeting in X days on [Goal]! Time to prepare your update."
+- High practical value; helps kids anticipate and prepare for progress meetings
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 516 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
