@@ -205,6 +205,19 @@
               :                       $"🌱 <strong>{nmHit.Value} notes</strong> on this goal — great start! Your journey is underway!";
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mb-3">@((MarkupString)nmMsg)</MudAlert>
 }
+@if (ProgressEntries.Count >= 1 && Goal.CompletionDate is null)
+{
+    var feaFirstDate = DateTimeOffset.FromUnixTimeMilliseconds(ProgressEntries.Last().UpdatedOn).LocalDateTime;
+    var feaToday = DateTime.Today;
+    if (feaFirstDate.Month == feaToday.Month && feaFirstDate.Day == feaToday.Day && feaFirstDate.Year < feaToday.Year)
+    {
+        var feaYears = feaToday.Year - feaFirstDate.Year;
+        var feaMsg = feaYears == 1
+            ? $"🎂 <strong>Happy 1-year anniversary!</strong> It was exactly one year ago today that you logged your first note on this goal — that's real staying power!"
+            : $"🎂 <strong>Happy {feaYears}-year anniversary!</strong> {feaYears} years of working on this goal — that is extraordinary long-term dedication!";
+        <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Cake" Dense="true" Class="mb-3">@((MarkupString)feaMsg)</MudAlert>
+    }
+}
 @if (Goal.ExpirationDate.HasValue && Goal.CompletionDate is null)
 {
     var nowMs2 = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
