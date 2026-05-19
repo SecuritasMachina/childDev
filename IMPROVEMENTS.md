@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 472 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Encourage yourself" tab with kid-typed affirmations (stored in goal's MeasurableOutcome field as a list) | Func | Domain: self-motivation | Low | M | Medium | Stores affirmations in existing field; no schema change | Overloads MeasurableOutcome field; risky | No |
+| 2 | Web: Home — "Progress pulse" sparkline: tiny bar chart per goal card showing last 4-week note cadence | UI | Domain: per-goal trend visibility | High | M | Low | Compute weekly note counts per goal from allTimestamps; render as 4 inline bars | Medium complexity; adds visual density | No |
+| 3 | Web: Todos — overdue todos count badge on the sidebar nav link | UI | Domain: navigation-level urgency | High | XS | Low | Show red badge on nav menu Todos item when OverdueTodoCount > 0 | Requires nav modification | No |
+| 4 | Web: GoalDetail — "Goal age" chip: how long since this goal was created (CreatedAt field?) | UX | Domain: journey context | Low | XS | Low | Show "Created 23 days ago" chip under goal title | Depends on CreatedAt field existence | No |
+| 5 | Web: Home — "Quick Win" panel: highlight active todos that are overdue by just 1 day (easy catches) | Func | Domain: manageable action items | High | S | Low | Filter todos for DueDate == yesterday; show in "Quick Win" section on Home | Requires loading todos on Home page | No |
+| 6 | Web: Journal — "Search journal entries" by text content | Func | Domain: journal utility | Medium | S | Low | Add search input to journal list; filter client-side | Journal list currently loaded and filterable client-side | No |
+| 7 | Web: Insights — "Consistency score" (% of days active in last 30) + trend vs prior period | UI | Domain: engagement metric | Medium | XS | Low | Already have ActiveDaysLast30; compute pct and compare to prior 30 | Prior 30-day window requires extra query | No |
+| 8 | Web: GoalDetail — emoji reaction row below each note (😊😤😅🎯) stored as... nothing, UI-only | UX | Domain: expressive engagement | Medium | S | Low | Pure visual toggle; no storage; each page load resets | No persistence — reset on reload; limited value | No |
+| 9 | Web: Home — "Notes this month" vs "last month" mini comparison widget in summary cards | UI | Domain: monthly progress context | High | S | Low | Already have GoalProgressTotal; need monthly breakdown from allTimestamps | Can compute from existing allTimestamps data | No |
+| 10 | Web: GoalDetail — collapsible "Goal Background" panel showing creation notes or goal context | Func | Domain: goal context preservation | Low | M | Low | Requires extra field on Goal entity; schema change | Schema change risk | No |
+
+**Selection iter 472:** Item #9 — Notes this month vs last month comparison in Home summary cards.
+- Add a small month-over-month note comparison widget to the Home stats area
+- Computable from `allTimestamps` without new queries: count notes in current calendar month vs previous
+- Show as a compact comparison: "This month: 8 notes (↑3 vs last month)" in the stat cards row
+- Zero extra DB queries; high value for visibility into monthly note cadence
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 469 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |

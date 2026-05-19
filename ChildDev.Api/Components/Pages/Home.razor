@@ -162,6 +162,28 @@
     </MudItem>
 </MudGrid>
 
+@if (NotesThisMonth + NotesLastMonth > 0 && string.IsNullOrWhiteSpace(FilterText))
+{
+    var diff = NotesThisMonth - NotesLastMonth;
+    var (trendIcon2, trendColor2, trendText2) = diff > 0
+        ? (Icons.Material.Filled.TrendingUp, Color.Success, $"+{diff} vs last month")
+        : diff < 0
+            ? (Icons.Material.Filled.TrendingDown, Color.Warning, $"{diff} vs last month")
+            : (Icons.Material.Filled.TrendingFlat, Color.Default, "same as last month");
+    <MudPaper Elevation="0" Class="pa-3 mb-4 d-flex align-items-center" Style="border-radius:12px;background:var(--mud-palette-background-grey);gap:12px;">
+        <MudIcon Icon="@Icons.Material.Filled.BarChart" Color="Color.Primary" Size="Size.Small" />
+        <MudText Typo="Typo.body2" Style="flex:1">
+            Progress notes this month: <strong>@NotesThisMonth</strong>
+            @if (NotesLastMonth > 0)
+            {
+                <MudIcon Icon="@trendIcon2" Color="@trendColor2" Size="Size.Small" Style="vertical-align:middle;margin:0 2px;" />
+                <MudText Typo="Typo.caption" Color="@trendColor2" Style="display:inline;">@trendText2</MudText>
+            }
+        </MudText>
+        <MudChip T="string" Size="Size.Small" Color="Color.Default">@NotesLastMonth last mo.</MudChip>
+    </MudPaper>
+}
+
 @if (CompletedGoals.Any() && string.IsNullOrWhiteSpace(FilterText))
 {
     var recentWin = CompletedGoals.MaxBy(g => g.CompletionDate ?? 0);
@@ -834,6 +856,8 @@
     private string? GoalOfMonthGuid;
     private string? GoalOfMonthText;
     private int GoalOfMonthCount;
+    private int NotesThisMonth;
+    private int NotesLastMonth;
     private bool ShowAddDialog;
     private string NewGoalText = string.Empty;
     private string? NewMeasurableOutcome;
@@ -951,6 +975,13 @@
             GoalOfMonthText = AllActiveGoals.FirstOrDefault(g => g.Guid == monthTopEntry.Key)?.GoalText;
             GoalOfMonthCount = monthTopEntry.Count();
         }
+
+        // Monthly note counts for comparison widget
+        var localNow = DateTimeOffset.Now.LocalDateTime;
+        var thisMonthStartMs = new DateTimeOffset(new DateTime(localNow.Year, localNow.Month, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
+        var lastMonthStartMs = new DateTimeOffset(new DateTime(localNow.Year, localNow.Month, 1).AddMonths(-1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
+        NotesThisMonth = allTimestamps.Count(p => p.UpdatedOn >= thisMonthStartMs);
+        NotesLastMonth = allTimestamps.Count(p => p.UpdatedOn >= lastMonthStartMs && p.UpdatedOn < thisMonthStartMs);
 
         // Sort: goals with no progress first (needs attention), then by oldest-update-first
         AllActiveGoals = AllActiveGoals
