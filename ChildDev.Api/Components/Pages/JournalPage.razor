@@ -67,6 +67,14 @@
     var jWowSeverity = JournalLastWeek == 0 || JournalThisWeek >= JournalLastWeek ? Severity.Info : Severity.Normal;
     <MudAlert Severity="@jWowSeverity" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.TrendingUp">@jWowMsg</MudAlert>
 }
+@if (JournalThisMonth >= 1)
+{
+    var jMonthMsg = JournalThisMonth >= 20 ? $"📓 In {JournalThisMonthName} you've written <strong>{JournalThisMonth} journal entries</strong> — outstanding! This might be your best month yet!"
+                  : JournalThisMonth >= 10 ? $"📓 In {JournalThisMonthName} you've written <strong>{JournalThisMonth} entries</strong> — double digits this month! Your reflection habit is really growing!"
+                  : JournalThisMonth >= 4  ? $"📓 In {JournalThisMonthName} you've already written <strong>{JournalThisMonth} entries</strong> — great journaling momentum this month!"
+                  :                          $"📓 You've written <strong>{JournalThisMonth} entr{(JournalThisMonth == 1 ? "y" : "ies")}</strong> in {JournalThisMonthName} — every entry is part of your growth story!";
+    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.CalendarMonth">@((MarkupString)jMonthMsg)</MudAlert>
+}
 
 @if (TotalWordsWritten >= 100)
 {
@@ -395,6 +403,8 @@ else
     private int JournalThisWeek;
     private int JournalLastWeek;
     private int TotalWordsWritten;
+    private int JournalThisMonth;
+    private string JournalThisMonthName = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -429,6 +439,11 @@ else
         TotalWordsWritten = AllEntries
             .Where(j => !string.IsNullOrWhiteSpace(j.Notes))
             .Sum(j => j.Notes!.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length);
+
+        var jLocalNow = DateTimeOffset.Now.LocalDateTime;
+        var jMonthStartMs = new DateTimeOffset(new DateTime(jLocalNow.Year, jLocalNow.Month, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
+        JournalThisMonth = AllEntries.Count(j => j.EnteredDate >= jMonthStartMs);
+        JournalThisMonthName = jLocalNow.ToString("MMMM");
 
         var bestMonthGroup = AllEntries
             .GroupBy(j => DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime.ToString("yyyy-MM"))
