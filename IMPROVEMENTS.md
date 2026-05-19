@@ -2,6 +2,30 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 453 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Home — "Goals needing attention" collapsed panel (stale + no-notes goals) | UI/Action | Domain: caregiver action prompts; complements heat indicator with aggregate list | High | M | Low | Collapsed by default; shows all stale goals with Add Note button; zero new queries | Medium effort; may feel redundant with heat border | No |
+| 2 | Web: GoalDetail — progress velocity estimate ("At this pace, complete in ~X weeks") | UI/Encourage | Domain: goal planning; kids/caregivers want sense of "how long is this taking?" | Medium | M | Low | Computes notes/week from ProgressEntries timestamps; encouraging if on-track | Inaccurate without ExpirationDate; may be discouraging | No |
+| 3 | Web: GoalDetail — "Goal keywords" chips extracted from GoalText | UI | Domain: discoverability | Low | S | Low | Auto-extract keywords from goal text; zero DB | Noisy; just re-displays words from the title | No |
+| 4 | Web: Home — "No progress this week" call-to-action when 0 notes and ≥1 active goal | UI/Encourage | Domain: engagement nudge | Medium | XS | Low | "You haven't logged any progress this week — pick a goal and add a note!" | Shown every week with no activity; could feel nagging | No |
+| 5 | Web: Insights — goal completion time distribution (scatter: days from creation to completion) | Func | Domain: analytics | Low | M | Medium | Shows how long goals typically take | Medium effort; low traffic page | No |
+| 6 | Web: GoalDetail — "How confident are you?" quick poll after adding a note (😟😕😐😊🌟) | UI/Func | Domain: IEP-style self-assessment | High | M | Low | Stores confidence as 1-5 in an existing text field (no new column) | Shoehorning into existing field is hacky | No |
+| 7 | Web: Home — goal card quick-peek popover on hover (shows last note preview) | UI | Domain: at-a-glance info | Medium | M | Low | Hover → MudPopover showing last note text | Complex; hover UX is mobile-unfriendly | No |
+| 8 | API: Add `?include_progress_count=true` to GET /goals sync for mobile | Func | Domain: mobile data completeness | Medium | M | Low | Mobile can show count without extra round-trip | Needs API change + mobile consumer | No |
+| 9 | Web: Home — filter dropdown: "All", "Needs attention", "On a streak", "Just started" | UI | Domain: goal navigation | High | S | Low | Named filters beyond free text; uses existing ProgressCounts/GoalStreaks/heat data | Adds UI complexity | No |
+| 10 | Web: GoalDetail — achievement unlocked animation when level increases | UI/Encourage | Domain: gamification milestone | High | M | Low | Detect level change on progress add; show "Level Up! 🎉 You reached Champion!" | Medium effort; requires tracking previous level | No |
+
+**Selection iter 453:** Item #4 — "No progress this week" nudge (XS effort, quick win).
+Then Item #1 — "Goals needing attention" panel (M effort, high value).
+Doing #4 first since it's a one-liner and then #1 as the main feature.
+
+Actually just doing #1 — it's the higher impact and already in the backlog.
+Wait, let me pick just one. Going with #1 since it's actionable.
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 450 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
