@@ -270,6 +270,41 @@
     <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">No goals matching "@FilterText".</MudText>
 }
 
+@{
+    var dueSoonNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    var dueSoonTodayStart = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+    var dueSoon7Ms = dueSoonTodayStart + 7L * 86_400_000L;
+    var dueSoonGoals = AllActiveGoals
+        .Where(g => g.ExpirationDate.HasValue && g.ExpirationDate.Value >= dueSoonNowMs && g.ExpirationDate.Value < dueSoon7Ms)
+        .OrderBy(g => g.ExpirationDate)
+        .ToList();
+}
+@if (dueSoonGoals.Any() && string.IsNullOrWhiteSpace(FilterText) && QuickFilter == "all")
+{
+    <MudPaper Elevation="2" Class="pa-3 mb-4"
+              Style="border-radius:12px;border-left:4px solid var(--mud-palette-warning);background:linear-gradient(135deg,rgba(255,152,0,.06) 0%,rgba(255,255,255,0) 100%);">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2" Spacing="1">
+            <MudIcon Icon="@Icons.Material.Filled.Alarm" Color="Color.Warning" Size="Size.Small" />
+            <MudText Typo="Typo.overline" Color="Color.Warning" Style="font-weight:700;letter-spacing:1px;">
+                Due Within 7 Days (@dueSoonGoals.Count)
+            </MudText>
+        </MudStack>
+        @foreach (var ds in dueSoonGoals)
+        {
+            var expDate = DateTimeOffset.FromUnixTimeMilliseconds(ds.ExpirationDate!.Value).LocalDateTime.Date;
+            var daysLeft = (expDate - DateTime.Today).Days;
+            var daysLabel = daysLeft == 0 ? "Due today!" : daysLeft == 1 ? "Due tomorrow" : $"Due in {daysLeft} days";
+            var labelColor = daysLeft <= 1 ? "color:var(--mud-palette-error)" : "color:var(--mud-palette-warning-darken)";
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-1" Spacing="2">
+                <MudText Typo="Typo.body2" Style="flex:1">@ds.GoalText</MudText>
+                <MudText Typo="Typo.caption" Style="@labelColor">@daysLabel</MudText>
+                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning"
+                           Href="@($"/goals/{ds.Guid}")">Open</MudButton>
+            </MudStack>
+        }
+    </MudPaper>
+}
+
 @if (!AllActiveGoals.Any() && string.IsNullOrWhiteSpace(FilterText))
 {
     @if (CompletedGoals.Count == 0)
