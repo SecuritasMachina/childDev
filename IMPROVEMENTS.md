@@ -2,6 +2,32 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 437 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+Step 0a: unsolved problems research running (background agent). Step 0b: domain notes reused from prior invocations. Focus: goal development, achievement, and encouragement per user direction.
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Home — stale-goal nudge banner ("2 goals haven't been updated in 14+ days") | UI/Encourage | Domain: caregiver visibility; kids lose focus on inactive goals | High | S | Low | At-a-glance caregiver alert; surfaces neglected goals without opening each one | Could feel nagging if shown too often; only show when ≥1 goal stale | No |
+| 2 | Web: GoalDetail — "goal age" progress bar (days elapsed vs. target date) | UI | Domain: progress visualization | Medium | S | Low | Visual sense of "I'm 40% of the way to my deadline" — motivates urgency | Only useful when ExpirationDate is set; otherwise shows nothing | No |
+| 3 | Web: Home — goal card "streak" chip (consecutive weeks with at least 1 progress note) | UI/Encourage | Domain: habit formation; research shows streaks motivate continued engagement | High | M | Low | "3-week streak 🔥" on card; visible reward for consistency | Streak calculation requires multiple queries; medium effort | No |
+| 4 | Mobile: GoalEntryViewModel — show progress count on goal list item | UI/Perf | Domain: goal progress visibility on mobile | Medium | S | Low | Kids see "5 notes" without opening each goal | Adds a JOIN or second query to GoalListViewModel | No |
+| 5 | Web: GoalDetail — "caregiver note" field on progress entries (separate from child's next steps) | Func | Domain: caregiver-child collaboration; caregivers need to add context without overwriting child's notes | High | M | Medium | Separate caregiver voice; professional alignment note doesn't pollute child's progress | Requires new DB column (blocked by no-migration rule — use soft approach via existing fields) | No |
+| 6 | Web: Home — "Goal of the Day" highlight (oldest-not-updated goal in hero position) | UI/Encourage | Domain: focus; kids do better when they have one clear thing to work on today | High | S | Low | Surfaces one goal prominently; reduces decision fatigue; zero new queries (already sorted) | Might confuse users who prefer the full grid view | No |
+| 7 | Web: GoalDetail — quick celebrate button on progress note ("Mark this step done 🎉") | UI/Encourage | Domain: positive reinforcement at step level, not just goal level | Medium | S | Low | Mini celebration per step keeps kids engaged; visual satisfaction | Minor animation cost | No |
+| 8 | Web: Home — show "X days to go" on goal card when expiration is set | UI | Domain: deadline awareness | Medium | S | Low | Already showing countdown badge; could make it more prominent with color | Very similar to iter 422 — check for duplication | No |
+| 9 | API: GoalProgress — add a "confidence" field (1-5 emoji scale: 😟😕😐😊🌟) | Func | Domain: self-assessment; IEP/therapy tracking standards include confidence/affect ratings | High | M | Low | Richer progress data; over time shows confidence trend | New column (blocked — use existing field approach) | No |
+| 10 | Web: Home — "Keep it up!" motivational quote above goal list (rotating from curated list) | UI/Encourage | Domain: encouragement | Low | S | Low | Costs nothing; kid sees a different motivating phrase each visit | Feels generic if not tied to their actual data | No |
+
+**Selection iter 437:** Item #6 — "Goal of the Day" / featured goal highlight.
+- Zero new DB queries (data already loaded, already sorted by staleness)
+- Highest impact for the core UX: kids see ONE clear thing to work on
+- Direct encouragement: featured goal gets "Spotlight" treatment with bigger card + action buttons
+- Low risk: purely additive, doesn't change existing goal grid
+- Negative: user might want to override which goal is featured (future work)
+
+---
+
 ## 2026-05-18 — Invocation 5 Iter 430 Fresh Brainstorm
 
 Step 0b refresh (every 3rd iteration).
