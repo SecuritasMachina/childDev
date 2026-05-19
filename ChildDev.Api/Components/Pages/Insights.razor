@@ -287,6 +287,38 @@
     </MudAlert>
 }
 
+@if (ThisMonthProgress > 0)
+{
+    var monthName = DateTime.Today.ToString("MMMM");
+    string monthCalloutMsg;
+    Severity monthCalloutSeverity;
+    if (LastMonthProgress == 0)
+    {
+        monthCalloutMsg = $"📝 You've written {ThisMonthProgress} progress note{(ThisMonthProgress == 1 ? "" : "s")} in {monthName} — great start!";
+        monthCalloutSeverity = Severity.Success;
+    }
+    else if (ThisMonthProgress > LastMonthProgress)
+    {
+        var diff = ThisMonthProgress - LastMonthProgress;
+        monthCalloutMsg = $"🚀 {monthName} is shaping up to be your best month! {ThisMonthProgress} progress notes and counting (+{diff} vs last month) — keep it going!";
+        monthCalloutSeverity = Severity.Success;
+    }
+    else if (ThisMonthProgress == LastMonthProgress)
+    {
+        monthCalloutMsg = $"📝 Matching last month's pace — {ThisMonthProgress} progress notes in {monthName} so far. Finish strong!";
+        monthCalloutSeverity = Severity.Info;
+    }
+    else
+    {
+        var daysLeft = DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month) - DateTime.Today.Day;
+        monthCalloutMsg = $"💪 {ThisMonthProgress} progress notes in {monthName} so far — {daysLeft} day{(daysLeft == 1 ? "" : "s")} left to match last month's {LastMonthProgress}. You've got this!";
+        monthCalloutSeverity = Severity.Warning;
+    }
+    <MudAlert Severity="@monthCalloutSeverity" Icon="@Icons.Material.Filled.TrendingUp" Dense="true" Class="mb-4">
+        @monthCalloutMsg
+    </MudAlert>
+}
+
 @* Month-over-month trends *@
 <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2" Style="text-transform:uppercase;letter-spacing:1px;">
     This Month vs Last Month
