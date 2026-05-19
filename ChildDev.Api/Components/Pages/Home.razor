@@ -503,6 +503,15 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                    Href="@($"/goals/{GoalOfMonthGuid}")" Class="ml-1">View</MudButton>
     </MudAlert>
 }
+@if (OverdueTodoCount >= 3 && string.IsNullOrWhiteSpace(FilterText))
+{
+    var otdLabel = OverdueTodoCount >= 7 ? $"📋 <strong>{OverdueTodoCount} overdue todos</strong> piling up — pick one and knock it out! Small wins add up!"
+                 : $"📋 <strong>{OverdueTodoCount} overdue todos</strong> — take 5 minutes to tackle one today. Every crossed-off task counts!";
+    <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.PendingActions" Dense="true" Class="mb-3">
+        @((MarkupString)otdLabel)
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning" Href="/todos" Class="ml-1">View todos</MudButton>
+    </MudAlert>
+}
 @{
     string? proximityGoalName = null;
     string? proximityMilestoneEmoji = null;
