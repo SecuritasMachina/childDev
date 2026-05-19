@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 489 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — filter/search within progress notes by text | Func | Domain: find past insights quickly | High | S | Low | Filter client-side by NextStepItems content; already loaded | Moderate UX improvement for goals with many notes | No |
+| 2 | Web: Home — "Quick Win" catch-up: show oldest overdue todo inline with instant Complete button | Func | Domain: frictionless todo catch-up | High | M | Low | Load overdue todos already done; add inline complete action | Would need todo state management inline on Home | No |
+| 3 | Web: Insights — "Days since last progress note" freshness indicator | UX | Domain: engagement freshness signal | Medium | XS | Low | From ProgressHeatmap max date; simple diff from today | Low complexity, useful at-a-glance signal | No |
+| 4 | Web: GoalDetail — monthly note summary: list each calendar month the user was active on this goal | UX | Domain: monthly engagement pattern | Medium | S | Low | Group ProgressEntries by YYYY-MM; show list of months + note counts | Useful context for long-running goals | No |
+| 5 | Web: Home — "Comeback of the day": if a stale goal (14+ days) gets a note, celebrate with banner | UX/Encourage | Domain: celebrate returning to a goal | High | S | Low | Detect if user just added a note to a previously stale goal | Requires tracking pre-note state; medium complexity | No |
+| 6 | Web: GoalDetail — "Best streak ever" for this goal: compute the longest consecutive day run | UX/Encourage | Domain: personal peak record | Medium | M | Low | Rolling window computation on ProgressEntries; show "Your best: 7 days!" | Medium complexity for rolling windows | No |
+| 7 | Web: Todos — "Weekly summary": how many todos completed this week vs goal (if set) | UX | Domain: weekly accountability | Medium | M | Low | Already have WeekCompletedCount; show a simple progress bar | Medium complexity for goal-setting UI | No |
+| 8 | Web: GoalDetail — copy goal summary to clipboard: button to copy goal + note count + level as text | UX | Domain: share/save progress snapshot | Low | XS | Low | JS interop for clipboard copy; plain text summary | Requires clipboard JS interop call | No |
+| 9 | Web: Home — "Top performer this month" badge on the goal with most notes in last 30 days | UX/Encourage | Domain: monthly goal spotlight | High | XS | Low | Already have GoalOfMonthGuid/Text; add a special card badge on that goal card | Uses existing GoalOfMonth data | No |
+| 10 | Web: Insights — add "Progress notes" to the month-over-month comparison table | UX | Domain: complete trend picture | Medium | XS | Low | Add a 4th row to the existing MoM table; already compute GoalProgressTotal | Very low effort; improves completeness | No |
+
+**Selection iter 489:** Item #9 — "Top performer this month" badge on the goal card that matches GoalOfMonth.
+- Already have `GoalOfMonthGuid` loaded in Home.razor
+- Add a subtle "🥇 This month's top goal" badge/chip to the matching goal card
+- Zero extra DB queries; high encouragement impact — spotlights the user's most-worked goal
+- Kids can see which goal they've been most dedicated to this month
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 486 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
