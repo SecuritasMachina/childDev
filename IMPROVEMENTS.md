@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 525 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Top weekdays for this goal" habit chip (2 most common days) | UX | Domain: personalized habit insight | Low | S | Low | Group ProgressEntries by DayOfWeek; show top 2 as chips: "You usually work on this on Tue & Thu" | Cute habit insight; lower priority | No |
+| 2 | Web: Insights — "Longest gap" callout: longest stretch between any two progress notes | UX | Domain: resilience visibility | Medium | S | Low | Compute from allProgressEver sorted; gap = max diff consecutive timestamps | Interesting retrospective data; no new queries | No |
+| 3 | Web: Home — Personal record alert when ProgressThisWeek beats any prior week max | UX/Encourage | Domain: celebrate a new high | High | M | Low | Check last 12 weeks from allTimestamps for max weekly count; compare ProgressThisWeek | Very motivating but needs extra computation | No |
+| 4 | Web: GoalDetail — "Pace to next milestone" projection: days at current rate until 5/10/25/50 notes | UX | Domain: forward-looking motivation | Medium | M | Low | Current notesPerWeek → extrapolate to next threshold; show "At your pace, 3 more weeks to Momentum!" | Requires careful edge-case handling | No |
+| 5 | Web: Journal — Most used tag shown as a prominent badge instead of just sorted list entry | UX | Domain: celebrate dominant interest | Medium | XS | Low | Already have AllTags sorted; just add distinct visual treatment to first tag | Minimal code; immediate visual improvement | No |
+| 6 | Web: Insights — "All-time longest gap" between progress notes as resilience callout | UX | Domain: persistence/bounce-back pattern | Low | S | Low | allProgressEver sorted, max consecutive gap; show as "Biggest comeback: X days" | Interesting retrospective; could feel negative if recent | No |
+| 7 | Web: GoalDetail — "Most active week" for this goal (week with most notes ever) | UX | Domain: historical peak performance | Medium | S | Low | Group ProgressEntries by ISO week; find max; show "Your best week: X notes in week of MMM d" | Encourages repeating a good week | No |
+| 8 | Web: Home — "Today's focus goal" based on which active goal hasn't been touched longest | UX | Domain: daily prioritization nudge | High | XS | Low | Already have AllActiveGoals sorted by LastProgressAt; first one = stale focus; already displayed as FeaturedGoal | FeaturedGoal already does this; could make label clearer | No |
+| 9 | Web: GoalDetail — Timeline of notes (vertical timeline with date + snippet) | UX | Domain: visual progress narrative | High | M | Low | Render ProgressEntries as MudTimeline entries with date, truncated note | High visual impact; MudBlazor has MudTimeline component | No |
+| 10 | Web: Insights — "This week's goal coverage" stat: X of Y active goals with notes this week | UX | Domain: portfolio-level weekly engagement | Medium | XS | Low | Needs active goal count + goals-with-notes-this-week; could pass GoalsProgressedThisWeek from Home load | Useful KPI; needs a quick DB query or a new field | No |
+
+**Selection iter 525:** Item #9 — Timeline of notes on GoalDetail.
+- Render ProgressEntries as a vertical MudTimeline showing date + truncated note content
+- MudBlazor has `MudTimeline`, `MudTimelineItem` components
+- Replaces the plain list with a visually rich progress narrative; zero extra queries
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 522 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
