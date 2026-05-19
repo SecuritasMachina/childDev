@@ -17,6 +17,48 @@
     My Activity Insights
 </MudText>
 
+@* Auto-generated progress narrative *@
+@{
+    var narStreak = CurrentStreak >= 7 ? $"You're on a 🔥 {CurrentStreak}-day streak — that's incredible consistency!"
+                  : CurrentStreak >= 3 ? $"You've got a {CurrentStreak}-day streak going — keep it alive!"
+                  : CurrentStreak == 1 ? "You got active today — a streak starts with day one! 🌱"
+                  : ActiveDaysLast30 > 0 ? "You've had some great active days this month — every session counts!"
+                  : "Your journey is waiting — every expert was once a beginner.";
+    var narProgress = GoalProgressTotal >= 50
+        ? $"With {GoalProgressTotal} progress notes logged, you're at Legendary status — your dedication is extraordinary! 🌟"
+        : GoalProgressTotal >= 25
+            ? $"You've written {GoalProgressTotal} progress notes — Champion-level commitment! 🏆"
+            : GoalProgressTotal >= 10
+                ? $"You've logged {GoalProgressTotal} progress notes — you're building real strength! ⭐"
+                : GoalProgressTotal >= 5
+                    ? $"You've written {GoalProgressTotal} progress notes — momentum is building! 🚀"
+                    : GoalProgressTotal >= 1
+                        ? $"You've started with {GoalProgressTotal} progress note{(GoalProgressTotal == 1 ? "" : "s")} — every great journey begins here! ⚡"
+                        : null;
+    var narGoals = GoalsCompletedAllTime >= 5
+        ? $"And you've completed {GoalsCompletedAllTime} goals — that track record proves you're someone who finishes what they start. 🎯"
+        : GoalsCompletedAllTime >= 1
+            ? $"You've already completed {GoalsCompletedAllTime} goal{(GoalsCompletedAllTime == 1 ? "" : "s")} — proof that you can make it happen. 🎯"
+            : TopGoalName is not null
+                ? $"Your most-worked goal — \"{(TopGoalName.Length > 40 ? TopGoalName[..40] + "…" : TopGoalName)}\" — shows where your heart is. Keep going! 💪"
+                : null;
+}
+@if (narProgress is not null)
+{
+    <MudPaper Elevation="2" Class="pa-4 mb-6" Style="border-radius:16px;background:linear-gradient(135deg,rgba(57,73,171,.06) 0%,rgba(255,255,255,0) 100%);border-left:4px solid var(--mud-palette-primary);">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
+            <MudIcon Icon="@Icons.Material.Filled.AutoStories" Color="Color.Primary" />
+            <MudText Typo="Typo.subtitle2" Color="Color.Primary" Style="font-weight:700;">Your Progress Story</MudText>
+        </MudStack>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-1">@narStreak</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-1">@narProgress</MudText>
+        @if (narGoals is not null)
+        {
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@narGoals</MudText>
+        }
+    </MudPaper>
+}
+
 @* Domain achievement stats *@
 <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2" Style="text-transform:uppercase;letter-spacing:1px;">
     Achievements
