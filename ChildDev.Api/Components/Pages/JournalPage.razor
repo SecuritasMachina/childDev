@@ -84,6 +84,29 @@
     </MudStack>
 }
 
+@* Mood leaderboard summary — only when 2+ moods recorded *@
+@if (AllMoods.Count >= 2)
+{
+    var topMoods = AllMoods.Take(3).ToList();
+    var totalMoodEntries = AllMoods.Sum(m => m.Count);
+    <MudPaper Elevation="0" Class="pa-2 mb-2" Style="border-radius:10px;background:var(--mud-palette-background-grey);">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap">
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-weight:600;margin-right:4px;">Your mood pattern:</MudText>
+            @for (int mi = 0; mi < topMoods.Count; mi++)
+            {
+                var medal = mi == 0 ? "🥇" : mi == 1 ? "🥈" : "🥉";
+                var moodPct = (int)(topMoods[mi].Count * 100.0 / Math.Max(totalMoodEntries, 1));
+                <MudChip T="string" Size="Size.Small"
+                         Color="@(mi == 0 ? Color.Warning : mi == 1 ? Color.Primary : Color.Default)"
+                         Variant="@(mi == 0 ? Variant.Filled : Variant.Outlined)"
+                         Style="font-size:0.7rem;">
+                    @medal @topMoods[mi].Mood <span style="opacity:.7;margin-left:2px;">@moodPct%</span>
+                </MudChip>
+            }
+        </MudStack>
+    </MudPaper>
+}
+
 @* Mood cloud — appears only when entries have moods *@
 @if (AllMoods.Count > 0)
 {
