@@ -190,24 +190,30 @@
 {
     var firstNote  = ProgressEntries.Last();
     var latestNote = ProgressEntries.First();
+    var journeyStartDt = DateTimeOffset.FromUnixTimeMilliseconds(firstNote.UpdatedOn).LocalDateTime;
+    var journeyDays = Math.Max((int)(DateTime.Now - journeyStartDt).TotalDays, 1);
+    var journeyDaysLabel = journeyDays == 1 ? "1 day" : journeyDays < 7 ? $"{journeyDays} days" : journeyDays < 30 ? $"{journeyDays / 7} week{(journeyDays / 7 == 1 ? "" : "s")}" : $"{journeyDays / 30} month{(journeyDays / 30 == 1 ? "" : "s")}";
     var firstSnip  = !string.IsNullOrWhiteSpace(firstNote.NextStepItems)
         ? (firstNote.NextStepItems.Length > 80 ? firstNote.NextStepItems[..80] + "…" : firstNote.NextStepItems)
         : null;
     var latestSnip = !string.IsNullOrWhiteSpace(latestNote.NextStepItems)
         ? (latestNote.NextStepItems.Length > 80 ? latestNote.NextStepItems[..80] + "…" : latestNote.NextStepItems)
         : null;
-    @if (firstSnip is not null && latestSnip is not null)
-    {
-        <MudPaper Elevation="0" Class="pa-3 mb-3" Style="border-radius:12px;background:linear-gradient(135deg,rgba(63,81,181,.04) 0%,rgba(255,255,255,0) 100%);border-left:3px solid var(--mud-palette-primary-lighten);">
-            <MudText Typo="Typo.caption" Color="Color.Primary" Style="font-weight:600;letter-spacing:0.5px;" Class="mb-1">📖 Your Journey</MudText>
+    <MudPaper Elevation="0" Class="pa-3 mb-3" Style="border-radius:12px;background:linear-gradient(135deg,rgba(63,81,181,.04) 0%,rgba(255,255,255,0) 100%);border-left:3px solid var(--mud-palette-primary-lighten);">
+        <MudText Typo="Typo.caption" Color="Color.Primary" Style="font-weight:600;letter-spacing:0.5px;" Class="mb-1">📖 Your Journey</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">
+            🗓️ You started this journey on <strong>@journeyStartDt.ToString("MMMM d, yyyy")</strong> — that's <strong>@journeyDaysLabel</strong> of working toward this goal!
+        </MudText>
+        @if (firstSnip is not null && latestSnip is not null)
+        {
             <MudText Typo="Typo.caption" Color="Color.Secondary">
-                <strong>Started:</strong> "@firstSnip"
+                <strong>Then:</strong> "@firstSnip"
             </MudText>
             <MudText Typo="Typo.caption" Color="Color.Primary" Class="mt-1">
                 <strong>Now:</strong> "@latestSnip"
             </MudText>
-        </MudPaper>
-    }
+        }
+    </MudPaper>
 }
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-1">

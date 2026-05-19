@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 495 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Best streak ever" for this goal: longest consecutive day run (vs current streak) | UX/Encourage | Domain: personal peak record | High | S | Low | Rolling 1-day window on ProgressEntries dates; show "All-time best: 7 days!" | Medium computation; excellent motivational comparison | No |
+| 2 | Web: Insights — "Days since last progress note" freshness card | UX | Domain: engagement recency signal | Medium | XS | Low | From ProgressHeatmap or TopGoal recent date; simple diff | Low engineering; useful signal | No |
+| 3 | Web: Home — show total progress note count in the stats area | UI | Domain: overall progress visibility | Medium | XS | Low | GoalProgressTotal already on Insights; need to count on Home as separate query | Requires extra query on Home | No |
+| 4 | Web: GoalDetail — "Monthly activity" list: which calendar months had notes on this goal | UX | Domain: monthly engagement pattern | Medium | S | Low | Group ProgressEntries by YYYY-MM; show as list of months | Useful for long-running goals | No |
+| 5 | Web: Home — "Comeback!" alert: if a stale goal (14+ days) was just worked on, celebrate | UX/Encourage | Domain: celebrate returning to a goal | High | S | Low | Compare LastProgressAt for each goal to determine if recently updated vs was stale | Requires pre-update state tracking | No |
+| 6 | Web: Journal — "Best month" callout: which calendar month had most journal entries | UX/Encourage | Domain: peak journaling period recognition | Medium | S | Low | Group AllEntries by month; find max; show "Your best month was May with 12 entries!" | Extra computation; interesting insight | No |
+| 7 | Web: Todos — "Fastest completion": todo completed soonest after being added | UX/Encourage | Domain: quick win celebration | Low | S | Low | CreatedAt vs CompletedAt diff; show "Your fastest: 2 minutes!" | Low value for kids; niche insight | No |
+| 8 | Web: GoalDetail — "First entry date" prominent display: "You started this journey on [date]!" | UX/Encourage | Domain: journey origin story | High | XS | Low | Use ProgressEntries.Last().UpdatedOn for start date; show near top | High emotional value; zero engineering lift | No |
+| 9 | Web: Home — "Notes per goal" ratio: average progress notes per active goal shown as a stat | UI | Domain: engagement depth signal | Medium | XS | Low | `ProgressCounts.Values.Average()` where any progress exists; inline stat | Simple computation from existing data | No |
+| 10 | Web: Insights — "Completionist" badge: if all-time goal completion rate >= 75%, show special badge | UX/Encourage | Domain: celebrate high completion rate | Medium | XS | Low | Already have GoalsCompletedAllTime and GoalsTotalAllTime | High encouragement for consistent completers | No |
+
+**Selection iter 495:** Item #8 — "First entry date" prominent display on GoalDetail.
+- Show "You started this journey on [date]!" near the top of GoalDetail
+- Uses `ProgressEntries.Last().UpdatedOn` (already loaded; last in descending order = oldest)
+- Zero extra DB queries; high emotional impact — validates the kid's journey start date
+- Simple, low-risk addition that celebrates when the goal was first worked on
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 492 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
