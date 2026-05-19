@@ -2,6 +2,52 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 540 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Note heatmap last 5 weeks" for this goal (compact CSS grid like Insights) | UX | Domain: visual per-goal activity rhythm | High | M | Low | Group ProgressEntries by day; show 5-row × 7-col grid; same heatmap CSS already in Insights | Very visual; pattern already exists; high engagement | No |
+| 2 | Web: Home — "Goals created this month" mini-stat in the stats card | UX | Domain: goal-setting momentum | Low | XS | Low | Filter AllActiveGoals + CompletedGoals by EnteredDate >= thisMonthStart; show count | Quick filter of already-loaded goals; minor info value | No |
+| 3 | Web: Journal — "Total words written" across all entries as cumulative celebration | UX/Encourage | Domain: celebrate writing volume | Medium | S | Low | Sum word count from AllEntries.Notes; show "You've written ~X words in your journal!" | Satisfying cumulative milestone; simple split/count | No |
+| 4 | Web: Insights — "Your most-neglected active goal" — show the goal with fewest notes or no notes recently | UX | Domain: portfolio attention balance | Medium | S | Low | Active goal with lowest ProgressCounts value > 0; frame positively as "ready for attention" | Useful balance nudge; data already in Insights queries | No |
+| 5 | Web: GoalDetail — "What would help most right now?" guided reflection prompt after 14+ days on goal | UX/Encourage | Domain: self-reflection / obstacle identification | High | S | Low | Rotating prompt set; appear when daysSince >= 14 and Count >= 3; different from existing "How you've grown" | Deep engagement; complement to existing reflection prompt | No |
+| 6 | Web: Home — "Today's focus": surface the one most-stale active goal as a call-to-action card | UX/Encourage | Domain: daily prioritization | High | XS | Low | Most-stale non-today-updated goal from AllActiveGoals; display above goals list as "Work on this today!" | Strong daily engagement cue; data already available | No |
+| 7 | Web: Todos — "You're on a roll!" alert: when 3+ todos completed today | UX/Encourage | Domain: celebrate daily task momentum | Medium | XS | Low | CompletedTodayCount already computed; show if >= 3; "Amazing — you've completed X todos today!" | CompletedTodayCount already exists; trivial to add | No |
+| 8 | Web: GoalDetail — "Pinned quote" for goal: user-written motivational phrase shown at top | UX | Domain: personal motivation anchor | High | L | High | Would need new schema field; complex edit flow | Skip — schema change required | No |
+| 9 | Web: Insights — "Longest active day streak ever": scan all progress dates for longest consecutive run | UX/Encourage | Domain: all-time personal record | Medium | M | Low | Scan allProgressEver; sort dates; find max consecutive run; show as personal record | Interesting all-time stat; requires full date-set scan | No |
+| 10 | Web: Home — "Comeback momentum": when a goal that was stale 30+ days gets a note today, show a bigger celebration | UX/Encourage | Domain: celebrate long-gap return | High | XS | Low | Existing ComebackGoalName detection (14+ days); extend threshold to 30+ days for a stronger message | Enhance existing comeback detection; already implemented partially | No |
+
+**Selection iter 540:** Item #6 — "Today's focus" call-to-action on Home.
+- Surface the most-stale active goal (hasn't been updated today) as a highlighted call-to-action
+- Show above the goal list: "💡 Focus on this today: [Goal Name]" with an "Add Note" button
+- `AllActiveGoals` is already sorted with stale goals first; pick the first one not updated today
+- Zero extra queries; high daily engagement impact; clear, direct action prompt
+
+---
+
+## 2026-05-18 — Invocation 6 Iter 537 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Pace to next milestone" projection at current notes/week rate | UX | Domain: forward-looking motivation | Medium | M | Low | notesPerWeekFS from focus score block; extrapolate to next threshold; "~3 more weeks to Momentum!" | Concrete goal for kids; uses existing notesPerWeekFS computation | No |
+| 2 | Web: Home — "Goals expiring next 30 days" collapsible section below the 7-day alert | UX | Domain: medium-term deadline awareness | Medium | S | Low | Extend existing dueSoonGoals logic to 30 days in a secondary expansion panel | Useful planning buffer; minor extension | No |
+| 3 | Web: Journal — "This week's entries" count vs last week caption in journal stat card on Home | UX | Domain: week-over-week journaling trend | Low | XS | Low | JournalThisWeek already in LoadStats; add JournalLastWeek field; show diff caption | Simple addition to existing stat card | No |
+| 4 | Web: GoalDetail — "What would help most right now?" — prompted reflection on obstacles | UX/Encourage | Domain: guided self-reflection / problem-solving | High | S | Low | Show a rotating reflection prompt based on note frequency and recency | Deep engagement; kids may skip generic prompts | No |
+| 5 | Web: Insights — "Your most-logged goal" vs "your most-neglected goal" side-by-side | UX | Domain: portfolio attention balance | Medium | S | Low | TopGoal already known; find active goal with fewest notes > 0; show both names | Useful balance view; TopGoal already computed | No |
+| 6 | Web: Home — "Streak at risk" warning: if goal with active streak hasn't been updated today | UX | Domain: streak protection motivation | High | XS | Low | Goals with GoalStreaks > 0 and LastProgressAt < todayStart; show "Your X-week streak is at risk!" | Very motivating; streak protection is powerful | No |
+| 7 | Web: GoalDetail — Note count milestone flash: when next note would hit 5/10/25/50, add badge | UX/Encourage | Domain: anticipate the next milestone | High | XS | Low | Already have milestoneCount + msThresholds; show "1 note away from Champion!" already exists; verify or enhance | Already have proximity detection; check if it's sufficient | No |
+| 8 | Web: Journal — "Total words written" across all journal entries | UX/Encourage | Domain: celebrate writing volume | Medium | S | Low | Sum word count from AllEntries.Notes; show "You've written ~X words in your journal!" | Simple computation; nice cumulative stat | No |
+| 9 | Web: Home — "Goals created this month" vs goals created last month | UX | Domain: goal-setting cadence | Low | XS | Low | AllActiveGoals + CompletedGoals filtered by EnteredDate; count current vs prior month | Minor metric; low impact | No |
+| 10 | Web: GoalDetail — "Note heatmap last 5 weeks" for this goal (like Insights heatmap but per-goal) | UX | Domain: visual per-goal activity | High | M | Low | Group ProgressEntries by day; show 5-week grid using same CSS as Insights heatmap | Very visual; already have Insights heatmap as a pattern to copy | No |
+
+**Selection iter 537:** Item #6 — "Streak at risk" warning on Home.
+- Goals with `GoalStreaks[guid] >= 2` that haven't been updated today (`LastProgressAt[guid] < todayStartMs`)
+- Show warning: "⚠️ Your X-week streak on 'Goal Name' is at risk — log a note to keep it alive!"
+- GoalStreaks and LastProgressAt are both already loaded; zero extra queries
+- High motivational impact — streak protection is one of the most powerful psychological drivers
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 534 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
