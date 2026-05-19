@@ -113,6 +113,18 @@
 {
     <MudAlert Severity="@freshSeverity" Class="mb-4" Dense="true">@freshMsg</MudAlert>
 }
+@if (NotesThisWeekProgress > 0 || NotesLastWeekProgress > 0)
+{
+    var wowPMsg = NotesLastWeekProgress == 0
+        ? $"📈 {NotesThisWeekProgress} progress note{(NotesThisWeekProgress == 1 ? "" : "s")} this week — great start! Keep the momentum going!"
+        : NotesThisWeekProgress > NotesLastWeekProgress
+            ? $"📈 <strong>{NotesThisWeekProgress} notes this week</strong> vs {NotesLastWeekProgress} last week — you're stepping it up! 🚀"
+            : NotesThisWeekProgress == NotesLastWeekProgress
+                ? $"📊 <strong>{NotesThisWeekProgress} progress notes this week</strong>, same as last week — rock-solid consistency!"
+                : $"📉 {NotesThisWeekProgress} notes this week vs {NotesLastWeekProgress} last week — can you match last week's pace?";
+    var wowPSeverity = NotesLastWeekProgress == 0 || NotesThisWeekProgress >= NotesLastWeekProgress ? Severity.Success : Severity.Normal;
+    <MudAlert Severity="@wowPSeverity" Icon="@Icons.Material.Filled.TrendingUp" Dense="true" Class="mb-4">@((MarkupString)wowPMsg)</MudAlert>
+}
 @if (JournalStreak >= 2)
 {
     var jStreakMsg = JournalStreak >= 14 ? $"📓 Journal streak: {JournalStreak} days — that's exceptional consistency! Your reflections are building something meaningful. 🌟"
