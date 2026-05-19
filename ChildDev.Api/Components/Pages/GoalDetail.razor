@@ -317,6 +317,18 @@
         </MudText>
     </MudPaper>
 }
+@if (ProgressEntries.Count >= 2 && Goal.CompletionDate is null && !Goal.ExpirationDate.HasValue && daysSince >= 7)
+{
+    var cfWeeks = Math.Max(daysSince / 7.0, 1.0);
+    var cfPace = ProgressEntries.Count / cfWeeks;
+    if (cfPace < 0.5)
+    {
+        var cfMsg = cfPace < 0.2
+            ? "⏳ <strong>Pace check:</strong> Less than 1 note every 5 weeks — this goal needs more attention to keep moving. Even one note this week would make a real difference!"
+            : "⏳ <strong>Pace check:</strong> About 1 note every 2-3 weeks — try to check in weekly to keep this goal alive and growing!";
+        <MudAlert Severity="Severity.Normal" Icon="@Icons.Material.Filled.Schedule" Dense="true" Class="mb-3">@((MarkupString)cfMsg)</MudAlert>
+    }
+}
 @{
     // Focus score: recency (0-40) + frequency (0-40) + streak (0-20)
     var nowMsFS = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
