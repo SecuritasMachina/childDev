@@ -204,9 +204,30 @@
         <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">
             🗓️ You started this journey on <strong>@journeyStartDt.ToString("MMMM d, yyyy")</strong> — that's <strong>@journeyDaysLabel</strong> of working toward this goal!
         </MudText>
+        @{
+            var activeMonths = ProgressEntries
+                .Select(p => DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime)
+                .GroupBy(d => new { d.Year, d.Month })
+                .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
+                .Select(g => (Label: new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM yy"), Count: g.Count()))
+                .ToList();
+        }
+        @if (activeMonths.Count >= 2)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1 mb-1">Active months:</MudText>
+            <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1">
+                @foreach (var (label, count) in activeMonths)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined"
+                             Style="font-size:0.7rem;height:22px;">
+                        @label <span style="opacity:.65;margin-left:3px;">@count</span>
+                    </MudChip>
+                }
+            </MudStack>
+        }
         @if (firstSnip is not null && latestSnip is not null)
         {
-            <MudText Typo="Typo.caption" Color="Color.Secondary">
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
                 <strong>Then:</strong> "@firstSnip"
             </MudText>
             <MudText Typo="Typo.caption" Color="Color.Primary" Class="mt-1">
