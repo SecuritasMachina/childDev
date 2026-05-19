@@ -190,9 +190,16 @@
 @{
     string? ageMilestoneEmoji = null;
     string? ageMilestoneName = null;
+    string? upcomingMilestoneName = null;
+    int? upcomingMilestoneDaysLeft = null;
     foreach (var (ageT, ageE, ageN) in new[] { (365, "🌟", "1 Year"), (180, "🏆", "6 Months"), (90, "⭐", "3 Months"), (60, "🚀", "2 Months"), (30, "💪", "1 Month") })
     {
         if (daysSince >= ageT && daysSince < ageT + 7) { ageMilestoneEmoji = ageE; ageMilestoneName = ageN; break; }
+        if (daysSince < ageT && ageT - daysSince <= 7 && ageT - daysSince >= 1 && upcomingMilestoneName is null)
+        {
+            upcomingMilestoneName = ageN;
+            upcomingMilestoneDaysLeft = ageT - daysSince;
+        }
     }
 }
 @if (daysSince >= 7 && daysSince <= 13 && Goal.CompletionDate is null && ProgressEntries.Count >= 2)
@@ -232,6 +239,14 @@
 {
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Celebration" Dense="true" Class="mb-3">
         @ageMilestoneEmoji <strong>@ageMilestoneName on this goal!</strong> @daysSince days of working toward this — that's real long-term commitment! 🎉
+    </MudAlert>
+}
+@if (upcomingMilestoneName is not null && Goal.CompletionDate is null)
+{
+    var ulDays = upcomingMilestoneDaysLeft!.Value;
+    var ulDaysLabel = ulDays == 1 ? "tomorrow!" : $"in {ulDays} days!";
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Upcoming" Dense="true" Class="mb-3">
+        🎯 <strong>@upcomingMilestoneName milestone coming up @ulDaysLabel</strong> Keep going — you're so close to this achievement!
     </MudAlert>
 }
 @{
