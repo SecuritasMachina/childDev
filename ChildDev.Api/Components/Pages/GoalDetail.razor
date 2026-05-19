@@ -194,6 +194,12 @@
         🗓️ <strong>One month in!</strong> You've kept this goal alive for @daysSince days and have @ProgressEntries.Count notes to show for it. The first month is where most goals get abandoned — you didn't. That's huge!
     </MudAlert>
 }
+@if (daysSince >= 98 && daysSince <= 107 && Goal.CompletionDate is null && ProgressEntries.Count >= 8)
+{
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mb-3">
+        💯 <strong>Welcome to the 100-day club!</strong> Only a tiny fraction of goals make it this far. You've logged @ProgressEntries.Count notes across @daysSince days — that's extraordinary dedication. Wear this badge with pride!
+    </MudAlert>
+}
 @if (ageMilestoneEmoji is not null && Goal.CompletionDate is null)
 {
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Celebration" Dense="true" Class="mb-3">
