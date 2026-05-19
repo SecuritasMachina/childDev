@@ -725,6 +725,24 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     </MudAlert>
 }
 @{
+    var lagNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    Goal? lagGoal = AllActiveGoals.Count >= 2 && string.IsNullOrWhiteSpace(FilterText)
+        ? AllActiveGoals.MinBy(g => g.EnteredDate)
+        : null;
+    var lagDays = lagGoal is not null ? (int)((lagNowMs - lagGoal.EnteredDate) / 86_400_000L) : 0;
+    if (lagDays < 30) lagGoal = null;
+}
+@if (lagGoal is not null)
+{
+    var lagName = lagGoal.GoalText?.Length > 55 ? lagGoal.GoalText[..55] + "…" : lagGoal.GoalText;
+    var lagLabel = lagDays >= 365 ? $"{lagDays / 365} year{(lagDays / 365 == 1 ? "" : "s")}" : lagDays >= 60 ? $"{lagDays / 30} months" : $"{lagDays} days";
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.AccessTime" Dense="true" Class="mb-3">
+        🕰️ <strong>Your most committed goal</strong> has been going for <strong>@lagLabel</strong>: "@lagName" — that's serious long-game thinking!
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Info"
+                   Href="@($"/goals/{lagGoal.Guid}")" Class="ml-1">View</MudButton>
+    </MudAlert>
+}
+@{
     var gotdTips = new[] {
         "What's one small action you can take on this goal today?",
         "Picture where you'll be when this goal is done — how does it feel?",
