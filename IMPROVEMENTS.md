@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-19 — Invocation 7 Iter 573 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Insights — "Goal completion timeline": last 3 completed goals with name, completion date, and days taken | UX/Encourage | Domain: celebrate achievement history | High | M | Low | CompletedGoals sorted by CompletionDate desc; take 3; duration = (CompletionDate - EnteredDate) / 86400000 | Strong celebration; needs CompletedGoals with both dates loaded | No |
+| 2 | Web: Home — "Daily progress streak": consecutive calendar days ending today where any goal got a note | UX/Encourage | Domain: daily habit building | High | S | Low | Sort allTimestamps; count backward from today | Global daily habit metric; distinct from per-goal weekly streak | No |
+| 3 | Web: GoalDetail — "Entry count this month" badge next to total in the progress stat | UX | Domain: monthly engagement context | Low | XS | Low | ProgressEntries filtered by month start; count; show "X this month" | Minor stat addition; quick filter | No |
+| 4 | Web: Insights — "Journal word count total": total words written across all journal entries | UX/Encourage | Domain: cumulative writing effort celebration | Medium | S | Low | Requires adding Notes text to the allJournalEver query (currently just timestamps) | Needs query change; resonant for writers | No |
+| 5 | Web: GoalDetail — "Note quality growth": avg word count of recent 5 vs first 5 notes | UX/Encourage | Domain: effort quality self-awareness | Medium | S | Low | NextStepItems word count computation; compare two groups | At least 10 notes required; interesting growth feedback | No |
+| 6 | Web: Home — "Upcoming goal deadline" countdown in goal cards when deadline is within 14 days | UX | Domain: deadline urgency awareness | High | XS | Low | ExpirationDate already shown; add urgency styling when <= 14 days | ExpirationDate already displayed; adds urgency framing | No |
+| 7 | Web: Journal — "Activity-only entry count" caption: how many entries have only Activity (no Notes) | UX | Domain: journaling variety awareness | Low | XS | Low | AllEntries.Count(j => !string.IsNullOrWhiteSpace(j.Activity) && string.IsNullOrWhiteSpace(j.Notes)) | Minor insight; low priority | No |
+| 8 | Web: GoalDetail — "Note length trend": show "Your notes are getting longer!" when avg recent length > avg early length | UX/Encourage | Domain: effort depth growth | Medium | S | Low | Same as #5 above — this IS the same feature | Duplicate of #5; pick only one | No |
+| 9 | Web: Home — "Quick add note" shortcut in the goal card header row (compact icon button) | UX | Domain: reduce friction to add progress | High | M | Med | Opens add progress dialog directly from Home; needs dialog state; would improve daily note frequency | Higher complexity; good UX payoff | No |
+| 10 | Web: Insights — "Active days this week vs last week": active calendar days with ANY action | UX/Encourage | Domain: engagement intensity comparison | Medium | XS | Low | allProgressEver + allJournalEver days; count distinct days this week vs last 7; compare | Quick engagement breadth metric; allJournalEver and allProgressEver already loaded | No |
+
+**Selection iter 573:** Item #10 — "Active days this week vs last week" on Insights.
+- Count distinct calendar days with ANY activity (progress or journal) in last 7 days vs prior 7 days
+- `allProgressEver` + `allJournalEver` both already loaded in `LoadDomainStats`
+- Show comparison message: "You were active X days this week vs Y last week — [tiered message]"
+- Zero extra queries; minimal computation
+
+---
+
 ## 2026-05-19 — Invocation 7 Iter 570 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
