@@ -82,6 +82,17 @@
                   :                          $"📓 You've written <strong>{JournalThisMonth} entr{(JournalThisMonth == 1 ? "y" : "ies")}</strong> in {JournalThisMonthName} — every entry is part of your growth story!";
     <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.CalendarMonth">@((MarkupString)jMonthMsg)</MudAlert>
 }
+@if (MonthTopMood is not null)
+{
+    var mtmEmojiMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
+        {"happy","😊"}, {"sad","😢"}, {"calm","😌"}, {"excited","🤩"}, {"tired","😴"},
+        {"angry","😠"}, {"anxious","😟"}, {"grateful","🙏"}, {"proud","💪"}, {"focused","🎯"}
+    };
+    var mtmEmoji = mtmEmojiMap.GetValueOrDefault(MonthTopMood, "💭");
+    <MudAlert Severity="Severity.Success" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.Mood">
+        This month your most common feeling is <strong>@MonthTopMood @mtmEmoji</strong> — that says a lot about how you're growing!
+    </MudAlert>
+}
 
 @{
     var totw7Ms = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - 7L * 86_400_000L;
@@ -443,6 +454,7 @@ else
     private int TotalWordsWritten;
     private int JournalThisMonth;
     private string JournalThisMonthName = "";
+    private string? MonthTopMood;
 
     protected override async Task OnInitializedAsync()
     {
@@ -496,6 +508,13 @@ else
         var jMonthStartMs = new DateTimeOffset(new DateTime(jLocalNow.Year, jLocalNow.Month, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
         JournalThisMonth = AllEntries.Count(j => j.EnteredDate >= jMonthStartMs);
         JournalThisMonthName = jLocalNow.ToString("MMMM");
+        var mtmGroup = AllEntries
+            .Where(j => j.EnteredDate >= jMonthStartMs && !string.IsNullOrWhiteSpace(j.Mood))
+            .GroupBy(j => j.Mood!.Trim(), StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+        if (mtmGroup is not null && mtmGroup.Count() >= 3)
+            MonthTopMood = mtmGroup.Key;
 
         var bestMonthGroup = AllEntries
             .GroupBy(j => DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime.ToString("yyyy-MM"))
