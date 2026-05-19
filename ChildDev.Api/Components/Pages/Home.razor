@@ -456,6 +456,21 @@
     </MudPaper>
 }
 
+@{
+    var focusTodayMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+    var focusGoal = !allGoalsActiveToday && string.IsNullOrWhiteSpace(FilterText) && AllActiveGoals.Count >= 1
+        ? AllActiveGoals.FirstOrDefault(g => !LastProgressAt.TryGetValue(g.Guid, out var fgLat) || fgLat < focusTodayMs)
+        : null;
+}
+@if (focusGoal is not null)
+{
+    var focusName = focusGoal.GoalText?.Length > 60 ? focusGoal.GoalText[..60] + "…" : focusGoal.GoalText;
+    <MudAlert Severity="Severity.Normal" Icon="@Icons.Material.Filled.Lightbulb" Dense="true" Class="mb-3">
+        💡 <strong>Focus on this today:</strong> "@focusName"
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
+                   Href="@($"/goals/{focusGoal.Guid}")" Class="ml-1">Add Note</MudButton>
+    </MudAlert>
+}
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
     <MudText Typo="Typo.h5">
         <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="mr-2" />
