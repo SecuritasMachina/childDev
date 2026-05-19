@@ -296,6 +296,25 @@
                    Href="@($"/goals/{GoalOfMonthGuid}")" Class="ml-1">View</MudButton>
     </MudAlert>
 }
+@{
+    var burstTodayMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+    var allGoalsActiveToday = AllActiveGoals.Count >= 2 &&
+        AllActiveGoals.All(g => LastProgressAt.TryGetValue(g.Guid, out var lat) && lat >= burstTodayMs);
+}
+@if (allGoalsActiveToday && string.IsNullOrWhiteSpace(FilterText))
+{
+    <MudPaper Elevation="3" Class="pa-4 mb-4" Style="border-radius:16px;background:linear-gradient(135deg,#FF8F00,#F57C00);color:#fff;">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudText Typo="Typo.h5" Style="line-height:1;">🎊</MudText>
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.subtitle1" Style="font-weight:700;color:#fff;">ALL GOALS ACTIVE TODAY!</MudText>
+                <MudText Typo="Typo.body2" Style="color:rgba(255,255,255,.9);">
+                    You logged progress on every single goal today — that is LEGENDARY dedication! 🌟
+                </MudText>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+}
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
     <MudText Typo="Typo.h5">

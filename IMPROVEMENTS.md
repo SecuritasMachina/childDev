@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 483 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Home — "Sort by most active" chip: re-sort goal cards by most notes in the last 7 days | UI | Domain: surface engaged goals | Medium | XS | Low | Already have note counts; compute 7-day subset from allTimestamps | Another sort option adds cognitive load | No |
+| 2 | Web: GoalDetail — "Pace insight": "At this pace you'll reach X notes by [date]" based on recent cadence | UX/Encourage | Domain: trajectory encouragement | High | S | Low | Linear extrapolation from last 30 days note count | Approximate prediction may mislead | No |
+| 3 | Web: Home — highlight goals with a note added THIS week with a subtle "active this week" ribbon | UI | Domain: reward recent engagement | High | XS | Low | Computed from LastProgressAt; show green "Active this week!" label | Minor visual addition | No |
+| 4 | Web: GoalDetail — "Share your progress" button that generates an encouragement summary text to copy | UX/Encourage | Domain: social sharing of wins | Medium | S | Low | Build text: goal + note count + level; show in dialog to copy | No actual sharing mechanism — just clipboard | No |
+| 5 | Web: Journal — show journal entry count as a stat card on the Journal list page | UI | Domain: journaling visibility | Low | XS | Low | Simple count display | Low-impact addition | No |
+| 6 | Web: Home — "Quick Win" from yesterday: show one overdue todo from yesterday as an urgent callout | Func | Domain: manage catch-ups | High | XS | Low | Filter AllPendingTodos for DueDate == yesterdayMs range | Requires loading todos, already done in Home | No |
+| 7 | Web: GoalDetail — "Best week" badge: which 7-day window had the most notes for this goal | UX/Encourage | Domain: personal peak insight | Medium | S | Low | Compute rolling 7-day windows from ProgressEntries timestamps | Medium computation; interesting insight | No |
+| 8 | Web: Home — "Encouragement burst": when all active goals have notes from today, show special all-goals banner | UX/Encourage | Domain: maximum daily win celebration | High | XS | Low | Check if all active goals have UpdatedOn today; show once-a-day congrats | Rare condition; high delight when triggered | No |
+| 9 | Web: GoalDetail — note count trend sparkline: show simple 4-week mini bar chart (4 bars for last 4 weeks) | UI | Domain: per-goal weekly trend | High | S | Low | Compute 4 weekly buckets from ProgressEntries; render as progress bars | Requires computing weekly windows | No |
+| 10 | Web: Insights — "Your progress summary": a 3-sentence auto-generated narrative based on stats | UX/Encourage | Domain: narrative self-awareness | High | S | Low | String interpolation with stats: streak, active days, top weekday, notes | Deterministic narrative, no ML required | No |
+
+**Selection iter 483:** Item #8 — Encouragement burst when all active goals have notes from today.
+- When EVERY active goal has had a progress note added today, show a celebration banner at the top of Home
+- Uses `LastProgressAt` dict (already loaded) and `TodayStartMs` (already in scope)
+- Zero extra DB queries; triggers only when kid is fully on top of all their goals
+- High delight reward for maximum daily effort — the rarest and most impressive achievement
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 478 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
