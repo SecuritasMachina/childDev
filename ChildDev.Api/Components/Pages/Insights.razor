@@ -328,6 +328,36 @@
     </MudAlert>
 }
 
+@if (NotesThisWeekProgress > 0 || NotesLastWeekProgress > 0)
+{
+    var wowDiff = NotesThisWeekProgress - NotesLastWeekProgress;
+    string wowMsg;
+    Severity wowSev;
+    if (NotesLastWeekProgress == 0)
+    {
+        wowMsg = $"📈 {NotesThisWeekProgress} progress note{(NotesThisWeekProgress == 1 ? "" : "s")} this week — great start! Keep the momentum going!";
+        wowSev = Severity.Success;
+    }
+    else if (wowDiff > 0)
+    {
+        wowMsg = $"🚀 {NotesThisWeekProgress} progress notes this week vs {NotesLastWeekProgress} last week (+{wowDiff}) — you're accelerating! 🔥";
+        wowSev = Severity.Success;
+    }
+    else if (wowDiff == 0)
+    {
+        wowMsg = $"📝 {NotesThisWeekProgress} progress notes this week — matching last week's pace. Consistent!";
+        wowSev = Severity.Info;
+    }
+    else
+    {
+        wowMsg = $"💪 {NotesThisWeekProgress} progress notes this week vs {NotesLastWeekProgress} last week — a little behind, but the week isn't over!";
+        wowSev = Severity.Warning;
+    }
+    <MudAlert Severity="@wowSev" Icon="@Icons.Material.Filled.Speed" Dense="true" Class="mb-4">
+        @wowMsg
+    </MudAlert>
+}
+
 @* Month-over-month trends *@
 <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2" Style="text-transform:uppercase;letter-spacing:1px;">
     This Month vs Last Month
@@ -566,6 +596,8 @@
     private int LastMonthJournal;
     private int ThisMonthProgress;
     private int LastMonthProgress;
+    private int NotesThisWeekProgress;
+    private int NotesLastWeekProgress;
 
     protected override async Task OnInitializedAsync()
     {
@@ -739,6 +771,13 @@
         var allTodosEver = await Db.Todos.Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt != null).Select(t => t.CompletedAt!.Value).ToListAsync();
         var allJournalEver = await Db.Journals.Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null).Select(j => j.EnteredDate).ToListAsync();
         var allProgressEver = await Db.GoalProgresses.Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null).Select(p => p.UpdatedOn).ToListAsync();
+        // Week-over-week progress note velocity
+        var wowNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var wow7Ms = wowNowMs - 7L * 86_400_000L;
+        var wow14Ms = wowNowMs - 14L * 86_400_000L;
+        NotesThisWeekProgress = allProgressEver.Count(ms => ms >= wow7Ms);
+        NotesLastWeekProgress = allProgressEver.Count(ms => ms >= wow14Ms && ms < wow7Ms);
+
         // Journal streak: consecutive days ending today with at least one journal entry
         var journalDateSet = allJournalEver
             .Select(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
