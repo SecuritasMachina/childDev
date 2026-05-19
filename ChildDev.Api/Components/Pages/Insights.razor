@@ -138,6 +138,12 @@
               :                                   $"⭐ Your longest daily streak: <strong>{LongestProgressDayStreak} days</strong> in a row — every streak starts with one day!";
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.LocalFireDepartment" Dense="true" Class="mb-4">@((MarkupString)lpsMsg)</MudAlert>
 }
+@if (BestProgressDayOfWeek is not null)
+{
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.CalendarToday" Dense="true" Class="mb-4">
+        📅 You log the most progress notes on <strong>@BestProgressDayOfWeek</strong>s (@BestProgressDayOfWeekCount total) — that's your power day!
+    </MudAlert>
+}
 @if (CompletionVelocityMsg is not null)
 {
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Speed" Dense="true" Class="mb-4">@CompletionVelocityMsg</MudAlert>
@@ -634,6 +640,8 @@
     private int NotesThisWeekProgress;
     private int NotesLastWeekProgress;
     private string? CompletionVelocityMsg;
+    private string? BestProgressDayOfWeek;
+    private int BestProgressDayOfWeekCount;
 
     protected override async Task OnInitializedAsync()
     {
@@ -865,6 +873,17 @@
             .Select(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
             .ToHashSet()
             .Count;
+
+        // Best day of week for progress notes
+        if (allProgressEver.Count >= 5)
+        {
+            var bestDow = allProgressEver
+                .GroupBy(ms => DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime.DayOfWeek)
+                .OrderByDescending(g => g.Count())
+                .First();
+            BestProgressDayOfWeek = bestDow.Key.ToString();
+            BestProgressDayOfWeekCount = bestDow.Count();
+        }
 
         // Journal streak: consecutive days ending today with at least one journal entry
         var journalDateSet = allJournalEver
