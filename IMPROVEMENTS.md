@@ -2,6 +2,30 @@
 
 ---
 
+## 2026-05-19 — Invocation 6 Iter 549 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Days since last note" countdown chip in header (compact, always visible) | UX | Domain: note recency awareness | Medium | XS | Low | daysSinceNote already computed; show in goal header next to progress count | Already have nudge alert; redundant with existing chip | No |
+| 2 | Web: Home — "Most productive recent week" callout in goals stat card (week with most notes) | UX/Encourage | Domain: celebrate peak performance | Medium | S | Low | allTimestamps already loaded; find week with most notes in last 60 days; show "Your best recent week: X notes" | Complement to streak + existing weekly record banner | No |
+| 3 | Web: GoalDetail — "Random encouraging quote" from a static list shown at top of page | UX/Encourage | Domain: motivational content | Medium | XS | Low | Static list of 20 kid-friendly growth mindset quotes; pick by hash of goal GUID | Warm and uplifting; doesn't require data; easy to add | No |
+| 4 | Web: Insights — "Consistency score" for journaling: days with ≥1 entry / last 30 days | UX | Domain: journaling habit strength | Medium | XS | Low | allJournalEver already loaded; count distinct days in last 30; show pct | Parallels progress active rate; simple computation | No |
+| 5 | Web: GoalDetail — "Next steps history" — mini-timeline of just the NextStepItems across all notes | UX | Domain: progress trail visibility | High | S | Low | ProgressEntries sorted descending; map NextStepItems; show as compact list | Shows evolution of next steps; deeper goal narrative | No |
+| 6 | Web: Home — "Goal portfolio balance" — show ratio of hot/warm/cold goals as a text summary | UX | Domain: portfolio health at a glance | Medium | XS | Low | Use gPCount/gDays from card loop; hot (<=1d), warm (2-13d), cold (14+d); show "X hot, Y warm, Z cold" | Quick portfolio diagnostic; zero extra queries | No |
+| 7 | Web: Journal — "Activity distribution by month" — top 3 months by entry count caption | UX | Domain: seasonal journaling patterns | Low | S | Low | Group AllEntries by month; find top 3; show as text | Interesting seasonal insight; low priority | No |
+| 8 | Web: GoalDetail — "Momentum meter": visual bar showing current-week notes vs personal best week | UX/Encourage | Domain: weekly comparison motivation | High | S | Low | Count notes in last 7 days; find max 7-day window across ProgressEntries; show filled bar | Very visual; powerful week-on-week comparison | No |
+| 9 | Web: Home — "Upcoming goal anniversaries" — goals approaching a round-number day milestone (30/60/90/180/365) | UX/Encourage | Domain: celebrate commitment milestones | High | XS | Low | daysSince = (nowMs - g.EnteredDate) / 86400000; check if within 7 days of 30/60/90/180/365 threshold | Emotionally resonant; zero extra queries | No |
+| 10 | Web: GoalDetail — Show whether this goal's pace is "above average" compared to other active goals | UX | Domain: peer-to-peer (self) comparison | Medium | M | Low | Compute notesPerWeek for all active goals; compare this goal's rate to median; show "Above average pace!" | Requires extra query for all goals' note counts; interesting | No |
+
+**Selection iter 549:** Item #9 — "Upcoming goal anniversaries" on Home.
+- For each active goal, compute `daysSince = (nowMs - g.EnteredDate) / 86_400_000L`
+- Check if `daysSince` is within 7 days of a milestone: 30, 60, 90, 180, 365
+- If milestone within 3 days: "🎂 Milestone in 2 days: 90 days on 'Goal Name'!"
+- If milestone just passed (≤7 days): "🎉 You just hit 30 days on 'Goal Name'!"
+- Already have `AllActiveGoals` + `EnteredDate`; zero extra queries
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 540 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
