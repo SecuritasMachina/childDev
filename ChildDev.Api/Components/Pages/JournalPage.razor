@@ -48,6 +48,13 @@
               :                       $"⭐ {JournalStreak}-day journaling streak — you're on a roll!";
     <MudAlert Severity="@(JournalStreak >= 7 ? Severity.Success : Severity.Info)" Dense="true" Class="mb-3">@jsMsg</MudAlert>
 }
+@if (LongestJournalStreak > JournalStreak && LongestJournalStreak >= 3)
+{
+    var ljsMsg = JournalStreak >= LongestJournalStreak
+        ? $"🏆 <strong>You're matching your all-time best streak of {LongestJournalStreak} days!</strong> Don't break it now!"
+        : $"📜 Your longest journaling streak ever: <strong>{LongestJournalStreak} days</strong> — can you beat it?";
+    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.History">@((MarkupString)ljsMsg)</MudAlert>
+}
 
 @if (BestJournalMonth is not null)
 {
@@ -414,6 +421,7 @@ else
     private DateTime? EditEnteredDate;
     private string? _confirmDeleteGuid;
     private int JournalStreak;
+    private int LongestJournalStreak;
     private string? BestJournalMonth;
     private int BestJournalMonthCount;
     private int JournalThisWeek;
@@ -446,6 +454,20 @@ else
             JournalStreak++;
             jsDay = jsDay.AddDays(-1);
         }
+
+        // Longest journaling streak ever
+        var sortedJDates = journalDates.OrderBy(d => d).ToList();
+        LongestJournalStreak = 0;
+        var ljCurrent = 0;
+        for (int lji = 0; lji < sortedJDates.Count; lji++)
+        {
+            if (lji == 0 || sortedJDates[lji] == sortedJDates[lji - 1].AddDays(1))
+                ljCurrent++;
+            else
+                ljCurrent = 1;
+            if (ljCurrent > LongestJournalStreak) LongestJournalStreak = ljCurrent;
+        }
+
         var wowNowJMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var wow7JMs = wowNowJMs - 7L * 86_400_000L;
         var wow14JMs = wowNowJMs - 14L * 86_400_000L;
