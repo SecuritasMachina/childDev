@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-19 — Invocation 8 Iter 594 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Insights — "Most productive journal day of week": group allJournalEver by DayOfWeek; find mode when >= 5 entries; show "You journal most on [Day]s!" | UX | Domain: journaling habit scheduling | Low | XS | Low | allJournalEver already loaded (line 920); group by DayOfWeek; find mode; add BestJournalDayOfWeek field | Complements BestProgressDayOfWeek; low effort | No |
+| 2 | Web: GoalDetail — "Note quality growth": if avg word count of last 5 > first 5 (>= 10 notes), show "Your notes are getting deeper!" | UX/Encourage | Domain: note quality evolution | Medium | S | Low | NextStepItems.Split(' ').Length; two groups; needs >= 10 notes | Meaningful quality signal for engaged users | No |
+| 3 | Web: Home — "Goal birthday": if any active goal is exactly 1 year old today (365 days ± 3), celebrate | UX/Encourage | Domain: yearly goal anniversary | High | XS | Low | AllActiveGoals EnteredDate within 365 ± 3 days; show "🎂 [Goal] is 1 year old today!" | Rare and meaningful 1-year milestone | No |
+| 4 | Web: Journal — "Longest gap between entries": find max days between consecutive entry dates; show "Your longest dry spell was X days — keep gaps shorter!" when >= 14 days | UX/Motivate | Domain: gap awareness | Low | XS | Low | AllEntries dates sorted; max gap between pairs; show when >= 14 | Gentle awareness from already-loaded data | No |
+| 5 | Web: GoalDetail — "Half-marathon milestone": at exactly 50 notes, show "You've reached the halfway point to 100!" | UX/Encourage | Domain: halfway milestone | High | XS | Low | ProgressEntries.Count in [48,52]; show "50 notes — halfway to 100! Are you going for the century?" | Strong motivating halfway point | No |
+| 6 | Web: Home — "Streak saved!" detection: if any goal had 0 notes yesterday but got a note today after 2+ day active streak, celebrate "Streak saved!" | UX/Encourage | Domain: streak save celebration | High | M | Med | Complex multi-day tracking needed; too risky | Too complex | No |
+| 7 | Web: GoalDetail — "Halfway to next age milestone": if daysSince is 50% of the next age milestone (30/60/90/180), show "Halfway to [next milestone]!" | UX/Encourage | Domain: progress toward age milestone | Medium | XS | Low | ageMilestones array; find next milestone > daysSince; check if daysSince == milestone/2; show nudge | Motivating halfway marker for age | No |
+| 8 | Web: Insights — "Goals completed vs started this year": show ratio "You completed X of Y goals started this year!" | UX/Encourage | Domain: annual completion rate | Medium | S | Low | Need EnteredDate and CompletionDate year filters; query from allGoals | Annual completion rate; requires additional computation | No |
+| 9 | Web: Home — "First note encouragement": if any active goal has 0 notes logged, show specific encouragement "Your goal [Name] is waiting for its first note!" | UX/Encourage | Domain: zero-note goal activation | High | XS | Low | AllActiveGoals where ProgressCounts.GetValueOrDefault(guid) == 0; show for first one | Specific push to start journaling on un-started goals | No |
+| 10 | Web: GoalDetail — "Notes this week vs goal average": show "X notes this week vs your Y/week average — [above/below] pace!" | UX/Encourage | Domain: pace relative to personal average | High | XS | Low | mmThisWeek already computed; cfWeeks/Count for avg; compare; show as contextual nudge | Personalized pace comparison; quick computation | No |
+
+**Selection iter 594:** Item #9 — "First note encouragement" on Home for goals with 0 notes.
+- Find first active goal where `ProgressCounts.GetValueOrDefault(guid) == 0`
+- Show "🌱 Your goal '[Name]' is waiting for its first note — even one note starts the momentum!" 
+- Show View/Add Note button linking to the goal
+- High impact: goals with no notes are often abandoned; this nudge can activate them
+
+---
+
 ## 2026-05-19 — Invocation 8 Iter 591 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |

@@ -516,6 +516,22 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     </MudAlert>
 }
 @{
+    Goal? zeroNoteGoal = string.IsNullOrWhiteSpace(FilterText)
+        ? AllActiveGoals.FirstOrDefault(g => ProgressCounts.GetValueOrDefault(g.Guid) == 0)
+        : null;
+}
+@if (zeroNoteGoal is not null)
+{
+    var znDaysAgo = (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - zeroNoteGoal.EnteredDate) / 86_400_000L);
+    var znWhen = znDaysAgo == 0 ? "added today" : znDaysAgo == 1 ? "added yesterday" : $"added {znDaysAgo} days ago";
+    var znName = zeroNoteGoal.GoalText?.Length > 55 ? zeroNoteGoal.GoalText[..55] + "…" : zeroNoteGoal.GoalText;
+    <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.SelfImprovement" Dense="true" Class="mb-3">
+        🌱 <strong>"@znName"</strong> (@znWhen) has no notes yet — even one note starts the momentum. You've got this!
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning"
+                   Href="@($"/goals/{zeroNoteGoal.Guid}")" Class="ml-1">Add first note</MudButton>
+    </MudAlert>
+}
+@{
     var ngNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
     var newGoal3dMs = ngNowMs - 3L * 86_400_000L;
     Goal? ngNewest = string.IsNullOrWhiteSpace(FilterText)
