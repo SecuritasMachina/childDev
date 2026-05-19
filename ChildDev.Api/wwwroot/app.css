@@ -98,3 +98,6 @@
 .confetti-burst span:nth-child(10) { left: 13%; background:#8BC34A; animation-delay:.22s; border-radius:50%; }
 .confetti-burst span:nth-child(11) { left: 43%; background:#FF4081; animation-delay:.07s; }
 .confetti-burst span:nth-child(12) { left: 73%; background:#FFC107; animation-delay:.16s; border-radius:50%; }
+
+/* Level progress bar fill animation (Blazor triggers value change after first render) */
+.level-anim-bar .mud-progress-linear-bar { transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1) !important; }
