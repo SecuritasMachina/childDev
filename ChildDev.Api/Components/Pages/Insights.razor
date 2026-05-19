@@ -451,6 +451,18 @@
         📊 <strong>Most productive quarter:</strong> @MostProductiveQuarter — @MostProductiveQuarterCount progress notes! That was your peak season of goal work!
     </MudAlert>
 }
+@if (!string.IsNullOrWhiteSpace(MostActiveGoalName))
+{
+    var magShort = MostActiveGoalName.Length > 55 ? MostActiveGoalName[..55] + "…" : MostActiveGoalName;
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Star" Dense="true" Class="mb-6">
+        ⭐ <strong>Your most dedicated goal:</strong> "@magShort" — @MostActiveGoalNoteCount notes! That goal has seen your best work!
+        @if (!string.IsNullOrWhiteSpace(MostActiveGoalGuid))
+        {
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Success"
+                       Href="@($"/goals/{MostActiveGoalGuid}")" Class="ml-1">View</MudButton>
+        }
+    </MudAlert>
+}
 
 @if (ThisMonthProgress > 0)
 {
@@ -735,6 +747,9 @@
     private string? NeglectedGoalGuid;
     private string? MostActiveDayName;
     private int MostActiveDayCount;
+    private string? MostActiveGoalName;
+    private string? MostActiveGoalGuid;
+    private int MostActiveGoalNoteCount;
     private Dictionary<DateOnly, int> ProgressHeatmap = new();
     private string? TopProgressWeekday;
     private int TopProgressWeekdayCount;
@@ -812,6 +827,27 @@
 
         GoalProgressTotal = await Db.GoalProgresses
             .CountAsync(p => p.AccountFk == AccountGuid && p.DeletedAt == null);
+
+        // Most active goal: goal with most progress notes
+        var magTop = await Db.GoalProgresses
+            .Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null)
+            .GroupBy(p => p.GoalFk)
+            .Select(g => new { GoalFk = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count)
+            .FirstOrDefaultAsync();
+        if (magTop is not null && magTop.Count >= 10)
+        {
+            var magGoal = await Db.Goals
+                .Where(g => g.Guid == magTop.GoalFk && g.AccountFk == AccountGuid && g.DeletedAt == null)
+                .Select(g => new { g.GoalText, g.Guid })
+                .FirstOrDefaultAsync();
+            if (magGoal is not null)
+            {
+                MostActiveGoalName = magGoal.GoalText;
+                MostActiveGoalGuid = magGoal.Guid;
+                MostActiveGoalNoteCount = magTop.Count;
+            }
+        }
 
         // Longest active goal (oldest EnteredDate among non-completed active goals)
         var longestGoal = await Db.Goals
