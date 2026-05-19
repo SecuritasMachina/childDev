@@ -49,6 +49,13 @@
     <MudAlert Severity="@(JournalStreak >= 7 ? Severity.Success : Severity.Info)" Dense="true" Class="mb-3">@jsMsg</MudAlert>
 }
 
+@if (BestJournalMonth is not null)
+{
+    <MudAlert Severity="Severity.Success" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.Star">
+        🏅 Your best journaling month was <strong>@BestJournalMonth</strong> — @BestJournalMonthCount entries! Can you beat it?
+    </MudAlert>
+}
+
 @* Tag cloud — appears only when entries have tags *@
 @if (AllTags.Count > 0)
 {
@@ -307,6 +314,8 @@ else
     private DateTime? EditEnteredDate;
     private string? _confirmDeleteGuid;
     private int JournalStreak;
+    private string? BestJournalMonth;
+    private int BestJournalMonthCount;
 
     protected override async Task OnInitializedAsync()
     {
@@ -331,6 +340,16 @@ else
         {
             JournalStreak++;
             jsDay = jsDay.AddDays(-1);
+        }
+        var bestMonthGroup = AllEntries
+            .GroupBy(j => DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime.ToString("yyyy-MM"))
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+        if (bestMonthGroup is not null && bestMonthGroup.Count() >= 3)
+        {
+            if (DateTime.TryParseExact(bestMonthGroup.Key + "-01", "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out var bestMonthDt))
+                BestJournalMonth = bestMonthDt.ToString("MMMM yyyy");
+            BestJournalMonthCount = bestMonthGroup.Count();
         }
         BuildTagCloud();
         BuildMoodCloud();
