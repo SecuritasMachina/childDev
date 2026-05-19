@@ -285,12 +285,34 @@
         _  => ("", "")
     };
     var notesNeeded = nextMilestone - teaserCount;
+    // Pace prediction: how many days to next milestone at current cadence
+    string? paceMsg = null;
+    if (nextMilestone > 0 && notesNeeded > 0 && ProgressEntries.Count >= 2)
+    {
+        var nowPaceMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var oldestMs = ProgressEntries.Last().UpdatedOn;
+        var daysElapsedPace = Math.Max((nowPaceMs - oldestMs) / 86_400_000.0, 1.0);
+        var notesPerDay = ProgressEntries.Count / daysElapsedPace;
+        if (notesPerDay > 0)
+        {
+            var daysToNext = (int)Math.Ceiling(notesNeeded / notesPerDay);
+            var targetDate = DateTime.Today.AddDays(daysToNext);
+            if (daysToNext <= 1)
+                paceMsg = $"📅 At your current pace, you'll reach {msEmoji} {msLabel} tomorrow!";
+            else if (daysToNext <= 30)
+                paceMsg = $"📅 At your current pace, you'll reach {msEmoji} {msLabel} in about {daysToNext} days ({targetDate:MMM d})!";
+        }
+    }
 }
 @if (nextMilestone > 0 && notesNeeded > 0 && notesNeeded <= 3)
 {
-    <MudText Typo="Typo.caption" Color="Color.Warning" Class="mb-2">
+    <MudText Typo="Typo.caption" Color="Color.Warning" Class="mb-1">
         @msEmoji Only @notesNeeded more note@(notesNeeded == 1 ? "" : "s") to unlock @msLabel 🎉
     </MudText>
+}
+@if (paceMsg is not null && notesNeeded > 3)
+{
+    <MudText Typo="Typo.caption" Color="Color.Info" Class="mb-2">@paceMsg</MudText>
 }
 
 @if (ProgressEntries.Count >= 2)
