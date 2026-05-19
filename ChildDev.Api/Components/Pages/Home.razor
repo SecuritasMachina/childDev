@@ -212,13 +212,19 @@
     if (bestGoal is not null && bestEntry.Value >= 2)
     {
         var truncName = bestGoal.GoalText?.Length > 50 ? bestGoal.GoalText[..50] + "…" : bestGoal.GoalText;
-        <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.LocalFireDepartment" Dense="true" Class="mb-3">
+        <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.LocalFireDepartment" Dense="true" Class="mb-2">
             🔥 Best streak: <strong>@bestEntry.Value weeks</strong> on "@truncName" — keep it going!
         </MudAlert>
     }
 }
+@if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWhiteSpace(FilterText))
+{
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Lightbulb" Dense="true" Class="mb-3">
+        You haven't logged any progress this week yet — pick a goal and add a note! You've got this. 💪
+    </MudAlert>
+}
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
     <MudText Typo="Typo.h5">
         <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="mr-2" />
         My Goals
@@ -228,6 +234,16 @@
                   Placeholder="Search goals…" Variant="Variant.Outlined"
                   Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
                   Clearable="true" Margin="Margin.Dense" Style="max-width:260px;" />
+</MudStack>
+<MudStack Row="true" Spacing="1" Class="mb-3" Wrap="Wrap.Wrap">
+    <MudChip T="string" Size="Size.Small" Variant="@(QuickFilter == "all" ? Variant.Filled : Variant.Outlined)"
+             Color="Color.Primary" OnClick='() => SetQuickFilter("all")'>All</MudChip>
+    <MudChip T="string" Size="Size.Small" Variant="@(QuickFilter == "attention" ? Variant.Filled : Variant.Outlined)"
+             Color="Color.Warning" OnClick='() => SetQuickFilter("attention")'
+             Icon="@Icons.Material.Filled.AccessTime">Needs Attention</MudChip>
+    <MudChip T="string" Size="Size.Small" Variant="@(QuickFilter == "streak" ? Variant.Filled : Variant.Outlined)"
+             Color="Color.Error" OnClick='() => SetQuickFilter("streak")'
+             Icon="@Icons.Material.Filled.LocalFireDepartment">On a Streak 🔥</MudChip>
 </MudStack>
 
 @if (!string.IsNullOrWhiteSpace(FilterText) && ActiveGoals.Count == 0)
@@ -687,6 +703,7 @@
     private List<Goal> CompletedGoals = [];
     private Goal? FeaturedGoal;
     private string FilterText = string.Empty;
+    private string QuickFilter = "all";
     private Dictionary<string, int> ProgressCounts = new();
     private Dictionary<string, long> LastProgressAt = new();
     private Dictionary<string, string> LatestNextStep = new();
@@ -808,6 +825,7 @@
     private void OnFilterChanged(string value)
     {
         FilterText = value;
+        if (!string.IsNullOrWhiteSpace(value)) QuickFilter = "all";
         ApplyFilter();
         if (!string.IsNullOrWhiteSpace(value))
             _ = Analytics.TrackAsync("goal_filter", AccountGuid, "home");
@@ -815,19 +833,39 @@
 
     private void ApplyFilter()
     {
-        if (string.IsNullOrWhiteSpace(FilterText))
+        var nowMsF = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        if (string.IsNullOrWhiteSpace(FilterText) && QuickFilter == "all")
         {
-            // First goal gets "Goal of the Day" treatment; rest go in the grid
             FeaturedGoal = AllActiveGoals.Count >= 2 ? AllActiveGoals[0] : null;
             ActiveGoals = FeaturedGoal is not null ? AllActiveGoals.Skip(1).ToList() : AllActiveGoals;
             return;
         }
         FeaturedGoal = null;
-        var q = FilterText.Trim();
-        ActiveGoals = AllActiveGoals
-            .Where(g => (g.GoalText?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false)
-                     || (g.MeasurableOutcome?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false))
-            .ToList();
+        IEnumerable<Goal> filtered = AllActiveGoals;
+        if (!string.IsNullOrWhiteSpace(FilterText))
+        {
+            var q = FilterText.Trim();
+            filtered = filtered.Where(g => (g.GoalText?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false)
+                                        || (g.MeasurableOutcome?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false));
+        }
+        if (QuickFilter == "attention")
+            filtered = filtered.Where(g => {
+                var p = ProgressCounts.GetValueOrDefault(g.Guid);
+                var l = LastProgressAt.GetValueOrDefault(g.Guid);
+                var d = p > 0 ? (int)((nowMsF - l) / 86_400_000L) : -1;
+                return p == 0 || d >= 14;
+            });
+        else if (QuickFilter == "streak")
+            filtered = filtered.Where(g => GoalStreaks.ContainsKey(g.Guid));
+        ActiveGoals = filtered.ToList();
+    }
+
+    private void SetQuickFilter(string filter)
+    {
+        QuickFilter = filter;
+        if (filter != "all") FilterText = string.Empty;
+        ApplyFilter();
+        _ = Analytics.TrackAsync("goal_quick_filter", AccountGuid, "home", filter);
     }
 
     private void OpenAddGoalDialog()
