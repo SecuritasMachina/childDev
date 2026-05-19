@@ -336,6 +336,33 @@
         </MudStack>
     </MudPaper>
 }
+@if (ProgressEntries.Count >= 3 && Goal.CompletionDate is null)
+{
+    var mmNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    var mm7Ms = mmNowMs - 7L * 86_400_000L;
+    var mmThisWeek = ProgressEntries.Count(p => p.UpdatedOn >= mm7Ms);
+    var mmBestWeek = 0;
+    for (int mmW = 0; mmW < ProgressEntries.Count; mmW++)
+    {
+        var mmWindowEnd = ProgressEntries[mmW].UpdatedOn + 7L * 86_400_000L;
+        var mmCount = ProgressEntries.Count(p => p.UpdatedOn >= ProgressEntries[mmW].UpdatedOn && p.UpdatedOn < mmWindowEnd);
+        if (mmCount > mmBestWeek) mmBestWeek = mmCount;
+    }
+    if (mmBestWeek >= 2)
+    {
+        var mmPct = mmBestWeek == 0 ? 0 : (int)(mmThisWeek * 100.0 / mmBestWeek);
+        var mmColor = mmPct >= 100 ? Color.Success : mmPct >= 60 ? Color.Primary : mmPct >= 30 ? Color.Warning : Color.Default;
+        var mmMsg = mmThisWeek >= mmBestWeek ? "🏆 Matching your best week ever!" : mmThisWeek == 0 ? "Log a note this week to build momentum!" : $"{mmThisWeek} of {mmBestWeek} (your best week)";
+        <MudPaper Elevation="0" Class="pa-2 mb-3" Style="border-radius:10px;background:var(--mud-palette-background-grey);">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-1">
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-weight:600;">⚡ This week's momentum</MudText>
+                <MudSpacer />
+                <MudText Typo="Typo.caption" Color="@mmColor">@mmMsg</MudText>
+            </MudStack>
+            <MudProgressLinear Value="@mmPct" Color="@mmColor" Rounded="true" Size="Size.Small" />
+        </MudPaper>
+    }
+}
 @{
     // Rule-based goal insight narrative
     var nowMsI = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
