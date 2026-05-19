@@ -321,6 +321,15 @@
     <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Upcoming" Dense="true" Class="mb-3">@((MarkupString)nmCloseMsg)</MudAlert>
 }
 @{
+    var hwfHalfwayMap = new Dictionary<int, int> { { 5, 10 }, { 13, 25 }, { 25, 50 }, { 50, 100 } };
+}
+@if (nmHit is null && nmClose is null && Goal.CompletionDate is null && hwfHalfwayMap.TryGetValue(ProgressEntries.Count, out var hwfTarget))
+{
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Moving" Dense="true" Class="mb-3">
+        🚀 <strong>Halfway to @hwfTarget notes!</strong> You're at @ProgressEntries.Count — the second half is where the real progress shows!
+    </MudAlert>
+}
+@{
     var pdTodayStartMs = new DateTimeOffset(DateTime.Today).ToUnixTimeMilliseconds();
     var pdTodayCount = ProgressEntries.Count(p => p.UpdatedOn >= pdTodayStartMs);
 }
