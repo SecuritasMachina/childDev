@@ -88,6 +88,14 @@
                   : JournalThisMonth >= 4  ? $"📓 In {JournalThisMonthName} you've already written <strong>{JournalThisMonth} entries</strong> — great journaling momentum this month!"
                   :                          $"📓 You've written <strong>{JournalThisMonth} entr{(JournalThisMonth == 1 ? "y" : "ies")}</strong> in {JournalThisMonthName} — every entry is part of your growth story!";
     <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.CalendarMonth">@((MarkupString)jMonthMsg)</MudAlert>
+    @if (JournalLastMonth > 0)
+    {
+        var jMomDiff = JournalThisMonth - JournalLastMonth;
+        var jMomMsg = jMomDiff > 0 ? $"📈 +{jMomDiff} vs last month ({JournalLastMonth} entries) — your journaling is growing!"
+                    : jMomDiff < 0 ? $"📉 {JournalLastMonth} entries last month — can you match or beat it this month?"
+                    :                $"📖 Same pace as last month ({JournalLastMonth} entries) — nice consistency!";
+        <MudText Typo="Typo.caption" Color="@(jMomDiff >= 0 ? Color.Success : Color.Warning)" Class="mb-3">@jMomMsg</MudText>
+    }
 }
 @if (MonthTopMood is not null)
 {
@@ -462,6 +470,7 @@ else
     private int TotalWordsWritten;
     private int JournalThisMonth;
     private string JournalThisMonthName = "";
+    private int JournalLastMonth;
     private string? MonthTopMood;
 
     protected override async Task OnInitializedAsync()
@@ -521,6 +530,9 @@ else
         var jMonthStartMs = new DateTimeOffset(new DateTime(jLocalNow.Year, jLocalNow.Month, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
         JournalThisMonth = AllEntries.Count(j => j.EnteredDate >= jMonthStartMs);
         JournalThisMonthName = jLocalNow.ToString("MMMM");
+        var jLastMonthDate = new DateTime(jLocalNow.Year, jLocalNow.Month, 1).AddMonths(-1);
+        var jLastMonthStartMs = new DateTimeOffset(jLastMonthDate, TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
+        JournalLastMonth = AllEntries.Count(j => j.EnteredDate >= jLastMonthStartMs && j.EnteredDate < jMonthStartMs);
         var mtmGroup = AllEntries
             .Where(j => j.EnteredDate >= jMonthStartMs && !string.IsNullOrWhiteSpace(j.Mood))
             .GroupBy(j => j.Mood!.Trim(), StringComparer.OrdinalIgnoreCase)
