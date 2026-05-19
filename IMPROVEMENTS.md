@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-19 — Invocation 8 Iter 606 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Note quality growth": compare avg word count of last 5 vs first 5 progress notes (>= 10 notes); show "Your notes are getting richer!" | UX/Encourage | Domain: note depth evolution | Medium | S | Low | NextStepItems.Split(' ').Length; two groups; compare avg; needs >= 10 notes | Still deferred from earlier brainstorms; implement now | No |
+| 2 | Web: Home — "Overdue goal reflection": if any active goal's ExpirationDate is in the past, show a gentle "expired — time to reflect or extend!" prompt | UX | Domain: expired goal awareness | Medium | XS | Low | ExpirationDate < nowMs && CompletionDate is null; show for first found | Closes the loop on expired goals | No |
+| 3 | Web: GoalDetail — "Today's progress count": show "X notes today on this goal" as a badge when today >= 2 notes | UX/Encourage | Domain: same-day momentum | High | XS | Low | ProgressEntries.Count(p => p.UpdatedOn >= todayStartMs); show when >= 2 | Real-time daily effort visibility | No |
+| 4 | Web: Insights — "Total combined weeks of effort": sum all goal ages (EnteredDate to now) across all goals ever; "You've put X combined weeks of commitment into your goals!" | UX/Encourage | Domain: aggregate effort appreciation | Low | XS | Low | Need GoalsTotalAllTime and dates; may need extra query | Low-value computation without dates | No |
+| 5 | Web: Home — "Notes per day this week" rate: ProgressThisWeek / 7 with tiered messages; "X.X notes per day this week!" | UX | Domain: daily rate awareness | Low | XS | Low | ProgressThisWeek / 7.0; show when >= 0.5 | Minor metric; simple computation | No |
+| 6 | Web: GoalDetail — "Extended note milestone": broaden nmMilestone window from +3 to +10 for broader visibility | UX/Encourage | Domain: proximity motivation | High | XS | Low | Change `ProgressEntries.Count < nm + 3` to `< nm + 10`; show "X notes away from [milestone]!" | Wider window = more users see the nudge | No |
+| 7 | Web: Journal — "Journal activity by hour of day": group AllEntries.EnteredDate by hour; find mode when >= 5; show "You journal most around Xpm!" | UX | Domain: scheduling self-awareness | Low | XS | Low | AllEntries ms → hour; group; mode; simple caption | Mirrors BestProgressDayOfWeek for journals by time | No |
+| 8 | Web: Home — "Encourage adding a measurable outcome": if any active goal lacks MeasurableOutcome, show "Set a target for [Goal] — knowing where you're going helps you get there!" | UX/Encourage | Domain: goal quality improvement | Medium | XS | Low | AllActiveGoals.FirstOrDefault(g => string.IsNullOrWhiteSpace(g.MeasurableOutcome)); link to edit | Nudges goal quality; encourages specific outcomes | No |
+| 9 | Web: GoalDetail — "Journal connection": if there are journal entries since goal start date, show "You've made X journal entries since starting this goal — your journey has context!" | UX/Encourage | Domain: cross-feature journey connection | Medium | M | Med | Would need journal query; extra DB call | Too complex | No |
+| 10 | Web: Insights — "Most consistent month of the year" badge: of all calendar months with entries, which had the most consecutive active days; show "Your most consistent month was [Month]!" | UX/Encourage | Domain: peak consistency month | Low | M | Low | Complex computation across months; marginal insight | Too complex | No |
+
+**Selection iter 606:** Item #6 — "Extended note milestone" window on GoalDetail.
+- Change nmMilestone proximity check from `ProgressEntries.Count < nm + 3` to `< nm + 10`
+- Also update the milestone message to show exact distance when not exactly at the milestone
+- Wider window means more users see the proximity nudge — high impact change
+
+---
+
 ## 2026-05-19 — Invocation 8 Iter 603 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
