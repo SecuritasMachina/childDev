@@ -522,6 +522,34 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         }
     </MudAlert>
 }
+@{
+    var nmMilestones576 = new[] { 100, 50, 25, 10, 5 };
+    Goal? nmNearGoal = null;
+    int nmNearTarget = 0;
+    int nmNearLeft = 0;
+    if (string.IsNullOrWhiteSpace(FilterText))
+    {
+        foreach (var nmG in AllActiveGoals)
+        {
+            var nmCount = ProgressCounts.GetValueOrDefault(nmG.Guid);
+            foreach (var nmT in nmMilestones576)
+            {
+                var nmLeft = nmT - nmCount;
+                if (nmLeft > 0 && nmLeft <= 2) { nmNearGoal = nmG; nmNearTarget = nmT; nmNearLeft = nmLeft; break; }
+            }
+            if (nmNearGoal is not null) break;
+        }
+    }
+}
+@if (nmNearGoal is not null)
+{
+    var nmNearName = nmNearGoal.GoalText?.Length > 50 ? nmNearGoal.GoalText[..50] + "…" : nmNearGoal.GoalText;
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mb-3">
+        🏆 <strong>Almost there!</strong> "@nmNearName" is just @nmNearLeft more note@(nmNearLeft == 1 ? "" : "s") away from @nmNearTarget! Keep going!
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Success"
+                   Href="@($"/goals/{nmNearGoal.Guid}")" Class="ml-1">Add Note</MudButton>
+    </MudAlert>
+}
 @if (AnniversaryGoalName is not null && string.IsNullOrWhiteSpace(FilterText))
 {
     var annivMsg = AnniversaryDaysUntil == 0
