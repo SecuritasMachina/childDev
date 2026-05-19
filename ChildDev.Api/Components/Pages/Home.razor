@@ -402,6 +402,13 @@
     <MudText Typo="Typo.body2" Color="Color.Secondary" Style="font-style:italic;">@todayQuote</MudText>
 </MudPaper>
 
+@if (ProgressNotesToday >= 3 && string.IsNullOrWhiteSpace(FilterText))
+{
+    var rollingMsg = ProgressNotesToday >= 7 ? $"🔥 <strong>{ProgressNotesToday} notes today — you're UNSTOPPABLE!</strong> That's an extraordinary output day. Go you!"
+                  : ProgressNotesToday >= 5 ? $"🚀 <strong>{ProgressNotesToday} notes today — you're on fire!</strong> This is a truly exceptional day of progress."
+                  :                           $"⭐ <strong>{ProgressNotesToday} notes today — you're on a roll!</strong> Keep this energy going for the rest of the day!";
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.LocalFireDepartment" Dense="true" Class="mb-3">@((MarkupString)rollingMsg)</MudAlert>
+}
 @if (IsNewWeeklyRecord && string.IsNullOrWhiteSpace(FilterText))
 {
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mb-2">
