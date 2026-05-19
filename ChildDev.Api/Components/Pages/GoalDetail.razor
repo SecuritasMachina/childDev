@@ -264,6 +264,20 @@
         🎯 <strong>@upcomingMilestoneName milestone coming up @ulDaysLabel</strong> Keep going — you're so close to this achievement!
     </MudAlert>
 }
+@if (Goal.CompletionDate is null)
+{
+    var rdnNextMultiple = (int)(Math.Ceiling((daysSince + 1) / 30.0) * 30);
+    var rdnDaysLeft = rdnNextMultiple - daysSince;
+    var rdnMonths = rdnNextMultiple / 30;
+    var rdnNamedMilestones = new HashSet<int> { 30, 60, 90, 180, 365 };
+    if (rdnDaysLeft >= 1 && rdnDaysLeft <= 5 && rdnMonths >= 2 && !rdnNamedMilestones.Contains(rdnNextMultiple))
+    {
+        var rdnLabel = rdnDaysLeft == 1 ? "tomorrow!" : $"in {rdnDaysLeft} days!";
+        <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.CalendarMonth" Dense="true" Class="mb-3">
+            📅 <strong>@rdnMonths-month mark coming @rdnLabel</strong> You're @daysSince days in and counting — keep the streak alive!
+        </MudAlert>
+    }
+}
 @{
     var nmMilestones = new[] { 100, 50, 25, 10, 5 };
     int? nmHit = null;
