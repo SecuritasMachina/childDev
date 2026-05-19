@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-19 — Invocation 6 Iter 555 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Next steps evolution" panel: last 3 non-null NextStepItems as a numbered mini-list | UX | Domain: show evolving plan narrative | High | S | Low | ProgressEntries descending; filter non-null NextStepItems; take 3; show with dates | Shows the journey of planning; very meaningful | No |
+| 2 | Web: Home — "Quick win" badge: highlight any goal that needs just 1 note to reach next milestone | UX/Encourage | Domain: proximity motivation | High | XS | Low | ProgressCounts[guid] in {0,4,9,24,49}; show "1 note away from [milestone]!" badge | Already have proximity banner; per-card badge is extra visibility | No |
+| 3 | Web: Insights — "Journaling consistency score": active journal days / last 30 calendar days as % | UX | Domain: journaling habit strength | Medium | XS | Low | allJournalEver already loaded; count distinct days in last 30; show "X% consistency" | Quick computation from existing data; useful self-awareness | No |
+| 4 | Web: GoalDetail — "Goal description richness": show word count of MeasurableOutcome if set | UX | Domain: goal quality awareness | Low | XS | Low | Goal.MeasurableOutcome?.Split(' ').Length; show "Your goal has a clear success metric!" | Minor; only shows if MeasurableOutcome set | No |
+| 5 | Web: Home — "Longest dormant goal" callout: surface the goal that hasn't been touched the longest | UX | Domain: portfolio attention balance | Medium | XS | Low | AllActiveGoals where LastProgressAt is oldest; show days since last note | Useful nudge; LastProgressAt already loaded | No |
+| 6 | Web: Journal — "Entry frequency trend": this month vs last month entry count in a compact caption | UX | Domain: journaling momentum awareness | Medium | XS | Low | AllEntries filtered by this month / last month start; count and compare | Simple; quick visual of journaling trend | No |
+| 7 | Web: GoalDetail — "Completion confidence" prompt: after 20+ notes, ask "How confident are you on a scale?" with 3 options | UX/Engage | Domain: self-assessment and reflection | High | M | Low | Show only when Count >= 20 and Goal.CompletionDate is null; three option buttons (High/Med/Low) | Deep engagement; could be stored in analytics; click creates event | No |
+| 8 | Web: Home — "First note ever": if user has never logged a note for any goal, show extra-encouraging first-note CTA | UX/Encourage | Domain: onboarding/first-use encouragement | High | XS | Low | TotalProgressNotes == 0; show "Add your first progress note — this is where the journey begins!" | Strong onboarding moment; TotalProgressNotes already loaded | No |
+| 9 | Web: GoalDetail — Show "entry count this month" next to total count in the stat bar | UX | Domain: monthly engagement context | Low | XS | Low | ProgressEntries filtered by this month; count; show alongside total | Minor UX addition; quick filter of existing data | No |
+| 10 | Web: Insights — "Goal completion celebration timeline": show last 3 completed goals with date and duration | UX/Encourage | Domain: celebrate achievement history | High | M | Low | CompletedGoals sorted by CompletionDate desc; take 3; show name, date, duration | Strong historical celebration; needs CompletedGoals with CompletionDate | No |
+
+**Selection iter 555:** Item #8 — "First note ever" extra-encouraging CTA on Home.
+- `TotalProgressNotes == 0` and `AllActiveGoals.Count > 0` — show a special banner
+- "🌱 Add your very first progress note! Every great journey starts with one step."
+- Show above the goals list; zero extra queries; `TotalProgressNotes` already loaded
+- Very high impact for new users — the first note is the hardest; this removes that friction
+
+---
+
 ## 2026-05-19 — Invocation 6 Iter 552 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
