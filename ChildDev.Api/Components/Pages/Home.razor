@@ -170,6 +170,12 @@
                     📅 @mtgsThisWeek meeting@(mtgsThisWeek == 1 ? "" : "s") this week
                 </MudText>
             }
+            @if (ProgressNotesToday > 0)
+            {
+                <MudText Typo="Typo.caption" Color="@(ProgressNotesToday >= 3 ? Color.Warning : Color.Success)">
+                    🔥 @ProgressNotesToday note@(ProgressNotesToday == 1 ? "" : "s") logged today!
+                </MudText>
+            }
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="4">
@@ -1056,6 +1062,7 @@
     private string QuickNoteText = string.Empty;
     private string? _confirmDeleteGoalGuid;
     private bool IsNewWeeklyRecord;
+    private int ProgressNotesToday;
     private string? NextMeetingGoalName;
     private int NextMeetingDaysAway;
     private string? NextMeetingGoalGuid;
@@ -1148,6 +1155,10 @@
         var weekEntries = allTimestamps.Where(p => p.UpdatedOn >= weekAgoMs).ToList();
         ProgressThisWeek = weekEntries.Count;
         GoalsProgressedThisWeek = weekEntries.Select(p => p.GoalFk).Distinct().Count();
+
+        // Progress notes logged today across all active goals
+        var todayStartMsLocal = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+        ProgressNotesToday = allTimestamps.Count(p => p.UpdatedOn >= todayStartMsLocal);
 
         // Personal record week: compare ProgressThisWeek to max of prior 12 weeks
         var priorMaxWeeklyNotes = 0;
