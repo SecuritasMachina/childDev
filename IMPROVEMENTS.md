@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-19 — Invocation 8 Iter 585 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Insights — "Todos completed this year" stat: filter by CompletedAt >= yearStart; show "🎯 X todos this year!" when >= 5 | UX/Encourage | Domain: annual achievement pride | Medium | XS | Low | TodosCompletedAllTime already queried; add YtdTodos field with year filter | Celebrates annual todo completion; quick extra query | No |
+| 2 | Web: GoalDetail — "Best month on this goal": which calendar month had the most notes; show "Your best month was [Month Year]: X notes!" | UX/Encourage | Domain: peak engagement memory | Medium | XS | Low | Group ProgressEntries by month-year; find max; show when >= 3 months of data | Fun peak-performance callout; zero extra queries | No |
+| 3 | Web: Home — "Deepest goal" fun fact: ProgressCounts.Values.Max() when >= 10 notes; "⭐ Your deepest goal has X notes — incredible dedication!" | UX/Encourage | Domain: depth appreciation | Medium | XS | Low | ProgressCounts already loaded; simple Max(); show when max >= 10 | Celebrates intense focus on single goal | No |
+| 4 | Web: Journal — "Longest gap between entries" stat: max days between consecutive journal dates; show "Your longest dry spell: X days — keep streaks shorter!" when >= 14 days | UX/Motivate | Domain: gap awareness + gentle nudge | Low | XS | Low | AllEntries dates sorted; scan consecutive pairs for max gap | Gentle gap awareness; not shaming | No |
+| 5 | Web: Insights — "Most productive journal day of week": group journalDates by DayOfWeek; find mode when >= 5 entries; show "You journal most on Fridays!" | UX | Domain: scheduling self-awareness | Low | XS | Low | journalDates already computed for streak; extend for day-of-week analysis | Complements BestProgressDayOfWeek for journals | No |
+| 6 | Web: GoalDetail — "You beat your record today!": if today's note count exceeds previous best single day, show "New personal best!" | UX/Encourage | Domain: real-time personal best detection | High | S | Med | Today's date filter; previous pbdGroup; compare; fragile if page loaded mid-day | Very motivating immediate feedback | No |
+| 7 | Web: Home — "Goal nearest due date": if any active goal has ExpirationDate within 7 days, show alert "⏰ [Goal] is due in X days!" | UX/Urgency | Domain: deadline awareness | High | XS | Low | AllActiveGoals ExpirationDate filter; min ExpirationDate - now; show when <= 7 days | Timely urgency nudge; ExpirationDate already loaded | No |
+| 8 | Web: GoalDetail — "Affirmation for your goal type": pick from 8 short sentences by GUID hash; show at bottom as warm encouragement caption | UX/Encourage | Domain: motivational micro-content | Medium | XS | Low | Static array; (GUID hash + dayOfYear) % 8; MudText caption at bottom | Warm personal touch; zero data needed; quick win | No |
+| 9 | Web: Home — "Pending todos by top goal": count pending todos for the most active goal; show "X todos waiting for [Goal Name]" | UX | Domain: actionable next step prompt | Medium | M | Med | Needs per-goal todo count; new LINQ query; more complex | Too complex for value delivered | No |
+| 10 | Web: Insights — "Progress note count by month": sparkline of last 6 months note totals; "Your busiest month was [Month] with X notes!" | UX | Domain: monthly productivity trend | High | M | Low | allProgressEver grouped by month; take last 6; show simple bar or counts | Interesting trend; monthly grouping clean | No |
+
+**Selection iter 585:** Item #7 — "Goal nearest due date" urgency alert on Home.
+- Filter `AllActiveGoals` for those with `ExpirationDate <= 7 days from now` that are not completed
+- Show alert "⏰ [Goal Name] is due in X days — keep going!" for the nearest due goal
+- Zero extra queries; `ExpirationDate` is already loaded on `AllActiveGoals`
+- High impact: timely reminders help kids prioritize
+
+---
+
 ## 2026-05-19 — Invocation 8 Iter 582 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |

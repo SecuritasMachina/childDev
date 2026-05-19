@@ -559,6 +559,29 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                    Href="@($"/goals/{nmNearGoal.Guid}")" Class="ml-1">Add Note</MudButton>
     </MudAlert>
 }
+@{
+    var ddNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    Goal? ddGoal = null;
+    int ddDaysLeft = 0;
+    if (string.IsNullOrWhiteSpace(FilterText))
+    {
+        foreach (var ddG in AllActiveGoals.Where(g => g.ExpirationDate.HasValue && g.CompletionDate == null).OrderBy(g => g.ExpirationDate))
+        {
+            var ddLeft = (int)Math.Ceiling((ddG.ExpirationDate!.Value - ddNowMs) / 86_400_000.0);
+            if (ddLeft <= 7 && ddLeft >= 0) { ddGoal = ddG; ddDaysLeft = ddLeft; break; }
+        }
+    }
+}
+@if (ddGoal is not null)
+{
+    var ddName = ddGoal.GoalText?.Length > 50 ? ddGoal.GoalText[..50] + "…" : ddGoal.GoalText;
+    var ddLabel = ddDaysLeft == 0 ? "due today!" : ddDaysLeft == 1 ? "due tomorrow" : $"due in {ddDaysLeft} days";
+    <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.Timer" Dense="true" Class="mb-3">
+        ⏰ <strong>"@ddName"</strong> is @ddLabel — now's the time to make it count!
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning"
+                   Href="@($"/goals/{ddGoal.Guid}")" Class="ml-1">View goal</MudButton>
+    </MudAlert>
+}
 @if (AnniversaryGoalName is not null && string.IsNullOrWhiteSpace(FilterText))
 {
     var annivMsg = AnniversaryDaysUntil == 0
