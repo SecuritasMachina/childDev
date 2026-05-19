@@ -660,6 +660,20 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                    Href="@($"/goals/{odGoal.Guid}")" Class="ml-1">Reflect on goal</MudButton>
     </MudAlert>
 }
+@{
+    Goal? moGoal = null;
+    if (string.IsNullOrWhiteSpace(FilterText))
+        moGoal = AllActiveGoals.FirstOrDefault(g => string.IsNullOrWhiteSpace(g.MeasurableOutcome) && g.CompletionDate == null);
+}
+@if (moGoal is not null)
+{
+    var moName = moGoal.GoalText?.Length > 45 ? moGoal.GoalText[..45] + "…" : moGoal.GoalText;
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.TrackChanges" Dense="true" Class="mb-3">
+        📏 <strong>"@moName"</strong> — knowing exactly where you're headed makes it easier to get there. Add a measurable target!
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Info"
+                   Href="@($"/goals/{moGoal.Guid}")" Class="ml-1">Set target</MudButton>
+    </MudAlert>
+}
 @if (AnniversaryGoalName is not null && string.IsNullOrWhiteSpace(FilterText))
 {
     var annivMsg = AnniversaryDaysUntil == 0
