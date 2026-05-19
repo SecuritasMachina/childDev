@@ -267,6 +267,17 @@
             🗓️ You started this journey on <strong>@journeyStartDt.ToString("MMMM d, yyyy")</strong> — that's <strong>@journeyDaysLabel</strong> of working toward this goal!
         </MudText>
         @{
+            var totalWords = ProgressEntries
+                .Where(p => !string.IsNullOrWhiteSpace(p.NextStepItems))
+                .Sum(p => p.NextStepItems!.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length);
+        }
+        @if (totalWords >= 20)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">
+                ✍️ You've written about <strong>~@totalWords words</strong> on this goal — that's real depth!
+            </MudText>
+        }
+        @{
             var activeMonths = ProgressEntries
                 .Select(p => DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime)
                 .GroupBy(d => new { d.Year, d.Month })
