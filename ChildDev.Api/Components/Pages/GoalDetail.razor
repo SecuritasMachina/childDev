@@ -210,13 +210,23 @@
     }
 }
 
-<MudText Typo="Typo.subtitle1" Class="mb-1">
-    Progress Notes
-    @if (ProgressEntries.Any())
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-1">
+    <MudText Typo="Typo.subtitle1">
+        Progress Notes
+        @if (ProgressEntries.Any())
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Class="ml-2">@ProgressEntries.Count</MudChip>
+        }
+    </MudText>
+    @if (ProgressEntries.Count >= 5)
     {
-        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Class="ml-2">@ProgressEntries.Count</MudChip>
+        <MudSpacer />
+        <MudTextField Value="@_noteFilter" ValueChanged="@((string v) => _noteFilter = v)"
+                      Placeholder="Search notes…" Variant="Variant.Outlined" Margin="Margin.Dense"
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                      Clearable="true" Immediate="true" Style="max-width:200px;" />
     }
-</MudText>
+</MudStack>
 @{
     var noteCount = ProgressEntries.Count;
     var (curLvlEmoji, curLvlName, nextLvlEmoji, nextLvlName, lvlStart, lvlEnd) = noteCount switch
@@ -347,6 +357,9 @@
         .Where(p => !string.IsNullOrWhiteSpace(p.NextStepItems) && p.NextStepItems.Length >= 30)
         .OrderByDescending(p => p.NextStepItems!.Length)
         .FirstOrDefault()?.Guid;
+    var displayedNotes = string.IsNullOrWhiteSpace(_noteFilter)
+        ? ProgressEntries
+        : ProgressEntries.Where(p => (p.NextStepItems ?? "").Contains(_noteFilter.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
 }
 @if (!ProgressEntries.Any())
 {
@@ -364,8 +377,12 @@
 }
 else
 {
+    @if (!displayedNotes.Any() && !string.IsNullOrWhiteSpace(_noteFilter))
+    {
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">No notes matching "@_noteFilter".</MudText>
+    }
     <MudTimeline TimelinePosition="TimelinePosition.Start" Class="mb-4">
-        @foreach (var p in ProgressEntries)
+        @foreach (var p in displayedNotes)
         {
             var enteredDate = DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime;
             var isPersonalBest = bestNoteGuid is not null && p.Guid == bestNoteGuid;
@@ -633,6 +650,7 @@ else
     private string? AccountGuid;
     private Goal? Goal;
     private List<GoalProgress> ProgressEntries = [];
+    private string _noteFilter = string.Empty;
     private bool ShowAddDialog;
     private string NewNextSteps = string.Empty;
     private DateTime? NewMeetingDate;
