@@ -311,6 +311,12 @@
                     {
                         <MudChip T="string" Icon="@Icons.Material.Filled.Schedule" Color="Color.Warning" Size="Size.Small">@expiryLabel</MudChip>
                     }
+                    @if (GoalStreaks.TryGetValue(g.Guid, out var streak))
+                    {
+                        <MudChip T="string" Icon="@Icons.Material.Filled.LocalFireDepartment" Color="Color.Warning" Size="Size.Small" Class="mr-1">
+                            @streak week streak! 🔥
+                        </MudChip>
+                    }
                     @if (LatestNextStep.TryGetValue(g.Guid, out var nextStep))
                     {
                         var truncated = nextStep.Length > 90 ? nextStep[..90] + "…" : nextStep;
@@ -550,6 +556,7 @@
     private Dictionary<string, int> ProgressCounts = new();
     private Dictionary<string, long> LastProgressAt = new();
     private Dictionary<string, string> LatestNextStep = new();
+    private Dictionary<string, int> GoalStreaks = new();
     private bool ShowAddDialog;
     private string NewGoalText = string.Empty;
     private string? NewMeasurableOutcome;
@@ -625,6 +632,29 @@
         LatestNextStep = stepRows
             .GroupBy(p => p.GoalFk)
             .ToDictionary(g => g.Key, g => g.OrderByDescending(p => p.UpdatedOn).First().NextStepItems!);
+
+        // Compute consecutive-week streaks from raw timestamps
+        var allTimestamps = await Db.GoalProgresses
+            .Where(p => guids.Contains(p.GoalFk) && p.DeletedAt == null)
+            .Select(p => new { p.GoalFk, p.UpdatedOn })
+            .ToListAsync();
+        var nowMsStreak = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var tsByGoal = allTimestamps.GroupBy(p => p.GoalFk)
+            .ToDictionary(g => g.Key, g => g.Select(p => p.UpdatedOn).ToList());
+        GoalStreaks = new Dictionary<string, int>();
+        foreach (var goalGuid in guids)
+        {
+            var ts = tsByGoal.GetValueOrDefault(goalGuid, []);
+            int streak = 0;
+            for (int week = 0; week < 52; week++)
+            {
+                var windowEnd   = nowMsStreak - (long)week * 7 * 86_400_000L;
+                var windowStart = windowEnd   - 7 * 86_400_000L;
+                if (ts.Any(t => t >= windowStart && t < windowEnd)) streak++;
+                else break;
+            }
+            if (streak >= 2) GoalStreaks[goalGuid] = streak;
+        }
 
         // Sort: goals with no progress first (needs attention), then by oldest-update-first
         AllActiveGoals = AllActiveGoals
