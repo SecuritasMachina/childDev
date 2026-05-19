@@ -230,7 +230,16 @@
     @foreach (var g in ActiveGoals)
     {
         <MudItem xs="12" sm="6" md="4">
-            <MudCard Elevation="2" Class="h-100">
+            @{
+                var gPCount = ProgressCounts.GetValueOrDefault(g.Guid);
+                var gLastAt = LastProgressAt.GetValueOrDefault(g.Guid);
+                var gDays   = gPCount > 0 ? (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - gLastAt) / 86_400_000L) : -1;
+                var heatClass = gPCount == 0 ? "goal-heat-new"
+                              : gDays <= 1   ? "goal-heat-hot"
+                              : gDays <= 13  ? "goal-heat-warm"
+                              : "goal-heat-cold";
+            }
+            <MudCard Elevation="2" Class="@($"h-100 {heatClass}")">
                 <MudCardHeader>
                     <CardHeaderAvatar>
                         <MudAvatar Color="Color.Primary" Size="Size.Medium">

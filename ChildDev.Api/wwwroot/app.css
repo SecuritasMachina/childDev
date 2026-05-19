@@ -42,6 +42,12 @@
 .goal-card-active { border-top: 3px solid #3949AB; }
 .goal-card-stale  { border-top: 3px solid #F9A825; }
 
+/* Progress recency heat indicator (left border) */
+.goal-heat-new  { border-left: 4px solid #2196F3 !important; } /* blue  — no notes yet */
+.goal-heat-hot  { border-left: 4px solid #4CAF50 !important; } /* green — updated recently */
+.goal-heat-warm { border-left: 4px solid #FF9800 !important; } /* amber — moderate */
+.goal-heat-cold { border-left: 4px solid #F44336 !important; } /* red   — stale 14+ days */
+
 /* Growth graphic container */
 .growth-graphic { display: flex; justify-content: center; align-items: center; }
 .growth-graphic svg { max-width: 100%; height: auto; filter: drop-shadow(0 6px 16px rgba(57,73,171,.15)); }
