@@ -118,6 +118,13 @@
                     {
                         <MudText Typo="Typo.caption" Color="Color.Warning">@effortEmoji @effortLabel</MudText>
                     }
+                    @if (ProgressEntries.Count >= 10)
+                    {
+                        var tehMins = ProgressEntries.Count * 3;
+                        var tehHours = tehMins / 60;
+                        var tehLabel = tehHours >= 1 ? $"~{tehHours}h of reflection" : $"~{tehMins} min of effort";
+                        <MudText Typo="Typo.caption" Color="Color.Info">⏱ @tehLabel</MudText>
+                    }
                 </MudPaper>
             </MudItem>
             @if (totalWords522 >= 10)
