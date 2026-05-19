@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 486 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Best week" badge: which 7-day window had most notes for this goal | UX/Encourage | Domain: peak personal performance | Medium | S | Low | Rolling 7-day windows from ProgressEntries; celebratory "Your best week was X notes!" | Medium computation; interesting insight | No |
+| 2 | Web: Home — "Active this week" label on goal cards that had a note in the last 7 days | UI | Domain: reward recent engagement | High | XS | Low | Use LastProgressAt and TodayStartMs; show green chip for recent activity | Minor visual; already have weekAgoMs | No |
+| 3 | Web: GoalDetail — note search/filter: text field to search within progress notes | Func | Domain: find past insights | Medium | S | Low | Filter ProgressEntries client-side on NextStepItems text | Low-complexity client-side filter | No |
+| 4 | Web: Home — "Quick Win" catch-up: one-tap "Mark Done" on the oldest overdue todo from Home | Func | Domain: frictionless todo catch-up | High | S | Low | Show the single most-overdue todo with instant complete button | Requires todo loading and state; moderate complexity | No |
+| 5 | Web: GoalDetail — "Consistency streak" specific to this goal: consecutive days with at least 1 note | UX/Encourage | Domain: goal-specific streak | High | S | Low | Compute from ProgressEntries timestamps; show streak chip near level | Natural extension of existing streak display | No |
+| 6 | Web: Insights — "Days since last progress note" widget: how recently user logged any progress note | UX | Domain: overall freshness indicator | Medium | XS | Low | From ProgressHeatmap or GoalProgressTotal, compute last active day | Simple computation; useful freshness signal | No |
+| 7 | Web: Home — sort goals: put "active this week" goals first, then others | UI | Domain: surface most engaged goals | Medium | XS | Low | Already have LastProgressAt; re-sort in LoadGoals post-ordering | Minor UX tweak; may conflict with existing sort | No |
+| 8 | Web: GoalDetail — "You've been working on this for X days" hero text at the very top | UX/Encourage | Domain: journey duration pride | Medium | XS | Low | Elevate the existing "Time Invested" strip stat to a proud headline | Redundant with existing strip but more prominent | No |
+| 9 | Web: Journal — journal streak: "You've journaled X days in a row!" on the Journal list page | UX/Encourage | Domain: journaling habit reinforcement | High | S | Low | Compute consecutive days with a journal entry from EnteredDate field | Extra query but straightforward | No |
+| 10 | Web: GoalDetail — "Personal record" callout when new note count is the most ever in a 7-day window | UX/Encourage | Domain: celebrating personal bests | High | M | Low | Compare current 7-day window to all-time best 7-day window | Rolling window computation; medium complexity | No |
+
+**Selection iter 486:** Item #2 — "Active this week" chip on goal cards on the Home page.
+- Goal cards with a note added in the last 7 days get a subtle green "active this week" chip
+- Already have `LastProgressAt` and the 7-day window from `GoalsProgressedThisWeek` tracking
+- Zero extra DB queries; high visual feedback on recent activity
+- Encourages kids to see which goals they've been working on vs which need attention
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 483 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
