@@ -62,6 +62,14 @@
         🏅 Your best journaling month was <strong>@BestJournalMonth</strong> — @BestJournalMonthCount entries! Can you beat it?
     </MudAlert>
 }
+@if (JournalDaysThisYear >= 10)
+{
+    var jdyMsg = JournalDaysThisYear >= 100 ? $"🌟 You've journaled on <strong>{JournalDaysThisYear} different days</strong> this year — that's extraordinary dedication!"
+               : JournalDaysThisYear >= 50  ? $"🏆 You've journaled on <strong>{JournalDaysThisYear} different days</strong> this year — impressive consistency!"
+               : JournalDaysThisYear >= 25  ? $"📅 You've journaled on <strong>{JournalDaysThisYear} different days</strong> this year — you're building a strong habit!"
+               :                              $"📅 You've journaled on <strong>{JournalDaysThisYear} different days</strong> this year — keep showing up!";
+    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.CalendarToday">@((MarkupString)jdyMsg)</MudAlert>
+}
 @if (LongestJournalGap >= 14)
 {
     var lgDaysMsg = LongestJournalGap >= 60 ? $"Your longest journaling gap was <strong>{LongestJournalGap} days</strong> — a long pause. You came back though, and that's what matters!"
@@ -483,6 +491,7 @@ else
     private int JournalThisMonth;
     private string JournalThisMonthName = "";
     private int JournalLastMonth;
+    private int JournalDaysThisYear;
     private string? MonthTopMood;
 
     protected override async Task OnInitializedAsync()
@@ -545,6 +554,11 @@ else
         var jLastMonthDate = new DateTime(jLocalNow.Year, jLocalNow.Month, 1).AddMonths(-1);
         var jLastMonthStartMs = new DateTimeOffset(jLastMonthDate, TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
         JournalLastMonth = AllEntries.Count(j => j.EnteredDate >= jLastMonthStartMs && j.EnteredDate < jMonthStartMs);
+        var jYearStartMs = new DateTimeOffset(new DateTime(jLocalNow.Year, 1, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
+        JournalDaysThisYear = AllEntries
+            .Where(j => j.EnteredDate >= jYearStartMs)
+            .Select(j => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime))
+            .Distinct().Count();
         var mtmGroup = AllEntries
             .Where(j => j.EnteredDate >= jMonthStartMs && !string.IsNullOrWhiteSpace(j.Mood))
             .GroupBy(j => j.Mood!.Trim(), StringComparer.OrdinalIgnoreCase)
