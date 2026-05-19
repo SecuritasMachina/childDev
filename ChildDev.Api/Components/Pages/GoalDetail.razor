@@ -188,6 +188,12 @@
         🎉 <strong>First week complete!</strong> You've already logged @ProgressEntries.Count note@(ProgressEntries.Count == 1 ? "" : "s") in your first week on this goal — that first week is the hardest, and you nailed it!
     </MudAlert>
 }
+@if (daysSince >= 28 && daysSince <= 34 && Goal.CompletionDate is null && ProgressEntries.Count >= 4)
+{
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Celebration" Dense="true" Class="mb-3">
+        🗓️ <strong>One month in!</strong> You've kept this goal alive for @daysSince days and have @ProgressEntries.Count notes to show for it. The first month is where most goals get abandoned — you didn't. That's huge!
+    </MudAlert>
+}
 @if (ageMilestoneEmoji is not null && Goal.CompletionDate is null)
 {
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Celebration" Dense="true" Class="mb-3">
