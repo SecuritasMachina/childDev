@@ -442,6 +442,29 @@ else if (bestGoalStreak >= 2 && goalStreak < bestGoalStreak)
         50 => (true, "🌟", "Legendary Achievement!", "50 notes! You've reached LEGENDARY status! This kind of persistence is extraordinary!"),
         _  => (false, "", "", "")
     };
+    // Previous milestone: find which tier was last crossed and when
+    string? prevMsEmoji = null;
+    string? prevMsLabel = null;
+    string? prevMsDate = null;
+    int? prevMsDaysAgo = null;
+    var msThresholds = new[] { (50, "🌟", "Legendary"), (25, "🏆", "Champion"), (10, "⭐", "Strong"), (5, "🚀", "Momentum") };
+    foreach (var (thresh, emoji, label) in msThresholds)
+    {
+        if (milestoneCount > thresh)
+        {
+            var msNoteIdx = milestoneCount - thresh; // descending index of the nth note
+            if (msNoteIdx >= 0 && msNoteIdx < ProgressEntries.Count)
+            {
+                var msNote = ProgressEntries[msNoteIdx];
+                var msDt = DateTimeOffset.FromUnixTimeMilliseconds(msNote.UpdatedOn).LocalDateTime;
+                prevMsEmoji = emoji;
+                prevMsLabel = label;
+                prevMsDate = msDt.ToString("MMM d, yyyy");
+                prevMsDaysAgo = (int)(DateTime.Now - msDt).TotalDays;
+            }
+            break;
+        }
+    }
 }
 @if (achievedMs)
 {
@@ -454,6 +477,13 @@ else if (bestGoalStreak >= 2 && goalStreak < bestGoalStreak)
             </MudStack>
         </MudStack>
     </MudPaper>
+}
+@if (prevMsEmoji is not null && prevMsDate is not null)
+{
+    var prevDaysLabel = prevMsDaysAgo == 0 ? "today" : prevMsDaysAgo == 1 ? "yesterday" : $"{prevMsDaysAgo} days ago";
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">
+        @prevMsEmoji Reached <strong>@prevMsLabel</strong> on @prevMsDate (@prevDaysLabel)
+    </MudText>
 }
 @{
     // Next milestone teaser (1, 5, 10, 25, 50)
