@@ -207,6 +207,15 @@
                     </MudText>
                 }
             }
+            @{
+                var goalsWithNextStep = AllActiveGoals.Count(g => LatestNextStep.ContainsKey(g.Guid));
+            }
+            @if (goalsWithNextStep > 0)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Primary">
+                    📌 @goalsWithNextStep goal@(goalsWithNextStep == 1 ? "" : "s") with a next step ready
+                </MudText>
+            }
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="4">
