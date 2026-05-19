@@ -295,6 +295,20 @@
 }
 @if (ProgressEntries.Count >= 1 && Goal.CompletionDate is null)
 {
+    var dslLastMs = ProgressEntries.First().UpdatedOn;
+    var dslDays = (int)((pdTodayStartMs - dslLastMs) / 86_400_000L);
+    if (dslDays >= 7)
+    {
+        var dslMsg = dslDays >= 21
+            ? $"💙 <strong>It's been {dslDays} days</strong> since your last note on this goal — check in and see where you are. Every note counts!"
+            : dslDays >= 14
+            ? $"📋 <strong>{dslDays} days</strong> since your last note — this goal is waiting for you. Add an update and keep the momentum going!"
+            : $"⏳ Your last note was <strong>{dslDays} days ago</strong> — time for a quick check-in on this goal!";
+        <MudAlert Severity="@(dslDays >= 21 ? Severity.Warning : Severity.Info)" Icon="@Icons.Material.Filled.EditNote" Dense="true" Class="mb-3">@((MarkupString)dslMsg)</MudAlert>
+    }
+}
+@if (ProgressEntries.Count >= 1 && Goal.CompletionDate is null)
+{
     var feaFirstDate = DateTimeOffset.FromUnixTimeMilliseconds(ProgressEntries.Last().UpdatedOn).LocalDateTime;
     var feaToday = DateTime.Today;
     if (feaFirstDate.Month == feaToday.Month && feaFirstDate.Day == feaToday.Day && feaFirstDate.Year < feaToday.Year)

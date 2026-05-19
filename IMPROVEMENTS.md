@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-19 — Invocation 8 Iter 609 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Note quality growth": compare avg word count of last 5 vs first 5 progress notes (>= 10 notes); show "Your notes are getting richer!" | UX/Encourage | Domain: note depth evolution | Medium | S | Low | NextStepItems.Split(' ').Length; two groups; compare avg | Complex word count; NextStepItems may be null | No |
+| 2 | Web: Home — "Encourage measurable outcome": if any active goal lacks MeasurableOutcome, show "Set a target for [Goal] — knowing where you're going helps you get there!" | UX/Encourage | Domain: goal quality nudge | Medium | XS | Low | AllActiveGoals.FirstOrDefault(g => string.IsNullOrWhiteSpace(g.MeasurableOutcome)); link to edit | Nudges goal quality; directly supports goal achievement | No |
+| 3 | Web: GoalDetail — "Days since last note" nudge: when active goal's most recent note was 7+ days ago, show "Your last note was X days ago — share an update!" | UX/Motivate | Domain: re-engagement | High | XS | Low | ProgressEntries.First().UpdatedOn; today - lastNote days; show when >= 7 and not completed | Most actionable nudge possible; directly drives note-taking | No |
+| 4 | Web: Insights — "Average goal age at completion": for GoalsCompletedAllTime >= 3, compute avg days from EnteredDate to CompletionDate; show "On average you reach your goals in X days!" | UX/Inform | Domain: completion velocity | Low | S | Med | Needs extra query for completed goal dates; may not be worth the query | Low priority; needs extra data | No |
+| 5 | Web: Home — "Most recent completed goal shoutout": when CompletedGoals.Count >= 1, show "🏆 Last completed: [Goal name] — celebrate that win!" as a rotating positive callout | UX/Encourage | Domain: achievement recognition | Medium | XS | Low | CompletedGoals.First().GoalText; show in completed section header | Keeps completed goals visible; positive reinforcement | No |
+| 6 | Web: Journal — "This week vs last week entry count": show "X entries this week vs Y last week" caption near the journal streak | UX | Domain: journal WoW pace | Low | XS | Low | allEntries filtered by thisWeekStart/lastWeekStart; simple count compare | Minor metric; mirrors Home's WoW for journal | No |
+| 7 | Web: GoalDetail — "Current week rank": of all weeks for this goal, how does this week's note count rank? Show "This is your #N best week on this goal!" when >= 3 weeks history | UX/Encourage | Domain: weekly performance context | Medium | S | Low | Group ProgressEntries by ISOWeek; rank current week; show when >= 3 weeks | Fun competitive self-comparison; encourages weekly excellence | No |
+| 8 | Web: Home — "Notes per goal this week": if ProgressThisWeek > 0 and AllActiveGoals.Count > 1, show "X notes across Y goals this week — well-rounded effort!" | UX/Encourage | Domain: breadth of effort | Low | XS | Low | ProgressThisWeek already loaded; AllActiveGoals.Count | Minor cross-goal metric; complements other stats | No |
+| 9 | Web: GoalDetail — "First note anniversary reminder": show "Your first note on this goal was exactly N months ago!" when month-anniversary of first note (± 2 days, >= 2 months) | UX/Celebrate | Domain: progress journey markers | Low | XS | Low | ProgressEntries.Last().UpdatedOn month/day check vs today; show when N >= 2 | Niche; only fires for long-running goals | No |
+| 10 | Web: Insights — "Most active goal this week" callout: of all active goals, which had the most notes in the last 7 days? Show "Your focus goal this week: [Goal]!" when >= 3 notes on that goal | UX/Encourage | Domain: weekly focus recognition | Medium | XS | Low | AllActiveGoalGuids; ProgressThisWeek grouped by GoalGuid; MaxBy count | Needs per-goal breakdown of this week's notes | No |
+
+**Selection iter 609:** Item #3 — "Days since last note" nudge on GoalDetail.
+- When an active goal's most recent progress note is 7+ days old, show "Your last note was X days ago — time to check in!" with tiered urgency (7-13 days: gentle, 14-20 days: firmer, 21+ days: concerned)
+- Directly drives re-engagement, the most actionable nudge possible
+- Uses `ProgressEntries.First().UpdatedOn` (most recent, sorted descending)
+
+---
+
 ## 2026-05-19 — Invocation 8 Iter 606 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
