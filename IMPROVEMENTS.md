@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-19 — Invocation 8 Iter 588 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Insights — "Todos completed this year" stat: add YtdTodosCompleted field; filter allTodosEver by year start ms; show "🎯 X todos completed this year" when >= 5 | UX/Encourage | Domain: annual todo achievement | Medium | XS | Low | allTodosEver already queried at line 919; filter in memory by year start; add caption under AllTime count | Annual todo achievement stat | No |
+| 2 | Web: GoalDetail — "Time since last note" hero display: show large friendly "X days since last note" badge at top when >= 3 days | UX/Urgency | Domain: recency awareness | High | XS | Low | ProgressEntries.First().UpdatedOn; daysSinceLast already computed; show MudChip at top | Immediate call to action when behind | No |
+| 3 | Web: Home — "Average days between notes" across all active goals when >= 10 total notes | UX | Domain: note frequency self-awareness | Low | S | Low | Per goal: entries sorted, compute gaps, average; complex across all goals | Too complex for marginal value | No |
+| 4 | Web: Journal — "Entry count by mood" caption: "You've written X times when 😊, Y times when 😴" for top 2 moods | UX | Domain: emotional context awareness | Low | XS | Low | AllMoods already computed; take top 2; show simple caption | Light insight from already-loaded data | No |
+| 5 | Web: GoalDetail — "You've crossed the halfway mark!" when ProgressEntries.Count == ExpirationDate-distance/2 for timed goals | UX/Encourage | Domain: timed goal halfway celebration | Medium | XS | Low | ExpirationDate.HasValue; halfwayCount = totalExpectedNotes/2; show when Count crosses it | Meaningful milestone for timed goals only | No |
+| 6 | Web: Home — "Most recent new goal": highlight the goal added most recently if it's < 3 days old; "New goal! You're off to a great start." | UX/Encourage | Domain: new goal momentum | Medium | XS | Low | AllActiveGoals.OrderByDescending(EnteredDate).First(); check < 3 days; encourage | Warm welcome for brand new goals | No |
+| 7 | Web: Insights — "Goal age distribution": show how many goals are <30d, 30-90d, 90d+ as a visual breakdown | UX | Domain: portfolio age health | Low | M | Low | AllActiveGoals EnteredDate; bucket counts; show 3 MudChips | Portfolio snapshot; minor value | No |
+| 8 | Web: GoalDetail — "Note density score": notes per unique active day vs total days; show "You log notes on X% of days you're active on this goal" | UX | Domain: per-active-day density | Low | S | Med | Complex calculation; unclear value | Too complex; skip | No |
+| 9 | Web: Journal — "Most journaled mood this month": filter AllEntries to current month; find mode mood; "This month you're mostly feeling [mood]!" | UX/Encourage | Domain: current month emotional snapshot | Medium | XS | Low | AllEntries month filter; AllMoods re-filtered; show as chip or text | Immediate emotional context; month-specific insight | No |
+| 10 | Web: Home — "Celebrate when all goals updated today": if every active goal has a note from today, show "🌟 All goals updated today — you're on fire!" | UX/Encourage | Domain: complete-portfolio daily sweep | High | XS | Low | allGoalsActiveToday already computed; show when true AND AllActiveGoals.Count >= 2 | Rare but very rewarding achievement | No |
+
+**Selection iter 588:** Item #10 — "All goals updated today" celebration on Home.
+- `allGoalsActiveToday` is already computed in Home.razor
+- Show "🌟 All goals updated today — every single goal has a note from you today!" when `allGoalsActiveToday && AllActiveGoals.Count >= 2`
+- Zero extra queries; uses existing computed flag
+
+---
+
 ## 2026-05-19 — Invocation 8 Iter 585 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
