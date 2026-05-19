@@ -377,6 +377,23 @@
                 }
             </MudStack>
         }
+        @{
+            var topWeekdays = ProgressEntries
+                .Select(p => DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime.DayOfWeek)
+                .GroupBy(d => d)
+                .OrderByDescending(g => g.Count())
+                .Take(2)
+                .Where(g => g.Count() >= 2)
+                .Select(g => g.Key.ToString())
+                .ToList();
+        }
+        @if (topWeekdays.Count >= 1)
+        {
+            var wdLabel = topWeekdays.Count == 1 ? topWeekdays[0] : $"{topWeekdays[0]} & {topWeekdays[1]}";
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                📅 You tend to work on this goal on <strong>@wdLabel</strong> — keep that habit going!
+            </MudText>
+        }
         @if (firstSnip is not null && latestSnip is not null)
         {
             <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
