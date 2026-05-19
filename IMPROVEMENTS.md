@@ -2,6 +2,30 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 447 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Home — completed goals count in trophy stat card ("Y completed") | UI/Encourage | Domain: recognition of past wins; seeing completed count motivates future goal-setting | High | XS | Low | Zero new queries — CompletedGoals.Count already loaded; instant positive reinforcement | None — purely additive | No |
+| 2 | Web: Insights — "Most progress" goal spotlight card | Func | Domain: achievement recognition | Medium | S | Low | "This goal has the most notes: 12 notes on [goal]" — a mini hall-of-fame | Insights page may be low-traffic | No |
+| 3 | Web: Home — motivational quote of the day (curated rotating list) | UI/Encourage | Domain: encouragement | Low | XS | Low | Different uplifting message each visit; zero DB queries; just a curated array | Feels generic if not personalized | No |
+| 4 | Web: GoalDetail — "goal history" summary card at bottom (first note date, total notes, last note date) | UI | Domain: progress history at a glance | Medium | S | Low | Compact summary "Started: Jan 5 · 12 notes · Last update: 3 days ago" | Partially redundant with timeline | No |
+| 5 | Web: Home — "Goals needing attention" expandable section (stale + no-notes goals) | UI/Encourage | Domain: caregiver action prompts | High | M | Low | All neglected goals in one place with one-click Add Note | Medium effort; some UI complexity | No |
+| 6 | Web: GoalDetail — auto-suggest next step from previous notes (show last note's NextStepItems as pre-fill) | UX | Domain: reduce blank-page friction when adding progress | High | S | Low | Pre-fills the new-note dialog with the previous note's next step; kid confirms or edits | Only works when there's a prior note | No |
+| 7 | Web: Home — "Your best streak" displayed on a goal card or globally | UI/Encourage | Domain: habit formation summary | Medium | S | Low | "Your longest current streak: 4 weeks on [Goal Name]!" | Requires finding max streak | No |
+| 8 | Web: Insights — goal completion rate over time (line chart) | Func | Domain: analytics | Low | M | Medium | Shows completed vs. active count per month | Medium effort; Insights already has a lot | No |
+| 9 | API: Progress note quality check — warn if new note is duplicate of last note | UX/Stability | Domain: data integrity | Low | S | Low | If kid logs identical text twice, show "Looks like you've noted this before!" | String matching needed; annoying if false-positive | No |
+| 10 | Web: GoalDetail — "next milestone" celebration preview ("Only 2 notes to your next milestone!") | UI/Encourage | Domain: gamification | High | XS | Low | Pre-empt the next milestone badge by teasing it; reuses existing milestone logic | Already partially covered by level meter | No |
+
+**Selection iter 447:** Item #6 — Auto-pre-fill new progress note with prior note's NextStepItems.
+- Kids (and caregivers) face blank-page friction when opening Add Progress Dialog
+- Pre-filling with the previous note's "next steps" turns "what do I write?" into "did this happen?"
+- Zero new DB queries (ProgressEntries is already loaded; just use `ProgressEntries.FirstOrDefault()`)
+- High impact: directly serves the goal-achievement loop (last step → did it happen? → new step)
+- Low risk: user can clear and retype; just a pre-fill, not a forced value
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 440 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
