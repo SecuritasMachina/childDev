@@ -558,36 +558,57 @@
 
 @if (CompletedGoals.Any())
 {
-    <MudExpansionPanels Class="mt-6">
-        <MudExpansionPanel Text="@($"Completed Goals ({CompletedGoals.Count})")">
-            <MudList T="Goal" Dense="true">
-                @foreach (var g in CompletedGoals)
-                {
-                    var completedOn = DateTimeOffset.FromUnixTimeMilliseconds(g.CompletionDate!.Value).LocalDateTime;
-                    var daysAgo = (int)(DateTime.Now - completedOn).TotalDays;
-                    string completedLabel;
-                    if (daysAgo == 0) completedLabel = "Completed today!";
-                    else if (daysAgo == 1) completedLabel = "Completed yesterday";
-                    else if (daysAgo < 7) completedLabel = $"Completed {daysAgo} days ago";
-                    else if (daysAgo < 14) completedLabel = "Completed 1 week ago";
-                    else if (daysAgo < 60) completedLabel = $"Completed {daysAgo / 7} weeks ago";
-                    else if (daysAgo < 365) completedLabel = $"Completed {daysAgo / 30} months ago";
-                    else completedLabel = $"Completed {completedOn:MMM d, yyyy}";
-                    <MudListItem>
-                        <MudStack Row="true" AlignItems="AlignItems.Center">
-                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
-                            <MudStack Spacing="0" Style="flex:1">
-                                <MudText Typo="Typo.body2" Class="text-decoration-line-through">@g.GoalText</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">@completedLabel</MudText>
-                            </MudStack>
-                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
-                                       Href="@($"/goals/{g.Guid}")">View</MudButton>
+    var recentCompleted = CompletedGoals
+        .OrderByDescending(g => g.CompletionDate ?? 0)
+        .Take(6)
+        .ToList();
+    var hasMore = CompletedGoals.Count > 6;
+    <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mt-6 mb-2" Style="text-transform:uppercase;letter-spacing:1px;">
+        🏆 Achievement Gallery (@CompletedGoals.Count)
+    </MudText>
+    <MudGrid Class="mb-2">
+        @foreach (var g in recentCompleted)
+        {
+            var completedOn = DateTimeOffset.FromUnixTimeMilliseconds(g.CompletionDate!.Value).LocalDateTime;
+            var daysAgo = (int)(DateTime.Now - completedOn).TotalDays;
+            var dateLabel = daysAgo == 0 ? "Today! 🎉" : daysAgo == 1 ? "Yesterday" : daysAgo < 7 ? $"{daysAgo}d ago" : completedOn.ToString("MMM d");
+            var titleShort = g.GoalText is not null && g.GoalText.Length > 55 ? g.GoalText[..55] + "…" : (g.GoalText ?? "");
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="1" Class="pa-3" Style="border-radius:12px;border:1.5px solid var(--mud-palette-warning);background:linear-gradient(135deg,rgba(255,193,7,.06) 0%,rgba(255,255,255,0) 100%);">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudText Style="font-size:1.4rem;line-height:1;">🏆</MudText>
+                        <MudStack Spacing="0" Style="flex:1;min-width:0;">
+                            <MudText Typo="Typo.body2" Style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">@titleShort</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@dateLabel</MudText>
                         </MudStack>
-                    </MudListItem>
-                }
-            </MudList>
-        </MudExpansionPanel>
-    </MudExpansionPanels>
+                        <MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small"
+                                       Color="Color.Warning" Href="@($"/goals/{g.Guid}")" />
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+    @if (hasMore)
+    {
+        <MudExpansionPanels Class="mb-2">
+            <MudExpansionPanel Text="@($"See all {CompletedGoals.Count} achievements…")">
+                <MudList T="Goal" Dense="true">
+                    @foreach (var g in CompletedGoals.OrderByDescending(g => g.CompletionDate ?? 0).Skip(6))
+                    {
+                        var completedOn2 = DateTimeOffset.FromUnixTimeMilliseconds(g.CompletionDate!.Value).LocalDateTime;
+                        <MudListItem>
+                            <MudStack Row="true" AlignItems="AlignItems.Center">
+                                <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Size="Size.Small" />
+                                <MudText Typo="Typo.body2" Style="flex:1">@g.GoalText</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mr-2">@completedOn2.ToString("MMM d, yyyy")</MudText>
+                                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" Href="@($"/goals/{g.Guid}")">View</MudButton>
+                            </MudStack>
+                        </MudListItem>
+                    }
+                </MudList>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    }
 }
 
 @* Goal completion celebration *@
