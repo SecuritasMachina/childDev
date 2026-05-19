@@ -454,6 +454,22 @@
                   :               $"📅 Notes in {cpActiveWeeks} of {cpTotalWeeks} weeks ({cpPct}% consistency) — every week you log counts!";
         <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.CalendarMonth" Dense="true" Class="mb-3">@((MarkupString)cpMsg)</MudAlert>
     }
+    var bmGroup = ProgressEntries
+        .GroupBy(p => { var d = DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime; return new { d.Year, d.Month }; })
+        .OrderByDescending(g => g.Count())
+        .FirstOrDefault();
+    var bmDistinctMonths = ProgressEntries
+        .Select(p => { var d = DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime; return new { d.Year, d.Month }; })
+        .Distinct().Count();
+    if (bmGroup is not null && bmGroup.Count() >= 3 && bmDistinctMonths >= 3)
+    {
+        var bmDate = new DateTime(bmGroup.Key.Year, bmGroup.Key.Month, 1);
+        var bmIsThisMonth = bmDate.Year == DateTime.Today.Year && bmDate.Month == DateTime.Today.Month;
+        var bmLabel = bmIsThisMonth ? "this month" : bmDate.ToString("MMMM yyyy");
+        <MudText Typo="Typo.caption" Color="Color.Primary" Class="mb-3">
+            📆 Best month on this goal: <strong>@bmGroup.Count() notes</strong> in @bmLabel — can you beat it?
+        </MudText>
+    }
 }
 @{
     // Rule-based goal insight narrative
