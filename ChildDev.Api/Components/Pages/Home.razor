@@ -421,6 +421,14 @@
         ? $"This week: {ProgressThisWeek} progress note{(ProgressThisWeek == 1 ? "" : "s")} on 1 goal! 💪 Keep going!"
         : $"This week: {ProgressThisWeek} progress note{(ProgressThisWeek == 1 ? "" : "s")} across {GoalsProgressedThisWeek} goals! 🌟 Amazing work!";
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.TrendingUp" Dense="true" Class="mb-2">@wMsg</MudAlert>
+    if (ProgressLastWeek > 0)
+    {
+        var wowDiff = ProgressThisWeek - ProgressLastWeek;
+        var wowMsg = wowDiff > 0 ? $"📈 +{wowDiff} vs last week ({ProgressLastWeek}) — you're improving!"
+                   : wowDiff < 0 ? $"📉 {ProgressLastWeek} last week — can you match or beat it this week?"
+                   :               $"= Same as last week ({ProgressLastWeek} notes) — steady consistency!";
+        <MudText Typo="Typo.caption" Color="@(wowDiff >= 0 ? Color.Success : Color.Warning)" Class="mb-2">@wowMsg</MudText>
+    }
 }
 @if (GoalStreaks.Any() && string.IsNullOrWhiteSpace(FilterText))
 {
@@ -1332,6 +1340,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private Dictionary<string, int> GoalStreaks = new();
     private Dictionary<string, int> TodayCountByGoal = new();
     private int ProgressThisWeek;
+    private int ProgressLastWeek;
     private int GoalsProgressedThisWeek;
     private string? GoalOfMonthGuid;
     private string? GoalOfMonthText;
@@ -1462,8 +1471,10 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         }
 
         var weekAgoMs = nowMsStreak - 7L * 86_400_000L;
+        var twoWeeksAgoMs = nowMsStreak - 14L * 86_400_000L;
         var weekEntries = allTimestamps.Where(p => p.UpdatedOn >= weekAgoMs).ToList();
         ProgressThisWeek = weekEntries.Count;
+        ProgressLastWeek = allTimestamps.Count(p => p.UpdatedOn >= twoWeeksAgoMs && p.UpdatedOn < weekAgoMs);
         GoalsProgressedThisWeek = weekEntries.Select(p => p.GoalFk).Distinct().Count();
 
         // Progress notes logged today across all active goals
