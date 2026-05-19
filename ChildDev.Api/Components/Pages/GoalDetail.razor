@@ -131,6 +131,55 @@
 }
 
 @{
+    // Focus score: recency (0-40) + frequency (0-40) + streak (0-20)
+    var nowMsFS = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    var goalAgeWeeksFS = Math.Max((nowMsFS - Goal.EnteredDate) / (7.0 * 86_400_000.0), 0.1);
+    int focusScore = 0;
+    string focusGrade = "F";
+    Color focusColor = Color.Default;
+    if (ProgressEntries.Count > 0)
+    {
+        var latestMs = ProgressEntries.First().UpdatedOn;
+        var daysSinceFS = (int)((nowMsFS - latestMs) / 86_400_000L);
+        var recencyPts = daysSinceFS == 0 ? 40 : daysSinceFS == 1 ? 30 : daysSinceFS <= 3 ? 20 : daysSinceFS <= 7 ? 10 : 0;
+        var notesPerWeekFS = ProgressEntries.Count / goalAgeWeeksFS;
+        var freqPts = (int)Math.Min(notesPerWeekFS * 4.0, 40);
+        var fsActiveDates = ProgressEntries
+            .Select(p => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime))
+            .ToHashSet();
+        var fsStreak = 0;
+        var fsDay = DateOnly.FromDateTime(DateTime.Today);
+        while (fsActiveDates.Contains(fsDay)) { fsStreak++; fsDay = fsDay.AddDays(-1); }
+        var streakPts = (int)Math.Min(fsStreak * 4, 20);
+        focusScore = recencyPts + freqPts + streakPts;
+        (focusGrade, focusColor) = focusScore >= 90 ? ("A", Color.Success)
+            : focusScore >= 75 ? ("B", Color.Primary)
+            : focusScore >= 55 ? ("C", Color.Warning)
+            : focusScore >= 35 ? ("D", Color.Warning)
+            : ("F", Color.Default);
+    }
+}
+@if (ProgressEntries.Count >= 1 && Goal.CompletionDate is null)
+{
+    var focusDesc = focusGrade switch
+    {
+        "A" => "Outstanding focus — this goal is getting your best effort!",
+        "B" => "Strong focus — great consistency on this goal!",
+        "C" => "Good effort — keep adding notes to build momentum!",
+        "D" => "This goal needs more attention — even one note helps!",
+        _   => "Let's get back to this goal — every note counts!"
+    };
+    <MudPaper Elevation="1" Class="pa-3 mb-3" Style="border-radius:12px;border-left:4px solid var(--mud-palette-primary);">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudText Typo="Typo.h4" Style="@($"font-weight:900;color:var(--mud-palette-{(focusGrade == "A" ? "success" : focusGrade == "B" ? "primary" : "warning")}-text,currentColor);min-width:36px;text-align:center;")">@focusGrade</MudText>
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.caption" Style="font-weight:600;">Focus Score: @focusScore/100</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@focusDesc</MudText>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+}
+@{
     // Rule-based goal insight narrative
     var nowMsI = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
     var goaldAgeWeeks = Math.Max((nowMsI - Goal.EnteredDate) / (7.0 * 86_400_000.0), 0.1);
