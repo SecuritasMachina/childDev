@@ -330,12 +330,20 @@ else
         {
             var enteredDate = DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime;
             var isPersonalBest = bestNoteGuid is not null && p.Guid == bestNoteGuid;
-            <MudTimelineItem Color="@(isPersonalBest ? Color.Warning : Color.Primary)" Size="Size.Small">
+            var noteTextLower = (p.NextStepItems ?? "").ToLowerInvariant();
+            var isLearnNote = noteTextLower.Contains("learn") || noteTextLower.Contains("discover") ||
+                              noteTextLower.Contains("realiz") || noteTextLower.Contains("figured out") ||
+                              noteTextLower.Contains("understand") || noteTextLower.Contains("found out");
+            <MudTimelineItem Color="@(isPersonalBest ? Color.Warning : isLearnNote ? Color.Info : Color.Primary)" Size="Size.Small">
                 <ItemContent>
-                    <MudPaper Elevation="1" Class="pa-3 mb-2" Style="@(isPersonalBest ? "border:1.5px solid var(--mud-palette-warning);" : "")">
+                    <MudPaper Elevation="1" Class="pa-3 mb-2" Style="@(isPersonalBest ? "border:1.5px solid var(--mud-palette-warning);" : isLearnNote ? "border:1.5px solid var(--mud-palette-info);" : "")">
                         @if (isPersonalBest)
                         {
                             <MudChip T="string" Size="Size.Small" Color="Color.Warning" Class="mb-1" Style="font-size:0.7rem;">⭐ Your most detailed note!</MudChip>
+                        }
+                        @if (isLearnNote && !isPersonalBest)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Info" Class="mb-1" Style="font-size:0.7rem;">💡 Learning moment!</MudChip>
                         }
                         <MudStack Row="true" AlignItems="AlignItems.Start">
                             <MudStack Spacing="0" Style="flex:1">
