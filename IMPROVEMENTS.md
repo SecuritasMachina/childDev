@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-19 — Invocation 9 Iter 648 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Home — "You're on a roll" when ProgressNotesToday >= 3: "🔥 X notes today across your goals — you're in the zone!" | UX/Encourage | Domain: high-output day celebration | High | XS | Low | ProgressNotesToday already loaded; simple threshold | Immediate real-time momentum; XS effort | No |
+| 2 | Web: GoalDetail — "Goal started on special day": if EnteredDate falls on a Monday or Jan 1, show "You started this goal on a Monday — goals started on Mondays have great energy!" | UX/Encourage | Domain: goal start context | Low | XS | Low | goalDate.DayOfWeek; fun trivia; non-essential | Light fun fact; low effort | No |
+| 3 | Web: Insights — "Average journal entries per month": TotalJournalEntries / months since first entry; show "You average X entries/month — great habit!" | UX | Domain: long-term journal pace | Low | XS | Low | JournalTotal / months from first entry date; FirstEntryDate field | Simple pace stat; needs first entry date | No |
+| 4 | Web: Journal — "Longest journaling run this year": find max consecutive journal-day streak within current year; show "Your longest run this year: X days!" when >= 5 | UX/Encourage | Domain: annual peak habit | Medium | S | Low | allEntries.Where(yearFilter).dates; scan for max consecutive | Year-scoped peak streak; S effort | No |
+| 5 | Web: GoalDetail — "Motivational phase label": if daysSince < 14 show "Kickoff phase", 14-60 "Building momentum", 60-180 "Deep work phase", 180+ "Long-game player" | UX | Domain: goal lifecycle framing | Low | XS | Low | daysSince ranges; static labels; MudChip display | Light framing of where they are in the journey | No |
+| 6 | Web: Home — "Celebrate all goals updated today": if every active goal has a note today (all-goals-active-today flag), show "🌟 All goals updated today — complete portfolio sweep!" | UX/Encourage | Domain: complete daily portfolio | High | XS | Low | allGoalsActiveToday already computed; AllActiveGoals.Count >= 2 | Rare but very rewarding; already has the flag | No |
+| 7 | Web: GoalDetail — "Completed goal high-five": when Goal.CompletionDate is set, show a big celebration at top of page with animation-class | UX/Celebrate | Domain: goal completion ceremony | High | XS | Low | Goal.CompletionDate != null; show prominent success banner | Completion deserves major recognition | No |
+| 8 | Web: Insights — "Monthly journal consistency trend": compare JournalConsistencyScore30 to JournalConsistencyScore30LastMonth; show "📓 Getting more consistent!" or "📓 A bit slower this month" | UX | Domain: journaling trend | Low | M | Med | Need JournalConsistencyScore30LastMonth field; extra range query | Interesting trend; medium effort | No |
+| 9 | Web: GoalDetail — "Encouragement when goal has MeasurableOutcome set": show "🎯 You know exactly where you're headed — goals with clear targets are 3x more likely to succeed!" | UX/Encourage | Domain: measurable outcome celebration | High | XS | Low | !string.IsNullOrWhiteSpace(Goal.MeasurableOutcome); show once | Reinforces importance of measurable targets | No |
+| 10 | Web: Home — "Week-over-week note trend arrow": show ⬆️/➡️/⬇️ trend icon + label next to ProgressThisWeek when both weeks have data | UX | Domain: WoW trend visualization | Medium | XS | Low | ProgressThisWeek vs ProgressLastWeek; compute delta; show directional | Instant WoW trend read | No |
+
+**Selection iter 648:** Item #6 — "All goals updated today" celebration on Home.
+- Check `allGoalsActiveToday` flag (already computed) + `AllActiveGoals.Count >= 2`
+- Show "🌟 All goals updated today — complete portfolio sweep! You're unstoppable!"
+- XS effort — the flag already exists; just need the display block
+- High impact: rare achievement deserves the biggest possible celebration
+
+---
+
 ## 2026-05-19 — Invocation 9 Iter 642 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
