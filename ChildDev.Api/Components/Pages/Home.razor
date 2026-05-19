@@ -832,6 +832,33 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                    Href="@($"/goals/{gotdGoal.Guid}")" Class="ml-1">View goal</MudButton>
     </MudAlert>
 }
+@{
+    var dowDay = DateTime.Today.DayOfWeek;
+    string? dowMsg = null;
+    string? dowIcon = null;
+    if (dowDay == DayOfWeek.Wednesday && string.IsNullOrWhiteSpace(FilterText) && AllActiveGoals.Count >= 1)
+    {
+        dowMsg = $"🌟 <strong>Midweek check-in!</strong> You're halfway through — how are your {AllActiveGoals.Count} goal{(AllActiveGoals.Count == 1 ? "" : "s")} coming along?";
+        dowIcon = Icons.Material.Filled.TrackChanges;
+    }
+    else if (dowDay == DayOfWeek.Sunday && string.IsNullOrWhiteSpace(FilterText) && AllActiveGoals.Count >= 1)
+    {
+        var dowWeekNotes = ProgressThisWeek;
+        dowMsg = dowWeekNotes >= 1
+            ? $"📋 <strong>Sunday reset!</strong> You logged {dowWeekNotes} note{(dowWeekNotes == 1 ? "" : "s")} this week — plan your next move for the week ahead!"
+            : "📋 <strong>Sunday reset!</strong> New week starts tomorrow — pick a goal to focus on and make a plan!";
+        dowIcon = Icons.Material.Filled.DateRange;
+    }
+    else if (dowDay == DayOfWeek.Monday && string.IsNullOrWhiteSpace(FilterText) && AllActiveGoals.Count >= 1)
+    {
+        dowMsg = $"🚀 <strong>New week, new momentum!</strong> You have {AllActiveGoals.Count} active goal{(AllActiveGoals.Count == 1 ? "" : "s")} — which one gets your first note this week?";
+        dowIcon = Icons.Material.Filled.RocketLaunch;
+    }
+}
+@if (dowMsg is not null)
+{
+    <MudAlert Severity="Severity.Info" Icon="@dowIcon" Dense="true" Class="mb-3">@((MarkupString)dowMsg)</MudAlert>
+}
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
     <MudText Typo="Typo.h5">
         <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="mr-2" />
