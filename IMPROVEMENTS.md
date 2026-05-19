@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-19 — Invocation 9 Iter 642 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Note quality growth": compare avg word count first half vs second half of progress entries (>= 10); show "Your notes are getting deeper — averaging X words now vs Y before!" | UX/Encourage | Domain: depth growth signal | High | S | Low | NextStepItems?.Split(' ', RemoveEmpty).Length; partition by index; avg; compare; >= 10 notes | Long-deferred; high value for engaged kids | No |
+| 2 | Web: Insights — "Most active goal" callout: find goal with max progress note count (GoalProgressCounts); show "[Goal name] has X notes — your most dedicated goal!" when >= 10 notes | UX/Encourage | Domain: dedication recognition | Medium | S | Low | Need GoalProgressCounts + goal text lookup; medium effort | Celebrates deep focus on one goal | No |
+| 3 | Web: Home — "New goal encouragement": if any active goal was added today or yesterday, show "🌱 New goal! You're building something great — this is just the beginning!" | UX/Encourage | Domain: new goal warmth | High | XS | Low | AllActiveGoals EnteredDate >= today-1; first match; show message | Warm welcome for brand new goals; XS effort | No |
+| 4 | Web: Journal — "Longest journaling run this year": find max consecutive-day journal streak in current year; show "Your longest run this year: X days in a row!" when >= 5 | UX/Encourage | Domain: peak habit within year | Medium | S | Low | journalDates filtered to yearStart; scan for max consecutive run | Year-scoped peak streak | No |
+| 5 | Web: GoalDetail — "This goal's note density": notes per day since goal was created; show "You log notes on this goal every X days on average!" | UX | Domain: per-goal note frequency | Low | XS | Low | ProgressEntries.Count / daysSince; show when daysSince >= 14 and count >= 3 | Light cadence context; XS effort | No |
+| 6 | Web: Home — "Goals added this month": count AllActiveGoals + CompletedGoals with EnteredDate in current month; show "📋 X goals started this month — ambition level: high!" when >= 2 | UX/Encourage | Domain: monthly goal creation pace | Medium | XS | Low | AllActiveGoals + CompletedGoals; filter by monthStart; count | Celebrates active goal-setting behavior | No |
+| 7 | Web: Insights — "Streak history chart": show last 7-day active days (1 or 0) as ✅/⬜ emoji pattern "Your last 7 days: ✅⬜✅✅⬜✅✅" in Insights | UX | Domain: visual recent activity | Medium | XS | Low | allEver last 7 days; check each day has any activity; map to emoji | Fun visual representation of recent activity | No |
+| 8 | Web: GoalDetail — "Longest gap between notes encouragement": if the all-time longest gap between notes is >= 7 days but current gap < 3 days, show "You've bounced back better than ever!" | UX/Encourage | Domain: resilience recognition | Medium | XS | Low | ProgressEntries sorted; max gap computation; compare to current gap from today | Celebrates consistency after a historic gap | No |
+| 9 | Web: GoalDetail — "100-day challenge": if ExpirationDate is exactly 100 days from EnteredDate (±3), show "🔥 100-day challenge accepted! You're on day X!" | UX/Encourage | Domain: 100-day challenge frame | High | XS | Low | ExpirationDate - EnteredDate ≈ 100 * 86_400_000L; daysSince; show current day count | Gamifies goals set to exactly 100-day windows | No |
+| 10 | Web: Home — "Todos completed today" celebration: if any todos were completed today (CompletedAt >= todayStartMs), show "🎯 X todo{s} done today — action mode!" | UX/Encourage | Domain: daily todo completion recognition | High | XS | Low | AllTodos (if loaded) or quick filter; CompletedAt >= todayStartMs | Celebrates daily todo completion; high momentum | No |
+
+**Selection iter 642:** Item #3 — "New goal encouragement" on Home when a goal was added today or yesterday.
+- Filter `AllActiveGoals` for `EnteredDate >= yesterday-start-ms`; take first match
+- Show "🌱 New goal added! You're building something great — this is just the beginning!"
+- XS effort — AllActiveGoals already loaded; simple date filter
+- High impact: new goal warmth increases early engagement and reduces abandonment
+
+---
+
 ## 2026-05-19 — Invocation 9 Iter 639 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |

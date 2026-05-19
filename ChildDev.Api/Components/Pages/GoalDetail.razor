@@ -133,6 +133,16 @@
                     {
                         <MudText Typo="Typo.caption" Color="Color.Success">📅 @ntmCount this month!</MudText>
                     }
+                    @{
+                        var ndGoalDate = DateTimeOffset.FromUnixTimeMilliseconds(Goal.EnteredDate).LocalDateTime;
+                        var ndDaysSince = (int)(DateTime.Now - ndGoalDate).TotalDays;
+                    }
+                    @if (ProgressEntries.Count >= 3 && ndDaysSince >= 14)
+                    {
+                        var ndDaysPerNote = ndDaysSince / (double)ProgressEntries.Count;
+                        var ndLabel = ndDaysPerNote < 2 ? "Every 1-2 days" : ndDaysPerNote < 5 ? $"Every {ndDaysPerNote:F0} days" : $"Every {ndDaysPerNote:F0}d avg";
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">📈 @ndLabel</MudText>
+                    }
                 </MudPaper>
             </MudItem>
             @if (totalWords522 >= 10)
