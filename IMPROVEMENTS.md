@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-19 — Invocation 6 Iter 552 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Next steps evolution" mini-panel: list last 3 unique next step snippets chronologically | UX | Domain: progress trail, show learning arc | High | S | Low | ProgressEntries sorted desc; filter non-null NextStepItems; take last 3; show as compact list | Shows the journey of plans; zero extra queries | No |
+| 2 | Web: Insights — "Journal mood trend": compare dominant mood this week vs last week | UX/Encourage | Domain: emotional trajectory awareness | Medium | M | Low | Filter allJournalEver by week timestamps; compute mode mood each week; compare | Interesting mood shift awareness; needs mood data per entry | No |
+| 3 | Web: Home — "Streak champion" callout: if any goal has 8+ week streak, give it a special featured card | UX/Encourage | Domain: celebrate exceptional streak commitment | High | XS | Low | GoalStreaks.MaxBy(kv => kv.Value); if >= 8 weeks show highlighted card at top | Very emotional; streak champions deserve recognition | No |
+| 4 | Web: GoalDetail — "Days since last note" visible as a countdown indicator under the focus score | UX | Domain: note recency awareness | Low | XS | Low | daysSinceNote already computed; already shown in nudge alert; redundant | Already shown in nudge; skip or combine | No |
+| 5 | Web: Todos — "Time to complete" estimate: show avg days to complete a todo based on history | UX | Domain: task completion cadence insight | Medium | M | Low | CompletedTodos with CompletedAt and UpdatedOn (creation); avg gap in days | Interesting pacing insight; needs UpdatedOn as proxy for creation time | No |
+| 6 | Web: Home — Quick note dialog: when adding a note, auto-complete with last note's next steps | UX | Domain: continuity in goal tracking | High | M | Low | LatestNextStep already loaded per goal; pre-fill quick note dialog | Great UX continuity; needs dialog state management | No |
+| 7 | Web: GoalDetail — "Momentum meter": bar showing current-week count vs personal best week for this goal | UX/Encourage | Domain: weekly engagement comparison | High | S | Low | Count notes in last 7 days; find max 7-day window from ProgressEntries; show filled bar with % | Very visual and motivating; straightforward computation | No |
+| 8 | Web: Journal — "Emotion journey": show mood progression over last 10 entries as emoji sequence | UX/Encourage | Domain: emotional self-awareness | Medium | XS | Low | Last 10 entries with non-null mood; map to emoji; show as row | Delightful; needs mood→emoji mapping; purely visual | No |
+| 9 | Web: Insights — "Todo completion rate by week": weekly average of todos completed per 7-day window | UX | Domain: task velocity trend | Medium | M | Low | CompletedTodos sorted by CompletedAt; group by week; average over last 4 weeks | Useful cadence metric; needs CompletedTodos timestamps | No |
+| 10 | Web: GoalDetail — "First entry anniversary": celebrate if today is the anniversary of the first note logged | UX/Encourage | Domain: milestone celebration | High | XS | Low | ProgressEntries.Last().UpdatedOn — extract month/day; compare to today; show if match | Charming personal milestone; very targeted | No |
+
+**Selection iter 552:** Item #7 — "Momentum meter" for the current week vs best week on GoalDetail.
+- Count notes in last 7 days for this goal
+- Find max 7-day window across all ProgressEntries (best week ever for this goal)
+- Show a labeled progress bar: "This week: 3/5 (your best week)" with MudProgressLinear
+- Zero extra queries; high visual and motivational impact
+
+---
+
 ## 2026-05-19 — Invocation 6 Iter 549 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
