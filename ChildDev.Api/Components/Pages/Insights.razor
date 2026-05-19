@@ -286,6 +286,22 @@
     </MudItem>
 </MudGrid>
 
+@{
+    var zeroDays = 30 - ActiveDaysLast30;
+    var (zeroDayMsg, zeroDaySeverity) = zeroDays switch
+    {
+        0 => ("You were active every single day this month — absolutely incredible! 🏆", Severity.Success),
+        <= 5 => ($"Only {zeroDays} quiet day{(zeroDays == 1 ? "" : "s")} this month — that's an amazing record! Keep it up! 🌟", Severity.Success),
+        <= 10 => ($"{zeroDays} days this month without activity — you're doing great! A little more consistency and you'll be unstoppable! 💪", Severity.Info),
+        <= 20 => ($"{zeroDays} days this month were quiet — every day you show up counts! Even 5 minutes of progress makes a difference. 🚀", Severity.Warning),
+        _ => ($"{zeroDays} quiet days this month — but the fact that you're here checking your progress shows you care! Start fresh today! 🌱", Severity.Normal)
+    };
+}
+@if (ActiveDaysLast30 > 0)
+{
+    <MudAlert Severity="@zeroDaySeverity" Class="mb-6" Dense="true">@zeroDayMsg</MudAlert>
+}
+
 @if (DailyChartSeries.Count > 0)
 {
     <MudPaper Elevation="1" Class="pa-4 mb-6">
