@@ -7,7 +7,7 @@
 <PageTitle>Register – ChildDev</PageTitle>
 
 <MudGrid Justify="Justify.Center" Class="mt-8">
-    <MudItem xs="12" sm="6" md="4">
+    <MudItem xs="12" sm="8" md="5">
         <MudCard>
             <MudCardHeader>
                 <CardHeaderContent>
@@ -15,6 +15,11 @@
                         <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="mr-2" />
                         Start Achieving Goals
                     </MudText>
+                    <MudStack Row="true" Justify="Justify.Center" Spacing="2" Class="mt-2">
+                        <MudChip T="string" Icon="@Icons.Material.Filled.MoneyOff" Color="Color.Success" Size="Size.Small" Variant="Variant.Outlined">100% Free</MudChip>
+                        <MudChip T="string" Icon="@Icons.Material.Filled.Lock" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined">Private &amp; Secure</MudChip>
+                        <MudChip T="string" Icon="@Icons.Material.Filled.NoAccounts" Color="Color.Secondary" Size="Size.Small" Variant="Variant.Outlined">No Ads</MudChip>
+                    </MudStack>
                 </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent>
@@ -24,20 +29,31 @@
                 }
                 <MudTextField @bind-Value="NickName" Label="Nickname" Variant="Variant.Outlined"
                               Class="mb-4" HelperText="Choose a name (1–50 characters)"
+                              Immediate="true"
                               @onkeyup="@(async (e) => { if (e.Key == "Enter") await DoRegister(); })" />
                 <MudTextField @bind-Value="Pin" Label="PIN" Variant="Variant.Outlined"
-                              InputType="InputType.Password" Class="mb-4"
+                              InputType="@PinInputType"
+                              Adornment="Adornment.End" AdornmentIcon="@PinEyeIcon"
+                              OnAdornmentClick="TogglePinVisibility"
+                              Class="mb-4" Immediate="true"
                               HelperText="At least 4 characters — remember this to log back in"
                               @onkeyup="@(async (e) => { if (e.Key == "Enter") await DoRegister(); })" />
                 <MudTextField @bind-Value="ConfirmPin" Label="Confirm PIN" Variant="Variant.Outlined"
-                              InputType="InputType.Password" Class="mb-4"
+                              InputType="@ConfirmPinInputType"
+                              Adornment="Adornment.End" AdornmentIcon="@ConfirmPinEyeIcon"
+                              OnAdornmentClick="ToggleConfirmPinVisibility"
+                              Class="mb-4" Immediate="true"
                               Error="@PinMismatch" ErrorText="PINs do not match"
                               @onkeyup="@(async (e) => { if (e.Key == "Enter") await DoRegister(); })" />
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center" Class="mt-1">
+                    <MudIcon Icon="@Icons.Material.Filled.Shield" Size="Size.Small" Class="mr-1" />
+                    Your data stays on your device and our private servers — never sold, never shared.
+                </MudText>
             </MudCardContent>
             <MudCardActions Class="px-4 pb-4 flex-column">
                 <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true"
                            OnClick="DoRegister"
-                           Disabled="@(string.IsNullOrWhiteSpace(NickName) || Pin.Length < 4 || Pin != ConfirmPin)">Create Account</MudButton>
+                           Disabled="@(string.IsNullOrWhiteSpace(NickName) || Pin.Length < 4 || Pin != ConfirmPin)">Create Account — Free</MudButton>
                 <MudText Typo="Typo.body2" Class="mt-3" Align="Align.Center">
                     Already have an account? <MudLink Href="/login">Login</MudLink>
                 </MudText>
@@ -52,6 +68,16 @@
     private string ConfirmPin = string.Empty;
     private bool PinMismatch;
     private string? Error;
+
+    private bool ShowPin;
+    private bool ShowConfirmPin;
+    private InputType PinInputType => ShowPin ? InputType.Text : InputType.Password;
+    private InputType ConfirmPinInputType => ShowConfirmPin ? InputType.Text : InputType.Password;
+    private string PinEyeIcon => ShowPin ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility;
+    private string ConfirmPinEyeIcon => ShowConfirmPin ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility;
+
+    private void TogglePinVisibility() => ShowPin = !ShowPin;
+    private void ToggleConfirmPinVisibility() => ShowConfirmPin = !ShowConfirmPin;
 
     protected override void OnInitialized()
     {
