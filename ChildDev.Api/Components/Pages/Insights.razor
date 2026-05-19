@@ -181,6 +181,14 @@
               :                 $"📓 You journaled on {JournalConsistencyScore30} days last month ({jcsPct}% consistency) — every entry counts!";
     <MudAlert Severity="@(jcsPct >= 80 ? Severity.Success : Severity.Info)" Icon="@Icons.Material.Filled.Book" Dense="true" Class="mb-4">@((MarkupString)jcsMsg)</MudAlert>
 }
+@if (JournalConsistencyScoreYear >= 5 && JournalYearDaysElapsed >= 14)
+{
+    var jcyPct = (int)(JournalConsistencyScoreYear * 100.0 / JournalYearDaysElapsed);
+    var jcyMsg = jcyPct >= 50 ? $"📓 <strong>{jcyPct}% journaling consistency this year</strong> — {JournalConsistencyScoreYear} days logged out of {JournalYearDaysElapsed}! You're making reflection a real habit!"
+               : jcyPct >= 25 ? $"📓 You've journaled on <strong>{JournalConsistencyScoreYear} days</strong> this year ({jcyPct}% consistency) — every entry builds your story!"
+               :                 $"📓 {JournalConsistencyScoreYear} journaling days so far this year — {jcyPct}% consistency. Keep going — small steps add up!";
+    <MudAlert Severity="@(jcyPct >= 50 ? Severity.Success : Severity.Info)" Icon="@Icons.Material.Filled.CalendarMonth" Dense="true" Class="mb-4">@((MarkupString)jcyMsg)</MudAlert>
+}
 @if (LongestProgressDayStreak >= 3)
 {
     var lpsMsg = LongestProgressDayStreak >= 14 ? $"🌟 All-time best: <strong>{LongestProgressDayStreak} consecutive days</strong> logging progress — that's legendary dedication!"
@@ -729,6 +737,8 @@
     private int JournalStreak;
     private int LongestProgressDayStreak;
     private int JournalConsistencyScore30;
+    private int JournalConsistencyScoreYear;
+    private int JournalYearDaysElapsed;
     private List<ChartSeries> GoalNotesChartSeries = [];
     private string[] GoalNotesChartLabels = [];
 
@@ -1009,6 +1019,15 @@
             .Select(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
             .ToHashSet()
             .Count;
+
+        // Journal consistency score for current year
+        var jcsYearStart = new DateTimeOffset(new DateTime(DateTime.Today.Year, 1, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Today)).ToUnixTimeMilliseconds();
+        JournalConsistencyScoreYear = allJournalEver
+            .Where(ms => ms >= jcsYearStart)
+            .Select(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
+            .ToHashSet()
+            .Count;
+        JournalYearDaysElapsed = DateTime.Today.DayOfYear;
 
         // Best day of week for progress notes
         if (allProgressEver.Count >= 5)
