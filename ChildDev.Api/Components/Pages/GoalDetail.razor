@@ -357,7 +357,11 @@ else
     </MudPaper>
 }
 
-<MudStack Row="true" Spacing="2" Class="mt-2">
+@{
+    var todayStartGoal = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+    var addedNoteToday = ProgressEntries.Any() && ProgressEntries.First().UpdatedOn >= todayStartGoal;
+}
+<MudStack Row="true" Spacing="2" Class="mt-2" Wrap="Wrap.Wrap">
     <MudButton Variant="Variant.Outlined" Color="Color.Primary"
                StartIcon="@Icons.Material.Filled.Add"
                OnClick="OpenAddProgressDialog">Add Progress Note</MudButton>
@@ -366,6 +370,12 @@ else
         <MudButton Variant="Variant.Outlined" Color="Color.Success"
                    StartIcon="@Icons.Material.Filled.EmojiEvents"
                    OnClick="MarkComplete">Mark as Complete</MudButton>
+    }
+    @if (addedNoteToday)
+    {
+        <MudButton Variant="Variant.Filled" Color="Color.Warning"
+                   StartIcon="@Icons.Material.Filled.Celebration"
+                   OnClick="CelebrateToday">🎊 Celebrate!</MudButton>
     }
 </MudStack>
 
@@ -645,6 +655,13 @@ else
         Snackbar.Add($"🎉 Step done: \"{short_}\" — amazing! What's your next step?", Severity.Success);
         await Analytics.TrackAsync("step_celebrate", AccountGuid, "goal_detail", GoalGuid);
         OpenAddProgressDialog();
+    }
+
+    private async Task CelebrateToday()
+    {
+        var goalName = Goal?.GoalText?.Length > 50 ? Goal.GoalText[..50] + "…" : Goal?.GoalText;
+        Snackbar.Add($"🎊 You logged progress on \"{goalName}\" today — AMAZING WORK! Keep it up! 🌟", Severity.Success);
+        await Analytics.TrackAsync("daily_celebrate", AccountGuid, "goal_detail", GoalGuid);
     }
 
     private void OpenAddProgressDialog()
