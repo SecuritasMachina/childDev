@@ -142,7 +142,17 @@
             }
             @if (TotalProgressNotes > 0)
             {
+                var estHours = TotalProgressNotes * 5 / 60;
+                var estMins = TotalProgressNotes * 5 % 60;
                 <MudText Typo="Typo.caption" Color="Color.Primary">📝 @TotalProgressNotes total progress note@(TotalProgressNotes == 1 ? "" : "s")</MudText>
+                if (estHours >= 1)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">⏱️ ~@estHours hr@(estHours == 1 ? "" : "s") invested in your goals</MudText>
+                }
+                else if (TotalProgressNotes >= 3)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">⏱️ ~@estMins min invested so far — keep going!</MudText>
+                }
             }
             @if (AllActiveGoals.Count >= 2)
             {

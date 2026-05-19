@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-19 — Invocation 7 Iter 570 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Insights — "Goal completion timeline": last 3 completed goals with name, date, and days taken | UX/Encourage | Domain: celebrate achievement history | High | M | Low | CompletedGoals sorted by CompletionDate desc; take 3; duration = (CompletionDate - EnteredDate) / 86400000 | Strong celebration of finished work; needs both dates on each | No |
+| 2 | Web: Home — "Daily progress streak": consecutive calendar days ending today where any goal got a note | UX/Encourage | Domain: daily habit building | High | S | Low | Sort allTimestamps by calendar date; count backward from today | Global daily habit metric; distinct from per-goal weekly streak | No |
+| 3 | Web: GoalDetail — "Goal health pulse": a single-line "pulse" of last 7 entries as ●/○ (note or no note per day) | UX | Domain: recent activity visual rhythm | Medium | M | Med | 7-day grid of circle icons, filled if note that day; shows at a glance | Visual pattern; requires per-day check within last 7 | No |
+| 4 | Web: Journal — "Longest journaling streak ever" caption under current streak alert | UX/Encourage | Domain: personal best awareness | Medium | XS | Low | Need to scan all journal dates for max consecutive run; already have allJournalEver-like data in JournalPage | Needs max-streak scan; complements current streak alert | No |
+| 5 | Web: Home — "Total hours of reflection" fun stat: TotalProgressNotes * avg 5 min = hours | UX/Encourage | Domain: cumulative effort fun fact | Low | XS | Low | TotalProgressNotes * 5 / 60 = hours; show "You've invested ~X hours in your goals!" | Fun; zero queries; rough estimate but motivating | No |
+| 6 | Web: GoalDetail — "Encouraging words from notes": extract 2-3 positive words from most recent note text | UX/Encourage | Domain: self-reflection depth | Low | M | High | Text analysis on NextStepItems; complex and fragile | Too complex; skip | No |
+| 7 | Web: Insights — "Most productive month ever": which calendar month had the most total activity (goals + journal) | UX | Domain: seasonal pattern awareness | Medium | S | Low | Group allEver (progress + journal + todos) by month; find max; show "Your most productive month was [Month]!" | allEver already composed; need to group by month instead of day | No |
+| 8 | Web: GoalDetail — "Entry count this month" next to total in the stat bar | UX | Domain: monthly engagement context | Low | XS | Low | ProgressEntries filtered by current month start; count; show alongside total | Minor UX add; quick computation | No |
+| 9 | Web: Home — "Goal of the day" spotlight: feature one goal with a random fun "focus tip" | UX/Encourage | Domain: daily goal engagement nudge | High | S | Low | Pick one active goal deterministically by day hash; show a tip like "Ask yourself: what's one small thing you can do today?" | Engaging daily variation; purely from existing goal data | No |
+| 10 | Web: Insights — "Active goals growth chart": show count of active + completed goals at each month boundary (mini trend) | UX | Domain: portfolio growth over time | Medium | M | Low | Requires grouping goals by EnteredDate month; somewhat complex | Interesting growth trend; needs temporal query | No |
+
+**Selection iter 570:** Item #5 — "Total hours of reflection" fun stat on Home.
+- `TotalProgressNotes * 5 / 60` gives estimated hours spent reflecting on goals
+- Show as "You've invested ~X hours in your goals!" caption in the stat card
+- Zero extra queries; `TotalProgressNotes` already loaded; purely motivational and fun
+- High encouragement value — makes the cumulative effort feel real and impressive
+
+---
+
 ## 2026-05-19 — Invocation 7 Iter 567 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
