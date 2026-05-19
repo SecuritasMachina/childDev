@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 475 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Celebrate 🎊" button visible only when a goal was updated today | UX/Encourage | Domain: daily reinforcement | High | XS | Low | Shows only if most recent note is from today; fires confetti snackbar | Simple conditional button with existing confetti | No |
+| 2 | Web: Home — sort goal cards: put goals with notes added today at the very top | UI | Domain: reward recent work | Medium | XS | Low | Already have LastProgressAt; sort by "today first" then existing order | Minor UX improvement | No |
+| 3 | Web: Todos — "Focus mode": show only today's due todos + overdue | UI | Domain: daily task focus | High | XS | Low | Add "Today's Focus" chip filter to existing MudChipSet | Already have today filter logic | No |
+| 4 | Web: GoalDetail — "Journey recap": generate a 2-sentence summary from oldest+newest note | UX | Domain: progress narrative | High | S | Low | Show: "You started with '[oldest text]' and now you're at '[newest text]'" | Truncates long notes; might not always make sense | No |
+| 5 | Web: Insights — "Top progress day" — which weekday had most notes historically | Func | Domain: personalized insight | Medium | XS | Low | Already load GoalProgress timestamps in the heatmap query; group by DayOfWeek | Similar to MostActiveDayName but for progress specifically | No |
+| 6 | Web: Home — "Encouragement of the day" rotating quotes from a larger set (50+ quotes) | UX/Encourage | Domain: daily motivation | Medium | XS | Low | Expand the existing _quotes array from 8 to 50 entries | Low code change, high morale impact | No |
+| 7 | Web: GoalDetail — "Effort rating" 1-5 stars after saving a note (stored in note text as metadata) | Func | Domain: self-assessment | Low | M | Medium | Would append "★★★☆☆" to NextStepItems — hacky | Corrupts note text; bad idea | No |
+| 8 | Web: Home — "Quick Journal" entry from home page (already exists, enhance with mood selector) | UI | Domain: mood-aware journaling | Medium | S | Low | Add 5 emoji mood chips to QuickJournal dialog; pass as Mood field | Moderate enhancement; mood field already on Journal | No |
+| 9 | Web: GoalDetail — "What I learned" highlight: if note contains "learned" keyword, show with yellow star | UX | Domain: learning recognition | Medium | XS | Low | Pure display; highlight notes containing "learned", "discovered", "realized" | Keyword matching only; low signal | No |
+| 10 | Web: Insights — "Zero days" callout: how many of the last 30 days had no activity | UX | Domain: awareness of inactivity | Medium | XS | Low | 30 - ActiveDaysLast30 = zero days; show as a gentle nudge | Could demotivate if count is high | No |
+
+**Selection iter 475:** Item #6 — Expand the daily motivational quotes from ~8 to 50+ entries.
+- The Home page already shows a daily rotating quote from a `_quotes[]` array
+- Expand with diverse, age-appropriate goal achievement + encouragement quotes
+- Zero risk, zero DB changes, high morale impact
+- Bigger variety means kids see fresh content more often
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 472 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
