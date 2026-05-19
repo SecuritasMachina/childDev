@@ -190,6 +190,20 @@
     </MudPaper>
 }
 
+@if (AllMoods.Count >= 2 && AllMoods.Sum(m => m.Count) >= 5)
+{
+    var moodEmojiMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
+        {"happy","😊"}, {"sad","😢"}, {"calm","😌"}, {"excited","🤩"}, {"tired","😴"},
+        {"angry","😠"}, {"anxious","😟"}, {"grateful","🙏"}, {"proud","💪"}, {"focused","🎯"}
+    };
+    var top2 = AllMoods.Take(2).ToList();
+    var em0 = moodEmojiMap.GetValueOrDefault(top2[0].Mood, "💭");
+    var em1 = moodEmojiMap.GetValueOrDefault(top2[1].Mood, "💭");
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">
+        You've written <strong>@top2[0].Count</strong> times feeling @em0 @top2[0].Mood and <strong>@top2[1].Count</strong> times feeling @em1 @top2[1].Mood.
+    </MudText>
+}
+
 @* Mood cloud — appears only when entries have moods *@
 @if (AllMoods.Count > 0)
 {
