@@ -203,6 +203,25 @@
         </MudStack>
     </MudPaper>
 }
+@if (daysSince >= 30 && Goal.CompletionDate is null && ProgressEntries.Count >= 2)
+{
+    var reflectDurLabel = daysSince >= 365
+        ? $"{daysSince / 365} year{(daysSince / 365 == 1 ? "" : "s")}"
+        : daysSince >= 60 ? $"{daysSince / 30} months"
+        : $"{daysSince} days";
+    <MudPaper Elevation="1" Class="pa-3 mb-3" Style="border-radius:12px;border-left:4px solid var(--mud-palette-info);background:linear-gradient(135deg,rgba(33,150,243,.06) 0%,rgba(255,255,255,0) 100%);">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+            <MudText Typo="Typo.h5" Style="line-height:1;">🌱</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Info" Style="font-weight:700;letter-spacing:0.5px;">HOW YOU'VE GROWN — @reflectDurLabel on this goal</MudText>
+        </MudStack>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-1">
+            Think about where you started vs where you are now. What's changed? What surprised you most about this journey?
+        </MudText>
+        <MudText Typo="Typo.caption" Color="Color.Info">
+            🤔 Reflecting on your growth makes the next steps clearer — and reminds you how far you've already come!
+        </MudText>
+    </MudPaper>
+}
 @{
     // Focus score: recency (0-40) + frequency (0-40) + streak (0-20)
     var nowMsFS = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
