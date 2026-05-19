@@ -636,6 +636,30 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                    Href="@($"/goals/{ddGoal.Guid}")" Class="ml-1">View goal</MudButton>
     </MudAlert>
 }
+@{
+    Goal? odGoal = null;
+    int odDaysOver = 0;
+    if (string.IsNullOrWhiteSpace(FilterText))
+    {
+        foreach (var odG in AllActiveGoals.Where(g => g.ExpirationDate.HasValue && g.CompletionDate == null).OrderBy(g => g.ExpirationDate))
+        {
+            var odOver = (int)Math.Floor((ddNowMs - odG.ExpirationDate!.Value) / 86_400_000.0);
+            if (odOver >= 1) { odGoal = odG; odDaysOver = odOver; break; }
+        }
+    }
+}
+@if (odGoal is not null)
+{
+    var odName = odGoal.GoalText?.Length > 50 ? odGoal.GoalText[..50] + "…" : odGoal.GoalText;
+    var odMsg = odDaysOver == 1
+        ? $"This goal's target date was yesterday — take a moment to reflect or set a new target!"
+        : $"This goal's target date was {odDaysOver} days ago — it's worth a moment to reflect on where you are!";
+    <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.EventBusy" Dense="true" Class="mb-3">
+        ⏰ <strong>"@odName"</strong> — @odMsg
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning"
+                   Href="@($"/goals/{odGoal.Guid}")" Class="ml-1">Reflect on goal</MudButton>
+    </MudAlert>
+}
 @if (AnniversaryGoalName is not null && string.IsNullOrWhiteSpace(FilterText))
 {
     var annivMsg = AnniversaryDaysUntil == 0
