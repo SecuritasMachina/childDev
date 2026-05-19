@@ -263,6 +263,13 @@
                     {
                         <MudChip T="string" Icon="@Icons.Material.Filled.Schedule" Color="Color.Warning" Size="Size.Small">@expiryLabel</MudChip>
                     }
+                    @if (LatestNextStep.TryGetValue(g.Guid, out var nextStep))
+                    {
+                        var truncated = nextStep.Length > 90 ? nextStep[..90] + "…" : nextStep;
+                        <MudText Typo="Typo.caption" Color="Color.Primary" Class="mt-2 d-block">
+                            <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" Style="vertical-align:middle;" /> @truncated
+                        </MudText>
+                    }
                 </MudCardContent>
                 <MudCardActions>
                     <MudButton Variant="Variant.Text" Color="Color.Primary"
@@ -493,6 +500,7 @@
     private string FilterText = string.Empty;
     private Dictionary<string, int> ProgressCounts = new();
     private Dictionary<string, long> LastProgressAt = new();
+    private Dictionary<string, string> LatestNextStep = new();
     private bool ShowAddDialog;
     private string NewGoalText = string.Empty;
     private string? NewMeasurableOutcome;
@@ -558,6 +566,16 @@
             .ToListAsync();
         ProgressCounts = progressGroups.ToDictionary(x => x.GoalFk, x => x.Count);
         LastProgressAt = progressGroups.ToDictionary(x => x.GoalFk, x => x.LastAt);
+
+        // Latest next step per goal for card preview
+        var stepRows = await Db.GoalProgresses
+            .Where(p => guids.Contains(p.GoalFk) && p.DeletedAt == null
+                     && p.NextStepItems != null && p.NextStepItems != "")
+            .Select(p => new { p.GoalFk, p.NextStepItems, p.UpdatedOn })
+            .ToListAsync();
+        LatestNextStep = stepRows
+            .GroupBy(p => p.GoalFk)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(p => p.UpdatedOn).First().NextStepItems!);
 
         // Sort: goals with no progress first (needs attention), then by oldest-update-first
         AllActiveGoals = AllActiveGoals
