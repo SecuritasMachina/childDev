@@ -611,6 +611,16 @@
             🏅 Best day on this goal: <strong>@pbdGroup.Count() notes</strong> on @pbdGroup.Key.ToString("MMM d, yyyy") — can you top it?
         </MudText>
     }
+    var mwpMonthStart = new DateTimeOffset(new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1)).ToUnixTimeMilliseconds();
+    var mwpCount = ProgressEntries.Count(p => p.UpdatedOn >= mwpMonthStart);
+    var mwpDaysIn = Math.Max(DateTime.Today.Day, 1);
+    if (mwpCount >= 2 && mwpDaysIn >= 7)
+    {
+        var mwpPace = mwpCount / (mwpDaysIn / 7.0);
+        <MudText Typo="Typo.caption" Color="Color.Success" Class="mb-3">
+            📆 This month: <strong>@mwpCount notes</strong> at <strong>@mwpPace.ToString("F1")/week</strong> pace — keep it up!
+        </MudText>
+    }
     var cpTotalWeeks = (int)Math.Max(Math.Ceiling(daysSince / 7.0), 1);
     var cpActiveWeeks = ProgressEntries
         .Select(p => System.Globalization.ISOWeek.GetWeekOfYear(DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime) * 10000
