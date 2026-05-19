@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-19 — Invocation 9 Iter 639 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — "Note quality growth": compare avg word count of first half vs second half of ProgressEntries (>= 10 notes); show "Your notes are getting deeper — [X] words avg vs [Y] before!" | UX/Encourage | Domain: reflection depth growth | High | S | Low | NextStepItems?.Split(' ').Length; partition by index into two halves; compare avg; >= 10 notes | Long-deferred; meaningful quality signal | No |
+| 2 | Web: Home — "First note of the day" streak across all goals: if ProgressNotesToday >= 1 and current streak is > 0, show "🔥 Day [N] of your daily streak — keep it alive!" | UX/Encourage | Domain: daily streak reinforcement | High | XS | Low | CurrentStreak + ProgressNotesToday >= 1; short confirmation message | Reinforces existing streak widget's data | No |
+| 3 | Web: GoalDetail — "This week vs last week notes": compare notes added in current ISO week vs prior week for this goal; show "⬆️ More active than last week!" when ahead | UX/Encourage | Domain: WoW goal-level comparison | Medium | XS | Low | ProgressEntries filtered by this/last week ms; compare counts | Per-goal WoW momentum; zero extra queries | No |
+| 4 | Web: Insights — "Goals completed this year": count goals with CompletionDate >= yearStart; show "🎯 X goals completed this year — powerful achievement!" when >= 2 | UX/Encourage | Domain: annual completion recognition | High | XS | Low | allGoals already queried; filter by CompletionDate >= yearStartMs; add YtdGoalsCompleted field | Simple annual achievement stat; high motivation value | No |
+| 5 | Web: Journal — "Longest journaling run this year": find max consecutive-day journal streak occurring within current year; show "Your longest run this year: X days in a row!" when >= 5 | UX/Encourage | Domain: peak habit within year | Medium | S | Low | journalDates filtered to this year; scan for longest consecutive run | Motivating year-in-review stat | No |
+| 6 | Web: Home — "Next goal to expire" monthly awareness: if any active goal expires within the next 30 days but more than 7 days away, show a soft reminder "📋 [Goal] expires in X days — steady progress matters!" | UX/Urgency | Domain: medium-term deadline awareness | Medium | XS | Low | AllActiveGoals ExpirationDate; filter 7 < daysLeft <= 30; find nearest; show gentle reminder | Softer complement to 7-day urgency alert | No |
+| 7 | Web: GoalDetail — "Goal category affirmation": rotating daily quote from 6 sentences, picked by (goal GUID hash + dayOfYear) % 6; show at bottom as caption | UX/Encourage | Domain: motivational micro-content | Medium | XS | Low | Static array; no data query; hash from Guid string; show as MudText caption | Warm daily affirmation feel | No |
+| 8 | Web: Insights — "Most active goal all time": the goal with the most progress notes total; show "[Goal name]: X notes — your most dedicated goal!" when >= 10 notes | UX/Encourage | Domain: goal dedication recognition | Medium | XS | Low | GoalProgressCounts loaded; find MaxBy value; fetch goal text; filter >= 10 | Celebrates the kid's most worked-on goal | No |
+| 9 | Web: GoalDetail — "Reflection intensity badge": if any 7-day window has >= 5 notes, show "🔥 High-intensity week! [date range] had X notes — you were really focused!" | UX/Encourage | Domain: peak engagement period | Medium | S | Low | ProgressEntries; sliding 7-day windows; find peak window; complex but in-memory | Celebrates periods of intense focus | No |
+| 10 | Web: Home — "You've been at this for [duration]!" total app usage duration: show "🗓️ You've been using this app for X days — look how far you've come!" when earliest goal is >= 30 days ago | UX/Encourage | Domain: long-term engagement celebration | Low | XS | Low | AllActiveGoals + CompletedGoals; find min EnteredDate; compute days from now | Celebrates long-term app engagement | No |
+
+**Selection iter 639:** Item #4 — "Goals completed this year" stat on Insights.
+- Filter `allGoals` by `CompletionDate >= yearStartMs`; add `YtdGoalsCompleted` field
+- Show "🎯 X goals completed this year — powerful achievement!" when >= 2
+- XS effort — allGoals is already fully queried in OnInitializedAsync; just add a count filter
+- High impact: annual completion recognition is a strong motivator
+
+---
+
 ## 2026-05-19 — Invocation 9 Iter 636 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
