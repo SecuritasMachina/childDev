@@ -80,6 +80,34 @@
                 : $"✍️ You've written {TotalWordsWritten:N0} words so far — you're building a wonderful reflection habit!";
     <MudAlert Severity="Severity.Success" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.Create">@wordsMsg</MudAlert>
 }
+@{
+    var moodEmojis = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["happy"]      = "😊", ["excited"]  = "🤩", ["proud"]      = "🌟", ["great"]    = "😄",
+        ["good"]       = "🙂", ["calm"]     = "😌", ["hopeful"]    = "🌈", ["motivated"] = "💪",
+        ["curious"]    = "🤔", ["grateful"] = "🙏", ["love"]       = "❤️", ["amazing"]  = "🎉",
+        ["sad"]        = "😢", ["tired"]    = "😴", ["bored"]      = "😐", ["frustrated"] = "😤",
+        ["angry"]      = "😡", ["anxious"]  = "😟", ["nervous"]    = "😰", ["stressed"] = "😰",
+        ["overwhelmed"] = "😩", ["confused"] = "😕", ["uncertain"] = "🤷", ["down"]    = "😔"
+    };
+    var recentMoods = AllEntries
+        .Where(j => !string.IsNullOrWhiteSpace(j.Mood))
+        .Take(10)
+        .Select(j => moodEmojis.GetValueOrDefault(j.Mood!.Trim(), "💭"))
+        .ToList();
+}
+@if (recentMoods.Count >= 3)
+{
+    <MudPaper Elevation="0" Class="pa-2 mb-3" Style="border-radius:10px;background:var(--mud-palette-background-grey);">
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-weight:600;" Class="mb-1">Your recent emotion journey (newest → oldest):</MudText>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0" Wrap="Wrap.Wrap">
+            @foreach (var emoji in recentMoods)
+            {
+                <MudText Style="font-size:1.4rem;line-height:1.6;margin-right:4px;">@emoji</MudText>
+            }
+        </MudStack>
+    </MudPaper>
+}
 @* Tag cloud — appears only when entries have tags *@
 @if (AllTags.Count > 0)
 {
