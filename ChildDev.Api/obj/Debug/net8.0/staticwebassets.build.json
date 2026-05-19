@@ -1,13 +1,40 @@
 {
   "Version": 1,
-  "Hash": "EXG82URhMuyjK0CBSsx22lY13Lknfjx3KmTE7yObrlI=",
+  "Hash": "FTnjxODPhqXgA5/BmycSSTCSgiqGPhR4laCD4u1ax6k=",
   "Source": "ChildDev.Api",
   "BasePath": "_content/ChildDev.Api",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "ChildDev.Api/wwwroot",
+      "Source": "ChildDev.Api",
+      "ContentRoot": "/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/wwwroot/",
+      "BasePath": "_content/ChildDev.Api",
+      "Pattern": "**"
+    }
+  ],
   "Assets": [
+    {
+      "Identity": "/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/wwwroot/app.css",
+      "SourceId": "ChildDev.Api",
+      "SourceType": "Discovered",
+      "ContentRoot": "/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/wwwroot/",
+      "BasePath": "_content/ChildDev.Api",
+      "RelativePath": "app.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/app.css"
+    },
     {
       "Identity": "/root/.nuget/packages/mudblazor/7.15.0/staticwebassets/MudBlazor.min.css",
       "SourceId": "MudBlazor",
