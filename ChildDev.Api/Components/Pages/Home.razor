@@ -406,24 +406,28 @@
                     var pCount = ProgressCounts.GetValueOrDefault(g.Guid);
                     var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                     var todayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
-                    var sevenDaysFromNowMs = todayStartMs + 7L * 86_400_000L;
+                    var fourteenDaysFromNowMs = todayStartMs + 14L * 86_400_000L;
                     var isExpired = g.ExpirationDate.HasValue && g.ExpirationDate.Value < todayStartMs;
-                    var isExpiringSoon = !isExpired && g.ExpirationDate.HasValue && g.ExpirationDate.Value < sevenDaysFromNowMs;
+                    var isExpiringSoon = !isExpired && g.ExpirationDate.HasValue && g.ExpirationDate.Value < fourteenDaysFromNowMs;
                     var lastAt = LastProgressAt.GetValueOrDefault(g.Guid);
                     var daysSinceProgress = pCount > 0 ? (int)((nowMs - lastAt) / 86_400_000L) : -1;
                     var isStale = daysSinceProgress >= 14;
-                    // Countdown label
+                    // Countdown chip label + color
                     string? expiryLabel = null;
+                    Color expiryColor = Color.Default;
                     if (isExpired && g.ExpirationDate.HasValue)
                     {
                         var daysOver = (int)((todayStartMs - g.ExpirationDate.Value) / 86_400_000L);
-                        expiryLabel = daysOver <= 1 ? "Past due" : $"{daysOver}d overdue";
+                        expiryLabel = daysOver <= 1 ? "⏰ Past due" : $"⏰ {daysOver}d overdue";
+                        expiryColor = Color.Error;
                     }
                     else if (isExpiringSoon && g.ExpirationDate.HasValue)
                     {
                         var expDate = DateTimeOffset.FromUnixTimeMilliseconds(g.ExpirationDate.Value).LocalDateTime.Date;
                         var daysLeft = (expDate - DateTime.Today).Days;
-                        expiryLabel = daysLeft == 0 ? "Due today" : daysLeft == 1 ? "Due tomorrow" : $"Due in {daysLeft}d";
+                        if (daysLeft <= 3)      { expiryLabel = daysLeft == 0 ? "⏳ Due today!" : daysLeft == 1 ? "⏳ Due tomorrow!" : $"⏳ {daysLeft} days left!"; expiryColor = Color.Error; }
+                        else if (daysLeft <= 7) { expiryLabel = $"⏳ {daysLeft} days left"; expiryColor = Color.Warning; }
+                        else                    { expiryLabel = $"📅 {daysLeft} days left"; expiryColor = Color.Info; }
                     }
                 }
                 <MudCardContent Class="pt-0">
@@ -448,13 +452,9 @@
                             }
                         </MudChip>
                     }
-                    @if (isExpired)
+                    @if ((isExpired || isExpiringSoon) && expiryLabel is not null)
                     {
-                        <MudChip T="string" Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Small">@expiryLabel</MudChip>
-                    }
-                    else if (isExpiringSoon)
-                    {
-                        <MudChip T="string" Icon="@Icons.Material.Filled.Schedule" Color="Color.Warning" Size="Size.Small">@expiryLabel</MudChip>
+                        <MudChip T="string" Size="Size.Small" Color="@expiryColor" Class="mr-1">@expiryLabel</MudChip>
                     }
                     @{
                         var lvlCount = ProgressCounts.GetValueOrDefault(g.Guid);

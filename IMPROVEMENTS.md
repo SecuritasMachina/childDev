@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 463 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Todos — display goal name chip on todos that have a GoalFk | UI | Domain: goal-todo connection visible | High | S | Low | Read-only chip; loads goal names from DB; makes purpose of each todo clear | Requires one extra query to load goal map | No |
+| 2 | Web: GoalDetail — "Copy Achievement" to clipboard (JS interop) | UX/Encourage | Domain: social sharing milestone | Medium | S | Low | "I reached Champion on [Goal]! 🏆" copied; motivating for kids | JS interop; clipboard permission; limited to supported browsers | No |
+| 3 | Web: Home — Completed Goals Gallery / ribbon at bottom of dashboard | UI | Domain: wins visibility | High | M | Low | Shows completed goals as chips with date; reinforces past achievement | Clutter if many completions; needs pagination | No |
+| 4 | Web: GoalDetail — "Wish me luck!" one-tap button adds brief motivational note | UX/Encourage | Domain: kid engagement | Low | S | Low | Adds a canned "Wishing myself luck!" entry; fun for kids | Silly value; no real progress data | No |
+| 5 | Web: Home — goal expiry countdown chip on cards (shows "⏳ 3 days left!" when <14 days) | UI/Func | Domain: deadline urgency | High | S | Low | ExpirationDate exists on goals; no new query; drives action near deadline | Only useful if goals have ExpirationDate set | No |
+| 6 | Web: Insights — longest daily run in last 90 days ("Your best streak was 12 days!") | UI/Encourage | Domain: peak performance recognition | Medium | M | Low | Queries analytics events for date runs; separate from current streak | Extra query across 90-day window | No |
+| 7 | Web: GoalDetail — CSS print view for "Goal Certificate" | UX | Domain: physical milestone | Low | M | Low | @media print styles; kid prints achievement certificate | Rarely used; styling effort | No |
+| 8 | Web: Journal — link a journal entry to a goal ("Tag this entry") | Func | Domain: goal-journal connection | High | L | Medium | Opens goal picker; stores GoalFk on Journal; shows on GoalDetail | Large scope; schema change for GoalFk on Journal | No |
+| 9 | Web: Home — "🎯 Today's Pick" card: one recommended action based on stale goal | UX/Encourage | Domain: daily guidance | High | M | Low | Pick most-stale goal; show its last NextStepItem as today's action | Rule-based; might miss context | No |
+| 10 | Web: Home — animated pulse on goal cards that are overdue (>14 days no update) | UI | Domain: attention to stale goals | Medium | XS | Low | CSS animation class on heat-cold cards; draws eye | Distracting if many stale goals | No |
+
+**Selection iter 463:** Item #5 — Goal expiry countdown chip on Home goal cards.
+- When `ExpirationDate` is set and within 14 days (and goal not completed), show `⏳ X days left!` chip on the card
+- Red chip for ≤3 days, amber for ≤7, default for ≤14
+- ExpirationDate already exists on the Goal entity; `AllActiveGoals` is fully loaded in Home.razor
+- Zero new DB queries; adds urgency to drive action near deadlines
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 462 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
