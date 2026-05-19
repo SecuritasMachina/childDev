@@ -76,6 +76,10 @@
             <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Style="font-size:2rem;" />
             <MudText Typo="Typo.h4" Class="mt-1">@TodosCompletedAllTime</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary">Todo@(TodosCompletedAllTime == 1 ? "" : "s") Done</MudText>
+            @if (YtdTodosCompleted >= 5)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Success">🎯 @YtdTodosCompleted this year!</MudText>
+            }
         </MudPaper>
     </MudItem>
     <MudItem xs="6" sm="3">
@@ -663,6 +667,7 @@
     private int GoalsTotalAllTime;
     private List<(string Name, long CompletionDate, long EnteredDate)> RecentCompletedGoals = [];
     private int TodosCompletedAllTime;
+    private int YtdTodosCompleted;
     private int JournalTotal;
     private int GoalProgressTotal;
     private string? TopMood;
@@ -917,6 +922,8 @@
 
         // All-time best day: combine all entities, group by date, find max
         var allTodosEver = await Db.Todos.Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt != null).Select(t => t.CompletedAt!.Value).ToListAsync();
+        var ytdStartMs = new DateTimeOffset(new DateTime(DateTime.Today.Year, 1, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
+        YtdTodosCompleted = allTodosEver.Count(ms => ms >= ytdStartMs);
         var allJournalEver = await Db.Journals.Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null).Select(j => j.EnteredDate).ToListAsync();
         var allProgressEver = await Db.GoalProgresses.Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null).Select(p => p.UpdatedOn).ToListAsync();
         // Week-over-week progress note velocity
