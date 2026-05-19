@@ -74,6 +74,10 @@
                 var gcPct = (int)Math.Round(GoalsCompletedAllTime * 100.0 / GoalsTotalAllTime);
                 <MudText Typo="Typo.caption" Color="@(gcPct >= 60 ? Color.Success : Color.Info)">@gcPct% completion rate</MudText>
             }
+            @if (YtdGoalsCompleted >= 2)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Success">🎯 @YtdGoalsCompleted this year!</MudText>
+            }
         </MudPaper>
     </MudItem>
     <MudItem xs="6" sm="3">
@@ -707,6 +711,7 @@
     // Domain entity stats
     private int GoalsCompletedAllTime;
     private int GoalsTotalAllTime;
+    private int YtdGoalsCompleted;
     private List<(string Name, long CompletionDate, long EnteredDate)> RecentCompletedGoals = [];
     private int TodosCompletedAllTime;
     private int YtdTodosCompleted;
@@ -778,6 +783,9 @@
             .CountAsync(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate != null);
         GoalsTotalAllTime = await Db.Goals
             .CountAsync(g => g.AccountFk == AccountGuid && g.DeletedAt == null);
+        var ytdGoalYearStart = new DateTimeOffset(new DateTime(DateTime.Today.Year, 1, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Today)).ToUnixTimeMilliseconds();
+        YtdGoalsCompleted = await Db.Goals
+            .CountAsync(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate != null && g.CompletionDate.Value >= ytdGoalYearStart);
 
         var rcgRows = await Db.Goals
             .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate != null)
