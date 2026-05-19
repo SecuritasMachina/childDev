@@ -55,6 +55,18 @@
         🏅 Your best journaling month was <strong>@BestJournalMonth</strong> — @BestJournalMonthCount entries! Can you beat it?
     </MudAlert>
 }
+@if (JournalThisWeek > 0 || JournalLastWeek > 0)
+{
+    var jWowMsg = JournalLastWeek == 0
+        ? $"📖 {JournalThisWeek} journal entr{(JournalThisWeek == 1 ? "y" : "ies")} this week — great start! Keep the reflection going!"
+        : JournalThisWeek > JournalLastWeek
+            ? $"📈 {JournalThisWeek} entries this week vs {JournalLastWeek} last week — you're journaling more! Keep that momentum!"
+            : JournalThisWeek == JournalLastWeek
+                ? $"📖 {JournalThisWeek} entries this week, same as last week — nice consistency!"
+                : $"📉 {JournalThisWeek} entr{(JournalThisWeek == 1 ? "y" : "ies")} this week vs {JournalLastWeek} last week — can you match your previous pace?";
+    var jWowSeverity = JournalLastWeek == 0 || JournalThisWeek >= JournalLastWeek ? Severity.Info : Severity.Normal;
+    <MudAlert Severity="@jWowSeverity" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.TrendingUp">@jWowMsg</MudAlert>
+}
 
 @* Tag cloud — appears only when entries have tags *@
 @if (AllTags.Count > 0)
@@ -340,6 +352,8 @@ else
     private int JournalStreak;
     private string? BestJournalMonth;
     private int BestJournalMonthCount;
+    private int JournalThisWeek;
+    private int JournalLastWeek;
 
     protected override async Task OnInitializedAsync()
     {
@@ -365,6 +379,12 @@ else
             JournalStreak++;
             jsDay = jsDay.AddDays(-1);
         }
+        var wowNowJMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var wow7JMs = wowNowJMs - 7L * 86_400_000L;
+        var wow14JMs = wowNowJMs - 14L * 86_400_000L;
+        JournalThisWeek = AllEntries.Count(j => j.EnteredDate >= wow7JMs);
+        JournalLastWeek = AllEntries.Count(j => j.EnteredDate >= wow14JMs && j.EnteredDate < wow7JMs);
+
         var bestMonthGroup = AllEntries
             .GroupBy(j => DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime.ToString("yyyy-MM"))
             .OrderByDescending(g => g.Count())
