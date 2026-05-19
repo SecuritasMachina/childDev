@@ -496,14 +496,21 @@ else if (bestGoalStreak >= 2 && goalStreak < bestGoalStreak)
 }
 @if (!ProgressEntries.Any())
 {
-    <MudPaper Elevation="0" Class="pa-6 mb-4 text-center"
-              Style="border:2px dashed var(--mud-palette-primary-lighten);border-radius:16px;background:rgba(63,81,181,.04);">
+    <MudPaper Elevation="2" Class="pa-5 mb-4 text-center"
+              Style="border:2px dashed var(--mud-palette-primary-lighten);border-radius:16px;background:linear-gradient(135deg,rgba(63,81,181,.06) 0%,rgba(255,255,255,0) 100%);">
         <MudText Typo="Typo.h2" Style="line-height:1;">🚀</MudText>
         <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-2 mb-1">Ready to take the first step?</MudText>
-        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
             Every journey starts with one note. What's the very first thing you'll do to move toward this goal?
         </MudText>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+        <MudPaper Elevation="0" Class="pa-3 mb-4 text-left" Style="border-radius:10px;background:rgba(255,255,255,0.7);">
+            <MudText Typo="Typo.caption" Color="Color.Primary" Style="font-weight:600;" Class="mb-1">💡 Ideas for your first note:</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">• What's your plan for working toward this goal?</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">• What's one small action you could take today?</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">• What resources or support do you need?</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">• How will you know you're making progress?</MudText>
+        </MudPaper>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large"
                    StartIcon="@Icons.Material.Filled.RocketLaunch"
                    OnClick="OpenAddProgressDialog">Write My First Note ✨</MudButton>
     </MudPaper>
