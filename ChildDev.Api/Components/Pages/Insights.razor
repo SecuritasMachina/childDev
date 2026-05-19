@@ -172,6 +172,29 @@
 {
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Speed" Dense="true" Class="mb-4">@CompletionVelocityMsg</MudAlert>
 }
+@if (RecentCompletedGoals.Count >= 1)
+{
+    <MudPaper Elevation="1" Class="pa-4 mb-4" Style="border-radius:12px;">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
+            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+            <MudText Typo="Typo.body2" Style="font-weight:700;">🏆 Recent Goal Wins</MudText>
+        </MudStack>
+        @foreach (var (name, completionDate, enteredDate) in RecentCompletedGoals)
+        {
+            var rcgDone = DateTimeOffset.FromUnixTimeMilliseconds(completionDate).LocalDateTime;
+            var rcgDays = Math.Max((int)((completionDate - enteredDate) / 86_400_000L), 1);
+            var rcgDur = rcgDays >= 365 ? $"{rcgDays / 365}yr" : rcgDays >= 30 ? $"{rcgDays / 30}mo" : $"{rcgDays}d";
+            var rcgName = name.Length > 55 ? name[..55] + "…" : name;
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
+                <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Success" Size="Size.Small" />
+                <MudStack Spacing="0" Style="flex:1;">
+                    <MudText Typo="Typo.body2" Style="font-weight:600;">@rcgName</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Completed @rcgDone.ToString("MMM d, yyyy") · @rcgDur journey</MudText>
+                </MudStack>
+            </MudStack>
+        }
+    </MudPaper>
+}
 @if (GoalsTotalAllTime > 0)
 {
     var completionPct = GoalsTotalAllTime == 0 ? 0 : (int)(GoalsCompletedAllTime * 100.0 / GoalsTotalAllTime);
@@ -638,6 +661,7 @@
     // Domain entity stats
     private int GoalsCompletedAllTime;
     private int GoalsTotalAllTime;
+    private List<(string Name, long CompletionDate, long EnteredDate)> RecentCompletedGoals = [];
     private int TodosCompletedAllTime;
     private int JournalTotal;
     private int GoalProgressTotal;
@@ -700,6 +724,14 @@
             .CountAsync(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate != null);
         GoalsTotalAllTime = await Db.Goals
             .CountAsync(g => g.AccountFk == AccountGuid && g.DeletedAt == null);
+
+        var rcgRows = await Db.Goals
+            .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate != null)
+            .OrderByDescending(g => g.CompletionDate)
+            .Take(3)
+            .Select(g => new { g.GoalText, g.CompletionDate, g.EnteredDate })
+            .ToListAsync();
+        RecentCompletedGoals = rcgRows.Select(g => (g.GoalText ?? "", g.CompletionDate!.Value, g.EnteredDate)).ToList();
 
         TodosCompletedAllTime = await Db.Todos
             .CountAsync(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt != null);
