@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-19 — Invocation 7 Iter 564 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: Insights — "Goal completion timeline": last 3 completed goals with name, date completed, and days it took | UX/Encourage | Domain: celebrate achievement history | High | M | Low | CompletedGoals sorted by CompletionDate desc; take 3; duration = (CompletionDate - EnteredDate) / 86400000 | Celebratory history panel; high emotional impact for achievers | No |
+| 2 | Web: Journal — "Monthly journaling summary": "In May you wrote X entries" as a cheerful caption | UX/Encourage | Domain: monthly reflection habit awareness | Medium | XS | Low | AllEntries filtered by current month start; show "In [Month] you wrote X journal entries!" | Simple filter; pleasant monthly milestone | No |
+| 3 | Web: GoalDetail — "Completion forecast" nudge: if pace < 0.5 notes/week and no expiration, show gentle encouragement | UX/Encourage | Domain: pacing self-awareness | High | XS | Low | weeksSince = daysSince / 7.0; notesPerWeek = Count / max(1, weeksSince); show if < 0.5 and no ExpirationDate | Non-duplicative with existing velocity label (only on expiration-dated goals) | No |
+| 4 | Web: Home — "Daily check-in streak": consecutive days (ending today) with ANY progress note; global habit metric | UX/Encourage | Domain: daily habit building | High | S | Low | Sort allTimestamps by calendar date; run backwards from today; count consecutive days | High motivation; differs from per-goal streak which is week-based | No |
+| 5 | Web: GoalDetail — "How you compare" per-note-quality: avg word count last 5 vs first 5 notes — "getting richer!" | UX/Encourage | Domain: effort quality growth awareness | Medium | S | Low | NextStepItems word count; avg of last 5 vs first 5; if last 5 avg > first 5 avg by >= 30%: "Your notes are getting richer!" | Engaging quality growth feedback; needs at least 10 notes | No |
+| 6 | Web: Journal — "Words written today" caption in journal header | UX | Domain: daily writing effort awareness | Low | XS | Low | AllEntries filtered by today's local date; sum word counts; show "X words written today" | Minor UX; words already computed for other journal metrics | No |
+| 7 | Web: Insights — "Journal mood distribution": show top 3 moods as a compact chip row | UX | Domain: emotional self-awareness over time | Medium | XS | Low | AllMoods already loaded; take top 3; show as chips with counts | AllMoods already computed in LoadInsights; zero extra queries | No |
+| 8 | Web: Home — "Goals with next step" count: how many active goals have a pinned next step | UX | Domain: planning health at a glance | Medium | XS | Low | Filter AllActiveGoals where LatestNextStep is non-null; show "X goals have a next step ready" | Encourages next-step discipline; LatestNextStep already loaded | No |
+| 9 | Web: GoalDetail — "Progress per month" bar: last 3 calendar months as tiny bar chart using CSS | UX | Domain: monthly engagement trend | Medium | M | Low | Group ProgressEntries by month; compute counts; render as 3-bar CSS grid | Visual trend; more complex to render cleanly | No |
+| 10 | Web: Insights — "Total words written in progress notes": show total word count across all progress notes | UX/Encourage | Domain: cumulative effort celebration | Medium | XS | Low | allProgressEver needs text; requires adding NextStepItems to the select | Needs extra DB field in query; easy once loaded | No |
+
+**Selection iter 564:** Item #7 — "Journal mood distribution" on Insights.
+- `AllMoods` is already loaded as `List<(string Mood, int Count)>` in `LoadInsights()`
+- Take top 3 moods; show as MudChips with counts in a compact row
+- Placed near the journal stats section on Insights
+- Zero extra queries; purely from already-computed data
+
+---
+
 ## 2026-05-19 — Invocation 7 Iter 561 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
