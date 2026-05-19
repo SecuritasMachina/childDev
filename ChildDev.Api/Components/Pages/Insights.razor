@@ -113,6 +113,15 @@
 {
     <MudAlert Severity="@freshSeverity" Class="mb-4" Dense="true">@freshMsg</MudAlert>
 }
+@if (JournalStreak >= 2)
+{
+    var jStreakMsg = JournalStreak >= 14 ? $"📓 Journal streak: {JournalStreak} days — that's exceptional consistency! Your reflections are building something meaningful. 🌟"
+                  : JournalStreak >= 7  ? $"📓 Journal streak: {JournalStreak} days! A full week of journaling — you're building a powerful habit! 💪"
+                  :                       $"📓 Journal streak: {JournalStreak} days! Keep writing — every entry adds to your story!";
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Book" Dense="true" Class="mb-4">
+        @jStreakMsg
+    </MudAlert>
+}
 
 @if (GoalsTotalAllTime > 0)
 {
@@ -544,6 +553,7 @@
     private List<(string Day, int Count)> WeekdayLeaderboard = [];
     private string? BestDayEverDate;
     private int BestDayEverCount;
+    private int JournalStreak;
     private List<ChartSeries> GoalNotesChartSeries = [];
     private string[] GoalNotesChartLabels = [];
 
@@ -729,6 +739,14 @@
         var allTodosEver = await Db.Todos.Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt != null).Select(t => t.CompletedAt!.Value).ToListAsync();
         var allJournalEver = await Db.Journals.Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null).Select(j => j.EnteredDate).ToListAsync();
         var allProgressEver = await Db.GoalProgresses.Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null).Select(p => p.UpdatedOn).ToListAsync();
+        // Journal streak: consecutive days ending today with at least one journal entry
+        var journalDateSet = allJournalEver
+            .Select(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
+            .ToHashSet();
+        JournalStreak = 0;
+        var jStreakDay = DateOnly.FromDateTime(DateTime.Today);
+        while (journalDateSet.Contains(jStreakDay)) { JournalStreak++; jStreakDay = jStreakDay.AddDays(-1); }
+
         var allEver = allTodosEver.Concat(allJournalEver).Concat(allProgressEver).ToList();
         if (allEver.Count >= 5)
         {
