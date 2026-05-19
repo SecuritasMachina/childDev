@@ -280,6 +280,13 @@
     </MudPaper>
 }
 
+@if (BestDayEverDate is not null)
+{
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Star" Dense="true" Class="mb-6">
+        🏅 <strong>All-time best day:</strong> @BestDayEverDate with <strong>@BestDayEverCount actions</strong>! That was an epic day — can you top it?
+    </MudAlert>
+}
+
 @* Month-over-month trends *@
 <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2" Style="text-transform:uppercase;letter-spacing:1px;">
     This Month vs Last Month
@@ -503,6 +510,8 @@
     private int LongestActiveGoalDays;
     private string? LongestActiveGoalGuid;
     private List<(string Day, int Count)> WeekdayLeaderboard = [];
+    private string? BestDayEverDate;
+    private int BestDayEverCount;
     private List<ChartSeries> GoalNotesChartSeries = [];
     private string[] GoalNotesChartLabels = [];
 
@@ -682,6 +691,24 @@
                 .OrderByDescending(g => g.Count())
                 .Select(g => (g.Key.ToString(), g.Count()))
                 .ToList();
+        }
+
+        // All-time best day: combine all entities, group by date, find max
+        var allTodosEver = await Db.Todos.Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt != null).Select(t => t.CompletedAt!.Value).ToListAsync();
+        var allJournalEver = await Db.Journals.Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null).Select(j => j.EnteredDate).ToListAsync();
+        var allProgressEver = await Db.GoalProgresses.Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null).Select(p => p.UpdatedOn).ToListAsync();
+        var allEver = allTodosEver.Concat(allJournalEver).Concat(allProgressEver).ToList();
+        if (allEver.Count >= 5)
+        {
+            var bestDayGroup = allEver
+                .GroupBy(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
+                .OrderByDescending(g => g.Count())
+                .FirstOrDefault();
+            if (bestDayGroup is not null && bestDayGroup.Count() >= 3)
+            {
+                BestDayEverDate = bestDayGroup.Key.ToString("MMMM d, yyyy");
+                BestDayEverCount = bestDayGroup.Count();
+            }
         }
     }
 
