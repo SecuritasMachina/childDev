@@ -99,10 +99,35 @@
         : daysLeft2 == 0 ? "Last day to reach this goal! 💪"
         : daysLeft2 == 1 ? "1 day left — you've got this! 💪"
         : $"Day {daysElapsed2} of {totalDays} — {daysLeft2} days to go!";
-    <MudStack Spacing="1" Class="mb-3">
+    <MudStack Spacing="1" Class="mb-2">
         <MudText Typo="Typo.caption" Color="@barColor2">@barLabel2</MudText>
         <MudProgressLinear Value="@pct" Color="@barColor2" Rounded="true" Size="Size.Small" />
     </MudStack>
+    @if (ProgressEntries.Count >= 2 && !isOverdue2 && daysLeft2 > 0)
+    {
+        var weeksElapsed = Math.Max(elapsedMs / (7.0 * 86_400_000.0), 0.5);
+        var notesPerWeek = ProgressEntries.Count / weeksElapsed;
+        var weeksLeft = daysLeft2 / 7.0;
+        var projectedNotes = notesPerWeek * weeksLeft;
+        string velocityMsg;
+        Color velocityColor;
+        if (notesPerWeek >= 1)
+        {
+            velocityMsg = $"📈 Pace: {notesPerWeek:F1} notes/week — you're building good momentum!";
+            velocityColor = Color.Success;
+        }
+        else
+        {
+            var neededPerWeek = Math.Ceiling(1.0 / weeksLeft * 10) / 10;
+            velocityMsg = $"📉 Pace: {notesPerWeek:F1} notes/week — try to log at least 1 note per week!";
+            velocityColor = Color.Warning;
+        }
+        <MudText Typo="Typo.caption" Color="@velocityColor" Class="mb-3">@velocityMsg</MudText>
+    }
+    else
+    {
+        <div class="mb-3"></div>
+    }
 }
 
 @if (Goal.CompletionDate is null && ProgressEntries.Any())

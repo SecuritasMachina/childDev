@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-05-18 — Invocation 6 Iter 456 Fresh Brainstorm (Goal-Focused + Encouragement)
+
+| # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Web: GoalDetail — progress velocity line ("At your pace: X notes/week — on track / need to speed up") | UI/Encourage | Domain: goal planning; makes deadline context actionable | High | S | Low | When ExpirationDate set, compute notes/week vs. what's needed; encouraging framing | Only when ExpirationDate exists | No |
+| 2 | Web: GoalDetail — "confidence" emoji quick reaction after adding a note | UI/Func | Domain: self-assessment; IEP tracking | High | M | Low | After saving, show 5 emoji buttons; store in a note field; trends over time | Hacky to use existing text field for this | No |
+| 3 | Web: Home — "Total progress notes" stat shown in goals card below active count | UI | Domain: engagement visibility | Low | XS | Low | "📝 47 total progress notes" below the trophy card | Minor info add | No |
+| 4 | Web: Insights — "Most active day of week" analytics card | Func | Domain: behavioral insight | Medium | S | Low | "You log most progress on Tuesdays!" from WebAnalytics timestamp distribution | Requires day-of-week aggregation on analytics table | No |
+| 5 | Web: GoalDetail — "pin this note as the goal summary" feature | Func | Domain: goal clarity; users want a "current status" view | High | M | Low | One note marked as "pinned summary"; shown at top | Requires new field or convention | No |
+| 6 | Web: Home — "Quick Goals Overview" at top of page (completed/active/streaks summary in one line) | UI | Domain: dashboard clarity | Medium | XS | Low | "5 active | 3 completed | 2 on a streak" as a subtitle under "My Goals" | Slightly redundant with existing stats | No |
+| 7 | API: Add GoalProgress.ConfidenceLevel (1-5) to sync endpoint via existing field conventions | Func | Domain: self-assessment | High | M | Medium | Store 1-5 in a dedicated column using EnsureCreated auto-add | Requires schema-level change | No |
+| 8 | Web: GoalDetail — "goal insight" AI-style summary ("Based on 12 notes, this goal shows steady progress") | UI/Encourage | Domain: progress narrative | Medium | M | Low | Rule-based text generation (no AI API); uses note count + recency + streak data | Medium effort; may feel robotic | No |
+| 9 | Web: Home — goal card hover tooltip with last note text preview | UI | Domain: at-a-glance content | Low | M | Low | MudTooltip or MudPopover showing truncated last note on card hover | Mobile-unfriendly hover UX | No |
+| 10 | Web: GoalDetail — "encourage a friend" share text (pre-written text to copy/send) | UI/Encourage | Domain: social sharing of achievements | Medium | S | Low | "Copy achievement text" generates "I just reached Champion level on my goal: [Goal]!" | Could be overused; needs careful copy | No |
+
+**Selection iter 456:** Item #1 — Progress velocity estimate on GoalDetail.
+- Shows notes/week pace and needed pace when ExpirationDate is set
+- Reuses ProgressEntries already loaded; computes average from timestamps
+- Directly actionable: tells kid/caregiver whether they're on track
+- Low risk: only shows when ExpirationDate is set
+
+---
+
 ## 2026-05-18 — Invocation 6 Iter 453 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
