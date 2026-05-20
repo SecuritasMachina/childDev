@@ -27,6 +27,8 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
+    volumes:
+      - childdev_dataprotection:/root/.aspnet/DataProtection-Keys
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
@@ -53,3 +55,4 @@ services:
 
 volumes:
   childdev_mariadb:
+  childdev_dataprotection:

@@ -3,12 +3,13 @@
 @inject NavigationManager Nav
 @inject IHttpContextAccessor HttpContextAccessor
 @inject WebAnalyticsService Analytics
+@inject WebAuthTokenService WebAuthTokens
 
 <PageTitle>Login – ChildDev</PageTitle>
 
 <MudGrid Justify="Justify.Center" Class="mt-8">
     <MudItem xs="12" sm="6" md="4">
-        <MudCard>
+        <MudCard Class="@(_blazorReady ? "blazor-ready" : "")">
             <MudCardHeader>
                 <CardHeaderContent>
                     <MudText Typo="Typo.h5" Align="Align.Center">
@@ -23,11 +24,10 @@
                     <MudAlert Severity="Severity.Error" Class="mb-4">@Error</MudAlert>
                 }
                 <MudTextField @bind-Value="NickName" Label="Nickname" Variant="Variant.Outlined"
-                              Class="mb-4" Immediate="true"
-                              @onkeyup="@(async (e) => { if (e.Key == "Enter") await DoLogin(); })" />
+                              Class="mb-4" Immediate="true" />
                 <MudTextField @bind-Value="Pin" Label="PIN" Variant="Variant.Outlined"
-                              InputType="InputType.Password" Class="mb-4"
-                              @onkeyup="@(async (e) => { if (e.Key == "Enter") await DoLogin(); })" />
+                              Immediate="true"
+                              InputType="InputType.Password" Class="mb-4" />
             </MudCardContent>
             <MudCardActions Class="px-4 pb-4 flex-column">
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
@@ -45,6 +45,13 @@
     private string NickName = string.Empty;
     private string Pin = string.Empty;
     private string? Error;
+    private bool _blazorReady;
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) { _blazorReady = true; StateHasChanged(); }
+        return Task.CompletedTask;
+    }
 
     protected override void OnInitialized()
     {
@@ -61,9 +68,8 @@
             Error = "Invalid nickname or PIN.";
             return;
         }
-        HttpContextAccessor.HttpContext!.Session.SetString("AccountGuid", account.Guid);
-        HttpContextAccessor.HttpContext!.Session.SetString("NickName", account.NickName);
         await Analytics.TrackAsync("login", account.Guid, "login");
-        Nav.NavigateTo("/");
+        var token = WebAuthTokens.GenerateToken(account.Guid, account.NickName);
+        Nav.NavigateTo($"/api/web/auth/complete?token={token}", forceLoad: true);
     }
 }

@@ -1,14 +1,9 @@
 @page "/logout"
 @inject NavigationManager Nav
-@inject IHttpContextAccessor HttpContextAccessor
-@inject WebAnalyticsService Analytics
 
 @code {
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        var accountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
-        await Analytics.TrackAsync("logout", accountGuid, "logout");
-        HttpContextAccessor.HttpContext?.Session.Clear();
-        Nav.NavigateTo("/login");
+        Nav.NavigateTo("/api/web/auth/logout", forceLoad: true);
     }
 }

@@ -57,6 +57,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddMudServices();
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddScoped<WebAnalyticsService>();
+builder.Services.AddSingleton<WebAuthTokenService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -109,6 +110,7 @@ app.MapGet("/api/health", async (AppDbContext db) =>
 
 app.MapRazorComponents<ChildDev.Api.Components.App>().AddInteractiveServerRenderMode();
 app.MapAuthEndpoints();
+app.MapWebAuthEndpoints();
 app.MapJournalEndpoints();
 app.MapGoalEndpoints();
 app.MapGoalProgressEndpoints();

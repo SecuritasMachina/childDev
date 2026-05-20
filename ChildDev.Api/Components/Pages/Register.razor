@@ -3,12 +3,13 @@
 @inject NavigationManager Nav
 @inject IHttpContextAccessor HttpContextAccessor
 @inject WebAnalyticsService Analytics
+@inject WebAuthTokenService WebAuthTokens
 
 <PageTitle>Register – ChildDev</PageTitle>
 
 <MudGrid Justify="Justify.Center" Class="mt-8">
     <MudItem xs="12" sm="8" md="5">
-        <MudCard>
+        <MudCard Class="@(_blazorReady ? "blazor-ready" : "")">
             <MudCardHeader>
                 <CardHeaderContent>
                     <MudText Typo="Typo.h5" Align="Align.Center">
@@ -28,22 +29,22 @@
                     <MudAlert Severity="Severity.Error" Class="mb-4">@Error</MudAlert>
                 }
                 <MudTextField @bind-Value="NickName" Label="Nickname" Variant="Variant.Outlined"
-                              Class="mb-4" HelperText="Choose a name (1–50 characters)"
-                              @onkeyup="@(async (e) => { if (e.Key == "Enter") await DoRegister(); })" />
+                              Immediate="true"
+                              Class="mb-4" HelperText="Choose a name (1–50 characters)" />
                 <MudTextField @bind-Value="Pin" Label="PIN" Variant="Variant.Outlined"
+                              Immediate="true"
                               InputType="@PinInputType"
                               Adornment="Adornment.End" AdornmentIcon="@PinEyeIcon"
                               OnAdornmentClick="TogglePinVisibility"
                               Class="mb-4"
-                              HelperText="At least 4 characters — remember this to log back in"
-                              @onkeyup="@(async (e) => { if (e.Key == "Enter") await DoRegister(); })" />
+                              HelperText="At least 4 characters — remember this to log back in" />
                 <MudTextField @bind-Value="ConfirmPin" Label="Confirm PIN" Variant="Variant.Outlined"
+                              Immediate="true"
                               InputType="@ConfirmPinInputType"
                               Adornment="Adornment.End" AdornmentIcon="@ConfirmPinEyeIcon"
                               OnAdornmentClick="ToggleConfirmPinVisibility"
                               Class="mb-4"
-                              Error="@PinMismatch" ErrorText="PINs do not match"
-                              @onkeyup="@(async (e) => { if (e.Key == "Enter") await DoRegister(); })" />
+                              Error="@PinMismatch" ErrorText="PINs do not match" />
                 <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center" Class="mt-1">
                     <MudIcon Icon="@Icons.Material.Filled.Shield" Size="Size.Small" Class="mr-1" />
                     Your data stays on your device and our private servers — never sold, never shared.
@@ -65,8 +66,15 @@
     private string NickName = string.Empty;
     private string Pin = string.Empty;
     private string ConfirmPin = string.Empty;
-    private bool PinMismatch;
+    private bool PinMismatch => ConfirmPin.Length > 0 && Pin != ConfirmPin;
     private string? Error;
+    private bool _blazorReady;
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) { _blazorReady = true; StateHasChanged(); }
+        return Task.CompletedTask;
+    }
 
     private bool ShowPin;
     private bool ShowConfirmPin;
@@ -97,7 +105,6 @@
             Error = "PIN must be at least 4 characters.";
             return;
         }
-        PinMismatch = Pin != ConfirmPin;
         if (PinMismatch) return;
         if (await Db.Accounts.AnyAsync(a => a.NickName == nick))
         {
@@ -115,9 +122,8 @@
         Db.Accounts.Add(account);
         await Db.SaveChangesAsync();
 
-        HttpContextAccessor.HttpContext!.Session.SetString("AccountGuid", account.Guid);
-        HttpContextAccessor.HttpContext!.Session.SetString("NickName", account.NickName);
         await Analytics.TrackAsync("register", account.Guid, "register");
-        Nav.NavigateTo("/");
+        var token = WebAuthTokens.GenerateToken(account.Guid, account.NickName);
+        Nav.NavigateTo($"/api/web/auth/complete?token={token}", forceLoad: true);
     }
 }
