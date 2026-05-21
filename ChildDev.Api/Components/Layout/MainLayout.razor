@@ -94,6 +94,16 @@
         <MudContainer MaxWidth="MaxWidth.Large" Class="pb-8">
             @Body
         </MudContainer>
+        <MudPaper Elevation="0" Class="mt-4 py-3" Style="background:#EEEEEE;border-top:1px solid #E0E0E0;">
+            <MudContainer MaxWidth="MaxWidth.Large">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="2">
+                    <MudIcon Icon="@Icons.Material.Filled.Android" Size="Size.Small" Style="color:#3DDC84;" />
+                    <MudLink Href="/downloads/ChildDev.apk" Typo="Typo.caption" Color="Color.Primary"
+                             Style="font-weight:600;">Download ChildDev for Android</MudLink>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">— install the mobile app</MudText>
+                </MudStack>
+            </MudContainer>
+        </MudPaper>
     </MudMainContent>
 </MudLayout>
 
