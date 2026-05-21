@@ -6,14 +6,16 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
-      - "--api.dashboard=true"
-      - "--api.insecure=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=charlesd@havranek.com"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
     ports:
       - "80:80"
       - "443:443"
-      - "8081:8080"   # Traefik dashboard
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
     restart: unless-stopped
 
   childdev-api:
@@ -22,7 +24,7 @@ services:
       dockerfile: Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      CHILDDEV_DB_CONNECTION: ${CHILDDEV_DB_CONNECTION:-Server=mariadb;Database=childdev;User=childdev;Password=${CHILDDEV_DB_PASSWORD:-changeme};}
+      CHILDDEV_DB_CONNECTION: "Server=mariadb;Database=childdev;User=childdev;Password=${CHILDDEV_DB_PASSWORD};"
       CHILDDEV_JWT_SECRET: ${CHILDDEV_JWT_SECRET}
     depends_on:
       mariadb:
@@ -32,9 +34,16 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.childdev.rule=Host(`${CHILDDEV_HOST:-localhost}`)"
-      - "traefik.http.routers.childdev.entrypoints=web"
+      - "traefik.http.routers.childdev-http.rule=Host(`childdev.havranek.com`)"
+      - "traefik.http.routers.childdev-http.entrypoints=web"
+      - "traefik.http.routers.childdev-http.middlewares=https-redirect"
+      - "traefik.http.routers.childdev.rule=Host(`childdev.havranek.com`)"
+      - "traefik.http.routers.childdev.entrypoints=websecure"
+      - "traefik.http.routers.childdev.tls=true"
+      - "traefik.http.routers.childdev.tls.certresolver=letsencrypt"
       - "traefik.http.services.childdev.loadbalancer.server.port=8080"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.permanent=true"
 
   mariadb:
     image: mariadb:11
@@ -42,7 +51,7 @@ services:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MARIADB_DATABASE: childdev
       MARIADB_USER: childdev
-      MARIADB_PASSWORD: ${CHILDDEV_DB_PASSWORD:-changeme}
+      MARIADB_PASSWORD: ${CHILDDEV_DB_PASSWORD}
     volumes:
       - childdev_mariadb:/var/lib/mysql
     healthcheck:
@@ -56,3 +65,4 @@ services:
 volumes:
   childdev_mariadb:
   childdev_dataprotection:
+  letsencrypt:

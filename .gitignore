@@ -28,3 +28,6 @@ appsettings.*.json
 # OS
 .DS_Store
 Thumbs.db
+
+# APK release files (deployed separately, not tracked in git)
+*.apk

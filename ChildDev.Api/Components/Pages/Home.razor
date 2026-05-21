@@ -4,6 +4,7 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @inject ISnackbar Snackbar
 @inject WebAnalyticsService Analytics
+@inject IWebHostEnvironment HostEnv
 
 <PageTitle>My Goals – ChildDev</PageTitle>
 
@@ -35,6 +36,16 @@
                         Get Started Free ✨
                     </MudButton>
                 </MudStack>
+                @if (ApkExists)
+                {
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-3">
+                        <MudIcon Icon="@Icons.Material.Filled.PhoneAndroid" Color="Color.Success" Size="Size.Small" />
+                        <MudLink Href="/downloads/ChildDev.apk" Target="_blank"
+                                 Style="font-size:0.9rem;font-weight:600;color:#388E3C;">
+                            Download Android App (.apk)
+                        </MudLink>
+                    </MudStack>
+                }
             </MudItem>
             <MudItem xs="12" md="6">
                 <div class="growth-graphic">
@@ -1473,6 +1484,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
 
 @code {
     private string? AccountGuid;
+    private bool ApkExists;
     private List<Goal> AllActiveGoals = [];
     private List<Goal> ActiveGoals = [];
     private List<Goal> CompletedGoals = [];
@@ -1533,6 +1545,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
 
     protected override async Task OnInitializedAsync()
     {
+        ApkExists = System.IO.File.Exists(System.IO.Path.Combine(HostEnv.WebRootPath, "downloads", "ChildDev.apk"));
         AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
         if (AccountGuid is null) return;
         await LoadGoals();
