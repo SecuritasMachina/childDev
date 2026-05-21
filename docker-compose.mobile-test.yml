@@ -1,0 +1,19 @@
+services:
+  mobile-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.mobile-test
+    image: childdev-mobile-test:latest
+    container_name: childdev-mobile-test
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./test-results/mobile:/results
+    environment:
+      MONKEY_EVENTS: "500"
+      HOST_ADB_PORT: "5555"
+      ANDROID_SDK_ROOT: /opt/android-sdk
+      ANDROID_HOME: /opt/android-sdk
+      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+    restart: "no"
+

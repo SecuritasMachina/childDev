@@ -1,0 +1,29 @@
+# Node modules (very large)
+**/node_modules/
+childDev/
+playwright/
+
+# Build output
+**/bin/
+**/obj/
+
+# Test results
+test-results/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vs/
+.vscode/
+*.user
+
+# Docker files (no recursion needed)
+docker-compose.yml
+docker-compose.mobile-test.yml
+Dockerfile.mobile-test
+
+# Secrets
+*.env
+.env*
