@@ -3,7 +3,7 @@
 set -euo pipefail
 
 SERVER="root@hwsrv-1313060.hostwindsdns.com"
-SSH_KEY="/home/jaxtrx/.ssh/root-hostwinds1"
+SSH_KEY="/home/jaxtrx/.ssh/hostWinds_id_rsa"
 REMOTE_DIR="/opt/childdev"
 APK_SRC="${1:-}"   # optional: path to a built APK file  e.g.  ./deploy.sh ./myapp.apk
 
