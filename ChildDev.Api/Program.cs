@@ -76,7 +76,9 @@ var app = builder.Build();
 
 app.UseResponseCompression();
 app.UseRequestTimeouts();
-app.UseStaticFiles();
+var mimeProvider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+mimeProvider.Mappings[".apk"] = "application/vnd.android.package-archive";
+app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = mimeProvider });
 app.UseCors();
 app.UseRouting();
 
