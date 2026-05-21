@@ -5,7 +5,7 @@ public record SyncResponse<T>(List<T> Records);
 
 public record JournalDto(
     string Guid, string AccountFk, string? Notes, string? Activity,
-    string? Mood, string? Tags, long EnteredDate, long UpdatedOn, long? DeletedAt);
+    string? Mood, string? EmotionReason, string? Tags, long EnteredDate, long UpdatedOn, long? DeletedAt);
 
 public record GoalDto(
     string Guid, string AccountFk, string? GoalText, long? NextMeetingDate,

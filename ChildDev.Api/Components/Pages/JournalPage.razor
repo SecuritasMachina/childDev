@@ -381,10 +381,19 @@ else
                             }
                         </CardHeaderActions>
                     </MudCardHeader>
-                    @if (!string.IsNullOrWhiteSpace(j.Notes))
+                    @if (!string.IsNullOrWhiteSpace(j.Notes) || !string.IsNullOrWhiteSpace(j.EmotionReason))
                     {
                         <MudCardContent Class="pt-0">
-                            <MudText Typo="Typo.body2">@(j.Notes.Length > 200 ? j.Notes[..200] + "…" : j.Notes)</MudText>
+                            @if (!string.IsNullOrWhiteSpace(j.Notes))
+                            {
+                                <MudText Typo="Typo.body2">@(j.Notes.Length > 200 ? j.Notes[..200] + "…" : j.Notes)</MudText>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(j.EmotionReason))
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                                    <em>Why: @(j.EmotionReason.Length > 100 ? j.EmotionReason[..100] + "…" : j.EmotionReason)</em>
+                                </MudText>
+                            }
                         </MudCardContent>
                     }
                     <MudCardActions>
@@ -453,7 +462,9 @@ else
         <MudTextField @bind-Value="NewNotes" Label="What happened? What did you observe?" Variant="Variant.Outlined"
                       Lines="4" Class="mb-4" AutoFocus="true" />
         <MudTextField @bind-Value="NewActivity" Label="Activity (optional)" Variant="Variant.Outlined" Class="mb-4" />
-        <MudTextField @bind-Value="NewMood" Label="Mood (optional)" Variant="Variant.Outlined" Class="mb-4" />
+        <MudTextField @bind-Value="NewMood" Label="How did you feel? (optional)" Variant="Variant.Outlined" Class="mb-4" />
+        <MudTextField @bind-Value="NewEmotionReason" Label="Why did you feel that way? (optional)" Variant="Variant.Outlined"
+                      Lines="2" Class="mb-4" />
         <MudTextField @bind-Value="NewTags" Label="Tags (optional, comma-separated)" Variant="Variant.Outlined" Class="mb-4" />
         <MudDatePicker @bind-Date="NewEnteredDate" Label="Entry date" Variant="Variant.Outlined" />
     </DialogContent>
@@ -475,7 +486,9 @@ else
         <MudTextField @bind-Value="EditNotes" Label="Notes" Variant="Variant.Outlined"
                       Lines="4" Class="mb-4" AutoFocus="true" />
         <MudTextField @bind-Value="EditActivity" Label="Activity (optional)" Variant="Variant.Outlined" Class="mb-4" />
-        <MudTextField @bind-Value="EditMood" Label="Mood (optional)" Variant="Variant.Outlined" Class="mb-4" />
+        <MudTextField @bind-Value="EditMood" Label="How did you feel? (optional)" Variant="Variant.Outlined" Class="mb-4" />
+        <MudTextField @bind-Value="EditEmotionReason" Label="Why did you feel that way? (optional)" Variant="Variant.Outlined"
+                      Lines="2" Class="mb-4" />
         <MudTextField @bind-Value="EditTags" Label="Tags (optional, comma-separated)" Variant="Variant.Outlined" Class="mb-4" />
         <MudDatePicker @bind-Date="EditEnteredDate" Label="Entry date" Variant="Variant.Outlined" />
     </DialogContent>
@@ -505,6 +518,7 @@ else
     private string NewNotes = string.Empty;
     private string NewActivity = string.Empty;
     private string NewMood = string.Empty;
+    private string NewEmotionReason = string.Empty;
     private string NewTags = string.Empty;
     private DateTime? NewEnteredDate = DateTime.Today;
     private bool ShowEditDialog;
@@ -512,6 +526,7 @@ else
     private string EditNotes = string.Empty;
     private string EditActivity = string.Empty;
     private string EditMood = string.Empty;
+    private string EditEmotionReason = string.Empty;
     private string EditTags = string.Empty;
     private DateTime? EditEnteredDate;
     private string? _confirmDeleteGuid;
@@ -716,6 +731,7 @@ else
                 (j.Notes?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (j.Activity?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (j.Mood?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (j.EmotionReason?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (j.Tags?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false));
         }
 
@@ -749,6 +765,7 @@ else
         NewNotes = string.Empty;
         NewActivity = string.Empty;
         NewMood = string.Empty;
+        NewEmotionReason = string.Empty;
         NewTags = string.Empty;
         NewEnteredDate = DateTime.Today;
         ShowAddDialog = true;
@@ -769,6 +786,7 @@ else
             Notes = string.IsNullOrWhiteSpace(NewNotes) ? null : NewNotes.Trim(),
             Activity = string.IsNullOrWhiteSpace(NewActivity) ? null : NewActivity.Trim(),
             Mood = string.IsNullOrWhiteSpace(NewMood) ? null : NewMood.Trim(),
+            EmotionReason = string.IsNullOrWhiteSpace(NewEmotionReason) ? null : NewEmotionReason.Trim(),
             Tags = string.IsNullOrWhiteSpace(NewTags) ? null : NewTags.Trim(),
             EnteredDate = enteredMs,
             UpdatedOn = now
@@ -779,6 +797,7 @@ else
         NewNotes = string.Empty;
         NewActivity = string.Empty;
         NewMood = string.Empty;
+        NewEmotionReason = string.Empty;
         NewTags = string.Empty;
         NewEnteredDate = DateTime.Today;
         ShowAddDialog = false;
@@ -792,6 +811,7 @@ else
         EditNotes = j.Notes ?? string.Empty;
         EditActivity = j.Activity ?? string.Empty;
         EditMood = j.Mood ?? string.Empty;
+        EditEmotionReason = j.EmotionReason ?? string.Empty;
         EditTags = j.Tags ?? string.Empty;
         EditEnteredDate = DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime.Date;
         ShowEditDialog = true;
@@ -805,6 +825,7 @@ else
         var notes = string.IsNullOrWhiteSpace(EditNotes) ? null : EditNotes.Trim();
         var activity = string.IsNullOrWhiteSpace(EditActivity) ? null : EditActivity.Trim();
         var mood = string.IsNullOrWhiteSpace(EditMood) ? null : EditMood.Trim();
+        var emotionReason = string.IsNullOrWhiteSpace(EditEmotionReason) ? null : EditEmotionReason.Trim();
         var tags = string.IsNullOrWhiteSpace(EditTags) ? null : EditTags.Trim();
         var enteredMs = EditEnteredDate.HasValue
             ? new DateTimeOffset(DateTime.SpecifyKind(EditEnteredDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
@@ -815,6 +836,7 @@ else
                 .SetProperty(j => j.Notes, notes)
                 .SetProperty(j => j.Activity, activity)
                 .SetProperty(j => j.Mood, mood)
+                .SetProperty(j => j.EmotionReason, emotionReason)
                 .SetProperty(j => j.Tags, tags)
                 .SetProperty(j => j.EnteredDate, enteredMs)
                 .SetProperty(j => j.UpdatedOn, now));

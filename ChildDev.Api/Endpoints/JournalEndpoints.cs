@@ -64,6 +64,11 @@ public static class JournalEndpoints
                 logger.LogWarning("sync/journal account={Account} rejected: Mood too long", accountGuid[..8]);
                 return Results.Problem("Record Mood must not exceed 50 characters.", statusCode: 422);
             }
+            if (req.Records.Any(r => r.EmotionReason?.Length > 1000))
+            {
+                logger.LogWarning("sync/journal account={Account} rejected: EmotionReason too long", accountGuid[..8]);
+                return Results.Problem("Record EmotionReason must not exceed 1000 characters.", statusCode: 422);
+            }
             if (req.Records.Any(r => r.Tags?.Length > 500))
             {
                 logger.LogWarning("sync/journal account={Account} rejected: Tags too long", accountGuid[..8]);
@@ -109,19 +114,20 @@ public static class JournalEndpoints
     private static Journal DtoToEntity(JournalDto dto) => new()
     {
         Guid = dto.Guid, AccountFk = dto.AccountFk, Notes = dto.Notes,
-        Activity = dto.Activity, Mood = dto.Mood, Tags = dto.Tags,
-        EnteredDate = dto.EnteredDate, UpdatedOn = dto.UpdatedOn, DeletedAt = dto.DeletedAt
+        Activity = dto.Activity, Mood = dto.Mood, EmotionReason = dto.EmotionReason,
+        Tags = dto.Tags, EnteredDate = dto.EnteredDate, UpdatedOn = dto.UpdatedOn, DeletedAt = dto.DeletedAt
     };
 
     private static void ApplyDto(Journal entity, JournalDto dto)
     {
         entity.Notes = dto.Notes; entity.Activity = dto.Activity;
-        entity.Mood = dto.Mood; entity.Tags = dto.Tags;
+        entity.Mood = dto.Mood; entity.EmotionReason = dto.EmotionReason;
+        entity.Tags = dto.Tags;
         entity.EnteredDate = dto.EnteredDate; entity.UpdatedOn = dto.UpdatedOn;
         entity.DeletedAt = dto.DeletedAt;
     }
 
     private static JournalDto EntityToDto(Journal j) => new(
-        j.Guid, j.AccountFk, j.Notes, j.Activity, j.Mood, j.Tags,
+        j.Guid, j.AccountFk, j.Notes, j.Activity, j.Mood, j.EmotionReason, j.Tags,
         j.EnteredDate, j.UpdatedOn, j.DeletedAt);
 }

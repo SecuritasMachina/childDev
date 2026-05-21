@@ -13,6 +13,8 @@ public class Journal
     public string? Activity { get; set; }
     [MaxLength(50)]
     public string? Mood { get; set; }
+    [MaxLength(1000)]
+    public string? EmotionReason { get; set; }
     [MaxLength(500)]
     public string? Tags { get; set; }
     public long EnteredDate { get; set; }

@@ -15,6 +15,7 @@ public partial class JournalEntryViewModel(
     [ObservableProperty] private string notes = string.Empty;
     [ObservableProperty] private string activity = string.Empty;
     [ObservableProperty] private string mood = string.Empty;
+    [ObservableProperty] private string emotionReason = string.Empty;
     [ObservableProperty] private string tags = string.Empty;
     [ObservableProperty] private string enteredDateDisplay = string.Empty;
     [ObservableProperty] private DateTime enteredDate = DateTime.Today;
@@ -22,6 +23,7 @@ public partial class JournalEntryViewModel(
     [ObservableProperty] private int notesWordCount;
     [ObservableProperty] private int activityLength;
     [ObservableProperty] private int moodLength;
+    [ObservableProperty] private int emotionReasonLength;
     [ObservableProperty] private int tagsLength;
 
     partial void OnNotesChanged(string value)
@@ -39,6 +41,7 @@ public partial class JournalEntryViewModel(
     }
 
     partial void OnMoodChanged(string value) => MoodLength = value?.Length ?? 0;
+    partial void OnEmotionReasonChanged(string value) => EmotionReasonLength = value?.Length ?? 0;
     partial void OnTagsChanged(string value) => TagsLength = value?.Length ?? 0;
 
     private bool CanSave() => !string.IsNullOrWhiteSpace(Notes) || !string.IsNullOrWhiteSpace(Activity);
@@ -56,6 +59,7 @@ public partial class JournalEntryViewModel(
         Notes = item.Notes ?? string.Empty;
         Activity = item.Activity ?? string.Empty;
         Mood = item.Mood ?? string.Empty;
+        EmotionReason = item.EmotionReason ?? string.Empty;
         Tags = item.Tags ?? string.Empty;
         EnteredDate = DateTimeOffset.FromUnixTimeMilliseconds(item.EnteredDate).LocalDateTime;
         EnteredDateDisplay = EnteredDate.ToString("ddd, MMM d yyyy");
@@ -77,6 +81,7 @@ public partial class JournalEntryViewModel(
         journal.Notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim();
         journal.Activity = string.IsNullOrWhiteSpace(Activity) ? null : Activity.Trim();
         journal.Mood = string.IsNullOrWhiteSpace(Mood) ? null : Mood.Trim();
+        journal.EmotionReason = string.IsNullOrWhiteSpace(EmotionReason) ? null : EmotionReason.Trim();
         journal.Tags = string.IsNullOrWhiteSpace(Tags) ? null : Tags.Trim();
 
         await repo.SaveAsync(journal);

@@ -53,13 +53,13 @@ public class SyncService(
             await SyncEntityAsync<Journal, JournalSyncDto>(
                 client, "sync/journal", since,
                 () => journalRepo.GetModifiedSinceAsync(account.Guid, since),
-                j => new JournalSyncDto(j.Guid, j.AccountFk, j.Notes, j.Activity, j.Mood, j.Tags,
+                j => new JournalSyncDto(j.Guid, j.AccountFk, j.Notes, j.Activity, j.Mood, j.EmotionReason, j.Tags,
                     j.EnteredDate, j.UpdatedOn, j.DeletedAt),
                 dto => journalRepo.UpsertFromSyncAsync(new Journal
                 {
                     Guid = dto.Guid, AccountFk = dto.AccountFk, Notes = dto.Notes,
-                    Activity = dto.Activity, Mood = dto.Mood, Tags = dto.Tags,
-                    EnteredDate = dto.EnteredDate, UpdatedOn = dto.UpdatedOn, DeletedAt = dto.DeletedAt
+                    Activity = dto.Activity, Mood = dto.Mood, EmotionReason = dto.EmotionReason,
+                    Tags = dto.Tags, EnteredDate = dto.EnteredDate, UpdatedOn = dto.UpdatedOn, DeletedAt = dto.DeletedAt
                 }));
 
             await SyncEntityAsync<Goal, GoalSyncDto>(
@@ -150,7 +150,7 @@ public record SyncRequestDto<T>(List<T> Records, long LastSyncAt);
 public record SyncResponseDto<T>(List<T> Records);
 
 public record JournalSyncDto(string Guid, string AccountFk, string? Notes, string? Activity,
-    string? Mood, string? Tags, long EnteredDate, long UpdatedOn, long? DeletedAt);
+    string? Mood, string? EmotionReason, string? Tags, long EnteredDate, long UpdatedOn, long? DeletedAt);
 
 public record GoalSyncDto(string Guid, string AccountFk, string? GoalText,
     long? NextMeetingDate, long? ExpirationDate, long EnteredDate, string? MeasurableOutcome,

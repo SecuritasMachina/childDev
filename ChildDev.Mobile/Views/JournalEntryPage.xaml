@@ -20,9 +20,13 @@
             <Entry Text="{Binding Activity}" Placeholder="e.g. Reading, Drawing" />
             <Label Text="{Binding ActivityLength, StringFormat='{0} characters'}"
                    FontSize="11" TextColor="Gray" HorizontalOptions="End" />
-            <Label Text="Mood" />
+            <Label Text="How did you feel?" />
             <Entry Text="{Binding Mood}" Placeholder="e.g. Happy, Focused" />
             <Label Text="{Binding MoodLength, StringFormat='{0} characters'}"
+                   FontSize="11" TextColor="Gray" HorizontalOptions="End" />
+            <Label Text="Why did you feel that way?" />
+            <Editor Text="{Binding EmotionReason}" Placeholder="What made you feel that way?" HeightRequest="80" AutoSize="TextChanges" />
+            <Label Text="{Binding EmotionReasonLength, StringFormat='{0} characters'}"
                    FontSize="11" TextColor="Gray" HorizontalOptions="End" />
             <Label Text="Tags" />
             <Entry Text="{Binding Tags}" Placeholder="comma-separated" />

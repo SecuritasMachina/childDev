@@ -108,7 +108,7 @@ public class SyncServiceTests : IDisposable
 
         var serverJournal = new JournalSyncDto(
             System.Guid.NewGuid().ToString(), account.Guid, "From server",
-            null, null, null, 1000, 1000, null);
+            null, null, null, null, 1000, 1000, null);
 
         var handler = new FakeSyncHandler(serverJournal);
         var service = BuildSyncService(handler);
@@ -160,7 +160,7 @@ public class SyncServiceTests : IDisposable
 
         var serverJournal = new JournalSyncDto(
             System.Guid.NewGuid().ToString(), account.Guid, "Sync test",
-            null, null, null, 1000, 1000, null);
+            null, null, null, null, 1000, 1000, null);
 
         var beforeSync = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var handler = new FakeSyncHandler(serverJournal);
@@ -200,7 +200,7 @@ public class SyncServiceTests : IDisposable
 
         var serverJournal = new JournalSyncDto(
             System.Guid.NewGuid().ToString(), account.Guid, "Concurrent test",
-            null, null, null, 1000, 1000, null);
+            null, null, null, null, 1000, 1000, null);
 
         var handler = new FakeSyncHandler(serverJournal);
         var service = BuildSyncService(handler);
@@ -587,7 +587,7 @@ public class SyncServiceTests : IDisposable
         var deletedAt = 5_000_000L;
         var serverJournal = new JournalSyncDto(
             System.Guid.NewGuid().ToString(), account.Guid, null,
-            null, null, null, deletedAt, deletedAt, deletedAt);
+            null, null, null, null, deletedAt, deletedAt, deletedAt);
 
         var handler = new FakeSyncHandler(serverJournal);
         var service = BuildSyncService(handler);
@@ -739,7 +739,7 @@ public class SyncServiceTests : IDisposable
 
         var serverJournal = new JournalSyncDto(
             System.Guid.NewGuid().ToString(), account.Guid, "A note",
-            "Coding", "Happy", "work,dev", 1000, 1000, null);
+            "Coding", "Happy", null, "work,dev", 1000, 1000, null);
 
         var handler = new FakeSyncHandler(serverJournal);
         var service = BuildSyncService(handler);
@@ -977,7 +977,7 @@ public class SyncServiceTests : IDisposable
 
         // Server returns same Guid with newer UpdatedOn and updated Notes
         var serverJournal = new JournalSyncDto(journalGuid, account.Guid, "server version",
-            null, null, null, now, now + 1000, null);
+            null, null, null, null, now, now + 1000, null);
 
         var handler = new FakeSyncHandler(serverJournal);
         var service = BuildSyncService(handler);
@@ -1406,7 +1406,7 @@ public class SyncServiceTests : IDisposable
         var enteredDate = 5_000_000L;
         var serverJournal = new JournalSyncDto(
             System.Guid.NewGuid().ToString(), account.Guid, "Entry note",
-            null, null, null, enteredDate, enteredDate, null);
+            null, null, null, null, enteredDate, enteredDate, null);
 
         var handler = new FakeSyncHandler(serverJournal);
         var service = BuildSyncService(handler);
@@ -1469,7 +1469,7 @@ public class SyncServiceTests : IDisposable
         var serverUpdatedOn = 9_000_000L;
         var serverJournal = new JournalSyncDto(
             System.Guid.NewGuid().ToString(), account.Guid, "server note",
-            null, null, null, serverUpdatedOn, serverUpdatedOn, null);
+            null, null, null, null, serverUpdatedOn, serverUpdatedOn, null);
 
         var service = BuildSyncService(new FakeSyncHandler(serverJournal));
         await service.RunAsync(account);
@@ -1735,7 +1735,7 @@ public class SyncServiceTests : IDisposable
         // Server sends same Guid with DeletedAt set and newer UpdatedOn — journal is soft-deleted
         var deletedAt = now + 1000;
         var serverJournal = new JournalSyncDto(journalGuid, account.Guid, null,
-            null, null, null, now, deletedAt, deletedAt);
+            null, null, null, null, now, deletedAt, deletedAt);
 
         var service = BuildSyncService(new FakeSyncHandler(serverJournal));
         var result = await service.RunAsync(account);
@@ -1901,9 +1901,9 @@ public class SyncServiceTests : IDisposable
         account.ServerJwt = "fake-jwt";
 
         var journal1 = new JournalSyncDto(System.Guid.NewGuid().ToString(), account.Guid, "first note",
-            null, null, null, 1000, 1000, null);
+            null, null, null, null, 1000, 1000, null);
         var journal2 = new JournalSyncDto(System.Guid.NewGuid().ToString(), account.Guid, "second note",
-            null, null, null, 2000, 2000, null);
+            null, null, null, null, 2000, 2000, null);
 
         var service = BuildSyncService(new MultiJournalSyncHandler(journal1, journal2));
         var result = await service.RunAsync(account);
