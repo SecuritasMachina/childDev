@@ -8,7 +8,7 @@ public partial class App : Application
     {
         InitializeComponent();
 
-        var account = accountService.GetAccountAsync().GetAwaiter().GetResult();
+        var account = Task.Run(accountService.GetAccountAsync).GetAwaiter().GetResult();
         MainPage = account is null
             ? new NavigationPage(services.GetRequiredService<Views.SetupPage>())
             : new AppShell();

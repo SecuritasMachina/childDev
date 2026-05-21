@@ -24,7 +24,7 @@ public static class MauiProgram
             "childdev.db3");
 
         var localDb = new LocalDatabase(dbPath);
-        localDb.InitAsync().GetAwaiter().GetResult();
+        Task.Run(() => localDb.InitAsync()).GetAwaiter().GetResult();
 
         builder.Services.AddSingleton(localDb.Connection);
         builder.Services.AddSingleton<AccountService>();
