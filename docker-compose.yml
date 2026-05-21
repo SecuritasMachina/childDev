@@ -33,6 +33,7 @@ services:
         condition: service_healthy
     volumes:
       - childdev_dataprotection:/root/.aspnet/DataProtection-Keys
+      - ./ChildDev.Api/wwwroot/downloads:/app/wwwroot/downloads
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
