@@ -42,7 +42,7 @@ public partial class SetupViewModel(AccountService accountService) : ObservableO
         try
         {
             await accountService.CreateAccountAsync(NickName.Trim(), Pin);
-            await Shell.Current.GoToAsync("//dashboard");
+            Application.Current!.MainPage = new AppShell();
         }
         catch
         {

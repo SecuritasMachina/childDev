@@ -4,14 +4,13 @@ namespace ChildDev.Mobile;
 
 public partial class App : Application
 {
-    public App(AccountService accountService)
+    public App(AccountService accountService, IServiceProvider services)
     {
         InitializeComponent();
 
         var account = accountService.GetAccountAsync().GetAwaiter().GetResult();
         MainPage = account is null
-            ? new NavigationPage(Handler?.MauiContext?.Services.GetService<Views.SetupPage>()
-                ?? throw new InvalidOperationException("SetupPage not registered"))
+            ? new NavigationPage(services.GetRequiredService<Views.SetupPage>())
             : new AppShell();
     }
 }
