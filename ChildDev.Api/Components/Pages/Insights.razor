@@ -519,6 +519,36 @@ else if (JourneyMonths >= 6)
     </MudPaper>
 }
 
+@if (TodoHeatmap.Any())
+{
+    var thToday = DateOnly.FromDateTime(DateTime.Today);
+    <MudPaper Elevation="1" Class="pa-4 mb-6" Style="border-radius:12px;">
+        <MudText Typo="Typo.subtitle2" Class="mb-3">Todos Completed — Last 12 Weeks</MudText>
+        @{
+            var thStart = thToday.AddDays(-83);
+        }
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;max-width:@(7 * 18 + 18)px;">
+            @for (int di = 0; di < 84; di++)
+            {
+                var day = thStart.AddDays(di);
+                var count = TodoHeatmap.GetValueOrDefault(day, 0);
+                var bg = count == 0 ? "#e8eaf6" : count == 1 ? "#FFCC80" : count <= 3 ? "#FFA726" : "#E65100";
+                var tip = count == 0 ? day.ToString("MMM d") : $"{day:MMM d}: {count} todo{(count == 1 ? "" : "s")} done";
+                var border = day == thToday ? "2px solid var(--mud-palette-primary)" : "none";
+                <div title="@tip" style="width:100%;aspect-ratio:1;border-radius:3px;background:@bg;border:@border;cursor:default;opacity:@(day > thToday ? "0.3" : "1")"></div>
+            }
+        </div>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">None</MudText>
+            <div style="width:12px;height:12px;border-radius:2px;background:#e8eaf6;"></div>
+            <div style="width:12px;height:12px;border-radius:2px;background:#FFCC80;"></div>
+            <div style="width:12px;height:12px;border-radius:2px;background:#FFA726;"></div>
+            <div style="width:12px;height:12px;border-radius:2px;background:#E65100;"></div>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Many</MudText>
+        </MudStack>
+    </MudPaper>
+}
+
 @if (TopProgressWeekday is not null)
 {
     <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.CalendarToday" Class="mb-6" Dense="true">
@@ -892,6 +922,7 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
     private int MostActiveGoalNoteCount;
     private Dictionary<DateOnly, int> ProgressHeatmap = new();
     private Dictionary<DateOnly, int> JournalHeatmap = new();
+    private Dictionary<DateOnly, int> TodoHeatmap = new();
     private string? TopProgressWeekday;
     private int TopProgressWeekdayCount;
     private int DaysSinceLastProgress = -1;
@@ -1178,6 +1209,14 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
             .Select(j => j.EnteredDate)
             .ToListAsync();
         JournalHeatmap = recentJournalTs
+            .GroupBy(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var recentTodoCompletedTs = await Db.Todos
+            .Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt != null && t.CompletedAt >= day84Ms)
+            .Select(t => t.CompletedAt!.Value)
+            .ToListAsync();
+        TodoHeatmap = recentTodoCompletedTs
             .GroupBy(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
             .ToDictionary(g => g.Key, g => g.Count());
 
