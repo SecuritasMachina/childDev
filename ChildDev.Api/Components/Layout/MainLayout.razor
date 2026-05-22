@@ -355,9 +355,13 @@
             try
             {
                 var saved = await JS.InvokeAsync<string?>("localStorage.getItem", "childdev_dark_mode");
-                if (saved == "true" && !_darkMode)
+                bool newDark;
+                if (saved == "true") newDark = true;
+                else if (saved == "false") newDark = false;
+                else newDark = await JS.InvokeAsync<bool>("eval", "window.matchMedia('(prefers-color-scheme:dark)').matches");
+                if (newDark != _darkMode)
                 {
-                    _darkMode = true;
+                    _darkMode = newDark;
                     StateHasChanged();
                 }
             }
