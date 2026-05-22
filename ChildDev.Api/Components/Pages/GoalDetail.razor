@@ -1640,9 +1640,14 @@ else
 @if (RelatedTodos.Count > 0)
 {
     <MudPaper Elevation="1" Class="pa-4 mt-4 mb-2" Style="border-radius:12px;">
+        @{
+            var rtOpen = RelatedTodos.Count(t => !t.CompletedAt.HasValue);
+            var rtDone = RelatedTodos.Count(t => t.CompletedAt.HasValue);
+            var rtHeaderSuffix = rtDone > 0 ? $" ({rtOpen} open, {rtDone} done)" : rtOpen > 0 ? $" ({rtOpen} open)" : "";
+        }
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
             <MudIcon Icon="@Icons.Material.Filled.CheckBox" Color="Color.Info" Size="Size.Small" />
-            <MudText Typo="Typo.subtitle2" Color="Color.Info">Todos for This Goal</MudText>
+            <MudText Typo="Typo.subtitle2" Color="Color.Info">Todos for This Goal@rtHeaderSuffix</MudText>
             <MudSpacer />
             <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Secondary" Href="/todos">View All</MudButton>
         </MudStack>
@@ -1664,11 +1669,21 @@ else
                         <MudStack Spacing="0" Style="flex:1">
                             <MudText Typo="Typo.body2" Color="@(rtDone ? Color.Secondary : rtOverdue ? Color.Error : Color.Default)"
                                      Style="@(rtDone ? "text-decoration:line-through" : "")">@rt.Title</MudText>
-                            @if (rtDue.HasValue)
+                            @{
+                                string? rtStatusLabel = null;
+                                Color rtStatusColor = Color.Secondary;
+                                if (rtDone && rt.CompletedAt.HasValue)
+                                {
+                                    var rtCompletedDt = DateTimeOffset.FromUnixTimeMilliseconds(rt.CompletedAt.Value).LocalDateTime;
+                                    rtStatusLabel = $"Completed {rtCompletedDt:MMM d} ✓";
+                                    rtStatusColor = Color.Success;
+                                }
+                                else if (rtOverdue && rtDue.HasValue) { rtStatusLabel = $"Due {rtDue.Value:MMM d} — overdue"; rtStatusColor = Color.Error; }
+                                else if (rtDue.HasValue) { rtStatusLabel = $"Due {rtDue.Value:MMM d}"; }
+                            }
+                            @if (rtStatusLabel is not null)
                             {
-                                <MudText Typo="Typo.caption" Color="@(rtOverdue ? Color.Error : Color.Secondary)">
-                                    @(rtDone ? $"Completed ✓" : rtOverdue ? $"Due {rtDue.Value:MMM d} — overdue" : $"Due {rtDue.Value:MMM d}")
-                                </MudText>
+                                <MudText Typo="Typo.caption" Color="@rtStatusColor">@rtStatusLabel</MudText>
                             }
                         </MudStack>
                     </MudStack>
