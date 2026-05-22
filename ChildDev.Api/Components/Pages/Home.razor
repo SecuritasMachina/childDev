@@ -1488,14 +1488,20 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                     🏆 @CompletedGoals.Count goal@(CompletedGoals.Count == 1 ? "" : "s") completed all-time!
                 </MudText>
             }
+            <MudTextField @bind-Value="CelebrationReflection"
+                          Label="What did you learn? What are you most proud of? (optional)"
+                          Variant="Variant.Outlined" Lines="2" FullWidth="true" Immediate="true"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.AutoAwesome"
+                          AdornmentColor="Color.Warning"
+                          Style="margin-top:8px;" />
         </MudStack>
     </DialogContent>
     <DialogActions>
         <MudButton Variant="Variant.Text" Color="Color.Default"
-                   OnClick="() => ShowCelebration = false">Done</MudButton>
+                   OnClick="async () => await CloseCelebration()">Done</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary"
                    StartIcon="@Icons.Material.Filled.Flag"
-                   OnClick="() => { ShowCelebration = false; OpenAddGoalDialog(); }">Set Next Goal 🎯</MudButton>
+                   OnClick="async () => await CloseCelebration(openNewGoal: true)">Set Next Goal 🎯</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -1887,6 +1893,8 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private List<Journal> RecentJournals = [];
     private bool ShowCelebration;
     private string? CelebratedGoalText;
+    private string? _celebratingGoalGuid;
+    private string CelebrationReflection = string.Empty;
     private List<(string GoalText, string NoteText, long Timestamp)> RecentProgressNotes = [];
     private bool ShowQuickNoteDialog;
     private string? QuickNoteGoalGuid;
@@ -2381,8 +2389,33 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         if (rows == 0) return;
         await Analytics.TrackAsync("goal_complete", AccountGuid, "home", guid);
         CelebratedGoalText = AllActiveGoals.FirstOrDefault(g => g.Guid == guid)?.GoalText;
+        _celebratingGoalGuid = guid;
+        CelebrationReflection = string.Empty;
         ShowCelebration = true;
         await LoadGoals();
+    }
+
+    private async Task CloseCelebration(bool openNewGoal = false)
+    {
+        ShowCelebration = false;
+        var reflection = CelebrationReflection.Trim();
+        if (!string.IsNullOrWhiteSpace(reflection) && _celebratingGoalGuid is not null && AccountGuid is not null)
+        {
+            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            Db.GoalProgresses.Add(new GoalProgress
+            {
+                Guid = System.Guid.NewGuid().ToString(),
+                AccountFk = AccountGuid,
+                GoalFk = _celebratingGoalGuid,
+                NextStepItems = $"🏆 Reflection: {reflection}",
+                UpdatedOn = now
+            });
+            await Db.SaveChangesAsync();
+            await Analytics.TrackAsync("goal_reflection", AccountGuid, "home", _celebratingGoalGuid);
+        }
+        _celebratingGoalGuid = null;
+        CelebrationReflection = string.Empty;
+        if (openNewGoal) OpenAddGoalDialog();
     }
 
     private async Task ConfirmDeleteGoal()
