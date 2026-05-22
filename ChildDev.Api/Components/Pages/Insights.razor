@@ -248,6 +248,12 @@ else if (JourneyMonths >= 6)
         📓 You journal most on <strong>@BestJournalDayOfWeek</strong>s (@BestJournalDayOfWeekCount entries total) — make that your reflection ritual!
     </MudAlert>
 }
+@if (JournalTimeOfDay is not null)
+{
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Schedule" Dense="true" Class="mb-4">
+        📓 You tend to journal in the <strong>@JournalTimeOfDay</strong> — that's your natural reflection time. Lean into it for daily consistency!
+    </MudAlert>
+}
 @if (CompletionVelocityMsg is not null)
 {
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Speed" Dense="true" Class="mb-4">@CompletionVelocityMsg</MudAlert>
@@ -958,6 +964,7 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
     private string? CompletionVelocityMsg;
     private string? BestProgressDayOfWeek;
     private int BestProgressDayOfWeekCount;
+    private string? JournalTimeOfDay;
     private string? BestJournalDayOfWeek;
     private int BestJournalDayOfWeekCount;
     private int TotalActiveDaysEver;
@@ -1346,6 +1353,17 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
             var pMax = Math.Max(pMorning, Math.Max(pAfternoon, pEvening));
             if (pMax * 100 / allProgressEver.Count >= 50)
                 ProgressTimeOfDay = pMorning == pMax ? "morning 🌅" : pAfternoon == pMax ? "afternoon ☀️" : "evening 🌙";
+        }
+
+        // Best time of day for journaling
+        if (allJournalEver.Count >= 10)
+        {
+            int jMorning = allJournalEver.Count(ms => DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime.Hour < 12);
+            int jAfternoon = allJournalEver.Count(ms => { var h = DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime.Hour; return h >= 12 && h < 17; });
+            int jEvening = allJournalEver.Count(ms => DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime.Hour >= 17);
+            var jMax = Math.Max(jMorning, Math.Max(jAfternoon, jEvening));
+            if (jMax * 100 / allJournalEver.Count >= 50)
+                JournalTimeOfDay = jMorning == jMax ? "morning 🌅" : jAfternoon == jMax ? "afternoon ☀️" : "evening 🌙";
         }
 
         // Best day of week for journal entries
