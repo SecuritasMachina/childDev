@@ -129,12 +129,12 @@ else
             {
                 <MudChip T="string" Value="@("Overdue")" Variant="Variant.Filled" Color="Color.Error">Overdue (@OverdueCount)</MudChip>
             }
-            <MudChip T="string" Value="@("Today")" Variant="Variant.Filled" Color="Color.Warning">Due Today</MudChip>
+            <MudChip T="string" Value="@("Today")" Variant="Variant.Filled" Color="Color.Warning">Due Today @(DueTodayCount > 0 ? $"({DueTodayCount})" : "")</MudChip>
             @if (DueThisWeekCount > 0)
             {
                 <MudChip T="string" Value="@("Week")" Variant="Variant.Filled" Color="Color.Secondary">This Week (@DueThisWeekCount)</MudChip>
             }
-            <MudChip T="string" Value="@("NoDate")" Variant="Variant.Filled" Color="Color.Info">No Date</MudChip>
+            <MudChip T="string" Value="@("NoDate")" Variant="Variant.Filled" Color="Color.Info">No Date @(NoDateCount > 0 ? $"({NoDateCount})" : "")</MudChip>
         </MudChipSet>
         <MudSpacer />
         <MudTextField Value="@FilterText" ValueChanged="@((string v) => OnFilterChanged(v))"
@@ -450,6 +450,8 @@ else
     private long TodayStartMs;
     private int FocusCount;
     private int DueThisWeekCount;
+    private int DueTodayCount;
+    private int NoDateCount;
     private int CompletedTodayCount;
     private int ProductivityStreak;
     private int LastWeekCompletedCount;
@@ -496,6 +498,8 @@ else
         FocusCount = AllPendingTodos.Count(t => t.DueDate.HasValue && t.DueDate.Value < todayEndForFocus);
         var thisWeekEndMs = TodayStartMs + 7L * 86_400_000L;
         DueThisWeekCount = AllPendingTodos.Count(t => t.DueDate.HasValue && t.DueDate.Value >= todayEndForFocus && t.DueDate.Value < thisWeekEndMs);
+        DueTodayCount = AllPendingTodos.Count(t => t.DueDate.HasValue && t.DueDate.Value >= TodayStartMs && t.DueDate.Value < todayEndForFocus);
+        NoDateCount = AllPendingTodos.Count(t => !t.DueDate.HasValue);
         WeekCompletedCount = CompletedTodos.Count(t => t.CompletedAt >= weekStartMs);
         var prevWeekStartMs = weekStartMs - 7L * 86_400_000L;
         LastWeekCompletedCount = CompletedTodos.Count(t => t.CompletedAt >= prevWeekStartMs && t.CompletedAt < weekStartMs);
