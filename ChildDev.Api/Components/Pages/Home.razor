@@ -1532,6 +1532,17 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         <MudIcon Icon="@Icons.Material.Filled.EditNote" Class="mr-1" Size="Size.Small" />
         Quick Journal Entry
     </MudText>
+    @if (string.IsNullOrWhiteSpace(QuickJournalText))
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">💡 Writing prompts:</MudText>
+        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
+            @foreach (var p in new[] { "What made me proud today?", "What did I learn?", "Something I'm grateful for…", "What challenged me today?" })
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary"
+                         Style="cursor:pointer;" OnClick="() => QuickJournalText = p">@p</MudChip>
+            }
+        </MudStack>
+    }
     <MudTextField @bind-Value="QuickJournalText"
                   Label="What happened today? What did you observe?"
                   Variant="Variant.Outlined" Lines="2" Class="mb-3" />
