@@ -1380,8 +1380,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
 {
     <MudExpansionPanels Class="mt-4 mb-2">
         <MudExpansionPanel Text="@($"Goals Needing Attention ({needsAttn.Count})")"
-                           Icon="@Icons.Material.Filled.NotificationsActive"
-                           IconColor="Color.Warning">
+                           Icon="@Icons.Material.Filled.NotificationsActive">
             <MudList T="Goal" Dense="true">
                 @foreach (var sg in needsAttn)
                 {

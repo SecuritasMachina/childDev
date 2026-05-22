@@ -80,7 +80,7 @@
             </MudCardHeader>
             <MudCardContent>
                 <MudTextField @bind-Value="NewNickName" Label="New Nickname" Variant="Variant.Outlined"
-                              HelperText="1–50 characters" Class="mb-3" />
+                              Immediate="true" HelperText="1–50 characters" Class="mb-3" />
                 @if (NickNameError is not null)
                 {
                     <MudAlert Severity="Severity.Error" Class="mb-3">@NickNameError</MudAlert>
@@ -100,11 +100,11 @@
             </MudCardHeader>
             <MudCardContent>
                 <MudTextField @bind-Value="CurrentPin" Label="Current PIN" InputType="InputType.Password"
-                              Variant="Variant.Outlined" Class="mb-3" />
+                              Variant="Variant.Outlined" Immediate="true" Class="mb-3" />
                 <MudTextField @bind-Value="NewPin" Label="New PIN" InputType="InputType.Password"
-                              Variant="Variant.Outlined" HelperText="At least 4 characters" Class="mb-3" />
+                              Variant="Variant.Outlined" Immediate="true" HelperText="At least 4 characters" Class="mb-3" />
                 <MudTextField @bind-Value="ConfirmNewPin" Label="Confirm New PIN" InputType="InputType.Password"
-                              Variant="Variant.Outlined" Class="mb-3"
+                              Variant="Variant.Outlined" Immediate="true" Class="mb-3"
                               Error="@PinMismatch" ErrorText="PINs do not match" />
                 @if (PinError is not null)
                 {
@@ -180,7 +180,7 @@
     private string CurrentPin = string.Empty;
     private string NewPin = string.Empty;
     private string ConfirmNewPin = string.Empty;
-    private bool PinMismatch;
+    private bool PinMismatch => ConfirmNewPin.Length > 0 && NewPin != ConfirmNewPin;
     private string? PinError;
 
     protected override async Task OnInitializedAsync()
@@ -239,7 +239,6 @@
     private async Task ChangePin()
     {
         PinError = null;
-        PinMismatch = NewPin != ConfirmNewPin;
         if (PinMismatch) return;
         if (string.IsNullOrWhiteSpace(CurrentPin))
         {
