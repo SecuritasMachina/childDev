@@ -24,10 +24,15 @@
                     <MudAlert Severity="Severity.Error" Class="mb-4">@Error</MudAlert>
                 }
                 <MudTextField @bind-Value="NickName" Label="Nickname" Variant="Variant.Outlined"
-                              Class="mb-4" Immediate="true" />
+                              Class="mb-4" Immediate="true"
+                              @onkeydown="@(async (e) => { if (e.Key == "Enter") await DoLogin(); })" />
                 <MudTextField @bind-Value="Pin" Label="PIN" Variant="Variant.Outlined"
                               Immediate="true"
-                              InputType="InputType.Password" Class="mb-4" />
+                              InputType="@PinInputType"
+                              Adornment="Adornment.End" AdornmentIcon="@PinEyeIcon"
+                              OnAdornmentClick="TogglePinVisibility"
+                              @onkeydown="@(async (e) => { if (e.Key == "Enter") await DoLogin(); })"
+                              Class="mb-4" />
             </MudCardContent>
             <MudCardActions Class="px-4 pb-4 flex-column">
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
@@ -46,6 +51,10 @@
     private string Pin = string.Empty;
     private string? Error;
     private bool _blazorReady;
+    private bool ShowPin;
+    private InputType PinInputType => ShowPin ? InputType.Text : InputType.Password;
+    private string PinEyeIcon => ShowPin ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility;
+    private void TogglePinVisibility() => ShowPin = !ShowPin;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
