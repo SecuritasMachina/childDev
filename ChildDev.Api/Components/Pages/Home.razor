@@ -1524,6 +1524,22 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         </MudStack>
     </TitleContent>
     <DialogContent>
+        @if (string.IsNullOrWhiteSpace(QuickNoteText))
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">💡 Quick-start prompts:</MudText>
+            <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
+                @foreach (var s in new[] {
+                    "How did I work toward this goal today?",
+                    "What's my next step?",
+                    "What did I learn or discover?",
+                    "What went well? What can I improve?"
+                })
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
+                             Style="cursor:pointer;" OnClick="() => QuickNoteText = s">@s</MudChip>
+                }
+            </MudStack>
+        }
         <MudTextField @bind-Value="QuickNoteText" Label="What happened? What's the next step?"
                       Variant="Variant.Outlined" Lines="3" AutoFocus="true" />
     </DialogContent>
