@@ -1378,7 +1378,12 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                         <MudText Style="font-size:1.4rem;line-height:1;">🏆</MudText>
                         <MudStack Spacing="0" Style="flex:1;min-width:0;">
                             <MudText Typo="Typo.body2" Style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">@titleShort</MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">@dateLabel</MudText>
+                            @{
+                                var agNotes = CompletedGoalProgressCounts.GetValueOrDefault(g.Guid);
+                            }
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                @dateLabel@(agNotes > 0 ? $" · {agNotes} note{(agNotes == 1 ? "" : "s")}" : "")
+                            </MudText>
                         </MudStack>
                         <MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small"
                                        Color="Color.Warning" Href="@($"/goals/{g.Guid}")" />
@@ -1689,6 +1694,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private string FilterText = string.Empty;
     private string QuickFilter = "all";
     private Dictionary<string, int> ProgressCounts = new();
+    private Dictionary<string, int> CompletedGoalProgressCounts = new();
     private Dictionary<string, long> LastProgressAt = new();
     private Dictionary<string, string> LatestNextStep = new();
     private Dictionary<string, int> GoalStreaks = new();
@@ -1810,6 +1816,17 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
             .Select(grp => new { GoalFk = grp.Key, Count = grp.Count(), LastAt = grp.Max(p => p.UpdatedOn) })
             .ToListAsync();
         ProgressCounts = progressGroups.ToDictionary(x => x.GoalFk, x => x.Count);
+
+        if (CompletedGoals.Count > 0)
+        {
+            var completedGuids = CompletedGoals.Select(g => g.Guid).ToList();
+            var completedProgressGroups = await Db.GoalProgresses
+                .Where(p => completedGuids.Contains(p.GoalFk) && p.DeletedAt == null)
+                .GroupBy(p => p.GoalFk)
+                .Select(grp => new { GoalFk = grp.Key, Count = grp.Count() })
+                .ToListAsync();
+            CompletedGoalProgressCounts = completedProgressGroups.ToDictionary(x => x.GoalFk, x => x.Count);
+        }
         LastProgressAt = progressGroups.ToDictionary(x => x.GoalFk, x => x.LastAt);
 
         // Latest next step per goal for card preview
