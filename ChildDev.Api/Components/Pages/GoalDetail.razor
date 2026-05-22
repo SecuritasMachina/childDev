@@ -1698,9 +1698,12 @@ else
     <MudPaper Elevation="1" Class="pa-4 mt-4 mb-2" Style="border-radius:12px;">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
             <MudIcon Icon="@Icons.Material.Filled.Book" Color="Color.Primary" Size="Size.Small" />
-            <MudText Typo="Typo.subtitle2" Color="Color.Primary">Related Journal Entries</MudText>
+            <MudText Typo="Typo.subtitle2" Color="Color.Primary">Related Journal Entries (@RelatedJournals.Count)</MudText>
             <MudSpacer />
-            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Secondary" Href="/journal">View All</MudButton>
+            @{
+                var rjGoalText = Uri.EscapeDataString(Goal?.GoalText ?? string.Empty);
+            }
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Secondary" Href="@($"/journal?tag={rjGoalText}")">View All</MudButton>
         </MudStack>
         <MudList T="string" Dense="true" Class="py-0">
             @foreach (var j in RelatedJournals)
