@@ -362,6 +362,24 @@ else if (JourneyMonths >= 6)
         </MudText>
     </MudPaper>
 }
+@if (TopJournalActivities.Count >= 2)
+{
+    <MudPaper Elevation="1" Class="pa-3 mb-4" Style="border-radius:12px;">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
+            <MudIcon Icon="@Icons.Material.Filled.DirectionsRun" Color="Color.Info" />
+            <MudText Typo="Typo.body2" Style="font-weight:600;">What you journal about most</MudText>
+        </MudStack>
+        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+            @foreach (var (activity, count) in TopJournalActivities)
+            {
+                var isTop = activity == TopJournalActivities[0].Activity;
+                <MudChip T="string" Size="Size.Small" Color="@(isTop ? Color.Info : Color.Default)" Variant="Variant.Outlined">
+                    @(isTop ? "🏅 " : "")@activity (@count)
+                </MudChip>
+            }
+        </MudStack>
+    </MudPaper>
+}
 @if (!string.IsNullOrWhiteSpace(MostActiveDayName))
 {
     <MudPaper Elevation="1" Class="pa-3 mb-4 d-flex align-items-center" Style="border-radius:12px;gap:12px;">
@@ -825,6 +843,7 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
     private int TopMoodCount;
     private List<(string Mood, int Count)> TopMoods = [];
     private List<(string Tag, int Count)> TopJournalTags = [];
+    private List<(string Activity, int Count)> TopJournalActivities = [];
     private string? TopGoalName;
     private string? TopGoalGuid;
     private int TopGoalNoteCount;
@@ -985,6 +1004,18 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
         TopJournalTags = tagJournals
             .SelectMany(t => t.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             .GroupBy(t => t, StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(g => g.Count())
+            .Take(5)
+            .Select(g => (g.Key, g.Count()))
+            .ToList();
+
+        // Top journal activities all-time
+        var activityJournals = await Db.Journals
+            .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null && j.Activity != null && j.Activity != "")
+            .Select(j => j.Activity!)
+            .ToListAsync();
+        TopJournalActivities = activityJournals
+            .GroupBy(a => a, StringComparer.OrdinalIgnoreCase)
             .OrderByDescending(g => g.Count())
             .Take(5)
             .Select(g => (g.Key, g.Count()))
