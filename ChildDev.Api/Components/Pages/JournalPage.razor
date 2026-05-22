@@ -323,7 +323,7 @@
                 var jhmDay = jhmStart.AddDays(jhi);
                 jhmCounts.TryGetValue(jhmDay, out var jhmCount);
                 var jhmIsToday = jhmDay == jhmToday;
-                var jhmBg = jhmCount == 0 ? "#e0e7ef"
+                var jhmBg = jhmCount == 0 ? "var(--mud-palette-background-grey)"
                           : jhmCount == 1 ? "#a5d6a7"
                           : jhmCount == 2 ? "#66bb6a"
                           : "#2e7d32";
@@ -336,7 +336,7 @@
         </div>
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
             <MudText Typo="Typo.caption" Color="Color.Secondary">None</MudText>
-            <div style="width:11px;height:11px;border-radius:2px;background:#e0e7ef;"></div>
+            <div style="width:11px;height:11px;border-radius:2px;background:var(--mud-palette-background-grey);"></div>
             <div style="width:11px;height:11px;border-radius:2px;background:#a5d6a7;"></div>
             <div style="width:11px;height:11px;border-radius:2px;background:#66bb6a;"></div>
             <div style="width:11px;height:11px;border-radius:2px;background:#2e7d32;"></div>

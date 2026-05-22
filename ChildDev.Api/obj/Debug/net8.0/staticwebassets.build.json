@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "M/9HbjTL3ADsuQLkz35yeANkcFoY5zWZgK7nLy1bm6o=",
+  "Hash": "4yluOh7wO/5kbar2TH7HAsiha76yggYSHG3szYWSA9I=",
   "Source": "ChildDev.Api",
   "BasePath": "_content/ChildDev.Api",
   "Mode": "Default",
@@ -72,6 +72,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/downloads/ChildDev.apk"
+    },
+    {
+      "Identity": "/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/wwwroot/manifest.json",
+      "SourceId": "ChildDev.Api",
+      "SourceType": "Discovered",
+      "ContentRoot": "/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/wwwroot/",
+      "BasePath": "_content/ChildDev.Api",
+      "RelativePath": "manifest.json",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/manifest.json"
     },
     {
       "Identity": "/root/.nuget/packages/mudblazor/7.15.0/staticwebassets/MudBlazor.min.css",
