@@ -132,11 +132,17 @@
         </MudContainer>
         <MudPaper Elevation="0" Class="mt-4 py-3" Style="background:var(--mud-palette-background-grey);border-top:1px solid var(--mud-palette-lines-default);">
             <MudContainer MaxWidth="MaxWidth.Large">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="2">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="2" Wrap="Wrap.Wrap">
                     <MudIcon Icon="@Icons.Material.Filled.Android" Size="Size.Small" Style="color:#3DDC84;" />
                     <MudLink Href="/downloads/ChildDev.apk" Typo="Typo.caption" Color="Color.Primary"
                              Style="font-weight:600;">Download ChildDev for Android</MudLink>
                     <MudText Typo="Typo.caption" Color="Color.Secondary">— install the mobile app</MudText>
+                    @if (NickName is not null)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">·</MudText>
+                        <MudLink Typo="Typo.caption" Color="Color.Secondary" Style="cursor:pointer;"
+                                 OnClick="OpenHelp">⌨️ Keyboard shortcuts</MudLink>
+                    }
                 </MudStack>
             </MudContainer>
         </MudPaper>
