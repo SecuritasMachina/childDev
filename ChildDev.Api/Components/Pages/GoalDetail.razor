@@ -1613,9 +1613,13 @@ else
     <MudButton Variant="Variant.Outlined" Color="Color.Primary"
                StartIcon="@Icons.Material.Filled.Add"
                OnClick="OpenAddProgressDialog">Add Progress Note</MudButton>
+    @{
+        var pendingRelatedTodos = RelatedTodos.Count(t => !t.CompletedAt.HasValue);
+        var createTodoLabel = pendingRelatedTodos > 0 ? $"Create Todo ({pendingRelatedTodos} open)" : "Create Todo";
+    }
     <MudButton Variant="Variant.Outlined" Color="Color.Info"
                StartIcon="@Icons.Material.Filled.AddTask"
-               OnClick="OpenAddTodoDialog">Create Todo</MudButton>
+               OnClick="OpenAddTodoDialog">@createTodoLabel</MudButton>
     @if (Goal.CompletionDate is null)
     {
         <MudButton Variant="Variant.Outlined" Color="Color.Success"
