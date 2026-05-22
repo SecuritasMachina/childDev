@@ -1433,6 +1433,38 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     </DialogActions>
 </MudDialog>
 
+@* Recent Progress Activity Feed *@
+@if (RecentProgressNotes.Count >= 2 && string.IsNullOrWhiteSpace(FilterText))
+{
+    <MudPaper Elevation="1" Class="pa-4 mt-6">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+            <MudText Typo="Typo.subtitle2">
+                <MudIcon Icon="@Icons.Material.Filled.Timeline" Class="mr-1" Size="Size.Small" />
+                Recent Goal Activity
+            </MudText>
+        </MudStack>
+        <MudList T="string" Dense="true">
+            @foreach (var (goalText, noteText, ts) in RecentProgressNotes)
+            {
+                var rpaDate = DateTimeOffset.FromUnixTimeMilliseconds(ts).LocalDateTime;
+                var rpaDaysAgo = (int)(DateTime.Now - rpaDate).TotalDays;
+                var rpaWhen = rpaDaysAgo == 0 ? "Today" : rpaDaysAgo == 1 ? "Yesterday" : $"{rpaDaysAgo}d ago";
+                var rpaNote = noteText.Length > 100 ? noteText[..100] + "…" : noteText;
+                var rpaGoal = goalText.Length > 45 ? goalText[..45] + "…" : goalText;
+                <MudListItem>
+                    <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="Color.Primary" Size="Size.Small" Style="margin-top:2px;" />
+                        <MudStack Spacing="0" Style="flex:1;min-width:0;">
+                            <MudText Typo="Typo.body2" Style="white-space:normal;">@rpaNote</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@rpaGoal · @rpaWhen</MudText>
+                        </MudStack>
+                    </MudStack>
+                </MudListItem>
+            }
+        </MudList>
+    </MudPaper>
+}
+
 @* Quick Add Todo *@
 <MudPaper Elevation="1" Class="pa-4 mt-4">
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
@@ -1648,6 +1680,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private List<Journal> RecentJournals = [];
     private bool ShowCelebration;
     private string? CelebratedGoalText;
+    private List<(string GoalText, string NoteText, long Timestamp)> RecentProgressNotes = [];
     private bool ShowQuickNoteDialog;
     private string? QuickNoteGoalGuid;
     private string? QuickNoteGoalText;
@@ -1946,6 +1979,21 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
             .OrderBy(g => LastProgressAt.ContainsKey(g.Guid) ? 1 : 0)
             .ThenBy(g => LastProgressAt.GetValueOrDefault(g.Guid, 0))
             .ToList();
+
+        // Recent cross-goal progress notes for activity feed
+        var allGoalGuids = goals.Where(g => g.CompletionDate == null).Select(g => g.Guid).ToList();
+        var goalTextMap = goals.ToDictionary(g => g.Guid, g => g.GoalText ?? "");
+        var recentRaw = await Db.GoalProgresses
+            .Where(p => allGoalGuids.Contains(p.GoalFk) && p.DeletedAt == null
+                     && p.NextStepItems != null && p.NextStepItems != "")
+            .OrderByDescending(p => p.UpdatedOn)
+            .Take(7)
+            .Select(p => new { p.GoalFk, p.NextStepItems, p.UpdatedOn })
+            .ToListAsync();
+        RecentProgressNotes = recentRaw
+            .Select(r => (GoalText: goalTextMap.GetValueOrDefault(r.GoalFk, ""), NoteText: r.NextStepItems!, Timestamp: r.UpdatedOn))
+            .ToList();
+
         ApplyFilter();
     }
 
