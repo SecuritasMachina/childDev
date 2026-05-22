@@ -324,9 +324,9 @@
 {
     var jhmToday = DateOnly.FromDateTime(DateTime.Today);
     var jhmStart = jhmToday.AddDays(-34);
-    var jhmDays = AllEntries
-        .Select(j => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime))
-        .ToHashSet();
+    var jhmCounts = AllEntries
+        .GroupBy(j => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime))
+        .ToDictionary(g => g.Key, g => g.Count());
     var jhmDaysOfWeek = new[] { "M", "T", "W", "T", "F", "S", "S" };
     <MudPaper Elevation="0" Class="pa-2 mb-3" Style="border-radius:10px;background:var(--mud-palette-background-grey);">
         <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-weight:600;" Class="mb-2">Writing activity — last 5 weeks</MudText>
@@ -338,19 +338,26 @@
             @for (int jhi = 0; jhi < 35; jhi++)
             {
                 var jhmDay = jhmStart.AddDays(jhi);
-                var jhmHas = jhmDays.Contains(jhmDay);
+                jhmCounts.TryGetValue(jhmDay, out var jhmCount);
                 var jhmIsToday = jhmDay == jhmToday;
-                var jhmBg = jhmHas ? "var(--mud-palette-success)" : "#e0e7ef";
+                var jhmBg = jhmCount == 0 ? "#e0e7ef"
+                          : jhmCount == 1 ? "#a5d6a7"
+                          : jhmCount == 2 ? "#66bb6a"
+                          : "#2e7d32";
                 var jhmBorder = jhmIsToday ? "2px solid var(--mud-palette-primary)" : "none";
-                var jhmTitle = jhmHas ? $"{jhmDay:MMM d} — wrote ✓" : jhmDay.ToString("MMM d");
+                var jhmTitle = jhmCount == 0 ? jhmDay.ToString("MMM d")
+                             : jhmCount == 1 ? $"{jhmDay:MMM d} — 1 entry ✓"
+                             : $"{jhmDay:MMM d} — {jhmCount} entries ✓";
                 <div title="@jhmTitle" style="width:100%;aspect-ratio:1;border-radius:3px;background:@jhmBg;border:@jhmBorder;cursor:default;opacity:@(jhmDay > jhmToday ? "0.3" : "1")"></div>
             }
         </div>
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
-            <MudText Typo="Typo.caption" Color="Color.Secondary">No entry</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">None</MudText>
             <div style="width:11px;height:11px;border-radius:2px;background:#e0e7ef;"></div>
-            <div style="width:11px;height:11px;border-radius:2px;background:var(--mud-palette-success);"></div>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">Wrote</MudText>
+            <div style="width:11px;height:11px;border-radius:2px;background:#a5d6a7;"></div>
+            <div style="width:11px;height:11px;border-radius:2px;background:#66bb6a;"></div>
+            <div style="width:11px;height:11px;border-radius:2px;background:#2e7d32;"></div>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">3+</MudText>
         </MudStack>
     </MudPaper>
 }
