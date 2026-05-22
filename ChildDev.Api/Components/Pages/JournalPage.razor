@@ -96,6 +96,23 @@
         <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" OnClick="OpenAddDialog" Class="ml-2">Write now</MudButton>
     </MudAlert>
 }
+@{
+    var jemMilestones = new[] { 200, 100, 50, 25, 10 };
+    var jemHit = jemMilestones.FirstOrDefault(m => AllEntries.Count >= m);
+    var jemMsg = jemHit switch
+    {
+        200 => $"🌟 <strong>200 journal entries!</strong> You've written a novel's worth of reflections — truly extraordinary! Your story is remarkable.",
+        100 => $"🏆 <strong>100 journal entries!</strong> Triple digits — that's a commitment to self-growth that most people never make. Be proud!",
+        50  => $"⭐ <strong>50 journal entries!</strong> Half a century of reflections — you're building a powerful record of your growth journey!",
+        25  => $"🚀 <strong>25 journal entries!</strong> A quarter century of reflections — you're turning journaling into a real habit!",
+        10  => $"💪 <strong>10 journal entries!</strong> Double digits — you're not just trying, you're building a real journaling practice!",
+        _   => null
+    };
+}
+@if (jemMsg is not null)
+{
+    <MudAlert Severity="Severity.Success" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.MenuBook">@((MarkupString)jemMsg)</MudAlert>
+}
 @if (BestJournalMonth is not null)
 {
     <MudAlert Severity="Severity.Success" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.Star">
