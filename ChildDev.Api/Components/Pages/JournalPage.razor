@@ -878,27 +878,75 @@ else
     private HashSet<DateOnly> MonthJournalDays = new();
     private List<(Journal Entry, int YearsAgo)> OnThisDayEntries = [];
     private int _promptIdx;
+    private int BestEntryWordCount;
     private static readonly string[] WpPrompts = new[] {
+        // Reflection & gratitude
         "What's one thing that went well today and why?",
-        "What's a goal you're excited about right now? Why does it matter?",
-        "Describe a challenge you faced recently. What did you learn?",
-        "What are you most proud of this week?",
-        "What's something kind you did for someone recently?",
-        "If today had a title, what would it be and why?",
-        "What's one skill you want to improve and what's your next step?",
-        "Who has helped you lately? How did it make you feel?",
-        "What made you smile or laugh today?",
-        "What's a fear you want to overcome? What's one small step you could take?",
-        "Describe your mood today in 3 words and explain one of them.",
-        "What's something new you tried recently? How did it go?",
-        "What does your best day look like? How close was today?",
-        "What's a habit you want to build? Why is it important to you?",
-        "What's one thing you'd do differently if you could redo yesterday?",
-        "Who inspires you and what have you learned from them?",
+        "What are you most grateful for right now?",
         "What's a small win you had recently that you haven't celebrated yet?",
+        "What's something that made you smile or laugh today?",
+        "Who has helped you lately? How did it make you feel?",
+        "What's the kindest thing someone did for you this week?",
+        "What's one thing you appreciate about yourself right now?",
+        "What's something beautiful or interesting you noticed today?",
+        // Goals & growth
+        "What's a goal you're excited about right now? Why does it matter?",
+        "What's one skill you want to improve and what's your next step?",
+        "What's a habit you want to build? Why is it important to you?",
         "What does success mean to you right now?",
         "What's something you're looking forward to and why?",
-        "What's the most interesting thing you've learned this week?"
+        "How have you grown in the last month? What changed?",
+        "What's one goal you've been putting off? What would it take to start?",
+        "If you could be amazing at one thing, what would it be?",
+        // Challenges & learning
+        "Describe a challenge you faced recently. What did you learn?",
+        "What's one thing you'd do differently if you could redo yesterday?",
+        "What's a fear you want to overcome? What's one small step you could take?",
+        "What's something that was hard but worth it?",
+        "What mistake taught you the most? What did you discover?",
+        "What's something you don't understand yet but want to learn?",
+        "When did you feel outside your comfort zone recently? How did it go?",
+        // People & relationships
+        "Who inspires you and what have you learned from them?",
+        "What's something kind you did for someone recently?",
+        "Who would you like to spend more time with and why?",
+        "What's one thing you'd like to tell a friend or family member?",
+        "Who in your life makes things better just by being around? Why?",
+        // Imagination & creativity
+        "If today had a title, what would it be and why?",
+        "If you could invent anything to make life better, what would it be?",
+        "What would your perfect Saturday look like from start to finish?",
+        "If you could talk to your future self, what would you ask?",
+        "What does your best day look like? How close was today?",
+        "If you could travel anywhere right now, where would you go?",
+        // Self-awareness & emotions
+        "Describe your mood today in 3 words and explain one of them.",
+        "What's something you're worried about? What might help?",
+        "When did you feel the most like yourself this week?",
+        "What do you need more of in your life right now?",
+        "What's something you wish others understood about you?",
+        "When do you feel the most energized and alive?",
+        "What drains your energy and what gives it back?",
+        // Curiosity & discovery
+        "What's the most interesting thing you've learned this week?",
+        "What's something new you tried recently? How did it go?",
+        "What question have you been wondering about lately?",
+        "What's something you used to believe that you've changed your mind about?",
+        "What's one book, video, or idea that stuck with you? Why?",
+        // Progress & momentum
+        "What are you most proud of this week?",
+        "What's a step forward you took that you almost didn't take?",
+        "What would you tell a younger version of yourself about right now?",
+        "What's one thing you did this week that future-you will be glad about?",
+        "If someone asked what you've been working on, what would you say?",
+        "What habit or effort has been quietly paying off?",
+        // Mindfulness & big picture
+        "What matters most to you right now?",
+        "What's something simple you'd like more of in your daily life?",
+        "If you had a week with no pressure at all, how would you spend it?",
+        "What's something in your life right now that you'd miss if it was gone?",
+        "What's one word you'd use to describe this season of your life?",
+        "What does 'doing your best' look like today?",
     };
 
     private void ShufflePrompt()
@@ -974,6 +1022,10 @@ else
         TotalWordsWritten = AllEntries
             .Where(j => !string.IsNullOrWhiteSpace(j.Notes))
             .Sum(j => j.Notes!.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length);
+        BestEntryWordCount = AllEntries
+            .Where(j => !string.IsNullOrWhiteSpace(j.Notes))
+            .Select(j => j.Notes!.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length)
+            .DefaultIfEmpty(0).Max();
 
         var jLocalNow = DateTimeOffset.Now.LocalDateTime;
         var jMonthStartMs = new DateTimeOffset(new DateTime(jLocalNow.Year, jLocalNow.Month, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
@@ -1193,6 +1245,11 @@ else
     {
         if (string.IsNullOrWhiteSpace(NewNotes) && string.IsNullOrWhiteSpace(NewActivity)) return;
 
+        var newWordCount = string.IsNullOrWhiteSpace(NewNotes)
+            ? 0
+            : NewNotes.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
+        var prevBest = BestEntryWordCount;
+
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var enteredMs = NewEnteredDate.HasValue
             ? new DateTimeOffset(DateTime.SpecifyKind(NewEnteredDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
@@ -1219,7 +1276,17 @@ else
         NewTags = string.Empty;
         NewEnteredDate = DateTime.Today;
         ShowAddDialog = false;
-        Snackbar.Add("Entry saved!", Severity.Success);
+
+        if (newWordCount >= 50 && newWordCount > prevBest)
+        {
+            await Analytics.TrackAsync("journal_personal_best_words", AccountGuid, "journal", newWordCount.ToString());
+            Snackbar.Add($"🏆 Personal best! {newWordCount} words — your longest journal entry ever! Amazing! 🌟", Severity.Success, opts => opts.VisibleStateDuration = 6000);
+        }
+        else
+        {
+            Snackbar.Add("Entry saved!", Severity.Success);
+        }
+
         await LoadEntries();
     }
 
