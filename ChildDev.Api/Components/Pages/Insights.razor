@@ -989,6 +989,17 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
                   ChartOptions="@(new ChartOptions { YAxisTicks = 1 })" />
     </MudPaper>
 }
+@if (MonthlyTrendSeries.Count > 0)
+{
+    <MudPaper Elevation="1" Class="pa-4 mb-6">
+        <MudText Typo="Typo.subtitle2" Class="mb-3">Monthly Activity Trend — Last 6 Months</MudText>
+        <MudChart ChartType="ChartType.Line"
+                  ChartSeries="@MonthlyTrendSeries"
+                  XAxisLabels="@MonthlyTrendLabels"
+                  Width="100%" Height="180px"
+                  ChartOptions="@(new ChartOptions { YAxisTicks = 1, LineStrokeWidth = 2 })" />
+    </MudPaper>
+}
 @if (GoalNotesChartSeries.Count > 0)
 {
     <MudPaper Elevation="1" Class="pa-4 mb-6">
@@ -1132,6 +1143,8 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
     private List<(string Mood, int Count)> ThisMonthMoods = [];
     private List<(string Mood, int Count)> LastMonthMoods = [];
     private List<(string Name, string Guid, int Notes28d)> GoalMomentumRanking = [];
+    private List<ChartSeries> MonthlyTrendSeries = [];
+    private string[] MonthlyTrendLabels = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -1708,6 +1721,33 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
                 MostProductiveQuarter = $"{qLabels[qNum - 1]} {qYear}";
                 MostProductiveQuarterCount = bestQ.Count();
             }
+        }
+
+        // Monthly activity trend: last 6 months of progress notes + journal entries
+        if (allProgressEver.Count >= 3 || allJournalEver.Count >= 3)
+        {
+            var today2 = DateTime.Today;
+            var months = Enumerable.Range(0, 6)
+                .Select(i => new DateTime(today2.Year, today2.Month, 1).AddMonths(-5 + i))
+                .ToList();
+            MonthlyTrendLabels = months.Select(m => m.ToString("MMM")).ToArray();
+            var progressNotesByMonth = months.Select(m =>
+            {
+                var mStart = new DateTimeOffset(m, TimeZoneInfo.Local.GetUtcOffset(m)).ToUnixTimeMilliseconds();
+                var mEnd = new DateTimeOffset(m.AddMonths(1), TimeZoneInfo.Local.GetUtcOffset(m.AddMonths(1))).ToUnixTimeMilliseconds();
+                return (double)allProgressEver.Count(ms => ms >= mStart && ms < mEnd);
+            }).ToArray();
+            var journalByMonth = months.Select(m =>
+            {
+                var mStart = new DateTimeOffset(m, TimeZoneInfo.Local.GetUtcOffset(m)).ToUnixTimeMilliseconds();
+                var mEnd = new DateTimeOffset(m.AddMonths(1), TimeZoneInfo.Local.GetUtcOffset(m.AddMonths(1))).ToUnixTimeMilliseconds();
+                return (double)allJournalEver.Count(ms => ms >= mStart && ms < mEnd);
+            }).ToArray();
+            MonthlyTrendSeries =
+            [
+                new ChartSeries { Name = "Progress Notes", Data = progressNotesByMonth },
+                new ChartSeries { Name = "Journal Entries", Data = journalByMonth }
+            ];
         }
     }
 
