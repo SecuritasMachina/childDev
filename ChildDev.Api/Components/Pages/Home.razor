@@ -1278,6 +1278,19 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                             _       => null
                         };
                     }
+                    @{
+                        int cardLvlPct2 = 0;
+                        if (lvlCount > 0 && cardNotesToNext > 0)
+                        {
+                            var cardLvlPrev = lvlCount < 5 ? 1 : lvlCount < 10 ? 5 : lvlCount < 25 ? 10 : lvlCount < 50 ? 25 : 50;
+                            var cardLvlCeil = lvlCount < 5 ? 5 : lvlCount < 10 ? 10 : lvlCount < 25 ? 25 : lvlCount < 50 ? 50 : 50;
+                            cardLvlPct2 = (int)((lvlCount - cardLvlPrev) * 100.0 / (cardLvlCeil - cardLvlPrev));
+                        }
+                    }
+                    @if (lvlCount > 0 && cardNotesToNext > 0)
+                    {
+                        <MudProgressLinear Value="@cardLvlPct2" Color="Color.Warning" Rounded="true" Size="Size.Small" Class="mt-2 mb-0" />
+                    }
                     @if (cardNotesToNext > 0 && cardNotesToNext <= 3 && cardNextLvlName is not null)
                     {
                         <MudText Typo="Typo.caption" Color="Color.Info" Class="mt-1 d-block">
