@@ -1580,6 +1580,17 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         }
         <MudDivider Class="mb-3" />
     }
+    @if (string.IsNullOrWhiteSpace(QuickTodoText))
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">💡 Quick ideas:</MudText>
+        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
+            @foreach (var idea in new[] { "Read 20 minutes 📚", "Do homework ✏️", "Exercise 🏃", "Clean room 🧹", "Practice instrument 🎵", "Review goal progress 🎯" })
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
+                         Style="cursor:pointer;" OnClick="() => QuickTodoText = idea">@idea</MudChip>
+            }
+        </MudStack>
+    }
     @if (AllActiveGoals.Count > 0)
     {
         <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Link to a goal (optional):</MudText>
@@ -1607,6 +1618,9 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined"
                  Style="cursor:pointer;" title="Set due today"
                  OnClick="() => QuickTodoDueDate = DateTime.Today">Today</MudChip>
+        <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined"
+                 Style="cursor:pointer;" title="Set due tomorrow"
+                 OnClick="() => QuickTodoDueDate = DateTime.Today.AddDays(1)">Tomorrow</MudChip>
         <MudButton Variant="Variant.Filled" Color="Color.Primary"
                    StartIcon="@Icons.Material.Filled.Add"
                    Disabled="@string.IsNullOrWhiteSpace(QuickTodoText)"
