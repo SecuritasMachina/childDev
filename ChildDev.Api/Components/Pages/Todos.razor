@@ -178,6 +178,7 @@ else
         var gbgTodos = group.Select(x => x.Todo).ToList();
         @if (!string.IsNullOrEmpty(gbgGoalText))
         {
+            var capturedGbgGoal = gbgGoalText;
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-3 mb-1">
                 <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Size="Size.Small" />
                 @if (gbgGoalGuid is not null)
@@ -191,11 +192,21 @@ else
                 }
                 <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined"
                          Style="height:18px;font-size:0.68rem;">@gbgTodos.Count</MudChip>
+                <MudSpacer />
+                <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Warning"
+                               title="Add todo for this goal"
+                               OnClick="@(() => OpenAddDialogForGoal(capturedGbgGoal))"
+                               aria-label="Add todo for this goal" />
             </MudStack>
         }
         else
         {
-            <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mt-3 mb-1">No goal linked</MudText>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-3 mb-1">
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">No goal linked</MudText>
+                <MudSpacer />
+                <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Default"
+                               title="Add todo" OnClick="OpenAddDialog" aria-label="Add todo" />
+            </MudStack>
         }
         <MudList T="Todo" Dense="false" Class="mb-0">
             @foreach (var t in gbgTodos)
@@ -759,6 +770,15 @@ else
         }
 
         PendingTodos = filtered.ToList();
+    }
+
+    private void OpenAddDialogForGoal(string goalText)
+    {
+        NewTitle = string.Empty;
+        NewNotes = null;
+        NewDueDate = null;
+        _newGoalLink = goalText;
+        ShowAddDialog = true;
     }
 
     private void OpenAddDialog()
