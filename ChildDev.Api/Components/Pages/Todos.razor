@@ -528,6 +528,9 @@ else
 </MudDialog>
 
 @code {
+    [SupplyParameterFromQuery(Name = "search")]
+    private string? SearchParam { get; set; }
+
     private string? AccountGuid;
     private List<Todo> AllPendingTodos = [];
     private List<Todo> CompletedTodos = [];
@@ -569,6 +572,8 @@ else
         AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
         if (AccountGuid is null) return;
         NowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        if (!string.IsNullOrWhiteSpace(SearchParam))
+            FilterText = SearchParam;
         await LoadTodos();
         await Analytics.TrackAsync("page_view", AccountGuid, "todos");
     }

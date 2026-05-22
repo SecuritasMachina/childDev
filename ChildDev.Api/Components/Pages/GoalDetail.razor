@@ -1649,7 +1649,10 @@ else
             <MudIcon Icon="@Icons.Material.Filled.CheckBox" Color="Color.Info" Size="Size.Small" />
             <MudText Typo="Typo.subtitle2" Color="Color.Info">Todos for This Goal@rtHeaderSuffix</MudText>
             <MudSpacer />
-            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Secondary" Href="/todos">View All</MudButton>
+            @{
+                var rtSearchParam = Uri.EscapeDataString($"Goal: {Goal?.GoalText ?? ""}");
+            }
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Secondary" Href="@($"/todos?search={rtSearchParam}")">View All</MudButton>
         </MudStack>
         <MudList T="string" Dense="true" Class="py-0">
             @foreach (var rt in RelatedTodos)
