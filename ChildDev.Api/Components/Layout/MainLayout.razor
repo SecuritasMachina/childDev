@@ -340,6 +340,16 @@
         StateHasChanged();
     }
 
+    [Microsoft.JSInterop.JSInvokable]
+    public void TriggerCloseSearch()
+    {
+        if (_searchOpen)
+        {
+            CloseSearch();
+            StateHasChanged();
+        }
+    }
+
     private async Task ToggleDarkMode()
     {
         _darkMode = !_darkMode;

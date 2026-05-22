@@ -8,6 +8,8 @@ window.childdev.setupSearchHotkey = function (dotNetRef) {
         if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
             e.preventDefault();
             dotNetRef.invokeMethodAsync('TriggerOpenSearch');
+        } else if (e.key === 'Escape') {
+            dotNetRef.invokeMethodAsync('TriggerCloseSearch');
         }
     };
     document.addEventListener('keydown', window._cdSearchHotkeyListener);
