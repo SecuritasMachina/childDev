@@ -1494,11 +1494,28 @@ else
         <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">No notes matching "@_noteFilter".</MudText>
     }
     <MudTimeline TimelinePosition="TimelinePosition.Start" Class="mb-4">
-        @{ var noteDisplayIdx = displayedNotes.Count; }
-        @foreach (var p in displayedNotes)
+        @{ var noteDisplayIdx = displayedNotes.Count; long? prevNoteMs = null; }
+        @for (var noteIdx = 0; noteIdx < displayedNotes.Count; noteIdx++)
         {
+            var p = displayedNotes[noteIdx];
             var noteNum = noteDisplayIdx--;
             var enteredDate = DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime;
+            if (prevNoteMs.HasValue)
+            {
+                var gapDays = (int)((prevNoteMs.Value - p.UpdatedOn) / 86_400_000L);
+                if (gapDays >= 14)
+                {
+                    var gapLabel = gapDays >= 60 ? $"{gapDays / 30} month{(gapDays / 30 == 1 ? "" : "s")} gap"
+                                 : gapDays >= 30 ? "1 month gap"
+                                 : $"{gapDays}-day gap";
+                    <MudTimelineItem Color="Color.Default" Size="Size.Small">
+                        <ItemContent>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-style:italic;opacity:.7;">⏸ @gapLabel</MudText>
+                        </ItemContent>
+                    </MudTimelineItem>
+                }
+            }
+            prevNoteMs = p.UpdatedOn;
             var isPersonalBest = bestNoteGuid is not null && p.Guid == bestNoteGuid;
             var noteTextLower = (p.NextStepItems ?? "").ToLowerInvariant();
             var isLearnNote = noteTextLower.Contains("learn") || noteTextLower.Contains("discover") ||
