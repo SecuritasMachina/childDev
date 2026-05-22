@@ -42,6 +42,23 @@
     </MudPaper>
 }
 
+@if (WeekCompletedCount > 0 && LastWeekCompletedCount > 0)
+{
+    var wowDiff = WeekCompletedCount - LastWeekCompletedCount;
+    var wowMsg = wowDiff > 0 ? $"📈 +{wowDiff} vs last week ({LastWeekCompletedCount}) — you're getting more done each week!"
+               : wowDiff < 0 ? $"📉 {LastWeekCompletedCount} done last week — can you match or beat it this week?"
+               :                $"📊 Same pace as last week ({LastWeekCompletedCount}) — nice consistency!";
+    <MudText Typo="Typo.caption" Color="@(wowDiff >= 0 ? Color.Success : Color.Warning)" Class="mb-4">@wowMsg</MudText>
+}
+@if (OldestPendingDays >= 14 && AllPendingTodos.Any())
+{
+    var oldestTodo = AllPendingTodos.OrderBy(t => t.UpdatedOn).First();
+    var oldestTitle = oldestTodo.Title.Length > 60 ? oldestTodo.Title[..60] + "…" : oldestTodo.Title;
+    var oldestMsg = OldestPendingDays >= 30
+        ? $"📌 <strong>\"@oldestTitle\"</strong> has been waiting <strong>{OldestPendingDays} days</strong> — it's time to tackle it or let it go!"
+        : $"📌 <strong>\"@oldestTitle\"</strong> has been on your list for <strong>{OldestPendingDays} days</strong> — can you get to it today?";
+    <MudAlert Severity="Severity.Normal" Dense="true" Class="mb-4" Icon="@Icons.Material.Filled.PendingActions">@((MarkupString)oldestMsg)</MudAlert>
+}
 @if (MonthCompletedCount >= 5 && WeekCompletedCount < MonthCompletedCount)
 {
     var monthName = DateTime.Today.ToString("MMMM");
@@ -406,6 +423,8 @@ else
     private int FocusCount;
     private int CompletedTodayCount;
     private int ProductivityStreak;
+    private int LastWeekCompletedCount;
+    private int OldestPendingDays;
     private string FilterText = string.Empty;
     private string StatusFilter = "All";
     private List<Todo> PendingTodos = [];
@@ -447,9 +466,13 @@ else
         var todayEndForFocus = TodayStartMs + 86_400_000L;
         FocusCount = AllPendingTodos.Count(t => t.DueDate.HasValue && t.DueDate.Value < todayEndForFocus);
         WeekCompletedCount = CompletedTodos.Count(t => t.CompletedAt >= weekStartMs);
+        var prevWeekStartMs = weekStartMs - 7L * 86_400_000L;
+        LastWeekCompletedCount = CompletedTodos.Count(t => t.CompletedAt >= prevWeekStartMs && t.CompletedAt < weekStartMs);
         var monthStartMs = new DateTimeOffset(new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
         MonthCompletedCount = CompletedTodos.Count(t => t.CompletedAt >= monthStartMs);
         CompletedTodayCount = CompletedTodos.Count(t => t.CompletedAt >= TodayStartMs);
+        var oldestPending = AllPendingTodos.Where(t => t.CompletedAt == null).Select(t => t.UpdatedOn).DefaultIfEmpty(0).Min();
+        OldestPendingDays = oldestPending > 0 ? (int)((NowMs - oldestPending) / 86_400_000L) : 0;
         // Productivity streak: consecutive 7-day windows ending now with at least 1 completed todo
         ProductivityStreak = 0;
         for (int w = 0; w < 52; w++)
