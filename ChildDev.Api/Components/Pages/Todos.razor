@@ -152,9 +152,19 @@ else
     </MudStack>
     @if (AllPendingTodos.Any())
     {
-        <MudText Typo="Typo.subtitle1" Class="mb-2" Color="Color.Secondary">
-            @PendingTodos.Count @(!string.IsNullOrWhiteSpace(FilterText) || StatusFilter != "All" ? "matching" : "pending")
-        </MudText>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+            <MudText Typo="Typo.subtitle1" Color="Color.Secondary" Style="flex:1;">
+                @PendingTodos.Count @(!string.IsNullOrWhiteSpace(FilterText) || StatusFilter != "All" ? "matching" : "pending")
+            </MudText>
+            @if (DueTodayCount > 0 && StatusFilter == "All" && string.IsNullOrWhiteSpace(FilterText))
+            {
+                <MudButton Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.DoneAll"
+                           OnClick="() => _confirmCompleteAllToday = true">
+                    ✅ All Done Today
+                </MudButton>
+            }
+        </MudStack>
     }
 }
 
@@ -506,6 +516,23 @@ else
     </DialogActions>
 </MudDialog>
 
+@* Complete All Due Today Confirmation *@
+<MudDialog @bind-Visible="_confirmCompleteAllToday">
+    <TitleContent>
+        <MudText Typo="Typo.h6" Color="Color.Success">
+            <MudIcon Icon="@Icons.Material.Filled.DoneAll" Class="mr-2" />
+            Complete All Due Today?
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText>Mark all @DueTodayCount todo@(DueTodayCount == 1 ? "" : "s") due today as complete? This will celebrate your productive day! 🎉</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _confirmCompleteAllToday = false">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="CompleteAllDueToday">✅ Complete All</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @* Delete Todo Confirmation *@
 <MudDialog Visible="@(_confirmDeleteGuid is not null)" VisibleChanged="@((bool v) => { if (!v) _confirmDeleteGuid = null; })">
     <TitleContent>
@@ -666,6 +693,7 @@ else
     private List<(string Guid, string GoalText)> _activeGoals = [];
     private string _newGoalLink = string.Empty;
     private bool _groupByGoal = false;
+    private bool _confirmCompleteAllToday;
 
     protected override async Task OnInitializedAsync()
     {
@@ -899,6 +927,30 @@ else
         if (rows == 0) return;
         await Analytics.TrackAsync("todo_reschedule_today", AccountGuid, "todos");
         Snackbar.Add("Rescheduled to today.", Severity.Info);
+        await LoadTodos();
+    }
+
+    private async Task CompleteAllDueToday()
+    {
+        _confirmCompleteAllToday = false;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var todayEndMs = TodayStartMs + 86_400_000L;
+        var guids = AllPendingTodos
+            .Where(t => t.DueDate.HasValue && t.DueDate.Value >= TodayStartMs && t.DueDate.Value < todayEndMs)
+            .Select(t => t.Guid)
+            .ToList();
+        if (guids.Count == 0) return;
+        await Db.Todos
+            .Where(t => guids.Contains(t.Guid) && t.AccountFk == AccountGuid && t.CompletedAt == null)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.CompletedAt, now)
+                .SetProperty(t => t.UpdatedOn, now));
+        await Analytics.TrackAsync("todo_complete_all_today", AccountGuid, "todos", guids.Count.ToString());
+        var msg = guids.Count >= 5 ? $"🔥 LEGENDARY! {guids.Count} todos crushed in one go!" :
+                  guids.Count >= 3 ? $"🚀 {guids.Count} todos done — what a day!" :
+                  guids.Count == 2 ? "⚡ Both todos done — awesome work!" :
+                  "✅ Today's todo done!";
+        Snackbar.Add(msg, Severity.Success);
         await LoadTodos();
     }
 
