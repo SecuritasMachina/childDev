@@ -1616,6 +1616,47 @@ else
                OnClick="CopyGoalSummary" title="Copy goal summary to clipboard">Summary</MudButton>
 </MudStack>
 
+@if (RelatedTodos.Count > 0)
+{
+    <MudPaper Elevation="1" Class="pa-4 mt-4 mb-2" Style="border-radius:12px;">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+            <MudIcon Icon="@Icons.Material.Filled.CheckBox" Color="Color.Info" Size="Size.Small" />
+            <MudText Typo="Typo.subtitle2" Color="Color.Info">Todos for This Goal</MudText>
+            <MudSpacer />
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Secondary" Href="/todos">View All</MudButton>
+        </MudStack>
+        <MudList T="string" Dense="true" Class="py-0">
+            @foreach (var rt in RelatedTodos)
+            {
+                var rtDue = rt.DueDate.HasValue
+                    ? DateTimeOffset.FromUnixTimeMilliseconds(rt.DueDate.Value).LocalDateTime
+                    : (DateTime?)null;
+                var rtOverdue = rtDue.HasValue && rtDue.Value.Date < DateTime.Today && rt.CompletedAt == null;
+                var rtDone = rt.CompletedAt.HasValue;
+                <MudListItem Style="padding-top:3px;padding-bottom:3px;">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudIconButton Icon="@(rtDone ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.RadioButtonUnchecked)"
+                                       Color="@(rtDone ? Color.Success : Color.Primary)"
+                                       Size="Size.Small"
+                                       Disabled="@rtDone"
+                                       OnClick="() => CompleteTodo(rt.Guid)" />
+                        <MudStack Spacing="0" Style="flex:1">
+                            <MudText Typo="Typo.body2" Color="@(rtDone ? Color.Secondary : rtOverdue ? Color.Error : Color.Default)"
+                                     Style="@(rtDone ? "text-decoration:line-through" : "")">@rt.Title</MudText>
+                            @if (rtDue.HasValue)
+                            {
+                                <MudText Typo="Typo.caption" Color="@(rtOverdue ? Color.Error : Color.Secondary)">
+                                    @(rtDone ? $"Completed ✓" : rtOverdue ? $"Due {rtDue.Value:MMM d} — overdue" : $"Due {rtDue.Value:MMM d}")
+                                </MudText>
+                            }
+                        </MudStack>
+                    </MudStack>
+                </MudListItem>
+            }
+        </MudList>
+    </MudPaper>
+}
+
 @if (RelatedJournals.Count > 0)
 {
     <MudPaper Elevation="1" Class="pa-4 mt-4 mb-2" Style="border-radius:12px;">
@@ -1904,6 +1945,7 @@ else
     private string? _newTodoNotes;
     private DateTime? _newTodoDueDate;
     private List<Journal> RelatedJournals = [];
+    private List<Todo> RelatedTodos = [];
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -1977,6 +2019,17 @@ else
                 (!string.IsNullOrWhiteSpace(j.Notes) && goalText.Length >= 6 && j.Notes.Contains(goalText, StringComparison.OrdinalIgnoreCase)))
             .Take(5)
             .ToList();
+
+        if (goalText.Length >= 3)
+        {
+            var goalPrefix = $"Goal: {goalText}";
+            RelatedTodos = await Db.Todos
+                .Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.Notes != null && t.Notes.StartsWith(goalPrefix))
+                .OrderBy(t => t.CompletedAt.HasValue ? 1 : 0)
+                .ThenBy(t => t.DueDate ?? long.MaxValue)
+                .Take(10)
+                .ToListAsync();
+        }
 
         await Analytics.TrackAsync("page_view", AccountGuid, "goal_detail", GoalGuid);
     }
@@ -2074,7 +2127,36 @@ else
         await Db.SaveChangesAsync();
         await Analytics.TrackAsync("todo_add_from_goal", AccountGuid, "goal_detail", GoalGuid);
         _showAddTodoDialog = false;
-        Snackbar.Add("Todo created! View it in the Todos section.", Severity.Success);
+        await ReloadRelatedTodos();
+        Snackbar.Add("Todo created!", Severity.Success);
+    }
+
+    private async Task CompleteTodo(string todoGuid)
+    {
+        var todo = RelatedTodos.FirstOrDefault(t => t.Guid == todoGuid);
+        if (todo is null || todo.CompletedAt.HasValue) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        todo.CompletedAt = now;
+        todo.UpdatedOn = now;
+        Db.Todos.Update(todo);
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("todo_complete", AccountGuid, "goal_detail", GoalGuid);
+        Snackbar.Add("Todo completed! ✓", Severity.Success);
+        StateHasChanged();
+    }
+
+    private async Task ReloadRelatedTodos()
+    {
+        if (AccountGuid is null || Goal is null) return;
+        var goalText = Goal.GoalText ?? "";
+        if (goalText.Length < 3) return;
+        var goalPrefix = $"Goal: {goalText}";
+        RelatedTodos = await Db.Todos
+            .Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.Notes != null && t.Notes.StartsWith(goalPrefix))
+            .OrderBy(t => t.CompletedAt.HasValue ? 1 : 0)
+            .ThenBy(t => t.DueDate ?? long.MaxValue)
+            .Take(10)
+            .ToListAsync();
     }
 
     private async Task AddProgress()
