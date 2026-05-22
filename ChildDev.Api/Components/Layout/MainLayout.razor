@@ -142,6 +142,39 @@
         </MudPaper>
     </MudMainContent>
 
+    @if (_helpOpen)
+    {
+        <MudOverlay Visible="true" DarkBackground="true" ZIndex="2000" OnClick="CloseHelp">
+            <MudPaper Elevation="8" @onclick:stopPropagation="true"
+                      Style="width:min(480px,96vw);border-radius:12px;overflow:hidden;">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="pa-4"
+                          Style="border-bottom:1px solid var(--mud-palette-lines-default);">
+                    <MudIcon Icon="@Icons.Material.Filled.Keyboard" Color="Color.Primary" Class="mr-2" />
+                    <MudText Typo="Typo.h6" Style="flex:1;font-weight:700;">Keyboard Shortcuts</MudText>
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="CloseHelp" />
+                </MudStack>
+                <div class="pa-4">
+                    @foreach (var (key, desc) in new[] {
+                        ("Ctrl + K", "Open global search"),
+                        ("Escape", "Close any open panel"),
+                        ("?", "Show this help"),
+                    })
+                    {
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3" Spacing="2">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined"
+                                     Style="font-family:monospace;font-weight:700;min-width:90px;justify-content:center;">@key</MudChip>
+                            <MudText Typo="Typo.body2" Style="flex:1;">@desc</MudText>
+                        </MudStack>
+                    }
+                    <MudDivider Class="my-3" />
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Tip: Press <strong>Ctrl+K</strong> from anywhere to instantly search goals, todos, and journal entries.
+                    </MudText>
+                </div>
+            </MudPaper>
+        </MudOverlay>
+    }
+
     @if (_searchOpen)
     {
         <MudOverlay Visible="true" DarkBackground="true" ZIndex="2000" OnClick="CloseSearch">
@@ -212,6 +245,7 @@
     private string _searchQuery = string.Empty;
     private bool _searchLoading;
     private List<SearchResult> _searchResults = [];
+    private bool _helpOpen;
 
     private record SearchResult(string Category, string Text, string Href, string Icon);
 
@@ -338,6 +372,7 @@
     public void TriggerOpenSearch()
     {
         OpenSearch();
+        _helpOpen = false;
         StateHasChanged();
     }
 
@@ -350,6 +385,26 @@
             StateHasChanged();
         }
     }
+
+    [Microsoft.JSInterop.JSInvokable]
+    public void TriggerCloseAll()
+    {
+        var changed = _searchOpen || _helpOpen;
+        _searchOpen = false;
+        _helpOpen = false;
+        if (changed) StateHasChanged();
+    }
+
+    [Microsoft.JSInterop.JSInvokable]
+    public void TriggerOpenHelp()
+    {
+        _helpOpen = true;
+        _searchOpen = false;
+        StateHasChanged();
+    }
+
+    private void OpenHelp() { _helpOpen = true; _searchOpen = false; }
+    private void CloseHelp() => _helpOpen = false;
 
     private async Task ToggleDarkMode()
     {
