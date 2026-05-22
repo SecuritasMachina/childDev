@@ -1241,6 +1241,16 @@ else
         ShowAddDialog = true;
     }
 
+    private static string? JournalMilestoneMessage(int count) => count switch
+    {
+        10  => "🎉 10 journal entries! You've built a real reflection habit — keep going!",
+        25  => "🌟 25 journal entries! A quarter-century of reflections — that's incredible dedication!",
+        50  => "🏆 50 journal entries! Half-century milestone — you're a journaling champion!",
+        100 => "🌟🌟 100 journal entries! LEGENDARY! You've written a life chapter worth reading!",
+        200 => "🏅 200 entries! You're in elite journaling territory — absolutely extraordinary!",
+        _   => count % 100 == 0 ? $"🎊 {count} journal entries — you're unstoppable!" : null
+    };
+
     private async Task AddEntry()
     {
         if (string.IsNullOrWhiteSpace(NewNotes) && string.IsNullOrWhiteSpace(NewActivity)) return;
@@ -1249,6 +1259,7 @@ else
             ? 0
             : NewNotes.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
         var prevBest = BestEntryWordCount;
+        var newTotalCount = AllEntries.Count + 1;
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var enteredMs = NewEnteredDate.HasValue
@@ -1277,7 +1288,13 @@ else
         NewEnteredDate = DateTime.Today;
         ShowAddDialog = false;
 
-        if (newWordCount >= 50 && newWordCount > prevBest)
+        var milestoneMsg = JournalMilestoneMessage(newTotalCount);
+        if (milestoneMsg is not null)
+        {
+            await Analytics.TrackAsync("journal_milestone", AccountGuid, "journal", newTotalCount.ToString());
+            Snackbar.Add(milestoneMsg, Severity.Success, opts => opts.VisibleStateDuration = 7000);
+        }
+        else if (newWordCount >= 50 && newWordCount > prevBest)
         {
             await Analytics.TrackAsync("journal_personal_best_words", AccountGuid, "journal", newWordCount.ToString());
             Snackbar.Add($"🏆 Personal best! {newWordCount} words — your longest journal entry ever! Amazing! 🌟", Severity.Success, opts => opts.VisibleStateDuration = 6000);

@@ -1812,16 +1812,31 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
             @{
                 var goalSuggestions = new (string Goal, string Outcome)[] {
+                    // School & learning
                     ("Read more books 📚", "Read 10 books this year"),
                     ("Get better at math ➕", "Score 90%+ on tests consistently"),
-                    ("Learn a new skill 🎯", "Practice for 30 minutes, 3× per week"),
+                    ("Improve my writing ✏️", "Write at least 3 paragraphs per day"),
+                    ("Learn something new 🎯", "Practice for 30 minutes, 3× per week"),
                     ("Be more organized 📋", "Complete homework before dinner every day"),
+                    // Health & fitness
                     ("Exercise regularly 🏃", "Exercise at least 3 times per week"),
+                    ("Improve at a sport ⚽", "Practice drills for 30 min, 3× per week"),
+                    ("Eat healthier 🥦", "Choose a healthy snack every day"),
+                    ("Get enough sleep 😴", "Be in bed by 9pm on school nights"),
+                    // Creativity & hobbies
                     ("Practice an instrument 🎵", "Practice 20 minutes every day"),
+                    ("Get better at art 🎨", "Complete one drawing or project per week"),
+                    ("Learn to code 💻", "Complete one coding lesson per week"),
+                    ("Start a collection 🏅", "Add to my collection every two weeks"),
+                    // People & character
                     ("Make more friends 🤝", "Have a positive social interaction each week"),
                     ("Help around the house 🏠", "Complete 3 chores per week without being asked"),
+                    ("Be kinder 💛", "Do one unexpected kind act every day"),
+                    ("Manage my feelings 🧘", "Use a calming strategy when upset"),
+                    // Life skills
                     ("Learn to cook 🍳", "Cook 5 different meals independently"),
-                    ("Improve at a sport ⚽", "Practice drills for 30 min, 3× per week"),
+                    ("Save money 💰", "Save $5 per week toward my goal"),
+                    ("Spend less screen time 📵", "Less than 1 hour of screens on school days"),
                 };
             }
             @foreach (var (goalText, outcomeText) in goalSuggestions)
