@@ -1566,15 +1566,18 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
             }
         </MudStack>
     }
-    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
         <MudTextField @bind-Value="QuickTodoText"
                       Label="What needs to be done?"
                       Variant="Variant.Outlined" Margin="Margin.Dense"
-                      Style="flex:1" Immediate="true"
+                      Style="flex:1;min-width:160px;" Immediate="true"
                       @onkeydown="@(async (e) => { if (e.Key == "Enter") await SaveQuickTodo(); })" />
         <MudDatePicker @bind-Date="QuickTodoDueDate" Label="Due (opt.)"
                        Variant="Variant.Outlined" Margin="Margin.Dense"
                        Style="max-width:130px;" />
+        <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined"
+                 Style="cursor:pointer;" title="Set due today"
+                 OnClick="() => QuickTodoDueDate = DateTime.Today">Today</MudChip>
         <MudButton Variant="Variant.Filled" Color="Color.Primary"
                    StartIcon="@Icons.Material.Filled.Add"
                    Disabled="@string.IsNullOrWhiteSpace(QuickTodoText)"
