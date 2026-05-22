@@ -1561,8 +1561,22 @@ else
                                         <MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Small" /> Next meeting: @meetingDate.ToString("MMM d, yyyy")
                                     </MudText>
                                 }
+                                @{
+                                    var noteAgeMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - p.UpdatedOn;
+                                    var noteAgeMin = (int)(noteAgeMs / 60_000L);
+                                    var noteAgeHr = (int)(noteAgeMs / 3_600_000L);
+                                    var noteTimeLabel = noteAgeMin < 60
+                                        ? (noteAgeMin <= 1 ? "just now" : $"{noteAgeMin}m ago")
+                                        : noteAgeHr < 24
+                                            ? $"{noteAgeHr}h ago"
+                                            : noteAgeHr < 48
+                                                ? "yesterday"
+                                                : noteAgeHr < 168
+                                                    ? $"{noteAgeHr / 24}d ago"
+                                                    : enteredDate.ToString("MMM d, yyyy");
+                                }
                                 <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                    Note #@noteNum · @enteredDate.ToString("MMM d, yyyy h:mm tt")
+                                    Note #@noteNum · @noteTimeLabel
                                 </MudText>
                             </MudStack>
                             @if (!string.IsNullOrWhiteSpace(p.NextStepItems))
