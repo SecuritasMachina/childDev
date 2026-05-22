@@ -24,6 +24,20 @@
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
     <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Href="/" aria-label="Back to goals" />
+    @if (_prevGoalGuid is not null)
+    {
+        <MudTooltip Text="Previous goal">
+            <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" Size="Size.Small" Color="Color.Secondary"
+                           Href="@($"/goals/{_prevGoalGuid}")" aria-label="Previous goal" />
+        </MudTooltip>
+    }
+    @if (_nextGoalGuid is not null)
+    {
+        <MudTooltip Text="Next goal">
+            <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Color="Color.Secondary"
+                           Href="@($"/goals/{_nextGoalGuid}")" aria-label="Next goal" />
+        </MudTooltip>
+    }
     <MudText Typo="Typo.h5" Style="flex:1">@Goal.GoalText</MudText>
     @if (Goal.CompletionDate is null)
     {
@@ -2005,8 +2019,12 @@ else
         </MudText>
     </TitleContent>
     <DialogContent>
+        @{
+            var epWc = EditProgressNextSteps.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
+            var epWcHelper = epWc == 0 ? "Describe what you worked on and what's next." : $"{epWc} word{(epWc == 1 ? "" : "s")}";
+        }
         <MudTextField @bind-Value="EditProgressNextSteps" Label="Progress / next steps" Variant="Variant.Outlined"
-                      Lines="3" Class="mb-4" AutoFocus="true" />
+                      Lines="3" Class="mb-4" AutoFocus="true" Immediate="true" HelperText="@epWcHelper" />
         <MudDatePicker @bind-Date="EditProgressMeetingDate" Label="Next meeting date (optional)" Variant="Variant.Outlined" />
     </DialogContent>
     <DialogActions>
@@ -2076,6 +2094,8 @@ else
     private DateTime? _newTodoDueDate;
     private List<Journal> RelatedJournals = [];
     private List<Todo> RelatedTodos = [];
+    private string? _prevGoalGuid;
+    private string? _nextGoalGuid;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -2133,6 +2153,16 @@ else
 
         Goal = await Db.Goals.FirstOrDefaultAsync(g => g.Guid == GoalGuid && g.AccountFk == AccountGuid && g.DeletedAt == null);
         if (Goal is null) return;
+
+        // Load adjacent goals for prev/next navigation (ordered by EnteredDate)
+        var allGoalGuids = await Db.Goals
+            .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null)
+            .OrderBy(g => g.EnteredDate)
+            .Select(g => g.Guid)
+            .ToListAsync();
+        var myIdx = allGoalGuids.IndexOf(GoalGuid);
+        if (myIdx > 0) _prevGoalGuid = allGoalGuids[myIdx - 1];
+        if (myIdx >= 0 && myIdx < allGoalGuids.Count - 1) _nextGoalGuid = allGoalGuids[myIdx + 1];
 
         await LoadProgress();
 
