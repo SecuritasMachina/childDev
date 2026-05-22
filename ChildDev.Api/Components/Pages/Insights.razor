@@ -341,6 +341,27 @@ else if (JourneyMonths >= 6)
     </MudPaper>
 }
 
+@if (TopJournalTags.Count >= 2)
+{
+    <MudPaper Elevation="1" Class="pa-3 mb-6" Style="border-radius:12px;">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
+            <MudIcon Icon="@Icons.Material.Filled.LocalOffer" Color="Color.Secondary" />
+            <MudText Typo="Typo.body2" Style="font-weight:600;">Your most-used journal tags</MudText>
+        </MudStack>
+        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+            @foreach (var (tag, count) in TopJournalTags)
+            {
+                var isTop = tag == TopJournalTags[0].Tag;
+                <MudChip T="string" Size="Size.Small" Color="@(isTop ? Color.Warning : Color.Default)" Variant="Variant.Outlined">
+                    @(isTop ? "⭐ " : "")@tag (@count)
+                </MudChip>
+            }
+        </MudStack>
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+            These tags reveal what matters most to you — keep exploring what shapes your growth!
+        </MudText>
+    </MudPaper>
+}
 @if (!string.IsNullOrWhiteSpace(MostActiveDayName))
 {
     <MudPaper Elevation="1" Class="pa-3 mb-4 d-flex align-items-center" Style="border-radius:12px;gap:12px;">
@@ -803,6 +824,7 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
     private string? TopMood;
     private int TopMoodCount;
     private List<(string Mood, int Count)> TopMoods = [];
+    private List<(string Tag, int Count)> TopJournalTags = [];
     private string? TopGoalName;
     private string? TopGoalGuid;
     private int TopGoalNoteCount;
@@ -954,6 +976,19 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
             TopMood = moodRows[0].Mood;
             TopMoodCount = moodRows[0].Count;
         }
+
+        // Top journal tags all-time
+        var tagJournals = await Db.Journals
+            .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null && j.Tags != null && j.Tags != "")
+            .Select(j => j.Tags!)
+            .ToListAsync();
+        TopJournalTags = tagJournals
+            .SelectMany(t => t.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .GroupBy(t => t, StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(g => g.Count())
+            .Take(5)
+            .Select(g => (g.Key, g.Count()))
+            .ToList();
 
         // Goal with the most progress notes ("Top Goal" spotlight)
         var topGoalProgress = await Db.GoalProgresses
