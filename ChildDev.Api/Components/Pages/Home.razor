@@ -1631,6 +1631,22 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     <MudTextField @bind-Value="QuickJournalText"
                   Label="What happened today? What did you observe?"
                   Variant="Variant.Outlined" Lines="2" Class="mb-3" />
+    @if (AllActiveGoals.Count > 0)
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Tag a goal (optional):</MudText>
+        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
+            @foreach (var ag2 in AllActiveGoals.Take(5))
+            {
+                var agText2 = ag2.GoalText ?? "";
+                var agShort2 = agText2.Length > 28 ? agText2[..28] + "…" : agText2;
+                <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.Flag"
+                         Variant="@(QuickJournalGoalTag == agText2 ? Variant.Filled : Variant.Outlined)"
+                         Color="@(QuickJournalGoalTag == agText2 ? Color.Success : Color.Default)"
+                         Style="cursor:pointer;"
+                         OnClick="() => QuickJournalGoalTag = QuickJournalGoalTag == agText2 ? string.Empty : agText2">@agShort2</MudChip>
+            }
+        </MudStack>
+    }
     <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">How are you feeling? (optional)</MudText>
     <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
         @foreach (var (emoji, mood) in new[] { ("😊","happy"), ("🤩","excited"), ("🙏","grateful"), ("💪","proud"), ("😌","calm"), ("🎯","focused"), ("😢","sad"), ("😴","tired"), ("😟","anxious"), ("😠","angry") })
@@ -1796,6 +1812,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private int MostFocusedGoalThisWeekCount;
     private string QuickJournalText = string.Empty;
     private string QuickJournalMood = string.Empty;
+    private string QuickJournalGoalTag = string.Empty;
     private string QuickTodoText = string.Empty;
     private DateTime? QuickTodoDueDate;
     private string? QuickTodoGoalGuid;
@@ -2362,6 +2379,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
             AccountFk = AccountGuid!,
             Notes = text,
             Mood = string.IsNullOrWhiteSpace(QuickJournalMood) ? null : QuickJournalMood,
+            Tags = string.IsNullOrWhiteSpace(QuickJournalGoalTag) ? null : QuickJournalGoalTag,
             EnteredDate = now,
             UpdatedOn = now
         });
@@ -2369,6 +2387,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         await Analytics.TrackAsync("journal_quickadd", AccountGuid, "home", string.IsNullOrWhiteSpace(QuickJournalMood) ? null : QuickJournalMood);
         QuickJournalText = string.Empty;
         QuickJournalMood = string.Empty;
+        QuickJournalGoalTag = string.Empty;
         Snackbar.Add("Journal entry saved!", Severity.Success);
         await LoadStats();
         StateHasChanged();
