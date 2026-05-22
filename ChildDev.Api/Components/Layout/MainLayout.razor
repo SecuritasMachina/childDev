@@ -3,6 +3,7 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @inject AppDbContext Db
 @inject IJSRuntime JS
+@inject WebAnalyticsService Analytics
 @using Microsoft.EntityFrameworkCore
 
 <MudThemeProvider Theme="_theme" IsDarkMode="@_darkMode" />
@@ -35,6 +36,11 @@
             </MudChip>
         }
         <MudSpacer />
+        @if (NickName is not null)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Search" Color="Color.Inherit" Size="Size.Small"
+                           OnClick="OpenSearch" title="Search goals, todos, journal" aria-label="Global search" />
+        }
         <MudIconButton Icon="@(_darkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
                        Color="Color.Inherit" Size="Size.Small"
                        OnClick="ToggleDarkMode"
@@ -133,6 +139,63 @@
             </MudContainer>
         </MudPaper>
     </MudMainContent>
+
+    @if (_searchOpen)
+    {
+        <MudOverlay Visible="true" DarkBackground="true" ZIndex="2000" OnClick="CloseSearch">
+            <MudPaper Elevation="8" @onclick:stopPropagation="true"
+                      Style="width:min(640px,96vw);max-height:80vh;overflow:hidden;display:flex;flex-direction:column;border-radius:8px;">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="pa-3"
+                          Style="border-bottom:1px solid var(--mud-palette-lines-default);">
+                    <MudIcon Icon="@Icons.Material.Filled.Search" Color="Color.Primary" Class="mr-1" />
+                    <MudTextField @bind-Value="_searchQuery" Placeholder="Search goals, todos, journal…"
+                                  Variant="Variant.Text" Margin="Margin.Dense"
+                                  Style="flex:1;" Immediate="true"
+                                  DebounceInterval="300" OnDebounceIntervalElapsed="RunSearchDebounced"
+                                  AutoFocus="true" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="CloseSearch" />
+                </MudStack>
+                <div style="overflow-y:auto;max-height:calc(80vh - 64px);">
+                    @if (_searchLoading)
+                    {
+                        <MudStack AlignItems="AlignItems.Center" Class="pa-6">
+                            <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                        </MudStack>
+                    }
+                    else if (_searchQuery.Length >= 2 && _searchResults.Count == 0)
+                    {
+                        <MudStack AlignItems="AlignItems.Center" Class="pa-6">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No results for "@_searchQuery"</MudText>
+                        </MudStack>
+                    }
+                    else if (_searchResults.Count > 0)
+                    {
+                        @foreach (var grp in _searchResults.GroupBy(r => r.Category))
+                        {
+                            <MudText Typo="Typo.overline" Color="Color.Secondary" Class="px-4 pt-3 pb-1">@grp.Key</MudText>
+                            @foreach (var result in grp)
+                            {
+                                <MudListItem T="string" OnClick="() => NavigateSearch(result.Href)"
+                                             Style="cursor:pointer;" Dense="true">
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                        <MudIcon Icon="@result.Icon" Size="Size.Small" Color="Color.Primary" />
+                                        <MudText Typo="Typo.body2"
+                                                 Style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@result.Text</MudText>
+                                    </MudStack>
+                                </MudListItem>
+                            }
+                        }
+                    }
+                    else
+                    {
+                        <MudStack AlignItems="AlignItems.Center" Class="pa-6">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Type at least 2 characters to search</MudText>
+                        </MudStack>
+                    }
+                </div>
+            </MudPaper>
+        </MudOverlay>
+    }
 </MudLayout>
 
 @code {
@@ -142,8 +205,14 @@
     private int _overdueTodoCount;
     private int _dailyStreak;
     private bool _hasJournalToday;
-
     private int _meetingSoonCount;
+
+    private bool _searchOpen;
+    private string _searchQuery = string.Empty;
+    private bool _searchLoading;
+    private List<SearchResult> _searchResults = [];
+
+    private record SearchResult(string Category, string Text, string Href, string Icon);
 
     private readonly MudTheme _theme = new()
     {
@@ -264,6 +333,77 @@
 
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
     private void CloseDrawer() => _drawerOpen = false;
+
+    private void OpenSearch()
+    {
+        _searchOpen = true;
+        _searchQuery = string.Empty;
+        _searchResults.Clear();
+        _searchLoading = false;
+    }
+
+    private void CloseSearch() => _searchOpen = false;
+
+    private async Task RunSearchDebounced()
+    {
+        if (_searchQuery.Length < 2)
+        {
+            _searchResults.Clear();
+            _searchLoading = false;
+            StateHasChanged();
+            return;
+        }
+        _searchLoading = true;
+        StateHasChanged();
+
+        var accountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
+        if (accountGuid is null) { _searchLoading = false; return; }
+
+        var q = _searchQuery.Trim();
+        var results = new List<SearchResult>();
+
+        var goals = await Db.Goals
+            .Where(g => g.AccountFk == accountGuid && g.DeletedAt == null
+                     && g.CompletionDate == null && g.GoalText.Contains(q))
+            .Select(g => new { g.Guid, g.GoalText })
+            .Take(5).ToListAsync();
+        results.AddRange(goals.Select(g =>
+            new SearchResult("Goals", g.GoalText, $"/goals/{g.Guid}", Icons.Material.Filled.EmojiEvents)));
+
+        var todos = await Db.Todos
+            .Where(t => t.AccountFk == accountGuid && t.DeletedAt == null
+                     && t.CompletedAt == null && t.Title != null && t.Title.Contains(q))
+            .Select(t => new { t.Guid, Title = t.Title ?? "" })
+            .Take(5).ToListAsync();
+        results.AddRange(todos.Select(t =>
+            new SearchResult("Todos", t.Title, "/todos", Icons.Material.Filled.CheckBox)));
+
+        var journals = await Db.Journals
+            .Where(j => j.AccountFk == accountGuid && j.DeletedAt == null
+                     && ((j.Notes != null && j.Notes.Contains(q)) || (j.Tags != null && j.Tags.Contains(q))))
+            .OrderByDescending(j => j.EnteredDate)
+            .Select(j => new { j.Notes, j.Tags })
+            .Take(5).ToListAsync();
+        results.AddRange(journals.Select(j =>
+        {
+            var notes = j.Notes ?? "";
+            var preview = string.IsNullOrWhiteSpace(notes)
+                ? (j.Tags ?? "")
+                : notes.Length > 80 ? notes[..80] + "…" : notes;
+            return new SearchResult("Journal", preview, "/journal", Icons.Material.Filled.Book);
+        }));
+
+        _searchResults = results;
+        _searchLoading = false;
+        StateHasChanged();
+        await Analytics.TrackAsync("global_search", accountGuid, "layout", $"q:{q},hits:{results.Count}");
+    }
+
+    private void NavigateSearch(string href)
+    {
+        CloseSearch();
+        Nav.NavigateTo(href);
+    }
 
     private bool IsActive(string path)
     {
