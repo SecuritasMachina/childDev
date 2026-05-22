@@ -5,6 +5,7 @@
 @inject ISnackbar Snackbar
 @inject WebAnalyticsService Analytics
 @inject IWebHostEnvironment HostEnv
+@inject IJSRuntime JS
 
 <PageTitle>My Goals – ChildDev</PageTitle>
 
@@ -1187,6 +1188,16 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                             <MudText Typo="Typo.caption" Color="@mtgColor2">@mtgLabel2</MudText>
                         }
                     </CardHeaderContent>
+                    <CardHeaderActions>
+                        @{var isPinned = _pinnedGoals.Contains(g.Guid);}
+                        <MudTooltip Text="@(isPinned ? "Unpin goal" : "Pin to top")">
+                            <MudIconButton Icon="@(isPinned ? Icons.Material.Filled.PushPin : Icons.Material.Outlined.PushPin)"
+                                           Size="Size.Small"
+                                           Color="@(isPinned ? Color.Warning : Color.Default)"
+                                           OnClick="() => TogglePinGoal(g.Guid)"
+                                           aria-label="@(isPinned ? "Unpin goal" : "Pin goal to top")" />
+                        </MudTooltip>
+                    </CardHeaderActions>
                 </MudCardHeader>
                 @{
                     var pCount = ProgressCounts.GetValueOrDefault(g.Guid);
@@ -1895,6 +1906,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private string? AnniversaryGoalGuid;
     private int AnniversaryDays;
     private int AnniversaryDaysUntil;
+    private HashSet<string> _pinnedGoals = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -1904,6 +1916,33 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         await LoadGoals();
         await LoadStats();
         await Analytics.TrackAsync("page_view", AccountGuid, "home");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var saved = await JS.InvokeAsync<string?>("localStorage.getItem", "childdev_pinned_goals");
+                if (!string.IsNullOrWhiteSpace(saved))
+                {
+                    _pinnedGoals = saved.Split(',', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
+                    ApplyFilter();
+                    StateHasChanged();
+                }
+            }
+            catch { }
+        }
+    }
+
+    private async Task TogglePinGoal(string guid)
+    {
+        if (_pinnedGoals.Contains(guid)) _pinnedGoals.Remove(guid);
+        else _pinnedGoals.Add(guid);
+        try { await JS.InvokeVoidAsync("localStorage.setItem", "childdev_pinned_goals", string.Join(",", _pinnedGoals)); }
+        catch { }
+        ApplyFilter();
     }
 
     private async Task LoadStats()
@@ -2258,13 +2297,13 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                                .OrderBy(g => g.NextMeetingDate);
         }
 
-        // Apply sort order
+        // Apply sort order (pinned goals always float to top)
         filtered = GoalSortOrder switch
         {
-            "most_active" => filtered.OrderByDescending(g => ProgressCounts.GetValueOrDefault(g.Guid)),
-            "newest"      => filtered.OrderByDescending(g => g.EnteredDate),
-            "alpha"       => filtered.OrderBy(g => g.GoalText, StringComparer.OrdinalIgnoreCase),
-            _             => filtered // "attention" — already sorted by LoadGoals
+            "most_active" => filtered.OrderByDescending(g => _pinnedGoals.Contains(g.Guid)).ThenByDescending(g => ProgressCounts.GetValueOrDefault(g.Guid)),
+            "newest"      => filtered.OrderByDescending(g => _pinnedGoals.Contains(g.Guid)).ThenByDescending(g => g.EnteredDate),
+            "alpha"       => filtered.OrderByDescending(g => _pinnedGoals.Contains(g.Guid)).ThenBy(g => g.GoalText, StringComparer.OrdinalIgnoreCase),
+            _             => filtered.OrderByDescending(g => _pinnedGoals.Contains(g.Guid)) // "attention" — already sorted by LoadGoals
         };
 
         if (string.IsNullOrWhiteSpace(FilterText) && QuickFilter == "all" && GoalSortOrder == "attention")
