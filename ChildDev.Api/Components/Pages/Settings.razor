@@ -4,6 +4,7 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @inject ISnackbar Snackbar
 @inject WebAnalyticsService Analytics
+@inject IJSRuntime JS
 
 <PageTitle>Settings – ChildDev</PageTitle>
 
@@ -30,7 +31,11 @@
                 <MudText Typo="Typo.body2" Color="Color.Secondary">Nickname</MudText>
                 <MudText Typo="Typo.body1" Class="mb-3">@CurrentNickName</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">Account ID</MudText>
-                <MudText Typo="Typo.caption" Class="mb-3" Style="font-family:monospace;">@AccountGuid</MudText>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
+                    <MudText Typo="Typo.caption" Style="font-family:monospace;flex:1;">@AccountGuid</MudText>
+                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" Color="Color.Primary"
+                                   title="Copy Account ID" OnClick="CopyAccountId" />
+                </MudStack>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">Member Since</MudText>
                 <MudText Typo="Typo.body1">@CreatedOnDisplay</MudText>
             </MudCardContent>
@@ -110,6 +115,31 @@
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ChangePin"
                            Disabled="@(string.IsNullOrWhiteSpace(CurrentPin) || NewPin.Length < 4 || NewPin != ConfirmNewPin)">Change PIN</MudButton>
             </MudCardActions>
+        </MudCard>
+        <MudCard Elevation="2" Class="mb-4">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudIcon Icon="@Icons.Material.Filled.Android" Style="color:#3DDC84;" />
+                        <MudText Typo="Typo.h6">Mobile App Setup</MudText>
+                    </MudStack>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudText Typo="Typo.body2" Class="mb-2">
+                    To sync your goals with the Android app, enter this Account ID and your PIN during login.
+                </MudText>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
+                    <MudTextField Value="@AccountGuid" Label="Account ID" Variant="Variant.Outlined"
+                                  ReadOnly="true" Style="font-family:monospace;font-size:0.78rem;" />
+                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Color="Color.Primary"
+                                   title="Copy Account ID" OnClick="CopyAccountId" />
+                </MudStack>
+                <MudLink Href="/downloads/ChildDev.apk" Color="Color.Primary" Style="font-weight:600;">
+                    <MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" Class="mr-1" />
+                    Download ChildDev for Android
+                </MudLink>
+            </MudCardContent>
         </MudCard>
     </MudItem>
 </MudGrid>
@@ -222,5 +252,13 @@
         ConfirmNewPin = string.Empty;
         await Analytics.TrackAsync("settings_change_pin", AccountGuid, "settings");
         Snackbar.Add("PIN changed!", Severity.Success);
+    }
+
+    private async Task CopyAccountId()
+    {
+        if (AccountGuid is null) return;
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", AccountGuid);
+        await Analytics.TrackAsync("settings_copy_account_id", AccountGuid, "settings");
+        Snackbar.Add("Account ID copied!", Severity.Info);
     }
 }
