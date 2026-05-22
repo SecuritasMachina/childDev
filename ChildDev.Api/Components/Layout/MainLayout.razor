@@ -39,7 +39,7 @@
         @if (NickName is not null)
         {
             <MudIconButton Icon="@Icons.Material.Filled.Search" Color="Color.Inherit" Size="Size.Small"
-                           OnClick="OpenSearch" title="Search goals, todos, journal" aria-label="Global search" />
+                           OnClick="OpenSearch" title="Search goals, todos, journal (Ctrl+K)" aria-label="Global search" />
         }
         <MudIconButton Icon="@(_darkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
                        Color="Color.Inherit" Size="Size.Small"
@@ -321,7 +321,23 @@
                 }
             }
             catch { /* localStorage unavailable (e.g., SSR pre-render) */ }
+
+            if (NickName is not null)
+            {
+                try
+                {
+                    await JS.InvokeVoidAsync("childdev.setupSearchHotkey", DotNetObjectReference.Create(this));
+                }
+                catch { }
+            }
         }
+    }
+
+    [Microsoft.JSInterop.JSInvokable]
+    public void TriggerOpenSearch()
+    {
+        OpenSearch();
+        StateHasChanged();
     }
 
     private async Task ToggleDarkMode()
