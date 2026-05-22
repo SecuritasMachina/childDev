@@ -2038,7 +2038,7 @@ else
     {
         var goalName = Goal?.GoalText ?? string.Empty;
         _newTodoTitle = goalName.Length > 60 ? goalName[..60] : goalName;
-        _newTodoNotes = null;
+        _newTodoNotes = goalName.Length > 0 ? $"Goal: {goalName}" : null;
         _newTodoDueDate = null;
         _showAddTodoDialog = true;
     }
@@ -2046,7 +2046,7 @@ else
     private void OpenAddTodoFromNote(string noteText)
     {
         _newTodoTitle = noteText.Length > 60 ? noteText[..60] : noteText;
-        _newTodoNotes = null;
+        _newTodoNotes = Goal?.GoalText is { Length: > 0 } gt ? $"Goal: {gt}" : null;
         _newTodoDueDate = null;
         _showAddTodoDialog = true;
     }

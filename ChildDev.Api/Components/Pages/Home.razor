@@ -1537,6 +1537,9 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                       Variant="Variant.Outlined" Margin="Margin.Dense"
                       Style="flex:1" Immediate="true"
                       @onkeydown="@(async (e) => { if (e.Key == "Enter") await SaveQuickTodo(); })" />
+        <MudDatePicker @bind-Date="QuickTodoDueDate" Label="Due (opt.)"
+                       Variant="Variant.Outlined" Margin="Margin.Dense"
+                       Style="max-width:130px;" />
         <MudButton Variant="Variant.Filled" Color="Color.Primary"
                    StartIcon="@Icons.Material.Filled.Add"
                    Disabled="@string.IsNullOrWhiteSpace(QuickTodoText)"
@@ -1768,6 +1771,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private string QuickJournalText = string.Empty;
     private string QuickJournalMood = string.Empty;
     private string QuickTodoText = string.Empty;
+    private DateTime? QuickTodoDueDate;
     private List<Journal> RecentJournals = [];
     private bool ShowCelebration;
     private string? CelebratedGoalText;
@@ -2275,16 +2279,21 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         var title = QuickTodoText.Trim();
         if (string.IsNullOrWhiteSpace(title)) return;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        long? dueDateMs = QuickTodoDueDate.HasValue
+            ? new DateTimeOffset(DateTime.SpecifyKind(QuickTodoDueDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
+            : null;
         Db.Todos.Add(new Todo
         {
             Guid = System.Guid.NewGuid().ToString(),
             AccountFk = AccountGuid!,
             Title = title,
+            DueDate = dueDateMs,
             UpdatedOn = now
         });
         await Db.SaveChangesAsync();
         await Analytics.TrackAsync("todo_quickadd", AccountGuid, "home");
         QuickTodoText = string.Empty;
+        QuickTodoDueDate = null;
         PendingTodoCount++;
         Snackbar.Add("Todo added!", Severity.Success);
     }
