@@ -1224,6 +1224,25 @@ else if (bestGoalStreak >= 2 && goalStreak < bestGoalStreak)
         🏆 Best streak ever: <strong>@bestGoalStreak days</strong> — can you beat it?
     </MudText>
 }
+@{
+    // Consecutive active weeks for this goal
+    var cawToday = DateOnly.FromDateTime(DateTime.Today);
+    var cawWeekStreak = 0;
+    for (int cawW = 0; cawW < 52; cawW++)
+    {
+        var cawMonday = cawToday.AddDays(-(((int)DateTime.Today.DayOfWeek + 6) % 7) - cawW * 7);
+        var cawHasNote = Enumerable.Range(0, 7).Any(d => goalActiveDates.Contains(cawMonday.AddDays(d)));
+        if (cawHasNote) cawWeekStreak++;
+        else break;
+    }
+}
+@if (cawWeekStreak >= 2 && Goal.CompletionDate is null)
+{
+    var cawMsg = cawWeekStreak >= 12 ? $"🗓️ <strong>{cawWeekStreak}-week active streak</strong> — legendary consistency over months!"
+               : cawWeekStreak >= 6 ? $"🗓️ <strong>{cawWeekStreak}-week active streak</strong> — every week you show up for this goal!"
+               : $"🗓️ <strong>{cawWeekStreak} consecutive weeks</strong> with progress on this goal — great habit!";
+    <MudText Typo="Typo.caption" Color="Color.Info" Class="mb-2">@((MarkupString)cawMsg)</MudText>
+}
 @if (longestGapDays >= 7 && ProgressEntries.Count >= 3)
 {
     var lgNowMs2 = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
