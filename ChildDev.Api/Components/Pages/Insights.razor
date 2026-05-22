@@ -458,18 +458,25 @@ else if (JourneyMonths >= 6)
 {
     var hmToday = DateOnly.FromDateTime(DateTime.Today);
     <MudPaper Elevation="1" Class="pa-4 mb-6" Style="border-radius:12px;">
-        <MudText Typo="Typo.subtitle2" Class="mb-3">Progress Notes — Last 5 Weeks</MudText>
+        <MudText Typo="Typo.subtitle2" Class="mb-3">Progress Notes — Last 12 Weeks</MudText>
         @{
-            var startDay = hmToday.AddDays(-34);
+            var startDay = hmToday.AddDays(-83);
+            var hmMonthLabels = new List<(int Col, string Label)>();
+            for (int di = 0; di < 84; di++)
+            {
+                var d = startDay.AddDays(di);
+                if (d.Day <= 7) hmMonthLabels.Add((di % 7, d.ToString("MMM")));
+            }
         }
-        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;max-width:280px;">
-            @for (int di = 0; di < 35; di++)
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;max-width:@(7 * 18 + 18)px;">
+            @for (int di = 0; di < 84; di++)
             {
                 var day = startDay.AddDays(di);
                 var count = ProgressHeatmap.GetValueOrDefault(day, 0);
                 var bg = count == 0 ? "#e8eaf6" : count == 1 ? "#90CAF9" : count <= 3 ? "#42A5F5" : "#1565C0";
                 var tip = count == 0 ? day.ToString("MMM d") : $"{day:MMM d}: {count} note{(count == 1 ? "" : "s")}";
-                <div title="@tip" style="width:100%;aspect-ratio:1;border-radius:3px;background:@bg;cursor:default;"></div>
+                var border = day == hmToday ? "2px solid var(--mud-palette-primary)" : "none";
+                <div title="@tip" style="width:100%;aspect-ratio:1;border-radius:3px;background:@bg;border:@border;cursor:default;opacity:@(day > hmToday ? "0.3" : "1")"></div>
             }
         </div>
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
@@ -1126,10 +1133,10 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
         if (lastProgressMs.HasValue)
             DaysSinceLastProgress = (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - lastProgressMs.Value) / 86_400_000L);
 
-        // Progress heatmap: notes per day for last 35 days
-        var day35Ms = DateTimeOffset.UtcNow.AddDays(-35).ToUnixTimeMilliseconds();
+        // Progress heatmap: notes per day for last 84 days (12 weeks)
+        var day84Ms = DateTimeOffset.UtcNow.AddDays(-84).ToUnixTimeMilliseconds();
         var recentProgressTs = await Db.GoalProgresses
-            .Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null && p.UpdatedOn >= day35Ms)
+            .Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null && p.UpdatedOn >= day84Ms)
             .Select(p => p.UpdatedOn)
             .ToListAsync();
         ProgressHeatmap = recentProgressTs
