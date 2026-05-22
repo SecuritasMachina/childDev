@@ -6,7 +6,7 @@
 @inject WebAnalyticsService Analytics
 @inject IJSRuntime JS
 
-<PageTitle>Goal Progress – ChildDev</PageTitle>
+<PageTitle>@(Goal is not null ? $"{(Goal.GoalText?.Length > 50 ? Goal.GoalText[..50] + "…" : Goal.GoalText)} – ChildDev" : "Goal – ChildDev")</PageTitle>
 
 @if (AccountGuid is null)
 {
@@ -1847,7 +1847,7 @@ else
             @(Goal?.GoalText is { Length: > 40 } gt40 ? gt40[..40] + "…" : Goal?.GoalText ?? "")
         </MudChip>
         <MudTextField @bind-Value="_newTodoTitle" Label="What needs to be done?" Variant="Variant.Outlined"
-                      Class="mb-4" AutoFocus="true" />
+                      Class="mb-4" AutoFocus="true" Immediate="true" />
         <MudTextField @bind-Value="_newTodoNotes" Label="Additional notes (optional)" Variant="Variant.Outlined"
                       Lines="2" Class="mb-4" />
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
