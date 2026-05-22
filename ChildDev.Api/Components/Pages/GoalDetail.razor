@@ -1583,6 +1583,9 @@ else
     <MudButton Variant="Variant.Outlined" Color="Color.Primary"
                StartIcon="@Icons.Material.Filled.Add"
                OnClick="OpenAddProgressDialog">Add Progress Note</MudButton>
+    <MudButton Variant="Variant.Outlined" Color="Color.Info"
+               StartIcon="@Icons.Material.Filled.AddTask"
+               OnClick="OpenAddTodoDialog">Create Todo</MudButton>
     @if (Goal.CompletionDate is null)
     {
         <MudButton Variant="Variant.Outlined" Color="Color.Success"
@@ -1596,6 +1599,27 @@ else
                    OnClick="CelebrateToday">🎊 Celebrate!</MudButton>
     }
 </MudStack>
+
+<MudDialog @bind-Visible="_showAddTodoDialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.AddTask" Class="mr-2" />
+            Create Todo for This Goal
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_newTodoTitle" Label="What needs to be done?" Variant="Variant.Outlined"
+                      Class="mb-4" AutoFocus="true" />
+        <MudTextField @bind-Value="_newTodoNotes" Label="Notes (optional)" Variant="Variant.Outlined"
+                      Lines="2" Class="mb-4" />
+        <MudDatePicker @bind-Date="_newTodoDueDate" Label="Due date (optional)" Variant="Variant.Outlined" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _showAddTodoDialog = false">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveNewTodo"
+                   Disabled="@string.IsNullOrWhiteSpace(_newTodoTitle)">Add Todo</MudButton>
+    </DialogActions>
+</MudDialog>
 
 <MudDialog @bind-Visible="ShowCelebration" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
     <DialogContent>
@@ -1807,6 +1831,10 @@ else
     private string MilestoneEmoji = "⭐";
     private string MilestoneMessage = string.Empty;
     private int _animLvlPct = 0;
+    private bool _showAddTodoDialog;
+    private string _newTodoTitle = string.Empty;
+    private string? _newTodoNotes;
+    private DateTime? _newTodoDueDate;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -1924,6 +1952,37 @@ else
             ? DateTimeOffset.FromUnixTimeMilliseconds(Goal.NextMeetingDate.Value).LocalDateTime
             : null;
         ShowAddDialog = true;
+    }
+
+    private void OpenAddTodoDialog()
+    {
+        var goalName = Goal?.GoalText ?? string.Empty;
+        _newTodoTitle = goalName.Length > 60 ? goalName[..60] : goalName;
+        _newTodoNotes = null;
+        _newTodoDueDate = null;
+        _showAddTodoDialog = true;
+    }
+
+    private async Task SaveNewTodo()
+    {
+        var title = _newTodoTitle.Trim();
+        if (string.IsNullOrWhiteSpace(title)) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        Db.Todos.Add(new ChildDev.Api.Models.Entities.Todo
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = AccountGuid!,
+            Title = title,
+            Notes = string.IsNullOrWhiteSpace(_newTodoNotes) ? null : _newTodoNotes.Trim(),
+            DueDate = _newTodoDueDate.HasValue
+                ? new DateTimeOffset(DateTime.SpecifyKind(_newTodoDueDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
+                : null,
+            UpdatedOn = now
+        });
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("todo_add_from_goal", AccountGuid, "goal_detail", GoalGuid);
+        _showAddTodoDialog = false;
+        Snackbar.Add("Todo created! View it in the Todos section.", Severity.Success);
     }
 
     private async Task AddProgress()
