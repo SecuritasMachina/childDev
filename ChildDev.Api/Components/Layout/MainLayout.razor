@@ -392,7 +392,7 @@
             .Select(t => new { t.Guid, Title = t.Title ?? "" })
             .Take(5).ToListAsync();
         results.AddRange(todos.Select(t =>
-            new SearchResult("Todos", t.Title, "/todos", Icons.Material.Filled.CheckBox)));
+            new SearchResult("Todos", t.Title, $"/todos?search={Uri.EscapeDataString(q)}", Icons.Material.Filled.CheckBox)));
 
         var journals = await Db.Journals
             .Where(j => j.AccountFk == accountGuid && j.DeletedAt == null
@@ -406,7 +406,7 @@
             var preview = string.IsNullOrWhiteSpace(notes)
                 ? (j.Tags ?? "")
                 : notes.Length > 80 ? notes[..80] + "…" : notes;
-            return new SearchResult("Journal", preview, "/journal", Icons.Material.Filled.Book);
+            return new SearchResult("Journal", preview, $"/journal?search={Uri.EscapeDataString(q)}", Icons.Material.Filled.Book);
         }));
 
         _searchResults = results;

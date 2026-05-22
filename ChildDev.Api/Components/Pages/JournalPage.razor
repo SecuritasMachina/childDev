@@ -847,6 +847,9 @@ else
     [SupplyParameterFromQuery(Name = "tag")]
     private string? TagParam { get; set; }
 
+    [SupplyParameterFromQuery(Name = "search")]
+    private string? SearchParam { get; set; }
+
     private const int PageSize = 20;
     private string? AccountGuid;
     private HashSet<string> _expandedGuids = new();
@@ -992,6 +995,8 @@ else
         _activeGoalNameToGuid = activeGoals.ToDictionary(g => g.GoalText!, g => g.Guid, StringComparer.OrdinalIgnoreCase);
         if (!string.IsNullOrWhiteSpace(TagParam))
             TagFilter = TagParam;
+        if (!string.IsNullOrWhiteSpace(SearchParam))
+            FilterText = SearchParam;
         await LoadEntries();
         await Analytics.TrackAsync("page_view", AccountGuid, "journal");
     }
