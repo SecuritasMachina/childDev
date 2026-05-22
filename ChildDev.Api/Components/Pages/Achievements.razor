@@ -155,32 +155,46 @@
         // Load aggregate data
         var goals = await Db.Goals
             .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null)
-            .Select(g => new { g.EnteredDate, g.CompletionDate })
+            .Select(g => new { g.EnteredDate, g.CompletionDate, g.MeasurableOutcome })
             .ToListAsync();
         var completedGoals = goals.Where(g => g.CompletionDate.HasValue).OrderBy(g => g.CompletionDate).ToList();
         var firstGoalDate = goals.Count > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(goals.Min(g => g.EnteredDate)).LocalDateTime : (DateTime?)null;
         var firstCompleteDate = completedGoals.Count > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(completedGoals[0].CompletionDate!.Value).LocalDateTime : (DateTime?)null;
+        var goalsWithOutcome = goals.Count(g => !string.IsNullOrWhiteSpace(g.MeasurableOutcome));
 
-        var progressNotes = await Db.GoalProgresses
+        var progressNotesFull = await Db.GoalProgresses
             .Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null)
-            .Select(p => p.UpdatedOn)
-            .OrderBy(p => p)
+            .Select(p => new { p.UpdatedOn, p.NextStepItems })
+            .OrderBy(p => p.UpdatedOn)
             .ToListAsync();
+        var progressNotes = progressNotesFull.Select(p => p.UpdatedOn).ToList();
         var firstNoteDate = progressNotes.Count > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(progressNotes[0]).LocalDateTime : (DateTime?)null;
+        var maxNoteWordCount = progressNotesFull
+            .Where(p => !string.IsNullOrWhiteSpace(p.NextStepItems))
+            .Select(p => p.NextStepItems!.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length)
+            .DefaultIfEmpty(0).Max();
 
-        var todos = await Db.Todos
+        var todosFull = await Db.Todos
             .Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt.HasValue)
-            .Select(t => t.CompletedAt!.Value)
-            .OrderBy(t => t)
+            .Select(t => new { t.CompletedAt, t.DueDate })
+            .OrderBy(t => t.CompletedAt)
             .ToListAsync();
+        var todos = todosFull.Select(t => t.CompletedAt!.Value).ToList();
         var firstTodoDate = todos.Count > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(todos[0]).LocalDateTime : (DateTime?)null;
+        var onTimeCount = todosFull.Count(t => t.DueDate.HasValue && t.CompletedAt!.Value <= t.DueDate.Value);
 
-        var journals = await Db.Journals
+        var journalsFull = await Db.Journals
             .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null)
-            .Select(j => j.EnteredDate)
-            .OrderBy(j => j)
+            .Select(j => new { j.EnteredDate, j.Mood, j.Notes })
+            .OrderBy(j => j.EnteredDate)
             .ToListAsync();
+        var journals = journalsFull.Select(j => j.EnteredDate).ToList();
         var firstJournalDate = journals.Count > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(journals[0]).LocalDateTime : (DateTime?)null;
+        var journalWithMoodCount = journalsFull.Count(j => !string.IsNullOrWhiteSpace(j.Mood));
+        var maxJournalWordCount = journalsFull
+            .Where(j => !string.IsNullOrWhiteSpace(j.Notes))
+            .Select(j => j.Notes!.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length)
+            .DefaultIfEmpty(0).Max();
 
         // Streak computation (progress notes + journals + todos combined)
         var allActivityMs = progressNotes.Concat(todos).Concat(journals).ToList();
@@ -222,6 +236,7 @@
                 MakeBadge("🌟", "Goal Legend", "Complete 25 goals", completedGoals.Count >= 25, completedGoals.Count >= 25 ? DateTimeOffset.FromUnixTimeMilliseconds(completedGoals[24].CompletionDate!.Value).LocalDateTime : null, completedGoals.Count < 25 ? $"{completedGoals.Count}/25 completed" : null),
                 MakeBadge("🚀", "Ambitious", "Set 5 goals", goals.Count >= 5, null, goals.Count < 5 ? $"{goals.Count}/5 goals" : null),
                 MakeBadge("💫", "Dream Big", "Set 20 goals", goals.Count >= 20, null, goals.Count < 20 ? $"{goals.Count}/20 goals" : null),
+                MakeBadge("📏", "Measurable", "Add success criteria to 3 goals", goalsWithOutcome >= 3, null, goalsWithOutcome < 3 ? $"{goalsWithOutcome}/3 goals with criteria" : null),
             ]),
             new BadgeCategory("📝", "Progress Notes", "rgba(67,160,71,.85)", "rgba(27,94,32,.9)",
             [
@@ -229,6 +244,7 @@
                 MakeBadge("📋", "Note Taker", "Write 10 progress notes", progressNotes.Count >= 10, progressNotes.Count >= 10 ? DateTimeOffset.FromUnixTimeMilliseconds(progressNotes[9]).LocalDateTime : null, progressNotes.Count < 10 ? $"{progressNotes.Count}/10 notes" : null),
                 MakeBadge("🗒️", "Dedicated", "Write 50 progress notes", progressNotes.Count >= 50, progressNotes.Count >= 50 ? DateTimeOffset.FromUnixTimeMilliseconds(progressNotes[49]).LocalDateTime : null, progressNotes.Count < 50 ? $"{progressNotes.Count}/50 notes" : null),
                 MakeBadge("📚", "Master Tracker", "Write 200 progress notes", progressNotes.Count >= 200, progressNotes.Count >= 200 ? DateTimeOffset.FromUnixTimeMilliseconds(progressNotes[199]).LocalDateTime : null, progressNotes.Count < 200 ? $"{progressNotes.Count}/200 notes" : null),
+                MakeBadge("🖊️", "Word Wizard", "Write a note with 100+ words", maxNoteWordCount >= 100, null, maxNoteWordCount < 100 ? $"Best: {maxNoteWordCount} words" : null),
             ]),
             new BadgeCategory("✅", "Todos", "rgba(229,57,53,.85)", "rgba(183,28,28,.9)",
             [
@@ -236,6 +252,7 @@
                 MakeBadge("💪", "Getting Things Done", "Complete 25 todos", todos.Count >= 25, todos.Count >= 25 ? DateTimeOffset.FromUnixTimeMilliseconds(todos[24]).LocalDateTime : null, todos.Count < 25 ? $"{todos.Count}/25 todos" : null),
                 MakeBadge("⚡", "Productivity Pro", "Complete 100 todos", todos.Count >= 100, todos.Count >= 100 ? DateTimeOffset.FromUnixTimeMilliseconds(todos[99]).LocalDateTime : null, todos.Count < 100 ? $"{todos.Count}/100 todos" : null),
                 MakeBadge("🔥", "Machine", "Complete 500 todos", todos.Count >= 500, todos.Count >= 500 ? DateTimeOffset.FromUnixTimeMilliseconds(todos[499]).LocalDateTime : null, todos.Count < 500 ? $"{todos.Count}/500 todos" : null),
+                MakeBadge("⏰", "On Time", "Complete 5 todos by their due date", onTimeCount >= 5, null, onTimeCount < 5 ? $"{onTimeCount}/5 on-time completions" : null),
             ]),
             new BadgeCategory("📓", "Journal", "rgba(2,136,209,.85)", "rgba(1,87,155,.9)",
             [
@@ -243,11 +260,14 @@
                 MakeBadge("✍️", "Reflection Builder", "Write 10 journal entries", journals.Count >= 10, journals.Count >= 10 ? DateTimeOffset.FromUnixTimeMilliseconds(journals[9]).LocalDateTime : null, journals.Count < 10 ? $"{journals.Count}/10 entries" : null),
                 MakeBadge("🖋️", "Storyteller", "Write 50 journal entries", journals.Count >= 50, journals.Count >= 50 ? DateTimeOffset.FromUnixTimeMilliseconds(journals[49]).LocalDateTime : null, journals.Count < 50 ? $"{journals.Count}/50 entries" : null),
                 MakeBadge("🏅", "Author", "Write 200 journal entries", journals.Count >= 200, journals.Count >= 200 ? DateTimeOffset.FromUnixTimeMilliseconds(journals[199]).LocalDateTime : null, journals.Count < 200 ? $"{journals.Count}/200 entries" : null),
+                MakeBadge("😊", "Mood Tracker", "Record your mood in 10 entries", journalWithMoodCount >= 10, null, journalWithMoodCount < 10 ? $"{journalWithMoodCount}/10 mood entries" : null),
+                MakeBadge("📜", "Deep Thinker", "Write a journal entry with 200+ words", maxJournalWordCount >= 200, null, maxJournalWordCount < 200 ? $"Best: {maxJournalWordCount} words" : null),
             ]),
             new BadgeCategory("🔥", "Streaks", "rgba(249,168,37,.9)", "rgba(230,81,0,.9)",
             [
                 MakeBadge("⚡", "3-Day Streak", "Be active 3 days in a row", maxStreak >= 3, null, maxStreak < 3 ? $"Best: {maxStreak} days" : null),
                 MakeBadge("🔥", "Week Warrior", "Be active 7 days in a row", maxStreak >= 7, null, maxStreak < 7 ? $"Best: {maxStreak} days" : null),
+                MakeBadge("💎", "Two-Week Strong", "Be active 14 days in a row", maxStreak >= 14, null, maxStreak < 14 ? $"Best: {maxStreak} days" : null),
                 MakeBadge("🌟", "Month Master", "Be active 30 days in a row", maxStreak >= 30, null, maxStreak < 30 ? $"Best: {maxStreak} days" : null),
                 MakeBadge("🏆", "Unstoppable", "Be active 100 days in a row", maxStreak >= 100, null, maxStreak < 100 ? $"Best: {maxStreak} days" : null),
             ]),
