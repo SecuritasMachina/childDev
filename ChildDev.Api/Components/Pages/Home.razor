@@ -1705,7 +1705,9 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         <MudTextField @bind-Value="NewMeasurableOutcome" Label="How will you measure success? (optional)"
                       Variant="Variant.Outlined" HelperText="e.g. Read 10 books, Tie shoes independently" Class="mb-4" />
         <MudDatePicker @bind-Date="NewGoalExpirationDate" Label="Target completion date (optional)"
-                       Variant="Variant.Outlined" HelperText="When do you want to achieve this by?" />
+                       Variant="Variant.Outlined" HelperText="When do you want to achieve this by?" Class="mb-4" />
+        <MudDatePicker @bind-Date="NewGoalNextMeetingDate" Label="Next check-in / meeting date (optional)"
+                       Variant="Variant.Outlined" HelperText="Schedule a review to check on progress" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => ShowAddDialog = false">Cancel</MudButton>
@@ -1751,6 +1753,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private string NewGoalText = string.Empty;
     private string? NewMeasurableOutcome;
     private DateTime? NewGoalExpirationDate;
+    private DateTime? NewGoalNextMeetingDate;
     private int PendingTodoCount;
     private int OverdueTodoCount;
     private int TodosDueToday;
@@ -2166,6 +2169,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         NewGoalText = string.Empty;
         NewMeasurableOutcome = null;
         NewGoalExpirationDate = null;
+        NewGoalNextMeetingDate = null;
         ShowAddDialog = true;
     }
 
@@ -2178,6 +2182,9 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         long? expirationMs = NewGoalExpirationDate.HasValue
             ? new DateTimeOffset(DateTime.SpecifyKind(NewGoalExpirationDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
             : null;
+        long? nextMeetingMs = NewGoalNextMeetingDate.HasValue
+            ? new DateTimeOffset(DateTime.SpecifyKind(NewGoalNextMeetingDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
+            : null;
         Db.Goals.Add(new Goal
         {
             Guid = System.Guid.NewGuid().ToString(),
@@ -2185,6 +2192,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
             GoalText = text,
             MeasurableOutcome = string.IsNullOrWhiteSpace(NewMeasurableOutcome) ? null : NewMeasurableOutcome.Trim(),
             ExpirationDate = expirationMs,
+            NextMeetingDate = nextMeetingMs,
             EnteredDate = now,
             UpdatedOn = now
         });
@@ -2193,6 +2201,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         NewGoalText = string.Empty;
         NewMeasurableOutcome = null;
         NewGoalExpirationDate = null;
+        NewGoalNextMeetingDate = null;
         ShowAddDialog = false;
         await Analytics.TrackAsync("goal_add", AccountGuid, "home");
         Snackbar.Add("Goal added!", Severity.Success);
