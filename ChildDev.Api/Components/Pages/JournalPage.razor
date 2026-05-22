@@ -484,6 +484,8 @@ else
         @foreach (var j in Entries)
         {
             var enteredDate = DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime;
+            var jWc = string.IsNullOrWhiteSpace(j.Notes) ? 0 : j.Notes.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
+            var jWcLabel = jWc >= 150 ? $"📖 Deep entry · {jWc} words" : jWc >= 50 ? $"📝 {jWc} words" : (string?)null;
             <MudItem xs="12" sm="6" md="4">
                 <MudCard Elevation="2" Class="h-100">
                     <MudCardHeader>
@@ -507,6 +509,10 @@ else
                             @if (!string.IsNullOrWhiteSpace(j.Notes))
                             {
                                 <MudText Typo="Typo.body2">@(j.Notes.Length > 200 ? j.Notes[..200] + "…" : j.Notes)</MudText>
+                                @if (jWcLabel is not null)
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">@jWcLabel</MudText>
+                                }
                             }
                             @if (!string.IsNullOrWhiteSpace(j.EmotionReason))
                             {
