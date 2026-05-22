@@ -1908,6 +1908,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private string? FirstTodoDueTodayTitle;
     private List<(string Guid, string Title, long? DueDate)> TopPendingTodos = [];
     private int JournalThisWeek;
+    private int TotalJournalCount;
     private int TodosCompletedThisWeek;
     private int TodosCompletedToday;
     private string? MostFocusedGoalThisWeekName;
@@ -2015,6 +2016,8 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         var weekStartMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
         JournalThisWeek = await Db.Journals
             .CountAsync(j => j.AccountFk == AccountGuid && j.DeletedAt == null && j.EnteredDate >= weekStartMs);
+        TotalJournalCount = await Db.Journals
+            .CountAsync(j => j.AccountFk == AccountGuid && j.DeletedAt == null);
         TodosCompletedThisWeek = await Db.Todos
             .CountAsync(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt != null && t.CompletedAt >= weekStartMs);
         TodosCompletedToday = await Db.Todos
@@ -2554,10 +2557,20 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         Snackbar.Add("✅ Todo done!", Severity.Success);
     }
 
+    private static string? JournalCountMilestone(int count) => count switch
+    {
+        10  => "🎉 10 journal entries! You've built a real reflection habit — keep going!",
+        25  => "🌟 25 journal entries! A quarter-century of reflections — incredible dedication!",
+        50  => "🏆 50 journal entries! Half-century milestone — you're a journaling champion!",
+        100 => "🌟🌟 100 journal entries! LEGENDARY! You've written a life chapter worth reading!",
+        _   => null
+    };
+
     private async Task SaveQuickJournal()
     {
         var text = QuickJournalText.Trim();
         if (string.IsNullOrWhiteSpace(text)) return;
+        var newTotal = TotalJournalCount + 1;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         Db.Journals.Add(new Journal
         {
@@ -2574,7 +2587,16 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         QuickJournalText = string.Empty;
         QuickJournalMood = string.Empty;
         QuickJournalGoalTag = string.Empty;
-        Snackbar.Add("Journal entry saved!", Severity.Success);
+        var milestoneMsg = JournalCountMilestone(newTotal);
+        if (milestoneMsg is not null)
+        {
+            await Analytics.TrackAsync("journal_milestone", AccountGuid, "home", newTotal.ToString());
+            Snackbar.Add(milestoneMsg, Severity.Success, opts => opts.VisibleStateDuration = 7000);
+        }
+        else
+        {
+            Snackbar.Add("Journal entry saved!", Severity.Success);
+        }
         await LoadStats();
         StateHasChanged();
     }
