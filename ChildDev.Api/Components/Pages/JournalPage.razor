@@ -737,7 +737,19 @@ else
     <DialogContent>
         <MudTextField @bind-Value="EditNotes" Label="Notes" Variant="Variant.Outlined"
                       Lines="4" Class="mb-4" AutoFocus="true" />
-        <MudTextField @bind-Value="EditActivity" Label="Activity (optional)" Variant="Variant.Outlined" Class="mb-4" />
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Activity (tap to select or type below):</MudText>
+        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-2">
+            @foreach (var act in new[] { "School", "Sports", "Reading", "Art", "Music", "Family time", "Social", "Homework", "Outdoor play", "Screen time" })
+            {
+                var capturedAct = act;
+                <MudChip T="string" Size="Size.Small"
+                         Variant="@(EditActivity == capturedAct ? Variant.Filled : Variant.Outlined)"
+                         Color="@(EditActivity == capturedAct ? Color.Primary : Color.Default)"
+                         Style="cursor:pointer;"
+                         OnClick="() => EditActivity = (EditActivity == capturedAct ? string.Empty : capturedAct)">@act</MudChip>
+            }
+        </MudStack>
+        <MudTextField @bind-Value="EditActivity" Label="Or type your own activity (optional)" Variant="Variant.Outlined" Class="mb-4" />
         <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-2">
             @foreach (var mood in new[] { "😊 happy", "🤩 excited", "🙏 grateful", "😤 proud", "😌 calm", "🎯 focused", "😢 sad", "😴 tired", "😰 anxious", "😠 angry" })
             {
