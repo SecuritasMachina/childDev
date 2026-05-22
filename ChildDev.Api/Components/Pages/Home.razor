@@ -1134,7 +1134,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                        StartIcon="@Icons.Material.Filled.TrendingUp">View Progress</MudButton>
             <MudButton Variant="Variant.Outlined" Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.Add"
-                       OnClick="() => OpenQuickNote(fg.Guid)">Add Note</MudButton>
+                       OnClick="async () => await OpenQuickNote(fg.Guid)">Add Note</MudButton>
             @if (fg.CompletionDate is null)
             {
                 <MudButton Variant="Variant.Outlined" Color="Color.Success"
@@ -1342,7 +1342,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                                Href="@($"/goals/{g.Guid}")">View</MudButton>
                     <MudButton Variant="Variant.Text" Color="Color.Secondary"
                                StartIcon="@Icons.Material.Filled.Add"
-                               OnClick="() => OpenQuickNote(g.Guid)">Note</MudButton>
+                               OnClick="async () => await OpenQuickNote(g.Guid)">Note</MudButton>
                     <MudSpacer />
                     <MudIconButton Icon="@Icons.Material.Filled.CheckCircle"
                                    Color="Color.Success" aria-label="Mark goal complete"
@@ -1398,7 +1398,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                             </MudStack>
                             <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
                                        StartIcon="@Icons.Material.Filled.Add"
-                                       OnClick="() => OpenQuickNote(sg.Guid)">Add Note</MudButton>
+                                       OnClick="async () => await OpenQuickNote(sg.Guid)">Add Note</MudButton>
                         </MudStack>
                     </MudListItem>
                 }
@@ -1737,6 +1737,20 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         </MudStack>
     </TitleContent>
     <DialogContent>
+        @if (_quickNotePrevNote is not null)
+        {
+            var prevSnip = _quickNotePrevNote.Length > 100 ? _quickNotePrevNote[..100] + "…" : _quickNotePrevNote;
+            <MudPaper Elevation="0" Class="pa-2 mb-3" Style="border-radius:8px;background:var(--mud-palette-background-grey);border-left:3px solid var(--mud-palette-primary-lighten);">
+                <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="1">
+                    <MudStack Spacing="0" Style="flex:1">
+                        <MudText Typo="Typo.caption" Color="Color.Primary" Style="font-weight:600;">📋 Last note:</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@prevSnip</MudText>
+                    </MudStack>
+                    <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
+                               OnClick="@(() => QuickNoteText = _quickNotePrevNote!)">Use</MudButton>
+                </MudStack>
+            </MudPaper>
+        }
         @if (string.IsNullOrWhiteSpace(QuickNoteText))
         {
             <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">💡 Quick-start prompts:</MudText>
@@ -1900,6 +1914,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private string? QuickNoteGoalGuid;
     private string? QuickNoteGoalText;
     private string QuickNoteText = string.Empty;
+    private string? _quickNotePrevNote;
     private string? _confirmDeleteGoalGuid;
     private bool IsNewWeeklyRecord;
     private int ProgressNotesToday;
@@ -2436,11 +2451,21 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         await LoadStats();
     }
 
-    private void OpenQuickNote(string goalGuid)
+    private async Task OpenQuickNote(string goalGuid)
     {
         QuickNoteGoalGuid = goalGuid;
         QuickNoteGoalText = AllActiveGoals.FirstOrDefault(g => g.Guid == goalGuid)?.GoalText;
         QuickNoteText = string.Empty;
+        _quickNotePrevNote = null;
+        if (AccountGuid is not null)
+        {
+            var prevNote = await Db.GoalProgresses
+                .Where(p => p.GoalFk == goalGuid && p.AccountFk == AccountGuid && p.DeletedAt == null)
+                .OrderByDescending(p => p.UpdatedOn)
+                .Select(p => p.NextStepItems)
+                .FirstOrDefaultAsync();
+            _quickNotePrevNote = prevNote;
+        }
         ShowQuickNoteDialog = true;
     }
 
