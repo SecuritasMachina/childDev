@@ -1423,6 +1423,30 @@ else if (bestGoalStreak >= 2 && goalStreak < bestGoalStreak)
               Class="mb-4" />
 }
 
+@if (ProgressEntries.Count >= 3)
+{
+    var ghmToday = DateOnly.FromDateTime(DateTime.Today);
+    var ghmStart = ghmToday.AddDays(-83);
+    var ghmDays = ProgressEntries
+        .Select(p => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime))
+        .GroupBy(d => d)
+        .ToDictionary(g => g.Key, g => g.Count());
+    <MudPaper Elevation="0" Class="pa-3 mb-4" Style="border-radius:10px;background:var(--mud-palette-background-grey);">
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-weight:600;" Class="mb-2">Note activity — last 12 weeks</MudText>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;max-width:@(7 * 16 + 12)px;">
+            @for (int di = 0; di < 84; di++)
+            {
+                var ghmDay = ghmStart.AddDays(di);
+                var cnt = ghmDays.GetValueOrDefault(ghmDay, 0);
+                var bg = cnt == 0 ? "var(--mud-palette-surface-variant, #e8eaf6)" : cnt == 1 ? "#7986CB" : "#3949AB";
+                var tip = cnt == 0 ? ghmDay.ToString("MMM d") : $"{ghmDay:MMM d}: {cnt} note{(cnt == 1 ? "" : "s")}";
+                var border = ghmDay == ghmToday ? "2px solid var(--mud-palette-secondary)" : "none";
+                <div title="@tip" style="width:100%;aspect-ratio:1;border-radius:3px;background:@bg;border:@border;cursor:default;opacity:@(ghmDay > ghmToday ? "0.3" : "1")"></div>
+            }
+        </div>
+    </MudPaper>
+}
+
 @{
     var bestNoteGuid = ProgressEntries
         .Where(p => !string.IsNullOrWhiteSpace(p.NextStepItems) && p.NextStepItems.Length >= 30)
