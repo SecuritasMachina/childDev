@@ -1604,20 +1604,49 @@ else
             <span></span><span></span><span></span><span></span>
             <span></span><span></span><span></span><span></span>
         </div>
-        <MudStack AlignItems="AlignItems.Center" Spacing="3" Class="pa-4">
+        <MudStack AlignItems="AlignItems.Center" Spacing="2" Class="pa-4">
             <MudText Typo="Typo.h2" Class="celeb-emoji">🎉</MudText>
             <MudText Typo="Typo.h5" Align="Align.Center" Color="Color.Success">Goal Achieved!</MudText>
             <MudText Typo="Typo.body1" Align="Align.Center" Color="Color.Secondary">
                 @Goal?.GoalText
             </MudText>
-            <MudText Typo="Typo.body2" Align="Align.Center">
-                Amazing work! Every big achievement starts with a single step. 🌟
+            @{
+                var celebDays = Goal is not null ? (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - Goal.EnteredDate) / 86_400_000L) : 0;
+                var celebNotes = ProgressEntries.Count;
+                var celebWords = ProgressEntries.Where(p => !string.IsNullOrWhiteSpace(p.NextStepItems)).Sum(p => p.NextStepItems!.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length);
+                var celebDurLabel = celebDays >= 365 ? $"{celebDays / 365} year{(celebDays / 365 == 1 ? "" : "s")}" : celebDays >= 30 ? $"{celebDays / 30} month{(celebDays / 30 == 1 ? "" : "s")}" : $"{celebDays} day{(celebDays == 1 ? "" : "s")}";
+            }
+            <MudGrid Spacing="2" Class="mt-1">
+                <MudItem xs="4">
+                    <MudPaper Elevation="0" Class="pa-2 text-center" Style="border-radius:8px;background:rgba(76,175,80,.08);">
+                        <MudText Typo="Typo.h6" Color="Color.Success">@celebDurLabel</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Journey</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudPaper Elevation="0" Class="pa-2 text-center" Style="border-radius:8px;background:rgba(63,81,181,.08);">
+                        <MudText Typo="Typo.h6" Color="Color.Primary">@celebNotes</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Note@(celebNotes == 1 ? "" : "s")</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudPaper Elevation="0" Class="pa-2 text-center" Style="border-radius:8px;background:rgba(255,152,0,.08);">
+                        <MudText Typo="Typo.h6" Color="Color.Warning">~@celebWords</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Words</MudText>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+            <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary" Class="mt-1">
+                🌟 You set this goal and saw it through — that takes real grit. Be proud of this win!
             </MudText>
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true"
-                   OnClick="() => ShowCelebration = false">Awesome! 🙌</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Default"
+                   OnClick="() => ShowCelebration = false">Done</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Success"
+                   StartIcon="@Icons.Material.Filled.Flag"
+                   Href="/">Set New Goal 🎯</MudButton>
     </DialogActions>
 </MudDialog>
 
