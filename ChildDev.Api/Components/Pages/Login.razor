@@ -24,7 +24,7 @@
                     <MudAlert Severity="Severity.Error" Class="mb-4">@Error</MudAlert>
                 }
                 <MudTextField @bind-Value="NickName" Label="Nickname" Variant="Variant.Outlined"
-                              Class="mb-4" Immediate="true"
+                              Class="mb-4" Immediate="true" AutoFocus="true"
                               @onkeydown="@(async (e) => { if (e.Key == "Enter") await DoLogin(); })" />
                 <MudTextField @bind-Value="Pin" Label="PIN" Variant="Variant.Outlined"
                               Immediate="true"

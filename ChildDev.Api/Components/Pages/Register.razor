@@ -32,7 +32,7 @@
                     <MudAlert Severity="Severity.Error" Class="mb-4">@Error</MudAlert>
                 }
                 <MudTextField @bind-Value="NickName" Label="Nickname" Variant="Variant.Outlined"
-                              Immediate="true"
+                              Immediate="true" AutoFocus="true"
                               @onkeydown="@(async (e) => { if (e.Key == "Enter") await DoRegister(); })"
                               Class="mb-4" HelperText="Choose a name (1–50 characters)" />
                 <MudTextField @bind-Value="Pin" Label="PIN" Variant="Variant.Outlined"
@@ -41,8 +41,22 @@
                               Adornment="Adornment.End" AdornmentIcon="@PinEyeIcon"
                               OnAdornmentClick="TogglePinVisibility"
                               @onkeydown="@(async (e) => { if (e.Key == "Enter") await DoRegister(); })"
-                              Class="mb-4"
+                              Class="mb-1"
                               HelperText="At least 4 characters — remember this to log back in" />
+                @if (Pin.Length > 0)
+                {
+                    var pinLen = Pin.Length;
+                    var (pinStrLabel, pinStrColor, pinStrWidth) = pinLen >= 8 ? ("Strong 💪", "#43A047", "100%")
+                        : pinLen >= 6 ? ("Good 👍", "#FB8C00", "66%")
+                        : pinLen >= 4 ? ("OK — consider longer", "#FDD835", "33%")
+                        : ("Too short", "#E53935", "16%");
+                    <div class="mb-3" style="padding: 0 2px;">
+                        <div style="height:5px;border-radius:4px;background:rgba(0,0,0,.08);overflow:hidden;">
+                            <div style="height:100%;width:@pinStrWidth;background:@pinStrColor;border-radius:4px;transition:width .3s ease,background .3s ease;"></div>
+                        </div>
+                        <MudText Typo="Typo.caption" Style="@($"color:{pinStrColor};font-weight:600;")">@pinStrLabel</MudText>
+                    </div>
+                }
                 <MudTextField @bind-Value="ConfirmPin" Label="Confirm PIN" Variant="Variant.Outlined"
                               Immediate="true"
                               InputType="@ConfirmPinInputType"
