@@ -131,6 +131,9 @@
                 <MudButton Variant="Variant.Outlined" Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Download"
                            OnClick="DownloadProgressReport">Download Report</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.DataObject"
+                           OnClick="ExportDataJson" Class="ml-2">Export All Data</MudButton>
             </MudCardActions>
         </MudCard>
         <MudCard Elevation="2" Class="mb-4">
@@ -363,5 +366,61 @@
         await JS.InvokeVoidAsync("eval", $"(function(){{var a=document.createElement('a');a.href='data:text/plain;charset=utf-8,'+encodeURIComponent({System.Text.Json.JsonSerializer.Serialize(content)});a.download={System.Text.Json.JsonSerializer.Serialize(filename)};a.click();}})()");
         await Analytics.TrackAsync("settings_download_report", AccountGuid, "settings");
         Snackbar.Add("Progress report downloaded!", Severity.Success);
+    }
+
+    private async Task ExportDataJson()
+    {
+        if (AccountGuid is null) return;
+        var goals = await Db.Goals
+            .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null)
+            .OrderByDescending(g => g.EnteredDate)
+            .ToListAsync();
+        var progressByGoal = await Db.GoalProgresses
+            .Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null)
+            .OrderByDescending(p => p.UpdatedOn)
+            .ToListAsync();
+        var journals = await Db.Journals
+            .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null)
+            .OrderByDescending(j => j.EnteredDate)
+            .ToListAsync();
+        var todos = await Db.Todos
+            .Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null)
+            .OrderByDescending(t => t.UpdatedOn)
+            .ToListAsync();
+
+        var export = new
+        {
+            ExportedAt = DateTime.UtcNow.ToString("o"),
+            NickName = CurrentNickName,
+            Goals = goals.Select(g => new
+            {
+                g.Guid, g.GoalText, g.MeasurableOutcome,
+                EnteredDate = DateTimeOffset.FromUnixTimeMilliseconds(g.EnteredDate).ToString("o"),
+                CompletionDate = g.CompletionDate.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(g.CompletionDate.Value).ToString("o") : null,
+                ProgressNotes = progressByGoal.Where(p => p.GoalFk == g.Guid).Select(p => new
+                {
+                    p.NextStepItems,
+                    UpdatedOn = DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).ToString("o")
+                }).ToList()
+            }).ToList(),
+            JournalEntries = journals.Select(j => new
+            {
+                j.Notes, j.Activity, j.Mood, j.Tags,
+                EnteredDate = DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).ToString("o")
+            }).ToList(),
+            Todos = todos.Select(t => new
+            {
+                t.Title, t.Notes,
+                DueDate = t.DueDate.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(t.DueDate.Value).ToString("o") : null,
+                CompletedAt = t.CompletedAt.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(t.CompletedAt.Value).ToString("o") : null
+            }).ToList()
+        };
+
+        var opts = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
+        var json = System.Text.Json.JsonSerializer.Serialize(export, opts);
+        var filename = $"childdev-export-{DateTime.Now:yyyy-MM-dd}.json";
+        await JS.InvokeVoidAsync("eval", $"(function(){{var a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent({System.Text.Json.JsonSerializer.Serialize(json)});a.download={System.Text.Json.JsonSerializer.Serialize(filename)};a.click();}})()");
+        await Analytics.TrackAsync("settings_export_json", AccountGuid, "settings");
+        Snackbar.Add("Data exported!", Severity.Success);
     }
 }
