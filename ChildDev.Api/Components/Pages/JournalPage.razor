@@ -4,6 +4,7 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @inject ISnackbar Snackbar
 @inject WebAnalyticsService Analytics
+@inject IJSRuntime JS
 
 <PageTitle>Journal – ChildDev</PageTitle>
 
@@ -602,6 +603,12 @@ else
                             }
                         }
                         <MudSpacer />
+                        @if (!string.IsNullOrWhiteSpace(j.Notes))
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small"
+                                           title="Copy entry text" aria-label="Copy journal entry"
+                                           OnClick="() => CopyEntryText(j)" />
+                        }
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
                                        aria-label="Edit entry"
                                        OnClick="() => OpenEditEntry(j)" />
@@ -1144,6 +1151,20 @@ else
     {
         _displayCount += PageSize;
         Entries = _filteredEntries.Take(_displayCount).ToList();
+    }
+
+    private async Task CopyEntryText(Journal j)
+    {
+        var sb = new System.Text.StringBuilder();
+        var dt = DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime;
+        sb.AppendLine($"[{dt:MMMM d, yyyy}]");
+        if (!string.IsNullOrWhiteSpace(j.Activity)) sb.AppendLine($"Activity: {j.Activity}");
+        if (!string.IsNullOrWhiteSpace(j.Mood)) sb.AppendLine($"Mood: {j.Mood}");
+        if (!string.IsNullOrWhiteSpace(j.Notes)) sb.AppendLine(j.Notes);
+        if (!string.IsNullOrWhiteSpace(j.EmotionReason)) sb.AppendLine($"Why: {j.EmotionReason}");
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", sb.ToString().TrimEnd());
+        await Analytics.TrackAsync("journal_copy_entry", AccountGuid, "journal");
+        Snackbar.Add("Journal entry copied!", Severity.Info);
     }
 
     private void OpenAddDialog()
