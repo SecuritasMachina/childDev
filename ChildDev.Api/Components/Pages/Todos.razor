@@ -601,7 +601,8 @@ else
             </MudStack>
         }
         <MudTextField @bind-Value="NewTitle" Label="What needs to be done?" Variant="Variant.Outlined"
-                      Class="mb-4" AutoFocus="true" />
+                      Class="mb-4" AutoFocus="true" Immediate="true"
+                      @onkeydown="@(async (e) => { if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(NewTitle)) await AddTodo(); })" />
         @if (_activeGoals.Count > 0)
         {
             <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Link to a goal (optional):</MudText>
@@ -645,7 +646,8 @@ else
     </TitleContent>
     <DialogContent>
         <MudTextField @bind-Value="EditTitle" Label="Task" Variant="Variant.Outlined"
-                      Class="mb-4" AutoFocus="true" />
+                      Class="mb-4" AutoFocus="true" Immediate="true"
+                      @onkeydown="@(async (e) => { if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(EditTitle)) await SaveTodoEdit(); })" />
         @if (_activeGoals.Count > 0)
         {
             <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Link to a goal (optional):</MudText>
