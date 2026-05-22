@@ -44,6 +44,12 @@
         <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" Size="Size.Small"
                        OnClick="OpenEditDialog" aria-label="Edit goal" />
     }
+    @if (ProgressEntries.Count > 0)
+    {
+        <MudIconButton Icon="@Icons.Material.Filled.Share" Color="Color.Default" Size="Size.Small"
+                       title="Copy progress summary to clipboard"
+                       OnClick="CopyGoalSummary" aria-label="Copy goal progress summary" />
+    }
     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
                    OnClick="() => _confirmDeleteGoal = true" aria-label="Delete goal" />
 </MudStack>
@@ -2306,6 +2312,35 @@ else
         Snackbar.Add("Note copied!", Severity.Info);
     }
 
+    private async Task CopyGoalSummary()
+    {
+        if (Goal is null) return;
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"Goal: {Goal.GoalText}");
+        if (!string.IsNullOrWhiteSpace(Goal.MeasurableOutcome))
+            sb.AppendLine($"Success measure: {Goal.MeasurableOutcome}");
+        if (Goal.CompletionDate.HasValue)
+        {
+            var cd = DateTimeOffset.FromUnixTimeMilliseconds(Goal.CompletionDate.Value).LocalDateTime;
+            sb.AppendLine($"Completed: {cd:MMMM d, yyyy}");
+        }
+        sb.AppendLine($"Progress notes: {ProgressEntries.Count}");
+        sb.AppendLine();
+        var notes = ProgressEntries.OrderBy(p => p.UpdatedOn).ToList();
+        for (int i = 0; i < notes.Count; i++)
+        {
+            var p = notes[i];
+            var dt = DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime;
+            sb.AppendLine($"[{dt:MMM d, yyyy}] Note #{i + 1}");
+            if (!string.IsNullOrWhiteSpace(p.NextStepItems))
+                sb.AppendLine(p.NextStepItems);
+            sb.AppendLine();
+        }
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", sb.ToString().TrimEnd());
+        await Analytics.TrackAsync("goal_copy_summary", AccountGuid, "goal_detail", GoalGuid);
+        Snackbar.Add($"Progress summary copied! ({ProgressEntries.Count} notes)", Severity.Success);
+    }
+
     private async Task SaveNewTodo()
     {
         var title = _newTodoTitle.Trim();
@@ -2582,32 +2617,4 @@ else
         Snackbar.Add("Goal updated!", Severity.Success);
     }
 
-    private async Task CopyGoalSummary()
-    {
-        if (Goal is null) return;
-        var sb = new System.Text.StringBuilder();
-        sb.AppendLine($"Goal: {Goal.GoalText}");
-        if (!string.IsNullOrWhiteSpace(Goal.MeasurableOutcome))
-            sb.AppendLine($"Success measure: {Goal.MeasurableOutcome}");
-        sb.AppendLine($"Progress notes: {ProgressEntries.Count}");
-        if (ProgressEntries.Count > 0)
-        {
-            var started = DateTimeOffset.FromUnixTimeMilliseconds(ProgressEntries.Last().UpdatedOn).LocalDateTime;
-            sb.AppendLine($"Started: {started:MMM d, yyyy}");
-        }
-        if (ProgressEntries.Count > 0)
-        {
-            sb.AppendLine();
-            sb.AppendLine("Recent Progress:");
-            foreach (var p in ProgressEntries.Take(5))
-            {
-                if (string.IsNullOrWhiteSpace(p.NextStepItems)) continue;
-                var d = DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime;
-                sb.AppendLine($"  [{d:MMM d}] {p.NextStepItems}");
-            }
-        }
-        await JS.InvokeVoidAsync("navigator.clipboard.writeText", sb.ToString());
-        await Analytics.TrackAsync("goal_copy_summary", AccountGuid, "goal_detail", GoalGuid);
-        Snackbar.Add("Goal summary copied to clipboard!", Severity.Info);
-    }
 }
