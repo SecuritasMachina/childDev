@@ -1775,10 +1775,26 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     <DialogContent>
         <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Need inspiration? Try one of these:</MudText>
         <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
-            @foreach (var s in new[] { "Read more books 📚", "Get better at math ➕", "Learn a new skill 🎯", "Be more organized 📋", "Exercise regularly 🏃", "Practice an instrument 🎵", "Make more friends 🤝", "Help around the house 🏠", "Learn to cook 🍳", "Improve at a sport ⚽" })
+            @{
+                var goalSuggestions = new (string Goal, string Outcome)[] {
+                    ("Read more books 📚", "Read 10 books this year"),
+                    ("Get better at math ➕", "Score 90%+ on tests consistently"),
+                    ("Learn a new skill 🎯", "Practice for 30 minutes, 3× per week"),
+                    ("Be more organized 📋", "Complete homework before dinner every day"),
+                    ("Exercise regularly 🏃", "Exercise at least 3 times per week"),
+                    ("Practice an instrument 🎵", "Practice 20 minutes every day"),
+                    ("Make more friends 🤝", "Have a positive social interaction each week"),
+                    ("Help around the house 🏠", "Complete 3 chores per week without being asked"),
+                    ("Learn to cook 🍳", "Cook 5 different meals independently"),
+                    ("Improve at a sport ⚽", "Practice drills for 30 min, 3× per week"),
+                };
+            }
+            @foreach (var (goalText, outcomeText) in goalSuggestions)
             {
+                var capturedGoal = goalText;
+                var capturedOutcome = outcomeText;
                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
-                         Style="cursor:pointer;" OnClick="() => { NewGoalText = s; }">@s</MudChip>
+                         Style="cursor:pointer;" OnClick="() => { NewGoalText = capturedGoal; NewMeasurableOutcome = capturedOutcome; }">@goalText</MudChip>
             }
         </MudStack>
         <MudTextField @bind-Value="NewGoalText" Label="What's the goal?" Variant="Variant.Outlined"
