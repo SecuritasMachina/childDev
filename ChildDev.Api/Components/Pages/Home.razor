@@ -711,6 +711,44 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     </MudAlert>
 }
 @{
+    var naStaleMs = DateTimeOffset.UtcNow.AddDays(-14).ToUnixTimeMilliseconds();
+    var naStaleGoals = string.IsNullOrWhiteSpace(FilterText)
+        ? AllActiveGoals
+            .Where(g => ProgressCounts.GetValueOrDefault(g.Guid) >= 1
+                     && (!LastProgressAt.TryGetValue(g.Guid, out var naLp) || naLp < naStaleMs))
+            .Select(g => new {
+                Goal = g,
+                DaysSince = (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                    - (LastProgressAt.TryGetValue(g.Guid, out var naLp2) ? naLp2 : g.EnteredDate)) / 86_400_000L)
+            })
+            .OrderByDescending(x => x.DaysSince)
+            .Take(5)
+            .ToList()
+        : [];
+}
+@if (naStaleGoals.Count >= 2)
+{
+    <MudPaper Elevation="2" Class="pa-3 mb-4" Style="border-radius:14px;border-left:4px solid var(--mud-palette-warning);background:var(--mud-palette-background-grey);">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+            <MudIcon Icon="@Icons.Material.Filled.NotificationImportant" Color="Color.Warning" Size="Size.Small" />
+            <MudText Typo="Typo.subtitle2" Color="Color.Warning" Style="font-weight:700;">
+                @naStaleGoals.Count Goal@(naStaleGoals.Count == 1 ? "" : "s") Waiting for You
+            </MudText>
+        </MudStack>
+        @foreach (var na in naStaleGoals)
+        {
+            var naName = na.Goal.GoalText?.Length > 55 ? na.Goal.GoalText[..55] + "…" : na.Goal.GoalText;
+            var naDayLabel = na.DaysSince == 1 ? "1 day" : $"{na.DaysSince} days";
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+                <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Size="Size.Small" Color="Color.Warning" Style="font-size:8px;" />
+                <MudText Typo="Typo.body2" Style="flex:1">"@naName" — no notes in @naDayLabel</MudText>
+                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning"
+                           Href="@($"/goals/{na.Goal.Guid}")">Add note</MudButton>
+            </MudStack>
+        }
+    </MudPaper>
+}
+@{
     var nmMilestones576 = new[] { 100, 50, 25, 10, 5 };
     Goal? nmNearGoal = null;
     int nmNearTarget = 0;
