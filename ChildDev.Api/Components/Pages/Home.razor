@@ -1737,8 +1737,13 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                 }
             </MudStack>
         }
+        @{
+            var qnWc = QuickNoteText.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
+            var qnWcHelper = qnWc == 0 ? "Be specific — your future self will thank you!" : $"{qnWc} word{(qnWc == 1 ? "" : "s")}";
+        }
         <MudTextField @bind-Value="QuickNoteText" Label="What happened? What's the next step?"
-                      Variant="Variant.Outlined" Lines="3" AutoFocus="true" />
+                      Variant="Variant.Outlined" Lines="3" AutoFocus="true" Immediate="true"
+                      HelperText="@qnWcHelper" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => ShowQuickNoteDialog = false">Cancel</MudButton>
