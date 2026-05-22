@@ -783,6 +783,24 @@ else
                 }
             </MudStack>
         }
+        @if (ActiveGoalNames.Count > 0)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Tag a goal (optional):</MudText>
+            <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-2">
+                @foreach (var editGoalName in ActiveGoalNames)
+                {
+                    var egTag = editGoalName.Length > 30 ? editGoalName[..30] + "…" : editGoalName;
+                    var editCapturedGoal = editGoalName;
+                    var egCurrent = EditTags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    var egActive = egCurrent.Any(t => t.Equals(editCapturedGoal, StringComparison.OrdinalIgnoreCase));
+                    <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.Flag"
+                             Variant="@(egActive ? Variant.Filled : Variant.Outlined)"
+                             Color="@(egActive ? Color.Success : Color.Default)"
+                             Style="cursor:pointer;"
+                             OnClick="@(() => { var parts = EditTags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList(); if (parts.Any(t => t.Equals(editCapturedGoal, StringComparison.OrdinalIgnoreCase))) parts.RemoveAll(t => t.Equals(editCapturedGoal, StringComparison.OrdinalIgnoreCase)); else parts.Add(editCapturedGoal); EditTags = string.Join(", ", parts); })">@egTag</MudChip>
+                }
+            </MudStack>
+        }
         <MudTextField @bind-Value="EditTags" Label="Tags (optional, comma-separated)" Variant="Variant.Outlined" Class="mb-4" />
         <MudDatePicker @bind-Date="EditEnteredDate" Label="Entry date" Variant="Variant.Outlined" />
     </DialogContent>
