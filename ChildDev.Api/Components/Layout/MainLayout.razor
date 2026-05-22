@@ -24,6 +24,15 @@
                 <MudText Typo="Typo.h6" Style="font-weight:700;letter-spacing:.3px;">ChildDev</MudText>
             </MudStack>
         </MudLink>
+        @if (_dailyStreak >= 2)
+        {
+            var streakEmoji = _dailyStreak >= 14 ? "🌟" : _dailyStreak >= 7 ? "🔥" : "⚡";
+            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled"
+                     Style="font-weight:700;font-size:0.78rem;margin-left:8px;cursor:default;"
+                     title="@($"{_dailyStreak}-day streak!")">
+                @streakEmoji @_dailyStreak
+            </MudChip>
+        }
         <MudSpacer />
         @if (NickName is not null)
         {
@@ -111,6 +120,7 @@
     private string? NickName;
     private bool _drawerOpen;
     private int _overdueTodoCount;
+    private int _dailyStreak;
 
     private readonly MudTheme _theme = new()
     {
@@ -153,6 +163,22 @@
                 _overdueTodoCount = await Db.Todos
                     .CountAsync(t => t.AccountFk == accountGuid && t.DeletedAt == null
                                   && t.CompletedAt == null && t.DueDate.HasValue && t.DueDate < todayStart);
+
+                var recentDays = await Db.GoalProgresses
+                    .Where(p => p.AccountFk == accountGuid && p.DeletedAt == null
+                             && p.UpdatedOn >= todayStart - 60L * 86_400_000L)
+                    .Select(p => p.UpdatedOn)
+                    .ToListAsync();
+                var activeDates = recentDays
+                    .Select(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
+                    .ToHashSet();
+                var streakDay = DateOnly.FromDateTime(DateTime.Today);
+                if (!activeDates.Contains(streakDay)) streakDay = streakDay.AddDays(-1);
+                while (activeDates.Contains(streakDay))
+                {
+                    _dailyStreak++;
+                    streakDay = streakDay.AddDays(-1);
+                }
             }
         }
     }
