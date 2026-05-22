@@ -1396,8 +1396,10 @@ else
         <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">No notes matching "@_noteFilter".</MudText>
     }
     <MudTimeline TimelinePosition="TimelinePosition.Start" Class="mb-4">
+        @{ var noteDisplayIdx = displayedNotes.Count; }
         @foreach (var p in displayedNotes)
         {
+            var noteNum = noteDisplayIdx--;
             var enteredDate = DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime;
             var isPersonalBest = bestNoteGuid is not null && p.Guid == bestNoteGuid;
             var noteTextLower = (p.NextStepItems ?? "").ToLowerInvariant();
@@ -1428,7 +1430,9 @@ else
                                         <MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Small" /> Next meeting: @meetingDate.ToString("MMM d, yyyy")
                                     </MudText>
                                 }
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">@enteredDate.ToString("MMM d, yyyy h:mm tt")</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    Note #@noteNum · @enteredDate.ToString("MMM d, yyyy h:mm tt")
+                                </MudText>
                             </MudStack>
                             @if (!string.IsNullOrWhiteSpace(p.NextStepItems))
                             {

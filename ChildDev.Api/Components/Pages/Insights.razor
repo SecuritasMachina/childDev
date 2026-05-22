@@ -236,6 +236,12 @@ else if (JourneyMonths >= 6)
         📅 You log the most progress notes on <strong>@BestProgressDayOfWeek</strong>s (@BestProgressDayOfWeekCount total) — that's your power day!
     </MudAlert>
 }
+@if (ProgressTimeOfDay is not null)
+{
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Schedule" Dense="true" Class="mb-4">
+        ⏰ You tend to log progress notes in the <strong>@ProgressTimeOfDay</strong> — lean into that rhythm for maximum consistency!
+    </MudAlert>
+}
 @if (BestJournalDayOfWeek is not null)
 {
     <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.MenuBook" Dense="true" Class="mb-4">
@@ -793,6 +799,7 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
     private int JournalTotal;
     private double JournalAvgPerMonth;
     private int GoalProgressTotal;
+    private string? ProgressTimeOfDay;
     private string? TopMood;
     private int TopMoodCount;
     private List<(string Mood, int Count)> TopMoods = [];
@@ -1179,6 +1186,16 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
                 .First();
             BestProgressDayOfWeek = bestDow.Key.ToString();
             BestProgressDayOfWeekCount = bestDow.Count();
+        }
+
+        if (allProgressEver.Count >= 10)
+        {
+            int pMorning = allProgressEver.Count(ms => DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime.Hour < 12);
+            int pAfternoon = allProgressEver.Count(ms => { var h = DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime.Hour; return h >= 12 && h < 17; });
+            int pEvening = allProgressEver.Count(ms => DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime.Hour >= 17);
+            var pMax = Math.Max(pMorning, Math.Max(pAfternoon, pEvening));
+            if (pMax * 100 / allProgressEver.Count >= 50)
+                ProgressTimeOfDay = pMorning == pMax ? "morning 🌅" : pAfternoon == pMax ? "afternoon ☀️" : "evening 🌙";
         }
 
         // Best day of week for journal entries
