@@ -990,6 +990,11 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                   Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
                   Clearable="true" Margin="Margin.Dense" Style="max-width:220px;" />
 </MudStack>
+@{
+    var qfNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    var qfMtg7Ms = qfNowMs + 7L * 86_400_000L;
+    var meetingSoonCount = AllActiveGoals.Count(g => g.NextMeetingDate.HasValue && g.NextMeetingDate.Value > qfNowMs && g.NextMeetingDate.Value <= qfMtg7Ms);
+}
 <MudStack Row="true" Spacing="1" Class="mb-3" Wrap="Wrap.Wrap">
     <MudChip T="string" Size="Size.Small" Variant="@(QuickFilter == "all" ? Variant.Filled : Variant.Outlined)"
              Color="Color.Primary" OnClick='() => SetQuickFilter("all")'>All</MudChip>
@@ -999,6 +1004,12 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     <MudChip T="string" Size="Size.Small" Variant="@(QuickFilter == "streak" ? Variant.Filled : Variant.Outlined)"
              Color="Color.Error" OnClick='() => SetQuickFilter("streak")'
              Icon="@Icons.Material.Filled.LocalFireDepartment">On a Streak 🔥</MudChip>
+    @if (meetingSoonCount > 0)
+    {
+        <MudChip T="string" Size="Size.Small" Variant="@(QuickFilter == "meeting" ? Variant.Filled : Variant.Outlined)"
+                 Color="Color.Info" OnClick='() => SetQuickFilter("meeting")'
+                 Icon="@Icons.Material.Filled.Event">Meeting Soon (@meetingSoonCount)</MudChip>
+    }
 </MudStack>
 
 @if (!string.IsNullOrWhiteSpace(FilterText) && ActiveGoals.Count == 0)
@@ -2182,6 +2193,12 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
             });
         else if (QuickFilter == "streak")
             filtered = filtered.Where(g => GoalStreaks.ContainsKey(g.Guid));
+        else if (QuickFilter == "meeting")
+        {
+            var mtg7Ms = nowMsF + 7L * 86_400_000L;
+            filtered = filtered.Where(g => g.NextMeetingDate.HasValue && g.NextMeetingDate.Value > nowMsF && g.NextMeetingDate.Value <= mtg7Ms)
+                               .OrderBy(g => g.NextMeetingDate);
+        }
 
         // Apply sort order
         filtered = GoalSortOrder switch
