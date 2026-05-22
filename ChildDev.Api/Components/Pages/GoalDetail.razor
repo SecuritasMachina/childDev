@@ -2082,12 +2082,20 @@ else
         </MudText>
     </TitleContent>
     <DialogContent>
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">📝 Structured templates:</MudText>
+        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
+            @foreach (var (label, template) in _progressTemplates)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined"
+                         OnClick="@(() => EditProgressNextSteps = template)">@label</MudChip>
+            }
+        </MudStack>
         @{
             var epWc = EditProgressNextSteps.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
             var epWcHelper = epWc == 0 ? "Describe what you worked on and what's next." : $"{epWc} word{(epWc == 1 ? "" : "s")}";
         }
         <MudTextField @bind-Value="EditProgressNextSteps" Label="Progress / next steps" Variant="Variant.Outlined"
-                      Lines="3" Class="mb-4" AutoFocus="true" Immediate="true" HelperText="@epWcHelper" />
+                      Lines="5" Class="mb-4" AutoFocus="true" Immediate="true" HelperText="@epWcHelper" />
         <MudDatePicker @bind-Date="EditProgressMeetingDate" Label="Next meeting date (optional)" Variant="Variant.Outlined" />
     </DialogContent>
     <DialogActions>
