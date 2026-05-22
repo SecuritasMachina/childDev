@@ -953,6 +953,25 @@
                 ✍️ You've written about <strong>~@totalWords words</strong> on this goal — that's real depth!
             </MudText>
         }
+        @if (ProgressEntries.Count >= 10)
+        {
+            var nqgAll = ProgressEntries
+                .Where(p => !string.IsNullOrWhiteSpace(p.NextStepItems))
+                .Select(p => p.NextStepItems!.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length)
+                .ToList();
+            if (nqgAll.Count >= 6)
+            {
+                var nqgHalf = nqgAll.Count / 2;
+                var nqgFirst = nqgAll.Skip(nqgAll.Count - nqgHalf).Average();
+                var nqgSecond = nqgAll.Take(nqgHalf).Average();
+                if (nqgSecond > nqgFirst * 1.2)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Success" Class="mb-1">
+                        📈 Your notes are getting deeper — averaging <strong>@((int)nqgSecond) words</strong> lately vs <strong>@((int)nqgFirst) words</strong> earlier. Real growth!
+                    </MudText>
+                }
+            }
+        }
         @{
             var activeRateDates = ProgressEntries
                 .Select(p => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime))

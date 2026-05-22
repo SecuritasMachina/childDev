@@ -290,6 +290,17 @@ else if (JourneyMonths >= 6)
     </MudPaper>
 }
 
+@if (GoalsTotalAllTime >= 2 && GoalsWithMeasurableOutcome >= 1)
+{
+    var gmoActiveCount = GoalsTotalAllTime - GoalsCompletedAllTime;
+    var gmoPct = (int)(GoalsWithMeasurableOutcome * 100.0 / Math.Max(GoalsTotalAllTime, 1));
+    var gmoMsg = gmoPct >= 80
+        ? $"🎯 <strong>{GoalsWithMeasurableOutcome} of {GoalsTotalAllTime} goals have clear measurable targets</strong> — goals with targets are far more likely to succeed!"
+        : gmoPct >= 50
+        ? $"🎯 <strong>{GoalsWithMeasurableOutcome} of {GoalsTotalAllTime} goals</strong> have measurable outcomes set. Adding targets to more goals helps you track success!"
+        : $"💡 <strong>{GoalsWithMeasurableOutcome} of {GoalsTotalAllTime} goals</strong> have a measurable target set — consider adding outcomes to the rest for better tracking!";
+    <MudAlert Severity="@(gmoPct >= 80 ? Severity.Success : Severity.Info)" Icon="@Icons.Material.Filled.TrackChanges" Dense="true" Class="mb-4">@((MarkupString)gmoMsg)</MudAlert>
+}
 @if (LongestActiveGoalDays >= 14 && !string.IsNullOrWhiteSpace(LongestActiveGoalName))
 {
     var lgDuration = LongestActiveGoalDays >= 365
@@ -753,6 +764,7 @@ else if (JourneyMonths >= 6)
     // Domain entity stats
     private int GoalsCompletedAllTime;
     private int GoalsTotalAllTime;
+    private int GoalsWithMeasurableOutcome;
     private int YtdGoalsCompleted;
     private List<(string Name, long CompletionDate, long EnteredDate)> RecentCompletedGoals = [];
     private int TodosCompletedAllTime;
@@ -833,6 +845,8 @@ else if (JourneyMonths >= 6)
             .CountAsync(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate != null);
         GoalsTotalAllTime = await Db.Goals
             .CountAsync(g => g.AccountFk == AccountGuid && g.DeletedAt == null);
+        GoalsWithMeasurableOutcome = await Db.Goals
+            .CountAsync(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.MeasurableOutcome != null && g.MeasurableOutcome != "");
         var ytdGoalYearStart = new DateTimeOffset(new DateTime(DateTime.Today.Year, 1, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Today)).ToUnixTimeMilliseconds();
         YtdGoalsCompleted = await Db.Goals
             .CountAsync(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate != null && g.CompletionDate.Value >= ytdGoalYearStart);
