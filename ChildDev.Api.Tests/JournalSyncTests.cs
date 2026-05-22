@@ -37,7 +37,7 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
         var guid = Guid.NewGuid().ToString();
         var updatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var journal = new JournalDto(guid, accountGuid, "My note", null, null, null, updatedOn, updatedOn, null);
+        var journal = new JournalDto(guid, accountGuid, "My note", null, null, null, null, updatedOn, updatedOn, null);
         await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([journal], 0));
         var response2 = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
         var body = await response2.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
@@ -53,9 +53,9 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
         var guid = Guid.NewGuid().ToString();
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "old", null, null, null, 1000, 1000, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "old", null, null, null, null, 1000, 1000, null)], 0));
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "new", null, null, null, 2000, 2000, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "new", null, null, null, null, 2000, 2000, null)], 0));
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
         var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
         Assert.Equal("new", body!.Records[0].Notes);
@@ -68,9 +68,9 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
         var guid = Guid.NewGuid().ToString();
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "server-wins", null, null, null, 2000, 2000, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "server-wins", null, null, null, null, 2000, 2000, null)], 0));
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "client-stale", null, null, null, 1000, 1000, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "client-stale", null, null, null, null, 1000, 1000, null)], 0));
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
         var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
         Assert.Equal("server-wins", body!.Records[0].Notes);
@@ -95,8 +95,8 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var newGuid = Guid.NewGuid().ToString();
         await _client.PostAsJsonAsync("/api/sync/journal",
             new SyncRequest<JournalDto>([
-                new JournalDto(oldGuid, accountGuid, "old note", null, null, null, oldTs, oldTs, null),
-                new JournalDto(newGuid, accountGuid, "new note", null, null, null, newTs, newTs, null)
+                new JournalDto(oldGuid, accountGuid, "old note", null, null, null, null, oldTs, oldTs, null),
+                new JournalDto(newGuid, accountGuid, "new note", null, null, null, null, newTs, newTs, null)
             ], 0));
         var response = await _client.PostAsJsonAsync("/api/sync/journal",
             new SyncRequest<JournalDto>([], oldTs));
@@ -113,7 +113,7 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt1);
         var intruderGuid = Guid.NewGuid().ToString();
-        var record = new JournalDto(intruderGuid, accountGuid2, "intruder note", null, null, null, 1000, 1000, null);
+        var record = new JournalDto(intruderGuid, accountGuid2, "intruder note", null, null, null, null, 1000, 1000, null);
         var uploadResponse = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([record], 0));
         Assert.Equal(HttpStatusCode.OK, uploadResponse.StatusCode);
 
@@ -131,10 +131,10 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var guid = Guid.NewGuid().ToString();
         var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "to delete", null, null, null, ts, ts, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "to delete", null, null, null, null, ts, ts, null)], 0));
         var deletedAt = ts + 1000;
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, null, null, null, null, ts, ts + 1000, deletedAt)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, null, null, null, null, null, ts, ts + 1000, deletedAt)], 0));
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
         var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
         var deleted = body!.Records.FirstOrDefault(r => r.Guid == guid);
@@ -153,7 +153,7 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var guid = Guid.NewGuid().ToString();
         var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid1, "user1 private note", null, null, null, ts, ts, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid1, "user1 private note", null, null, null, null, ts, ts, null)], 0));
 
         // User 2 syncs with LastSyncAt=0 (would return everything for their account)
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt2);
@@ -173,7 +173,7 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var guid = Guid.NewGuid().ToString();
 
         await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([
-            new JournalDto(guid, accountGuid, "Full entry", "Swimming", "Happy", "fitness,sport", ts, ts, null)
+            new JournalDto(guid, accountGuid, "Full entry", "Swimming", "Happy", null, "fitness,sport", ts, ts, null)
         ], 0));
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
@@ -196,9 +196,9 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         // Insert in non-ascending order
         await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([
-            new JournalDto(Guid.NewGuid().ToString(), accountGuid, "at t3", null, null, null, t3, t3, null),
-            new JournalDto(Guid.NewGuid().ToString(), accountGuid, "at t1", null, null, null, t1, t1, null),
-            new JournalDto(Guid.NewGuid().ToString(), accountGuid, "at t2", null, null, null, t2, t2, null)
+            new JournalDto(Guid.NewGuid().ToString(), accountGuid, "at t3", null, null, null, null, t3, t3, null),
+            new JournalDto(Guid.NewGuid().ToString(), accountGuid, "at t1", null, null, null, null, t1, t1, null),
+            new JournalDto(Guid.NewGuid().ToString(), accountGuid, "at t2", null, null, null, null, t2, t2, null)
         ], 0));
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
@@ -222,14 +222,14 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         // Establish server state: A at ts+1000, B at ts+2000
         await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([
-            new JournalDto(guidA, accountGuid, "A server", null, null, null, ts, ts + 1000, null),
-            new JournalDto(guidB, accountGuid, "B server", null, null, null, ts, ts + 2000, null)
+            new JournalDto(guidA, accountGuid, "A server", null, null, null, null, ts, ts + 1000, null),
+            new JournalDto(guidB, accountGuid, "B server", null, null, null, null, ts, ts + 2000, null)
         ], 0));
 
         // Client sends A at ts+2000 (newer → client wins) and B at ts+1000 (older → server wins)
         await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([
-            new JournalDto(guidA, accountGuid, "A client newer", null, null, null, ts, ts + 2000, null),
-            new JournalDto(guidB, accountGuid, "B client stale", null, null, null, ts, ts + 1000, null)
+            new JournalDto(guidA, accountGuid, "A client newer", null, null, null, null, ts, ts + 2000, null),
+            new JournalDto(guidB, accountGuid, "B client stale", null, null, null, null, ts, ts + 1000, null)
         ], 0));
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
@@ -250,7 +250,7 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "Always returned", null, null, null, ts, ts, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "Always returned", null, null, null, null, ts, ts, null)], 0));
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], -1));
         var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
@@ -266,7 +266,7 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(Guid.NewGuid().ToString(), accountGuid, "old note", null, null, null, ts, ts, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(Guid.NewGuid().ToString(), accountGuid, "old note", null, null, null, null, ts, ts, null)], 0));
 
         // LastSyncAt is larger than the record's UpdatedOn — delta must be empty
         var futureSync = ts + 10_000L;
@@ -285,11 +285,11 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "Server version", null, null, null, ts, ts, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "Server version", null, null, null, null, ts, ts, null)], 0));
 
         // Same UpdatedOn, different content — strict > means server keeps its version
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "Client version", null, null, null, ts, ts, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "Client version", null, null, null, null, ts, ts, null)], 0));
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
         var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
@@ -311,8 +311,8 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         // Batch contains one valid record (correct AccountFk) and one intruder (wrong AccountFk)
         await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([
-            new JournalDto(validGuid, accountGuid1, "my note", null, null, null, ts, ts, null),
-            new JournalDto(intruderGuid, accountGuid2, "intruder", null, null, null, ts, ts, null)
+            new JournalDto(validGuid, accountGuid1, "my note", null, null, null, null, ts, ts, null),
+            new JournalDto(intruderGuid, accountGuid2, "intruder", null, null, null, null, ts, ts, null)
         ], 0));
 
         // Account1 delta: valid record stored, intruder skipped
@@ -333,11 +333,11 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         // Store a soft-deleted journal
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, ts, ts, ts)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, null, ts, ts, ts)], 0));
 
         // Client sends same Guid with DeletedAt = null and newer UpdatedOn — LWW restores the record
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, ts, ts + 1000, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, null, ts, ts + 1000, null)], 0));
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
         var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
@@ -358,12 +358,12 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         // Store journal with EnteredDate = originalEnteredDate, UpdatedOn = t1
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, originalEnteredDate, t1, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, null, originalEnteredDate, t1, null)], 0));
 
         // Client sends newer UpdatedOn with a corrected EnteredDate — journal entry date IS mutable
         var correctedEnteredDate = 5_000_000L;
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, correctedEnteredDate, t2, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, null, correctedEnteredDate, t2, null)], 0));
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
         var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
@@ -382,11 +382,11 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         // Store journal with Activity, Mood, Tags set
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", "Running", "Calm", "health", ts, ts, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", "Running", "Calm", null, "health", ts, ts, null)], 0));
 
         // Client sends newer UpdatedOn with aux fields = null — LWW must clear all three
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, ts, ts + 1000, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, null, ts, ts + 1000, null)], 0));
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
         var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
@@ -406,11 +406,11 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "entry to delete", null, null, null, ts, ts, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "entry to delete", null, null, null, null, ts, ts, null)], 0));
 
         var deletedAt = ts + 1000;
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, null, null, null, null, ts, ts + 1000, deletedAt)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, null, null, null, null, null, ts, ts + 1000, deletedAt)], 0));
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
         var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
@@ -429,7 +429,7 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, ts, ts, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, null, ts, ts, null)], 0));
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
         var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
@@ -447,10 +447,10 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, ts, ts, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, null, ts, ts, null)], 0));
         var deletedAt = ts + 500;
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, null, null, null, null, ts, deletedAt, deletedAt)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, null, null, null, null, null, ts, deletedAt, deletedAt)], 0));
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
         var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
@@ -467,7 +467,7 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
         var guid = Guid.NewGuid().ToString();
         var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var dup = new JournalDto(guid, accountGuid, "note", null, null, null, ts, ts, null);
+        var dup = new JournalDto(guid, accountGuid, "note", null, null, null, null, ts, ts, null);
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal",
             new SyncRequest<JournalDto>([dup, dup], 0));
@@ -484,7 +484,7 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var futureTs = DateTimeOffset.UtcNow.AddHours(2).ToUnixTimeMilliseconds();
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, futureTs, futureTs, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "note", null, null, null, null, futureTs, futureTs, null)], 0));
 
         Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
@@ -496,7 +496,7 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
         var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var records = Enumerable.Range(0, 501)
-            .Select(_ => new JournalDto(Guid.NewGuid().ToString(), accountGuid, "note", null, null, null, ts, ts, null))
+            .Select(_ => new JournalDto(Guid.NewGuid().ToString(), accountGuid, "note", null, null, null, null, ts, ts, null))
             .ToList();
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>(records, 0));
@@ -512,7 +512,7 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto("not-a-valid-guid", accountGuid, "note", null, null, null, ts, ts, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto("not-a-valid-guid", accountGuid, "note", null, null, null, null, ts, ts, null)], 0));
 
         Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
@@ -525,7 +525,7 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(Guid.NewGuid().ToString(), accountGuid, "   ", null, null, null, ts, ts, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(Guid.NewGuid().ToString(), accountGuid, "   ", null, null, null, null, ts, ts, null)], 0));
 
         Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
@@ -538,7 +538,7 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(Guid.NewGuid().ToString(), accountGuid, null, "Swimming", null, null, ts, ts, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(Guid.NewGuid().ToString(), accountGuid, null, "Swimming", null, null, null, ts, ts, null)], 0));
 
         Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
     }
@@ -552,10 +552,10 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var guid = Guid.NewGuid().ToString();
 
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "first upload", null, null, null, ts, ts, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "first upload", null, null, null, null, ts, ts, null)], 0));
 
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "second upload", null, null, null, ts, ts + 1, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "second upload", null, null, null, null, ts, ts + 1, null)], 0));
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
         var body = await response.Content.ReadFromJsonAsync<SyncResponse<JournalDto>>();
@@ -574,7 +574,7 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var guid = Guid.NewGuid().ToString();
 
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "boundary note", null, null, null, ts, ts, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, "boundary note", null, null, null, null, ts, ts, null)], 0));
 
         // LastSyncAt == record.UpdatedOn — strict > means this record must NOT appear in delta
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], ts));
@@ -592,7 +592,7 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var guid = Guid.NewGuid().ToString();
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuidA, "account A note", null, null, null, ts, ts, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuidA, "account A note", null, null, null, null, ts, ts, null)], 0));
 
         // Account B fetches delta — must NOT see account A's entry
         var (jwtB, _) = await RegisterAsync("jsync_isolation_b1");
@@ -612,7 +612,7 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         // DeletedAt = ts+1, UpdatedOn = ts → invalid invariant
         var response = await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(Guid.NewGuid().ToString(), accountGuid, null, null, null, null, ts, ts, ts + 1)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(Guid.NewGuid().ToString(), accountGuid, null, null, null, null, null, ts, ts, ts + 1)], 0));
 
         Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
@@ -627,12 +627,12 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var newGuid = Guid.NewGuid().ToString();
 
         await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(existingGuid, accountGuid, "original note", null, null, null, ts, ts, null)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(existingGuid, accountGuid, "original note", null, null, null, null, ts, ts, null)], 0));
 
         await _client.PostAsJsonAsync("/api/sync/journal",
             new SyncRequest<JournalDto>([
-                new JournalDto(existingGuid, accountGuid, "updated note", null, null, null, ts, ts + 1, null),
-                new JournalDto(newGuid, accountGuid, "brand new note", null, null, null, ts, ts, null)
+                new JournalDto(existingGuid, accountGuid, "updated note", null, null, null, null, ts, ts + 1, null),
+                new JournalDto(newGuid, accountGuid, "brand new note", null, null, null, null, ts, ts, null)
             ], 0));
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));
@@ -657,7 +657,7 @@ public class JournalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         var upload = await _client.PostAsJsonAsync("/api/sync/journal",
-            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, null, null, null, null, ts, ts, ts)], 0));
+            new SyncRequest<JournalDto>([new JournalDto(guid, accountGuid, null, null, null, null, null, ts, ts, ts)], 0));
         Assert.Equal(HttpStatusCode.OK, upload.StatusCode);
 
         var response = await _client.PostAsJsonAsync("/api/sync/journal", new SyncRequest<JournalDto>([], 0));

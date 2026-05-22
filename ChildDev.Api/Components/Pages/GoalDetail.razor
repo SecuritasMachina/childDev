@@ -208,6 +208,25 @@
         <MudText Typo="Typo.caption" Color="Color.Secondary">(@mtgDate.ToString("MMM d"))</MudText>
     </MudStack>
 }
+@if (Goal.NextMeetingDate.HasValue && Goal.CompletionDate is null)
+{
+    var mtgPrepDate = DateTimeOffset.FromUnixTimeMilliseconds(Goal.NextMeetingDate.Value).LocalDateTime;
+    var mtgPrepDays = (mtgPrepDate.Date - DateTime.Today).Days;
+    @if (mtgPrepDays == 1)
+    {
+        <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.NotificationsActive" Dense="true" Class="mb-3">
+            📋 <strong>Meeting tomorrow!</strong> Add a progress note today so you walk in prepared and confident.
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning" OnClick="OpenAddProgressDialog" Class="ml-1">Add prep note</MudButton>
+        </MudAlert>
+    }
+    else if (mtgPrepDays == 2)
+    {
+        <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Event" Dense="true" Class="mb-3">
+            📅 <strong>Meeting in 2 days!</strong> A quick progress note now will make your session much more productive.
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Info" OnClick="OpenAddProgressDialog" Class="ml-1">Add note</MudButton>
+        </MudAlert>
+    }
+}
 @{
     var psmNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
     var psmLastMeeting = ProgressEntries.FirstOrDefault(p => p.NextMeetingDate.HasValue && p.NextMeetingDate.Value < psmNowMs);

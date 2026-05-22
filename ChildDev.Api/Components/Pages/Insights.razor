@@ -59,6 +59,20 @@
     </MudPaper>
 }
 
+@if (JourneyYears >= 1)
+{
+    var annMsg = JourneyYears >= 2
+        ? $"🗓️ <strong>You've been on this journey for {JourneyYears} years!</strong> That kind of long-term commitment is rare — you should be incredibly proud of how far you've come!"
+        : "🗓️ <strong>One full year on this journey!</strong> 365 days of setting goals and showing up — that's a real transformation. Here's to the next year! 🥳";
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Celebration" Dense="true" Class="mb-4">@((MarkupString)annMsg)</MudAlert>
+}
+else if (JourneyMonths >= 6)
+{
+    var moMsg = JourneyMonths >= 9
+        ? $"🌟 <strong>Nearly a year on your journey!</strong> {JourneyMonths} months of goal-setting — you're building something truly lasting."
+        : $"🌱 <strong>{JourneyMonths} months into your journey!</strong> Half a year of working toward your goals — the consistency is paying off!";
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.AutoAwesome" Dense="true" Class="mb-4">@((MarkupString)moMsg)</MudAlert>
+}
 @* Domain achievement stats *@
 <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2" Style="text-transform:uppercase;letter-spacing:1px;">
     Achievements
@@ -797,6 +811,8 @@
     private bool[] Last7DaysActive = new bool[7];
     private string? MostProductiveQuarter;
     private int MostProductiveQuarterCount;
+    private int JourneyYears;
+    private int JourneyMonths;
 
     protected override async Task OnInitializedAsync()
     {
@@ -865,6 +881,17 @@
             LongestActiveGoalName = longestGoal.GoalText;
             LongestActiveGoalGuid = longestGoal.Guid;
             LongestActiveGoalDays = (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - longestGoal.EnteredDate) / 86_400_000L);
+        }
+
+        // First goal ever (for journey anniversary)
+        var firstGoalMs = await Db.Goals
+            .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null)
+            .MinAsync(g => (long?)g.EnteredDate);
+        if (firstGoalMs.HasValue)
+        {
+            var journeyDays = (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - firstGoalMs.Value) / 86_400_000L);
+            JourneyYears = journeyDays / 365;
+            JourneyMonths = journeyDays / 30;
         }
 
         var moodRows = await Db.Journals

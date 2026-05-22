@@ -286,7 +286,11 @@
                 <MudIcon Icon="@Icons.Material.Filled.Book" Color="Color.Primary" Style="font-size:2rem;" />
                 <MudText Typo="Typo.h4" Class="mt-1">@JournalThisWeek</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">Journal Entr@(JournalThisWeek == 1 ? "y" : "ies") This Week</MudText>
-                @if (TodosCompletedThisWeek > 0)
+                @if (TodosCompletedToday >= 1)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Success">✅ @TodosCompletedToday done today!</MudText>
+                }
+                else if (TodosCompletedThisWeek > 0)
                 {
                     <MudText Typo="Typo.caption" Color="Color.Success">✅ @TodosCompletedThisWeek quick win@(TodosCompletedThisWeek == 1 ? "" : "s") this week</MudText>
                 }
@@ -433,6 +437,14 @@
     <MudText Typo="Typo.body2" Color="Color.Secondary" Style="font-style:italic;">@todayQuote</MudText>
 </MudPaper>
 
+@if (TodosCompletedToday >= 1 && string.IsNullOrWhiteSpace(FilterText))
+{
+    var tdMsg = TodosCompletedToday >= 5 ? $"🏆 <strong>{TodosCompletedToday} todos done today</strong> — legendary action-taker! You're crushing it!"
+            : TodosCompletedToday >= 3 ? $"🔥 <strong>{TodosCompletedToday} todos completed today</strong> — you're in full action mode! Momentum is everything."
+            : TodosCompletedToday == 2 ? "✅ <strong>2 todos done today</strong> — you're building a productive day! Keep the action going!"
+            :                            "✅ <strong>Todo completed today</strong> — every finished task moves you forward. Great start!";
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.TaskAlt" Dense="true" Class="mb-3">@((MarkupString)tdMsg)</MudAlert>
+}
 @if (ProgressNotesToday >= 3 && string.IsNullOrWhiteSpace(FilterText))
 {
     var rollingMsg = ProgressNotesToday >= 7 ? $"🔥 <strong>{ProgressNotesToday} notes today — you're UNSTOPPABLE!</strong> That's an extraordinary output day. Go you!"
@@ -1520,6 +1532,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private int OverdueTodoCount;
     private int JournalThisWeek;
     private int TodosCompletedThisWeek;
+    private int TodosCompletedToday;
     private string QuickJournalText = string.Empty;
     private string QuickTodoText = string.Empty;
     private List<Journal> RecentJournals = [];
@@ -1568,6 +1581,8 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
             .CountAsync(j => j.AccountFk == AccountGuid && j.DeletedAt == null && j.EnteredDate >= weekStartMs);
         TodosCompletedThisWeek = await Db.Todos
             .CountAsync(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt != null && t.CompletedAt >= weekStartMs);
+        TodosCompletedToday = await Db.Todos
+            .CountAsync(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt != null && t.CompletedAt >= todayStartMs);
 
         RecentJournals = await Db.Journals
             .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null)
