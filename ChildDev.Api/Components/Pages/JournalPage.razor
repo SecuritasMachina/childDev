@@ -664,6 +664,24 @@ else
                 }
             </MudStack>
         }
+        @if (ActiveGoalNames.Count > 0)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Tag a goal (optional):</MudText>
+            <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-2">
+                @foreach (var goalName in ActiveGoalNames)
+                {
+                    var gTag = goalName.Length > 30 ? goalName[..30] + "…" : goalName;
+                    var capturedGoal = goalName;
+                    var gCurrent = NewTags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    var gActive = gCurrent.Any(t => t.Equals(capturedGoal, StringComparison.OrdinalIgnoreCase));
+                    <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.Flag"
+                             Variant="@(gActive ? Variant.Filled : Variant.Outlined)"
+                             Color="@(gActive ? Color.Success : Color.Default)"
+                             Style="cursor:pointer;"
+                             OnClick="@(() => { var parts = NewTags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList(); if (parts.Any(t => t.Equals(capturedGoal, StringComparison.OrdinalIgnoreCase))) parts.RemoveAll(t => t.Equals(capturedGoal, StringComparison.OrdinalIgnoreCase)); else parts.Add(capturedGoal); NewTags = string.Join(", ", parts); })">@gTag</MudChip>
+                }
+            </MudStack>
+        }
         <MudTextField @bind-Value="NewTags" Label="Tags (optional, comma-separated)" Variant="Variant.Outlined" Class="mb-4" />
         <MudDatePicker @bind-Date="NewEnteredDate" Label="Entry date" Variant="Variant.Outlined" />
     </DialogContent>
@@ -739,6 +757,7 @@ else
     private List<(string Tag, int Count)> AllTags = [];
     private List<(string Mood, int Count)> AllMoods = [];
     private List<(string Activity, int Count)> AllActivities = [];
+    private List<string> ActiveGoalNames = [];
     private bool ShowAddDialog;
     private string NewNotes = string.Empty;
     private string NewActivity = string.Empty;
@@ -777,6 +796,12 @@ else
     {
         AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
         if (AccountGuid is null) return;
+        ActiveGoalNames = await Db.Goals
+            .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate == null && g.GoalText != null)
+            .OrderByDescending(g => g.EnteredDate)
+            .Select(g => g.GoalText!)
+            .Take(8)
+            .ToListAsync();
         await LoadEntries();
         await Analytics.TrackAsync("page_view", AccountGuid, "journal");
     }
