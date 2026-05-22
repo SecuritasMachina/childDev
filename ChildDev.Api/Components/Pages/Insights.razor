@@ -114,6 +114,11 @@ else if (JourneyMonths >= 6)
             {
                 <MudText Typo="Typo.caption" Color="Color.Info">avg @JournalAvgPerMonth.ToString("F1")/month</MudText>
             }
+            @if (TotalJournalWords >= 50)
+            {
+                var jwLabel = TotalJournalWords >= 10000 ? $"📖 {TotalJournalWords / 1000}k words" : $"📝 {TotalJournalWords} words";
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@jwLabel</MudText>
+            }
         </MudPaper>
     </MudItem>
     <MudItem xs="6" sm="3">
@@ -138,6 +143,11 @@ else if (JourneyMonths >= 6)
             @if (AvgProgressNotesPerWeek >= 0.5)
             {
                 <MudText Typo="Typo.caption" Color="Color.Secondary">avg @AvgProgressNotesPerWeek.ToString("F1")/week</MudText>
+            }
+            @if (TotalProgressNoteWords >= 50)
+            {
+                var pwLabel = TotalProgressNoteWords >= 10000 ? $"✍️ {TotalProgressNoteWords / 1000}k words" : $"✍️ {TotalProgressNoteWords} words";
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@pwLabel</MudText>
             }
             @if (TotalActiveDaysEver >= 14 && TotalLast30 >= 3)
             {
@@ -910,6 +920,8 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
     private int JournalTotal;
     private double JournalAvgPerMonth;
     private int GoalProgressTotal;
+    private int TotalJournalWords;
+    private int TotalProgressNoteWords;
     private string? ProgressTimeOfDay;
     private string? TopMood;
     private int TopMoodCount;
@@ -1009,8 +1021,20 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
         JournalTotal = await Db.Journals
             .CountAsync(j => j.AccountFk == AccountGuid && j.DeletedAt == null);
 
+        var journalNotes = await Db.Journals
+            .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null && j.Notes != null && j.Notes != "")
+            .Select(j => j.Notes!)
+            .ToListAsync();
+        TotalJournalWords = journalNotes.Sum(n => n.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length);
+
         GoalProgressTotal = await Db.GoalProgresses
             .CountAsync(p => p.AccountFk == AccountGuid && p.DeletedAt == null);
+
+        var progressNoteTexts = await Db.GoalProgresses
+            .Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null && p.NextStepItems != null && p.NextStepItems != "")
+            .Select(p => p.NextStepItems!)
+            .ToListAsync();
+        TotalProgressNoteWords = progressNoteTexts.Sum(n => n.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length);
 
         // Most active goal: goal with most progress notes
         var magTop = await Db.GoalProgresses
