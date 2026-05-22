@@ -288,6 +288,41 @@
         </MudStack>
     </MudPaper>
 }
+@* 5-week journal heatmap *@
+@if (AllEntries.Count >= 3)
+{
+    var jhmToday = DateOnly.FromDateTime(DateTime.Today);
+    var jhmStart = jhmToday.AddDays(-34);
+    var jhmDays = AllEntries
+        .Select(j => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime))
+        .ToHashSet();
+    var jhmDaysOfWeek = new[] { "M", "T", "W", "T", "F", "S", "S" };
+    <MudPaper Elevation="0" Class="pa-2 mb-3" Style="border-radius:10px;background:var(--mud-palette-background-grey);">
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-weight:600;" Class="mb-2">Writing activity — last 5 weeks</MudText>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;max-width:220px;">
+            @for (int jhi = 0; jhi < 7; jhi++)
+            {
+                <div style="text-align:center;font-size:0.58rem;color:var(--mud-palette-text-secondary);padding-bottom:2px;">@jhmDaysOfWeek[jhi]</div>
+            }
+            @for (int jhi = 0; jhi < 35; jhi++)
+            {
+                var jhmDay = jhmStart.AddDays(jhi);
+                var jhmHas = jhmDays.Contains(jhmDay);
+                var jhmIsToday = jhmDay == jhmToday;
+                var jhmBg = jhmHas ? "var(--mud-palette-success)" : "#e0e7ef";
+                var jhmBorder = jhmIsToday ? "2px solid var(--mud-palette-primary)" : "none";
+                var jhmTitle = jhmHas ? $"{jhmDay:MMM d} — wrote ✓" : jhmDay.ToString("MMM d");
+                <div title="@jhmTitle" style="width:100%;aspect-ratio:1;border-radius:3px;background:@jhmBg;border:@jhmBorder;cursor:default;opacity:@(jhmDay > jhmToday ? "0.3" : "1")"></div>
+            }
+        </div>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">No entry</MudText>
+            <div style="width:11px;height:11px;border-radius:2px;background:#e0e7ef;"></div>
+            <div style="width:11px;height:11px;border-radius:2px;background:var(--mud-palette-success);"></div>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Wrote</MudText>
+        </MudStack>
+    </MudPaper>
+}
 @* Tag cloud — appears only when entries have tags *@
 @if (AllTags.Count > 0)
 {
