@@ -343,17 +343,63 @@ else if (JourneyMonths >= 6)
 
 @if (TopMoods.Count > 0)
 {
+    var moodNow = DateTimeOffset.Now.LocalDateTime;
+    var thisMonthLabel = moodNow.ToString("MMMM");
+    var lastMonthLabel = moodNow.AddMonths(-1).ToString("MMMM");
+    var showTrend = ThisMonthMoods.Count > 0 && LastMonthMoods.Count > 0;
     <MudPaper Elevation="1" Class="pa-3 mb-6" Style="border-radius:12px;">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
             <MudIcon Icon="@Icons.Material.Filled.Mood" Color="Color.Secondary" />
             <MudText Typo="Typo.body2" Style="font-weight:600;">Your top moods</MudText>
         </MudStack>
-        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="mb-2">
             @foreach (var (mood, count) in TopMoods)
             {
                 <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined">@mood (@count)</MudChip>
             }
         </MudStack>
+        @if (showTrend)
+        {
+            var thisMoodTop = ThisMonthMoods.Count > 0 ? ThisMonthMoods[0].Mood : null;
+            var lastMoodTop = LastMonthMoods.Count > 0 ? LastMonthMoods[0].Mood : null;
+            var moodShift = thisMoodTop != null && lastMoodTop != null && thisMoodTop != lastMoodTop
+                ? $"Top mood shifted: {lastMoodTop} → {thisMoodTop} this month"
+                : thisMoodTop != null && lastMoodTop != null && thisMoodTop == lastMoodTop
+                ? $"Consistent top mood: {thisMoodTop} ✅"
+                : null;
+            <MudDivider Class="my-2" />
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-weight:600;letter-spacing:0.5px;" Class="mb-1">Mood trend</MudText>
+            <MudGrid Spacing="2">
+                <MudItem xs="6">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">@lastMonthLabel</MudText>
+                    <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                        @foreach (var (mood, count) in LastMonthMoods)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined" Style="font-size:0.7rem;height:22px;">@mood @count×</MudChip>
+                        }
+                    </MudStack>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.caption" Color="Color.Primary" Class="mb-1" Style="font-weight:600;">@thisMonthLabel</MudText>
+                    <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                        @foreach (var (mood, count) in ThisMonthMoods)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Filled" Style="font-size:0.7rem;height:22px;">@mood @count×</MudChip>
+                        }
+                    </MudStack>
+                </MudItem>
+            </MudGrid>
+            @if (moodShift is not null)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Info" Class="mt-1">📊 @moodShift</MudText>
+            }
+        }
+        else if (ThisMonthMoods.Count > 0)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                @thisMonthLabel: @string.Join(", ", ThisMonthMoods.Select(m => $"{m.Mood} {m.Count}×"))
+            </MudText>
+        }
     </MudPaper>
 }
 
@@ -994,6 +1040,8 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
     private int JourneyYears;
     private int JourneyMonths;
     private double AvgProgressNotesPerWeek;
+    private List<(string Mood, int Count)> ThisMonthMoods = [];
+    private List<(string Mood, int Count)> LastMonthMoods = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -1102,6 +1150,30 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
             TopMood = moodRows[0].Mood;
             TopMoodCount = moodRows[0].Count;
         }
+
+        // Monthly mood breakdown (this month vs last month)
+        var moodLocalNow = DateTimeOffset.Now.LocalDateTime;
+        var moodThisMonthStart = new DateTimeOffset(new DateTime(moodLocalNow.Year, moodLocalNow.Month, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
+        var moodLastMonthDt = new DateTime(moodLocalNow.Year, moodLocalNow.Month, 1).AddMonths(-1);
+        var moodLastMonthStart = new DateTimeOffset(moodLastMonthDt, TimeZoneInfo.Local.GetUtcOffset(moodLastMonthDt)).ToUnixTimeMilliseconds();
+        var moodJournalsFull = await Db.Journals
+            .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null && j.Mood != null && j.Mood != "" && j.EnteredDate >= moodLastMonthStart)
+            .Select(j => new { j.Mood, j.EnteredDate })
+            .ToListAsync();
+        ThisMonthMoods = moodJournalsFull
+            .Where(j => j.EnteredDate >= moodThisMonthStart)
+            .GroupBy(j => j.Mood!)
+            .OrderByDescending(g => g.Count())
+            .Take(3)
+            .Select(g => (g.Key, g.Count()))
+            .ToList();
+        LastMonthMoods = moodJournalsFull
+            .Where(j => j.EnteredDate >= moodLastMonthStart && j.EnteredDate < moodThisMonthStart)
+            .GroupBy(j => j.Mood!)
+            .OrderByDescending(g => g.Count())
+            .Take(3)
+            .Select(g => (g.Key, g.Count()))
+            .ToList();
 
         // Top journal tags all-time
         var tagJournals = await Db.Journals
