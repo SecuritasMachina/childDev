@@ -1484,6 +1484,35 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         <MudSpacer />
         <MudButton Href="/todos" Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small">View All</MudButton>
     </MudStack>
+    @if (TopPendingTodos.Any())
+    {
+        var todayStartMsQ = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+        <MudList T="string" Dense="true" Class="mb-2 py-0">
+            @foreach (var (title, dueDate) in TopPendingTodos)
+            {
+                var isOverdueQ = dueDate.HasValue && dueDate.Value < todayStartMsQ;
+                var isDueTodayQ = dueDate.HasValue && dueDate.Value >= todayStartMsQ && dueDate.Value < todayStartMsQ + 86_400_000L;
+                var dueLabelQ = isOverdueQ ? "overdue" : isDueTodayQ ? "today" : dueDate.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(dueDate.Value).LocalDateTime.ToString("MMM d") : null;
+                var dueLabelColorQ = isOverdueQ ? "var(--mud-palette-error)" : isDueTodayQ ? "var(--mud-palette-warning-darken)" : "var(--mud-palette-text-secondary)";
+                var truncTitle = title.Length > 60 ? title[..60] + "…" : title;
+                <MudListItem Style="padding-top:2px;padding-bottom:2px;">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudIcon Icon="@Icons.Material.Filled.RadioButtonUnchecked" Size="Size.Small" Color="Color.Default" Style="opacity:.5;" />
+                        <MudText Typo="Typo.body2" Style="flex:1;">@truncTitle</MudText>
+                        @if (dueLabelQ is not null)
+                        {
+                            <MudText Typo="Typo.caption" Style="@($"color:{dueLabelColorQ};white-space:nowrap;")">@dueLabelQ</MudText>
+                        }
+                    </MudStack>
+                </MudListItem>
+            }
+        </MudList>
+        @if (PendingTodoCount > 3)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">+@(PendingTodoCount - 3) more pending</MudText>
+        }
+        <MudDivider Class="mb-3" />
+    }
     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
         <MudTextField @bind-Value="QuickTodoText"
                       Label="What needs to be done?"
@@ -1689,6 +1718,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private int OverdueTodoCount;
     private int TodosDueToday;
     private string? FirstTodoDueTodayTitle;
+    private List<(string Title, long? DueDate)> TopPendingTodos = [];
     private int JournalThisWeek;
     private int TodosCompletedThisWeek;
     private int TodosCompletedToday;
@@ -1742,6 +1772,11 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         TodosDueToday = todos.Count(t => t.DueDate.HasValue && t.DueDate.Value >= todayStartMs && t.DueDate.Value < tomorrowStartMs);
         var firstDueToday = todos.FirstOrDefault(t => t.DueDate.HasValue && t.DueDate.Value >= todayStartMs && t.DueDate.Value < tomorrowStartMs);
         FirstTodoDueTodayTitle = firstDueToday?.Title is { Length: > 0 } ttl ? (ttl.Length > 50 ? ttl[..50] + "…" : ttl) : null;
+        TopPendingTodos = todos
+            .OrderBy(t => t.DueDate ?? long.MaxValue)
+            .Take(3)
+            .Select(t => (Title: t.Title ?? "", DueDate: t.DueDate))
+            .ToList();
 
         var weekStartMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
         JournalThisWeek = await Db.Journals
