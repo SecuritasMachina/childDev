@@ -2,6 +2,7 @@
 @inject NavigationManager Nav
 @inject IHttpContextAccessor HttpContextAccessor
 @inject AppDbContext Db
+@inject IJSRuntime JS
 @using Microsoft.EntityFrameworkCore
 
 <MudThemeProvider Theme="_theme" IsDarkMode="@_darkMode" />
@@ -36,7 +37,7 @@
         <MudSpacer />
         <MudIconButton Icon="@(_darkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
                        Color="Color.Inherit" Size="Size.Small"
-                       OnClick="@(() => _darkMode = !_darkMode)"
+                       OnClick="ToggleDarkMode"
                        title="@(_darkMode ? "Switch to light mode" : "Switch to dark mode")" />
         @if (NickName is not null)
         {
@@ -228,6 +229,30 @@
                 }
             }
         }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var saved = await JS.InvokeAsync<string?>("localStorage.getItem", "childdev_dark_mode");
+                if (saved == "true" && !_darkMode)
+                {
+                    _darkMode = true;
+                    StateHasChanged();
+                }
+            }
+            catch { /* localStorage unavailable (e.g., SSR pre-render) */ }
+        }
+    }
+
+    private async Task ToggleDarkMode()
+    {
+        _darkMode = !_darkMode;
+        try { await JS.InvokeVoidAsync("localStorage.setItem", "childdev_dark_mode", _darkMode ? "true" : "false"); }
+        catch { }
     }
 
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
