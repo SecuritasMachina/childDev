@@ -486,6 +486,8 @@ else
             var enteredDate = DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime;
             var jWc = string.IsNullOrWhiteSpace(j.Notes) ? 0 : j.Notes.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
             var jWcLabel = jWc >= 150 ? $"📖 Deep entry · {jWc} words" : jWc >= 50 ? $"📝 {jWc} words" : (string?)null;
+            var jIsLong = (j.Notes?.Length ?? 0) > 200 || (j.EmotionReason?.Length ?? 0) > 100;
+            var jExpanded = _expandedGuids.Contains(j.Guid);
             <MudItem xs="12" sm="6" md="4">
                 <MudCard Elevation="2" Class="h-100">
                     <MudCardHeader>
@@ -508,7 +510,7 @@ else
                         <MudCardContent Class="pt-0">
                             @if (!string.IsNullOrWhiteSpace(j.Notes))
                             {
-                                <MudText Typo="Typo.body2">@(j.Notes.Length > 200 ? j.Notes[..200] + "…" : j.Notes)</MudText>
+                                <MudText Typo="Typo.body2">@(jExpanded || j.Notes.Length <= 200 ? j.Notes : j.Notes[..200] + "…")</MudText>
                                 @if (jWcLabel is not null)
                                 {
                                     <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">@jWcLabel</MudText>
@@ -517,8 +519,17 @@ else
                             @if (!string.IsNullOrWhiteSpace(j.EmotionReason))
                             {
                                 <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
-                                    <em>Why: @(j.EmotionReason.Length > 100 ? j.EmotionReason[..100] + "…" : j.EmotionReason)</em>
+                                    <em>Why: @(jExpanded || j.EmotionReason.Length <= 100 ? j.EmotionReason : j.EmotionReason[..100] + "…")</em>
                                 </MudText>
+                            }
+                            @if (jIsLong)
+                            {
+                                var capturedGuid = j.Guid;
+                                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
+                                           Class="mt-1 px-0"
+                                           OnClick="() => { if (_expandedGuids.Contains(capturedGuid)) _expandedGuids.Remove(capturedGuid); else _expandedGuids.Add(capturedGuid); }">
+                                    @(jExpanded ? "Show less" : "Read more")
+                                </MudButton>
                             }
                         </MudCardContent>
                     }
@@ -678,6 +689,7 @@ else
 @code {
     private const int PageSize = 20;
     private string? AccountGuid;
+    private HashSet<string> _expandedGuids = new();
     private List<Journal> AllEntries = [];
     private List<Journal> _filteredEntries = [];
     private List<Journal> Entries = [];
@@ -721,6 +733,7 @@ else
     private int JournalDaysThisYear;
     private int JournalDaysThisMonth;
     private string? MonthTopMood;
+    private HashSet<DateOnly> MonthJournalDays = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -740,6 +753,9 @@ else
             .Select(j => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime))
             .ToHashSet();
         HasEntryToday = journalDates.Contains(DateOnly.FromDateTime(DateTime.Today));
+        MonthJournalDays = journalDates
+            .Where(d => d.Year == DateTime.Today.Year && d.Month == DateTime.Today.Month)
+            .ToHashSet();
         JournalStreak = 0;
         var jsDay = DateOnly.FromDateTime(DateTime.Today);
         while (journalDates.Contains(jsDay))
