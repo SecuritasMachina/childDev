@@ -312,6 +312,14 @@
     </MudItem>
 </MudGrid>
 
+@if ((CompletedGoals.Count >= 1 || TotalProgressNotes >= 5) && string.IsNullOrWhiteSpace(FilterText))
+{
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Class="mb-2">
+        <MudButton Href="/achievements" Variant="Variant.Text" Color="Color.Warning" Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.EmojiEvents">View Achievements 🏆</MudButton>
+    </MudStack>
+}
+
 @if ((YtdProgressNotes >= 5 || YtdGoalsCompleted >= 1) && string.IsNullOrWhiteSpace(FilterText))
 {
     var yearLabel = $"{DateTime.Today.Year}";
