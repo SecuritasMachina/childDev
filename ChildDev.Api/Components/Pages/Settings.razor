@@ -36,6 +36,37 @@
             </MudCardContent>
         </MudCard>
 
+        @if (TotalGoals > 0 || TotalProgressNotes > 0)
+        {
+            <MudCard Elevation="2" Class="mb-4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Your Progress at a Glance</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudGrid Spacing="2">
+                        <MudItem xs="6">
+                            <MudText Typo="Typo.h5" Color="Color.Primary">@TotalGoals</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Total Goals</MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudText Typo="Typo.h5" Color="Color.Success">@TotalProgressNotes</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Progress Notes</MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudText Typo="Typo.h5" Color="Color.Info">@TotalJournalEntries</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Journal Entries</MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudText Typo="Typo.h5" Color="Color.Warning">@TotalTodosCompleted<span style="font-size:1rem;opacity:.6;">/@TotalTodos</span></MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Todos Done</MudText>
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        }
+
         <MudCard Elevation="2" Class="mb-4">
             <MudCardHeader>
                 <CardHeaderContent>
@@ -87,6 +118,11 @@
     private string? AccountGuid;
     private string CurrentNickName = string.Empty;
     private string CreatedOnDisplay = string.Empty;
+    private int TotalGoals;
+    private int TotalProgressNotes;
+    private int TotalJournalEntries;
+    private int TotalTodos;
+    private int TotalTodosCompleted;
 
     private string NewNickName = string.Empty;
     private string? NickNameError;
@@ -111,6 +147,12 @@
         CurrentNickName = display.NickName;
         NewNickName = display.NickName;
         CreatedOnDisplay = DateTimeOffset.FromUnixTimeMilliseconds(display.CreatedOn).LocalDateTime.ToString("MMMM d, yyyy");
+        TotalGoals = await Db.Goals.CountAsync(g => g.AccountFk == AccountGuid && g.DeletedAt == null);
+        TotalProgressNotes = await Db.GoalProgresses.CountAsync(p => p.AccountFk == AccountGuid && p.DeletedAt == null);
+        TotalJournalEntries = await Db.Journals.CountAsync(j => j.AccountFk == AccountGuid && j.DeletedAt == null);
+        var allTodos = await Db.Todos.Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null).Select(t => t.CompletedAt).ToListAsync();
+        TotalTodos = allTodos.Count;
+        TotalTodosCompleted = allTodos.Count(c => c != null);
         await Analytics.TrackAsync("page_view", AccountGuid, "settings");
     }
 
