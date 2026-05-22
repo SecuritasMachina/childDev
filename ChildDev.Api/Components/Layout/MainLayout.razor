@@ -4,7 +4,7 @@
 @inject AppDbContext Db
 @using Microsoft.EntityFrameworkCore
 
-<MudThemeProvider Theme="_theme" />
+<MudThemeProvider Theme="_theme" IsDarkMode="@_darkMode" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -34,6 +34,10 @@
             </MudChip>
         }
         <MudSpacer />
+        <MudIconButton Icon="@(_darkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
+                       Color="Color.Inherit" Size="Size.Small"
+                       OnClick="@(() => _darkMode = !_darkMode)"
+                       title="@(_darkMode ? "Switch to light mode" : "Switch to dark mode")" />
         @if (NickName is not null)
         {
             <MudHidden Breakpoint="Breakpoint.SmAndDown">
@@ -119,6 +123,7 @@
 @code {
     private string? NickName;
     private bool _drawerOpen;
+    private bool _darkMode;
     private int _overdueTodoCount;
     private int _dailyStreak;
 
