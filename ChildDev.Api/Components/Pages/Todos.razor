@@ -147,6 +147,14 @@ else
             <MudChip T="string" Value="@("NoDate")" Variant="Variant.Filled" Color="Color.Info">No Date @(NoDateCount > 0 ? $"({NoDateCount})" : "")</MudChip>
         </MudChipSet>
         <MudSpacer />
+        <MudSelect T="string" Value="@SortBy" ValueChanged="OnSortChanged"
+                   Variant="Variant.Outlined" Margin="Margin.Dense"
+                   Style="max-width:130px;" Label="Sort"
+                   Dense="true">
+            <MudSelectItem Value="@("DueDate")">Due Date</MudSelectItem>
+            <MudSelectItem Value="@("Added")">Newest</MudSelectItem>
+            <MudSelectItem Value="@("Title")">Title A–Z</MudSelectItem>
+        </MudSelect>
         <MudTooltip Text="@(_groupByGoal ? "Switch to date view" : "Group by goal")">
             <MudIconButton Icon="@(_groupByGoal ? Icons.Material.Filled.ViewList : Icons.Material.Filled.AccountTree)"
                            Color="@(_groupByGoal ? Color.Warning : Color.Default)"
@@ -712,6 +720,7 @@ else
     private int OldestPendingDays;
     private string FilterText = string.Empty;
     private string StatusFilter = "All";
+    private string SortBy = "DueDate";
     private List<Todo> PendingTodos = [];
     private bool ShowAddDialog;
     private string NewTitle = string.Empty;
@@ -834,7 +843,20 @@ else
                                            (t.Notes?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false));
         }
 
-        PendingTodos = filtered.ToList();
+        PendingTodos = (SortBy switch
+        {
+            "Title" => filtered.OrderBy(t => t.Title ?? ""),
+            "Added" => filtered.OrderByDescending(t => t.UpdatedOn),
+            _ => filtered.OrderBy(t => t.DueDate ?? long.MaxValue)
+        }).ToList();
+    }
+
+    private void OnSortChanged(string value)
+    {
+        SortBy = value;
+        ApplyFilter();
+        if (AccountGuid is not null)
+            _ = Analytics.TrackAsync("todo_sort", AccountGuid, "todos", value);
     }
 
     private void OpenAddDialogForGoal(string goalText)
