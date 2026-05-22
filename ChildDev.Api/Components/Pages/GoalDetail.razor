@@ -1916,14 +1916,20 @@ else
             <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary" Class="mt-1">
                 🌟 You set this goal and saw it through — that takes real grit. Be proud of this win!
             </MudText>
+            <MudTextField @bind-Value="_celebrationReflection"
+                          Label="What did you learn? What are you most proud of? (optional)"
+                          Variant="Variant.Outlined" Lines="2" FullWidth="true" Immediate="true"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.AutoAwesome"
+                          AdornmentColor="Color.Warning"
+                          Style="margin-top:8px;" />
         </MudStack>
     </DialogContent>
     <DialogActions>
         <MudButton Variant="Variant.Text" Color="Color.Default"
-                   OnClick="() => ShowCelebration = false">Done</MudButton>
+                   OnClick="async () => await CloseGoalCelebration()">Done</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Success"
                    StartIcon="@Icons.Material.Filled.Flag"
-                   Href="/">Set New Goal 🎯</MudButton>
+                   OnClick="CloseAndGoHome">Set New Goal 🎯</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -2091,6 +2097,7 @@ else
     private DateTime? NewMeetingDate;
     private string? _dialogPrevNoteText;
     private bool ShowCelebration;
+    private string _celebrationReflection = string.Empty;
     private List<ChartSeries> ProgressChartSeries = [];
     private string[] ProgressChartLabels = [];
     private bool ShowEditProgressDialog;
@@ -2494,7 +2501,36 @@ else
         Goal.UpdatedOn = now;
         await Db.SaveChangesAsync();
         await Analytics.TrackAsync("goal_complete", AccountGuid, "goal_detail", GoalGuid);
+        _celebrationReflection = string.Empty;
         ShowCelebration = true;
+    }
+
+    private async Task CloseAndGoHome()
+    {
+        await CloseGoalCelebration();
+        Nav.NavigateTo("/");
+    }
+
+    private async Task CloseGoalCelebration()
+    {
+        ShowCelebration = false;
+        var reflection = _celebrationReflection.Trim();
+        if (!string.IsNullOrWhiteSpace(reflection) && GoalGuid is not null && AccountGuid is not null)
+        {
+            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            Db.GoalProgresses.Add(new GoalProgress
+            {
+                Guid = System.Guid.NewGuid().ToString(),
+                AccountFk = AccountGuid,
+                GoalFk = GoalGuid,
+                NextStepItems = $"🏆 Reflection: {reflection}",
+                UpdatedOn = now
+            });
+            await Db.SaveChangesAsync();
+            await Analytics.TrackAsync("goal_reflection", AccountGuid, "goal_detail", GoalGuid);
+            await LoadProgress();
+        }
+        _celebrationReflection = string.Empty;
     }
 
     private async Task ReopenGoal()
