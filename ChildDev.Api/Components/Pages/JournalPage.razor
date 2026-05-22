@@ -32,6 +32,20 @@
             <MudChip T="string" Value="@("Week")" Variant="Variant.Filled" Color="Color.Info">This Week</MudChip>
             <MudChip T="string" Value="@("Month")" Variant="Variant.Filled" Color="Color.Info">This Month</MudChip>
         </MudChipSet>
+        @if (AvailableYears.Count >= 2)
+        {
+            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Class="ml-1">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Year:</MudText>
+                @foreach (var yr in AvailableYears)
+                {
+                    var isYrSelected = YearFilter == yr;
+                    <MudChip T="int" Size="Size.Small"
+                             Color="@(isYrSelected ? Color.Primary : Color.Default)"
+                             Variant="@(isYrSelected ? Variant.Filled : Variant.Outlined)"
+                             OnClick="@(() => OnYearFilterChanged(yr))">@yr</MudChip>
+                }
+            </MudStack>
+        }
         <MudSpacer />
         <MudTextField Value="@FilterText" ValueChanged="@((string v) => OnFilterChanged(v))"
                       Placeholder="Search entries…" Variant="Variant.Outlined" Margin="Margin.Dense"
@@ -838,6 +852,8 @@ else
     private int _displayCount = PageSize;
     private string FilterText = string.Empty;
     private string DateFilter = "All";
+    private int? YearFilter;
+    private List<int> AvailableYears = [];
     private string? TagFilter;
     private string? MoodFilter;
     private string? ActivityFilter;
@@ -982,6 +998,12 @@ else
             .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null)
             .OrderByDescending(j => j.EnteredDate)
             .ToListAsync();
+        AvailableYears = AllEntries
+            .Select(j => DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime.Year)
+            .Distinct()
+            .OrderByDescending(y => y)
+            .ToList();
+
         var journalDates = AllEntries
             .Select(j => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime))
             .ToHashSet();
@@ -1159,6 +1181,14 @@ else
             _ = Analytics.TrackAsync("journal_filter", AccountGuid, "journal", DateFilter);
     }
 
+    private void OnYearFilterChanged(int? year)
+    {
+        YearFilter = YearFilter == year ? null : year;
+        ApplyFilter();
+        if (year.HasValue && AccountGuid is not null)
+            _ = Analytics.TrackAsync("journal_year_filter", AccountGuid, "journal", year.Value.ToString());
+    }
+
     private void ApplyFilter()
     {
         var weekStartMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
@@ -1170,6 +1200,9 @@ else
             "Month" => AllEntries.Where(j => j.EnteredDate >= monthStartMs),
             _ => AllEntries
         };
+
+        if (YearFilter.HasValue)
+            filtered = filtered.Where(j => DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime.Year == YearFilter.Value);
 
         if (!string.IsNullOrWhiteSpace(FilterText))
         {
