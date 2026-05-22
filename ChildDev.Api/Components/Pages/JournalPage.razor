@@ -555,7 +555,12 @@ else
                         <CardHeaderActions>
                             @if (!string.IsNullOrWhiteSpace(j.Mood))
                             {
-                                <MudChip T="string" Size="Size.Small" Color="Color.Secondary">@j.Mood</MudChip>
+                                var jMoodEmoji2 = j.Mood switch {
+                                    "happy" => "😊", "excited" => "🤩", "grateful" => "🙏", "proud" => "💪",
+                                    "calm" => "😌", "focused" => "🎯", "sad" => "😢", "tired" => "😴",
+                                    "anxious" => "😟", "angry" => "😠", _ => null
+                                };
+                                <MudChip T="string" Size="Size.Small" Color="Color.Secondary">@(jMoodEmoji2 is not null ? $"{jMoodEmoji2} " : "")@j.Mood</MudChip>
                             }
                         </CardHeaderActions>
                     </MudCardHeader>
