@@ -1813,9 +1813,9 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
             }
         </MudStack>
         <MudTextField @bind-Value="NewGoalText" Label="What's the goal?" Variant="Variant.Outlined"
-                      Lines="2" Class="mb-4" AutoFocus="true" />
+                      Lines="2" Class="mb-4" AutoFocus="true" Immediate="true" />
         <MudTextField @bind-Value="NewMeasurableOutcome" Label="How will you measure success? (optional)"
-                      Variant="Variant.Outlined" HelperText="e.g. Read 10 books, Tie shoes independently" Class="mb-4" />
+                      Variant="Variant.Outlined" Immediate="true" HelperText="e.g. Read 10 books, Tie shoes independently" Class="mb-4" />
         <MudDatePicker @bind-Date="NewGoalExpirationDate" Label="Target completion date (optional)"
                        Variant="Variant.Outlined" HelperText="When do you want to achieve this by?" Class="mb-4" />
         <MudDatePicker @bind-Date="NewGoalNextMeetingDate" Label="Next check-in / meeting date (optional)"

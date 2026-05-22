@@ -2054,9 +2054,9 @@ else
     </TitleContent>
     <DialogContent>
         <MudTextField @bind-Value="EditGoalText" Label="Goal" Variant="Variant.Outlined"
-                      Lines="2" Class="mb-4" AutoFocus="true" />
+                      Lines="2" Class="mb-4" AutoFocus="true" Immediate="true" />
         <MudTextField @bind-Value="EditMeasurableOutcome" Label="How will you measure success? (optional)"
-                      Variant="Variant.Outlined" Class="mb-4" />
+                      Variant="Variant.Outlined" Immediate="true" Class="mb-4" />
         <MudDatePicker @bind-Date="EditNextMeetingDate" Label="Next meeting date (optional)"
                        Variant="Variant.Outlined" Class="mb-4" />
         <MudDatePicker @bind-Date="EditExpirationDate" Label="Target completion date (optional)"
