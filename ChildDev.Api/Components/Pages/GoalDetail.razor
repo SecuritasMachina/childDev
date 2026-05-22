@@ -1980,9 +1980,14 @@ else
                 }
             </MudStack>
         }
+        @{
+            var pnWc = NewNextSteps.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
+            var pnWcHelper = pnWc == 0 ? "Be specific — the more detail, the more you'll see your growth!" : $"{pnWc} word{(pnWc == 1 ? "" : "s")}";
+        }
         <MudTextField @bind-Value="NewNextSteps"
                       Label="What happened? What's the next step?"
-                      Variant="Variant.Outlined" Lines="3" Class="mb-4" AutoFocus="true" />
+                      Variant="Variant.Outlined" Lines="3" Class="mb-4" AutoFocus="true"
+                      Immediate="true" HelperText="@pnWcHelper" />
         <MudDatePicker @bind-Date="NewMeetingDate" Label="Next meeting date (optional)" Variant="Variant.Outlined" />
     </DialogContent>
     <DialogActions>
