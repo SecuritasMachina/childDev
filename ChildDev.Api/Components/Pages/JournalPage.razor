@@ -656,8 +656,13 @@ else
         </MudText>
     </TitleContent>
     <DialogContent>
+        @{
+            var newWc = NewNotes.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
+            var newWcHelper = newWc == 0 ? "Write freely — every word counts!" : $"{newWc} word{(newWc == 1 ? "" : "s")}";
+        }
         <MudTextField @bind-Value="NewNotes" Label="What happened? What did you observe?" Variant="Variant.Outlined"
-                      Lines="4" Class="mb-4" AutoFocus="true" />
+                      Lines="4" Class="mb-4" AutoFocus="true" Immediate="true"
+                      HelperText="@newWcHelper" />
         <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Activity (tap to select or type below):</MudText>
         <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-2">
             @foreach (var act in new[] { "School", "Sports", "Reading", "Art", "Music", "Family time", "Social", "Homework", "Outdoor play", "Screen time" })
@@ -735,8 +740,13 @@ else
         </MudText>
     </TitleContent>
     <DialogContent>
+        @{
+            var editWc = EditNotes.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
+            var editWcHelper = editWc == 0 ? "Write freely — every word counts!" : $"{editWc} word{(editWc == 1 ? "" : "s")}";
+        }
         <MudTextField @bind-Value="EditNotes" Label="Notes" Variant="Variant.Outlined"
-                      Lines="4" Class="mb-4" AutoFocus="true" />
+                      Lines="4" Class="mb-4" AutoFocus="true" Immediate="true"
+                      HelperText="@editWcHelper" />
         <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Activity (tap to select or type below):</MudText>
         <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-2">
             @foreach (var act in new[] { "School", "Sports", "Reading", "Art", "Music", "Family time", "Social", "Homework", "Outdoor play", "Screen time" })
