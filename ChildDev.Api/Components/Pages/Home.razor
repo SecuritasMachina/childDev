@@ -2126,7 +2126,8 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         {
             var q = FilterText.Trim();
             filtered = filtered.Where(g => (g.GoalText?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false)
-                                        || (g.MeasurableOutcome?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false));
+                                        || (g.MeasurableOutcome?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false)
+                                        || (LatestNextStep.TryGetValue(g.Guid, out var ns) && ns.Contains(q, StringComparison.OrdinalIgnoreCase)));
         }
         if (QuickFilter == "attention")
             filtered = filtered.Where(g => {
