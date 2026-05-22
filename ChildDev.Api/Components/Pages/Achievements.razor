@@ -77,6 +77,10 @@
                     <MudText Style="font-size:1.5rem;line-height:1.3;">@next!.Emoji</MudText>
                     <MudText Typo="Typo.caption" Style="font-weight:700;display:block;">@next!.Name</MudText>
                     <MudText Typo="Typo.caption" Style="font-size:0.6rem;color:var(--mud-palette-text-secondary);">@cat.Icon @cat.Name</MudText>
+                    @if (!string.IsNullOrEmpty(next!.ProgressHint))
+                    {
+                        <MudText Typo="Typo.caption" Style="font-size:0.6rem;color:var(--mud-palette-primary);font-weight:600;">@next.ProgressHint</MudText>
+                    }
                 </MudPaper>
             }
         </MudStack>
@@ -121,6 +125,10 @@
                     @if (!badge.Earned)
                     {
                         <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" Color="Color.Secondary" Style="margin-top:4px;" />
+                        @if (!string.IsNullOrEmpty(badge.ProgressHint))
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Primary" Style="font-size:0.6rem;font-weight:600;margin-top:2px;">@badge.ProgressHint</MudText>
+                        }
                     }
                 </MudPaper>
             </MudItem>
@@ -134,7 +142,7 @@
     private int TotalBadgeCount;
     private List<BadgeCategory> BadgeCategories = [];
 
-    private record Badge(string Emoji, string Name, string Description, bool Earned, DateTime? EarnedOn = null);
+    private record Badge(string Emoji, string Name, string Description, bool Earned, DateTime? EarnedOn = null, string? ProgressHint = null);
     private record BadgeCategory(string Icon, string Name, string GradientFrom, string GradientTo, List<Badge> Badges);
 
     protected override async Task OnInitializedAsync()
@@ -209,39 +217,39 @@
             new BadgeCategory("🎯", "Goals", "rgba(57,73,171,.85)", "rgba(40,53,147,.9)",
             [
                 MakeBadge("🌱", "First Goal", "Set your very first goal", goals.Count >= 1, firstGoalDate),
-                MakeBadge("⭐", "Achiever", "Complete your first goal", completedGoals.Count >= 1, firstCompleteDate),
-                MakeBadge("🏆", "Champion", "Complete 5 goals", completedGoals.Count >= 5, completedGoals.Count >= 5 ? DateTimeOffset.FromUnixTimeMilliseconds(completedGoals[4].CompletionDate!.Value).LocalDateTime : null),
-                MakeBadge("🌟", "Goal Legend", "Complete 25 goals", completedGoals.Count >= 25, completedGoals.Count >= 25 ? DateTimeOffset.FromUnixTimeMilliseconds(completedGoals[24].CompletionDate!.Value).LocalDateTime : null),
-                MakeBadge("🚀", "Ambitious", "Set 5 goals", goals.Count >= 5, null),
-                MakeBadge("💫", "Dream Big", "Set 20 goals", goals.Count >= 20, null),
+                MakeBadge("⭐", "Achiever", "Complete your first goal", completedGoals.Count >= 1, firstCompleteDate, completedGoals.Count == 0 ? "0/1 completed" : null),
+                MakeBadge("🏆", "Champion", "Complete 5 goals", completedGoals.Count >= 5, completedGoals.Count >= 5 ? DateTimeOffset.FromUnixTimeMilliseconds(completedGoals[4].CompletionDate!.Value).LocalDateTime : null, completedGoals.Count < 5 ? $"{completedGoals.Count}/5 completed" : null),
+                MakeBadge("🌟", "Goal Legend", "Complete 25 goals", completedGoals.Count >= 25, completedGoals.Count >= 25 ? DateTimeOffset.FromUnixTimeMilliseconds(completedGoals[24].CompletionDate!.Value).LocalDateTime : null, completedGoals.Count < 25 ? $"{completedGoals.Count}/25 completed" : null),
+                MakeBadge("🚀", "Ambitious", "Set 5 goals", goals.Count >= 5, null, goals.Count < 5 ? $"{goals.Count}/5 goals" : null),
+                MakeBadge("💫", "Dream Big", "Set 20 goals", goals.Count >= 20, null, goals.Count < 20 ? $"{goals.Count}/20 goals" : null),
             ]),
             new BadgeCategory("📝", "Progress Notes", "rgba(67,160,71,.85)", "rgba(27,94,32,.9)",
             [
                 MakeBadge("✏️", "First Step", "Add your first progress note", progressNotes.Count >= 1, firstNoteDate),
-                MakeBadge("📋", "Note Taker", "Write 10 progress notes", progressNotes.Count >= 10, progressNotes.Count >= 10 ? DateTimeOffset.FromUnixTimeMilliseconds(progressNotes[9]).LocalDateTime : null),
-                MakeBadge("🗒️", "Dedicated", "Write 50 progress notes", progressNotes.Count >= 50, progressNotes.Count >= 50 ? DateTimeOffset.FromUnixTimeMilliseconds(progressNotes[49]).LocalDateTime : null),
-                MakeBadge("📚", "Master Tracker", "Write 200 progress notes", progressNotes.Count >= 200, progressNotes.Count >= 200 ? DateTimeOffset.FromUnixTimeMilliseconds(progressNotes[199]).LocalDateTime : null),
+                MakeBadge("📋", "Note Taker", "Write 10 progress notes", progressNotes.Count >= 10, progressNotes.Count >= 10 ? DateTimeOffset.FromUnixTimeMilliseconds(progressNotes[9]).LocalDateTime : null, progressNotes.Count < 10 ? $"{progressNotes.Count}/10 notes" : null),
+                MakeBadge("🗒️", "Dedicated", "Write 50 progress notes", progressNotes.Count >= 50, progressNotes.Count >= 50 ? DateTimeOffset.FromUnixTimeMilliseconds(progressNotes[49]).LocalDateTime : null, progressNotes.Count < 50 ? $"{progressNotes.Count}/50 notes" : null),
+                MakeBadge("📚", "Master Tracker", "Write 200 progress notes", progressNotes.Count >= 200, progressNotes.Count >= 200 ? DateTimeOffset.FromUnixTimeMilliseconds(progressNotes[199]).LocalDateTime : null, progressNotes.Count < 200 ? $"{progressNotes.Count}/200 notes" : null),
             ]),
             new BadgeCategory("✅", "Todos", "rgba(229,57,53,.85)", "rgba(183,28,28,.9)",
             [
                 MakeBadge("✔️", "Action Taker", "Complete your first todo", todos.Count >= 1, firstTodoDate),
-                MakeBadge("💪", "Getting Things Done", "Complete 25 todos", todos.Count >= 25, todos.Count >= 25 ? DateTimeOffset.FromUnixTimeMilliseconds(todos[24]).LocalDateTime : null),
-                MakeBadge("⚡", "Productivity Pro", "Complete 100 todos", todos.Count >= 100, todos.Count >= 100 ? DateTimeOffset.FromUnixTimeMilliseconds(todos[99]).LocalDateTime : null),
-                MakeBadge("🔥", "Machine", "Complete 500 todos", todos.Count >= 500, todos.Count >= 500 ? DateTimeOffset.FromUnixTimeMilliseconds(todos[499]).LocalDateTime : null),
+                MakeBadge("💪", "Getting Things Done", "Complete 25 todos", todos.Count >= 25, todos.Count >= 25 ? DateTimeOffset.FromUnixTimeMilliseconds(todos[24]).LocalDateTime : null, todos.Count < 25 ? $"{todos.Count}/25 todos" : null),
+                MakeBadge("⚡", "Productivity Pro", "Complete 100 todos", todos.Count >= 100, todos.Count >= 100 ? DateTimeOffset.FromUnixTimeMilliseconds(todos[99]).LocalDateTime : null, todos.Count < 100 ? $"{todos.Count}/100 todos" : null),
+                MakeBadge("🔥", "Machine", "Complete 500 todos", todos.Count >= 500, todos.Count >= 500 ? DateTimeOffset.FromUnixTimeMilliseconds(todos[499]).LocalDateTime : null, todos.Count < 500 ? $"{todos.Count}/500 todos" : null),
             ]),
             new BadgeCategory("📓", "Journal", "rgba(2,136,209,.85)", "rgba(1,87,155,.9)",
             [
                 MakeBadge("📖", "First Entry", "Write your first journal entry", journals.Count >= 1, firstJournalDate),
-                MakeBadge("✍️", "Reflection Builder", "Write 10 journal entries", journals.Count >= 10, journals.Count >= 10 ? DateTimeOffset.FromUnixTimeMilliseconds(journals[9]).LocalDateTime : null),
-                MakeBadge("🖋️", "Storyteller", "Write 50 journal entries", journals.Count >= 50, journals.Count >= 50 ? DateTimeOffset.FromUnixTimeMilliseconds(journals[49]).LocalDateTime : null),
-                MakeBadge("🏅", "Author", "Write 200 journal entries", journals.Count >= 200, journals.Count >= 200 ? DateTimeOffset.FromUnixTimeMilliseconds(journals[199]).LocalDateTime : null),
+                MakeBadge("✍️", "Reflection Builder", "Write 10 journal entries", journals.Count >= 10, journals.Count >= 10 ? DateTimeOffset.FromUnixTimeMilliseconds(journals[9]).LocalDateTime : null, journals.Count < 10 ? $"{journals.Count}/10 entries" : null),
+                MakeBadge("🖋️", "Storyteller", "Write 50 journal entries", journals.Count >= 50, journals.Count >= 50 ? DateTimeOffset.FromUnixTimeMilliseconds(journals[49]).LocalDateTime : null, journals.Count < 50 ? $"{journals.Count}/50 entries" : null),
+                MakeBadge("🏅", "Author", "Write 200 journal entries", journals.Count >= 200, journals.Count >= 200 ? DateTimeOffset.FromUnixTimeMilliseconds(journals[199]).LocalDateTime : null, journals.Count < 200 ? $"{journals.Count}/200 entries" : null),
             ]),
             new BadgeCategory("🔥", "Streaks", "rgba(249,168,37,.9)", "rgba(230,81,0,.9)",
             [
-                MakeBadge("⚡", "3-Day Streak", "Be active 3 days in a row", maxStreak >= 3, null),
-                MakeBadge("🔥", "Week Warrior", "Be active 7 days in a row", maxStreak >= 7, null),
-                MakeBadge("🌟", "Month Master", "Be active 30 days in a row", maxStreak >= 30, null),
-                MakeBadge("🏆", "Unstoppable", "Be active 100 days in a row", maxStreak >= 100, null),
+                MakeBadge("⚡", "3-Day Streak", "Be active 3 days in a row", maxStreak >= 3, null, maxStreak < 3 ? $"Best: {maxStreak} days" : null),
+                MakeBadge("🔥", "Week Warrior", "Be active 7 days in a row", maxStreak >= 7, null, maxStreak < 7 ? $"Best: {maxStreak} days" : null),
+                MakeBadge("🌟", "Month Master", "Be active 30 days in a row", maxStreak >= 30, null, maxStreak < 30 ? $"Best: {maxStreak} days" : null),
+                MakeBadge("🏆", "Unstoppable", "Be active 100 days in a row", maxStreak >= 100, null, maxStreak < 100 ? $"Best: {maxStreak} days" : null),
             ]),
         ];
 
@@ -249,6 +257,6 @@
         EarnedCount = BadgeCategories.Sum(c => c.Badges.Count(b => b.Earned));
     }
 
-    private static Badge MakeBadge(string emoji, string name, string desc, bool earned, DateTime? earnedOn) =>
-        new(emoji, name, desc, earned, earned ? earnedOn : null);
+    private static Badge MakeBadge(string emoji, string name, string desc, bool earned, DateTime? earnedOn, string? progressHint = null) =>
+        new(emoji, name, desc, earned, earned ? earnedOn : null, earned ? null : progressHint);
 }
