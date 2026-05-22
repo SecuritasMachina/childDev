@@ -21,7 +21,17 @@
 @if (OverdueCount > 0)
 {
     <MudAlert Severity="Severity.Warning" Class="mb-4">
-        @OverdueCount overdue todo@(OverdueCount == 1 ? "" : "s") — get caught up!
+        <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="1">
+            <MudText Style="flex:1;">@OverdueCount overdue todo@(OverdueCount == 1 ? "" : "s") — get caught up!</MudText>
+            @if (OverdueCount >= 2)
+            {
+                <MudButton Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.Today"
+                           OnClick="() => _confirmRescheduleAllOverdue = true">
+                    📅 Reschedule All
+                </MudButton>
+            }
+        </MudStack>
     </MudAlert>
 }
 
@@ -533,6 +543,23 @@ else
     </DialogActions>
 </MudDialog>
 
+@* Reschedule All Overdue Confirmation *@
+<MudDialog @bind-Visible="_confirmRescheduleAllOverdue">
+    <TitleContent>
+        <MudText Typo="Typo.h6" Color="Color.Warning">
+            <MudIcon Icon="@Icons.Material.Filled.Today" Class="mr-2" />
+            Reschedule All Overdue?
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText>Move all @OverdueCount overdue todo@(OverdueCount == 1 ? "" : "s") to today? You can snooze or reschedule them individually after.</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _confirmRescheduleAllOverdue = false">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="RescheduleAllOverdue">📅 Reschedule All</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @* Delete Todo Confirmation *@
 <MudDialog Visible="@(_confirmDeleteGuid is not null)" VisibleChanged="@((bool v) => { if (!v) _confirmDeleteGuid = null; })">
     <TitleContent>
@@ -694,6 +721,7 @@ else
     private string _newGoalLink = string.Empty;
     private bool _groupByGoal = false;
     private bool _confirmCompleteAllToday;
+    private bool _confirmRescheduleAllOverdue;
 
     protected override async Task OnInitializedAsync()
     {
@@ -927,6 +955,25 @@ else
         if (rows == 0) return;
         await Analytics.TrackAsync("todo_reschedule_today", AccountGuid, "todos");
         Snackbar.Add("Rescheduled to today.", Severity.Info);
+        await LoadTodos();
+    }
+
+    private async Task RescheduleAllOverdue()
+    {
+        _confirmRescheduleAllOverdue = false;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guids = AllPendingTodos
+            .Where(t => t.DueDate.HasValue && t.DueDate.Value < TodayStartMs)
+            .Select(t => t.Guid)
+            .ToList();
+        if (guids.Count == 0) return;
+        await Db.Todos
+            .Where(t => guids.Contains(t.Guid) && t.AccountFk == AccountGuid && t.CompletedAt == null)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.DueDate, TodayStartMs)
+                .SetProperty(t => t.UpdatedOn, now));
+        await Analytics.TrackAsync("todo_reschedule_all_overdue", AccountGuid, "todos", guids.Count.ToString());
+        Snackbar.Add($"📅 {guids.Count} overdue todo{(guids.Count == 1 ? "" : "s")} moved to today.", Severity.Success);
         await LoadTodos();
     }
 
