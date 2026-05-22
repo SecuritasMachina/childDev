@@ -1527,6 +1527,9 @@ else
                                 <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Success"
                                            OnClick="() => CelebrateStep(p.NextStepItems!)"
                                            aria-label="Mark step done">Done! 🎉</MudButton>
+                                <MudIconButton Icon="@Icons.Material.Filled.AddTask" Size="Size.Small"
+                                               Color="Color.Info" title="Create todo from this note"
+                                               OnClick="() => OpenAddTodoFromNote(p.NextStepItems!)" aria-label="Create todo from note" />
                             }
                             <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
                                            Color="Color.Default" OnClick="() => OpenEditProgress(p)" aria-label="Edit progress note" />
@@ -1958,6 +1961,14 @@ else
     {
         var goalName = Goal?.GoalText ?? string.Empty;
         _newTodoTitle = goalName.Length > 60 ? goalName[..60] : goalName;
+        _newTodoNotes = null;
+        _newTodoDueDate = null;
+        _showAddTodoDialog = true;
+    }
+
+    private void OpenAddTodoFromNote(string noteText)
+    {
+        _newTodoTitle = noteText.Length > 60 ? noteText[..60] : noteText;
         _newTodoNotes = null;
         _newTodoDueDate = null;
         _showAddTodoDialog = true;
