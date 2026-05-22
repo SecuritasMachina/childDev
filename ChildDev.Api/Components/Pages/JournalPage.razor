@@ -288,6 +288,37 @@
         </MudStack>
     </MudPaper>
 }
+@* On this day — memories from past years *@
+@if (OnThisDayEntries.Count > 0)
+{
+    <MudPaper Elevation="1" Class="pa-3 mb-3" Style="border-radius:12px;border-left:4px solid var(--mud-palette-info);">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+            <MudIcon Icon="@Icons.Material.Filled.History" Color="Color.Info" Size="Size.Small" />
+            <MudText Typo="Typo.body2" Style="font-weight:700;color:var(--mud-palette-info-darken);">📅 On this day…</MudText>
+        </MudStack>
+        @foreach (var (entry, yearsAgo) in OnThisDayEntries)
+        {
+            var otdLabel = yearsAgo == 1 ? "1 year ago" : $"{yearsAgo} years ago";
+            var otdSnip = !string.IsNullOrWhiteSpace(entry.Notes)
+                ? (entry.Notes.Length > 150 ? entry.Notes[..150] + "…" : entry.Notes)
+                : null;
+            var otdMood = !string.IsNullOrWhiteSpace(entry.Mood) ? entry.Mood : null;
+            <MudPaper Elevation="0" Class="pa-2 mb-2" Style="border-radius:8px;background:var(--mud-palette-background-grey);">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">@otdLabel</MudChip>
+                    @if (otdMood is not null)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">@otdMood</MudChip>
+                    }
+                </MudStack>
+                @if (otdSnip is not null)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@otdSnip</MudText>
+                }
+            </MudPaper>
+        }
+    </MudPaper>
+}
 @* 5-week journal heatmap *@
 @if (AllEntries.Count >= 3)
 {
@@ -740,6 +771,7 @@ else
     private int JournalDaysThisMonth;
     private string? MonthTopMood;
     private HashSet<DateOnly> MonthJournalDays = new();
+    private List<(Journal Entry, int YearsAgo)> OnThisDayEntries = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -835,6 +867,17 @@ else
         BuildTagCloud();
         BuildMoodCloud();
         BuildActivityCloud();
+
+        // "On this day" — entries from same month/day in prior years
+        var otdToday = DateOnly.FromDateTime(DateTime.Today);
+        OnThisDayEntries = AllEntries
+            .Select(j => (Entry: j, Date: DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime)))
+            .Where(x => x.Date.Month == otdToday.Month && x.Date.Day == otdToday.Day && x.Date.Year < otdToday.Year)
+            .OrderByDescending(x => x.Date.Year)
+            .Take(3)
+            .Select(x => (x.Entry, otdToday.Year - x.Date.Year))
+            .ToList();
+
         ApplyFilter();
     }
 
