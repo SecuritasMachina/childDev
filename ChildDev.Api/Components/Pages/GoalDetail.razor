@@ -1609,6 +1609,13 @@ else
                 _     => ("🌱", "Seedling", "⚡ Getting Started", 1, 0)
             };
             var sumPct = sumNextCount > 0 ? (int)((sumCount - sumPrev) * 100.0 / (sumNextCount - sumPrev)) : 100;
+            var pace28Ms = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - 28L * 86_400_000L;
+            var notesLast28 = ProgressEntries.Count(p => p.UpdatedOn >= pace28Ms);
+            var notesPerWeek = notesLast28 / 4.0;
+            var notesNeeded = sumNext is not null ? sumNextCount - sumCount : 0;
+            int? daysToNextLevel = notesPerWeek > 0 && notesNeeded > 0
+                ? (int)Math.Ceiling(notesNeeded / notesPerWeek * 7)
+                : null;
         }
         <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="3" AlignItems="AlignItems.Center">
             <MudStack Spacing="0" AlignItems="AlignItems.Center">
@@ -1640,6 +1647,19 @@ else
                 <MudText Typo="Typo.caption" Color="Color.Secondary">Last Update</MudText>
                 <MudText Typo="Typo.body2" Style="font-weight:600;">@lastLabel</MudText>
             </MudStack>
+            @if (notesLast28 >= 1)
+            {
+                <MudDivider Vertical="true" FlexItem="true" />
+                <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Pace</MudText>
+                    <MudText Typo="Typo.body2" Style="font-weight:600;">@notesLast28 / 4wk</MudText>
+                    @if (daysToNextLevel.HasValue)
+                    {
+                        var daysLabel = daysToNextLevel <= 7 ? $"~{daysToNextLevel}d to level up!" : $"~{daysToNextLevel}d to next level";
+                        <MudText Typo="Typo.caption" Color="@(daysToNextLevel <= 7 ? Color.Success : Color.Secondary)" Style="font-size:0.65rem;">@daysLabel</MudText>
+                    }
+                </MudStack>
+            }
         </MudStack>
     </MudPaper>
 }
