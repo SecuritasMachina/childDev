@@ -130,6 +130,10 @@ else
                 <MudChip T="string" Value="@("Overdue")" Variant="Variant.Filled" Color="Color.Error">Overdue (@OverdueCount)</MudChip>
             }
             <MudChip T="string" Value="@("Today")" Variant="Variant.Filled" Color="Color.Warning">Due Today</MudChip>
+            @if (DueThisWeekCount > 0)
+            {
+                <MudChip T="string" Value="@("Week")" Variant="Variant.Filled" Color="Color.Secondary">This Week (@DueThisWeekCount)</MudChip>
+            }
             <MudChip T="string" Value="@("NoDate")" Variant="Variant.Filled" Color="Color.Info">No Date</MudChip>
         </MudChipSet>
         <MudSpacer />
@@ -436,6 +440,7 @@ else
     private long NowMs;
     private long TodayStartMs;
     private int FocusCount;
+    private int DueThisWeekCount;
     private int CompletedTodayCount;
     private int ProductivityStreak;
     private int LastWeekCompletedCount;
@@ -480,6 +485,8 @@ else
         OverdueCount = AllPendingTodos.Count(t => t.DueDate.HasValue && t.DueDate.Value < TodayStartMs);
         var todayEndForFocus = TodayStartMs + 86_400_000L;
         FocusCount = AllPendingTodos.Count(t => t.DueDate.HasValue && t.DueDate.Value < todayEndForFocus);
+        var thisWeekEndMs = TodayStartMs + 7L * 86_400_000L;
+        DueThisWeekCount = AllPendingTodos.Count(t => t.DueDate.HasValue && t.DueDate.Value >= todayEndForFocus && t.DueDate.Value < thisWeekEndMs);
         WeekCompletedCount = CompletedTodos.Count(t => t.CompletedAt >= weekStartMs);
         var prevWeekStartMs = weekStartMs - 7L * 86_400_000L;
         LastWeekCompletedCount = CompletedTodos.Count(t => t.CompletedAt >= prevWeekStartMs && t.CompletedAt < weekStartMs);
@@ -522,11 +529,13 @@ else
 
         IEnumerable<Todo> filtered = AllPendingTodos;
 
+        var weekEndMs = TodayStartMs + 7L * 86_400_000L;
         filtered = StatusFilter switch
         {
             "Focus" => filtered.Where(t => t.DueDate.HasValue && t.DueDate.Value < todayEndMs),
             "Overdue" => filtered.Where(t => t.DueDate.HasValue && t.DueDate.Value < TodayStartMs),
             "Today" => filtered.Where(t => t.DueDate.HasValue && t.DueDate.Value >= TodayStartMs && t.DueDate.Value < todayEndMs),
+            "Week" => filtered.Where(t => t.DueDate.HasValue && t.DueDate.Value >= todayEndMs && t.DueDate.Value < weekEndMs),
             "NoDate" => filtered.Where(t => !t.DueDate.HasValue),
             _ => filtered
         };
