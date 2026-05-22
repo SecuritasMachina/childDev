@@ -1640,7 +1640,14 @@ else
                             <MudStack Spacing="0" Style="flex:1">
                                 @if (!string.IsNullOrWhiteSpace(p.NextStepItems))
                                 {
-                                    <MudText Typo="Typo.body2">@p.NextStepItems</MudText>
+                                    @if (!string.IsNullOrWhiteSpace(_noteFilter))
+                                    {
+                                        <MudText Typo="Typo.body2">@((MarkupString)HighlightMatch(p.NextStepItems, _noteFilter.Trim()))</MudText>
+                                    }
+                                    else
+                                    {
+                                        <MudText Typo="Typo.body2">@p.NextStepItems</MudText>
+                                    }
                                 }
                                 @if (p.NextMeetingDate.HasValue)
                                 {
@@ -2703,6 +2710,17 @@ else
         await Analytics.TrackAsync("goal_edit", AccountGuid, "goal_detail", GoalGuid);
         ShowEditDialog = false;
         Snackbar.Add("Goal updated!", Severity.Success);
+    }
+
+    private static string HighlightMatch(string text, string query)
+    {
+        if (string.IsNullOrEmpty(query) || query.Length < 2) return System.Net.WebUtility.HtmlEncode(text);
+        var idx = text.IndexOf(query, StringComparison.OrdinalIgnoreCase);
+        if (idx < 0) return System.Net.WebUtility.HtmlEncode(text);
+        var before = System.Net.WebUtility.HtmlEncode(text[..idx]);
+        var match = System.Net.WebUtility.HtmlEncode(text[idx..(idx + query.Length)]);
+        var after = HighlightMatch(text[(idx + query.Length)..], query);
+        return $"{before}<mark style='background:rgba(63,81,181,.18);color:inherit;border-radius:2px;padding:0 2px;'>{match}</mark>{after}";
     }
 
 }
