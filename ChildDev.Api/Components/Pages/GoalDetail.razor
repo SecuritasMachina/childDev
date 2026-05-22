@@ -268,9 +268,25 @@
     var daysSince = (int)(DateTime.Now - goalDate).TotalDays;
     var durationText = daysSince == 0 ? "today" : daysSince == 1 ? "1 day ago" : $"{daysSince} days ago";
 }
-<MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">
+<MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">
     Set on @goalDate.ToString("MMM d, yyyy") — @durationText
 </MudText>
+@if (Goal.CompletionDate is null && ProgressEntries.Count > 0)
+{
+    var lastNote = ProgressEntries[0];
+    var lastWorkMs = lastNote.UpdatedOn;
+    var lastWorkDays = (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - lastWorkMs) / 86_400_000L);
+    var (lastWorkColor, lastWorkLabel) = lastWorkDays == 0
+        ? (Color.Success, "✅ Worked on today")
+        : lastWorkDays == 1
+            ? (Color.Success, "⚡ Last worked on yesterday")
+            : lastWorkDays <= 7
+                ? (Color.Info, $"📅 Last worked on {lastWorkDays} days ago")
+                : lastWorkDays <= 14
+                    ? (Color.Warning, $"⚠ Not worked on in {lastWorkDays} days")
+                    : (Color.Error, $"⏰ {lastWorkDays} days since last note");
+    <MudChip T="string" Size="Size.Small" Color="@lastWorkColor" Variant="Variant.Outlined" Class="mb-2">@lastWorkLabel</MudChip>
+}
 @if (Goal.CompletionDate is null)
 {
     var glpLabel = daysSince < 14 ? ("🌱", "Kickoff", "Getting started — every new goal begins here!")
