@@ -119,6 +119,23 @@
         <MudCard Elevation="2" Class="mb-4">
             <MudCardHeader>
                 <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Progress Report</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudText Typo="Typo.body2" Class="mb-3">
+                    Download a text summary of all your goals, progress notes, and recent journal entries.
+                </MudText>
+            </MudCardContent>
+            <MudCardActions Class="px-4 pb-4">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Download"
+                           OnClick="DownloadProgressReport">Download Report</MudButton>
+            </MudCardActions>
+        </MudCard>
+        <MudCard Elevation="2" Class="mb-4">
+            <MudCardHeader>
+                <CardHeaderContent>
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                         <MudIcon Icon="@Icons.Material.Filled.Android" Style="color:#3DDC84;" />
                         <MudText Typo="Typo.h6">Mobile App Setup</MudText>
@@ -260,5 +277,91 @@
         await JS.InvokeVoidAsync("navigator.clipboard.writeText", AccountGuid);
         await Analytics.TrackAsync("settings_copy_account_id", AccountGuid, "settings");
         Snackbar.Add("Account ID copied!", Severity.Info);
+    }
+
+    private async Task DownloadProgressReport()
+    {
+        if (AccountGuid is null) return;
+        var sb = new System.Text.StringBuilder();
+        var now = DateTime.Now;
+        sb.AppendLine($"ChildDev Progress Report — {CurrentNickName}");
+        sb.AppendLine($"Generated: {now:MMMM d, yyyy}");
+        sb.AppendLine(new string('=', 50));
+
+        var goals = await Db.Goals
+            .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null)
+            .OrderByDescending(g => g.EnteredDate)
+            .ToListAsync();
+        var activeGoals = goals.Where(g => g.CompletionDate == null).ToList();
+        var completedGoals = goals.Where(g => g.CompletionDate != null).ToList();
+
+        sb.AppendLine();
+        sb.AppendLine($"ACTIVE GOALS ({activeGoals.Count})");
+        sb.AppendLine(new string('-', 30));
+        foreach (var g in activeGoals)
+        {
+            sb.AppendLine($"• {g.GoalText}");
+            if (!string.IsNullOrWhiteSpace(g.MeasurableOutcome))
+                sb.AppendLine($"  Success measure: {g.MeasurableOutcome}");
+            var noteCount = await Db.GoalProgresses.CountAsync(p => p.GoalFk == g.Guid && p.DeletedAt == null);
+            sb.AppendLine($"  Progress notes: {noteCount}");
+            var latestNote = await Db.GoalProgresses
+                .Where(p => p.GoalFk == g.Guid && p.DeletedAt == null)
+                .OrderByDescending(p => p.UpdatedOn)
+                .FirstOrDefaultAsync();
+            if (latestNote?.NextStepItems is not null)
+            {
+                var snip = latestNote.NextStepItems.Length > 120 ? latestNote.NextStepItems[..120] + "…" : latestNote.NextStepItems;
+                var d = DateTimeOffset.FromUnixTimeMilliseconds(latestNote.UpdatedOn).LocalDateTime;
+                sb.AppendLine($"  Last note ({d:MMM d}): {snip}");
+            }
+        }
+
+        if (completedGoals.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine($"COMPLETED GOALS ({completedGoals.Count})");
+            sb.AppendLine(new string('-', 30));
+            foreach (var g in completedGoals.Take(10))
+            {
+                var d = DateTimeOffset.FromUnixTimeMilliseconds(g.CompletionDate!.Value).LocalDateTime;
+                sb.AppendLine($"✅ {g.GoalText} (completed {d:MMM d, yyyy})");
+            }
+        }
+
+        sb.AppendLine();
+        sb.AppendLine("RECENT JOURNAL ENTRIES");
+        sb.AppendLine(new string('-', 30));
+        var journals = await Db.Journals
+            .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null)
+            .OrderByDescending(j => j.EnteredDate)
+            .Take(10)
+            .ToListAsync();
+        foreach (var j in journals)
+        {
+            var d = DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime;
+            sb.Append($"[{d:MMM d}]");
+            if (!string.IsNullOrWhiteSpace(j.Mood)) sb.Append($" {j.Mood}");
+            if (!string.IsNullOrWhiteSpace(j.Notes))
+            {
+                var snip = j.Notes.Length > 100 ? j.Notes[..100] + "…" : j.Notes;
+                sb.Append($" — {snip}");
+            }
+            sb.AppendLine();
+        }
+
+        sb.AppendLine();
+        sb.AppendLine($"SUMMARY");
+        sb.AppendLine(new string('-', 30));
+        sb.AppendLine($"Goals set: {TotalGoals} | Active: {activeGoals.Count} | Completed: {completedGoals.Count}");
+        sb.AppendLine($"Progress notes: {TotalProgressNotes}");
+        sb.AppendLine($"Journal entries: {TotalJournalEntries}");
+        sb.AppendLine($"Todos done: {TotalTodosCompleted} / {TotalTodos}");
+
+        var content = sb.ToString();
+        var filename = $"childdev-report-{now:yyyy-MM-dd}.txt";
+        await JS.InvokeVoidAsync("eval", $"(function(){{var a=document.createElement('a');a.href='data:text/plain;charset=utf-8,'+encodeURIComponent({System.Text.Json.JsonSerializer.Serialize(content)});a.download={System.Text.Json.JsonSerializer.Serialize(filename)};a.click();}})()");
+        await Analytics.TrackAsync("settings_download_report", AccountGuid, "settings");
+        Snackbar.Add("Progress report downloaded!", Severity.Success);
     }
 }
