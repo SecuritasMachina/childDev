@@ -373,41 +373,43 @@
     </MudStack>
 }
 
-@* Mood leaderboard summary — only when 2+ moods recorded *@
-@if (AllMoods.Count >= 2)
+@* Mood distribution bar chart — only when 3+ entries with moods *@
+@if (AllMoods.Count >= 2 && AllMoods.Sum(m => m.Count) >= 3)
 {
-    var topMoods = AllMoods.Take(3).ToList();
-    var totalMoodEntries = AllMoods.Sum(m => m.Count);
-    <MudPaper Elevation="0" Class="pa-2 mb-2" Style="border-radius:10px;background:var(--mud-palette-background-grey);">
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap">
-            <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-weight:600;margin-right:4px;">Your mood pattern:</MudText>
-            @for (int mi = 0; mi < topMoods.Count; mi++)
-            {
-                var medal = mi == 0 ? "🥇" : mi == 1 ? "🥈" : "🥉";
-                var moodPct = (int)(topMoods[mi].Count * 100.0 / Math.Max(totalMoodEntries, 1));
-                <MudChip T="string" Size="Size.Small"
-                         Color="@(mi == 0 ? Color.Warning : mi == 1 ? Color.Primary : Color.Default)"
-                         Variant="@(mi == 0 ? Variant.Filled : Variant.Outlined)"
-                         Style="font-size:0.7rem;">
-                    @medal @topMoods[mi].Mood <span style="opacity:.7;margin-left:2px;">@moodPct%</span>
-                </MudChip>
-            }
-        </MudStack>
-    </MudPaper>
-}
-
-@if (AllMoods.Count >= 2 && AllMoods.Sum(m => m.Count) >= 5)
-{
-    var moodEmojiMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
+    var moodChartEmojis = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
         {"happy","😊"}, {"sad","😢"}, {"calm","😌"}, {"excited","🤩"}, {"tired","😴"},
         {"angry","😠"}, {"anxious","😟"}, {"grateful","🙏"}, {"proud","💪"}, {"focused","🎯"}
     };
-    var top2 = AllMoods.Take(2).ToList();
-    var em0 = moodEmojiMap.GetValueOrDefault(top2[0].Mood, "💭");
-    var em1 = moodEmojiMap.GetValueOrDefault(top2[1].Mood, "💭");
-    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">
-        You've written <strong>@top2[0].Count</strong> times feeling @em0 @top2[0].Mood and <strong>@top2[1].Count</strong> times feeling @em1 @top2[1].Mood.
-    </MudText>
+    var moodColors = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
+        {"happy","#FDD835"}, {"excited","#FF7043"}, {"grateful","#AB47BC"}, {"calm","#42A5F5"},
+        {"proud","#26A69A"}, {"focused","#5C6BC0"}, {"sad","#78909C"}, {"tired","#A1887F"},
+        {"angry","#EF5350"}, {"anxious","#FF8A65"}
+    };
+    var mcdTotal = AllMoods.Sum(m => m.Count);
+    var mcdMax = AllMoods.Max(m => m.Count);
+    var mcdShow = AllMoods.Take(6).ToList();
+    <MudPaper Elevation="0" Class="pa-3 mb-3" Style="border-radius:12px;background:var(--mud-palette-background-grey);">
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-weight:700;letter-spacing:.5px;" Class="mb-2">
+            MOOD BREAKDOWN — @mcdTotal ENTRIES
+        </MudText>
+        @foreach (var (mood, count) in mcdShow)
+        {
+            var moodPct = (int)(count * 100.0 / Math.Max(mcdTotal, 1));
+            var barPct = (int)(count * 100.0 / Math.Max(mcdMax, 1));
+            var moodEmoji = moodChartEmojis.GetValueOrDefault(mood, "💭");
+            var barColor = moodColors.GetValueOrDefault(mood, "var(--mud-palette-primary)");
+            <div style="margin-bottom:5px;">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+                    <span style="font-size:0.85rem;min-width:20px;">@moodEmoji</span>
+                    <span style="font-size:0.75rem;color:var(--mud-palette-text-primary);min-width:68px;font-weight:600;">@mood</span>
+                    <div style="flex:1;background:var(--mud-palette-lines-default);border-radius:4px;height:10px;overflow:hidden;">
+                        <div style="width:@(barPct)%;height:100%;background:@barColor;border-radius:4px;transition:width .4s ease;"></div>
+                    </div>
+                    <span style="font-size:0.7rem;color:var(--mud-palette-text-secondary);min-width:32px;text-align:right;">@moodPct%</span>
+                </div>
+            </div>
+        }
+    </MudPaper>
 }
 
 @* Mood cloud — appears only when entries have moods *@
