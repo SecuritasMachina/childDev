@@ -579,8 +579,15 @@ else
                 .SetProperty(t => t.UpdatedOn, now));
         if (rows == 0) return;
         await Analytics.TrackAsync("todo_complete", AccountGuid, "todos");
-        Snackbar.Add("Todo completed!", Severity.Success);
         await LoadTodos();
+        var todayDoneCount = CompletedTodos.Count(t => t.CompletedAt >= TodayStartMs);
+        var doneMsg = todayDoneCount >= 10 ? "🔥🔥 LEGENDARY! 10+ todos done today!" :
+                      todayDoneCount >= 7 ? $"🔥 On fire! {todayDoneCount} todos today!" :
+                      todayDoneCount >= 5 ? $"🚀 {todayDoneCount} todos crushed today!" :
+                      todayDoneCount >= 3 ? $"⚡ {todayDoneCount} done today — building momentum!" :
+                      todayDoneCount == 1 ? "✅ First one done — keep going!" :
+                      "✅ Todo completed!";
+        Snackbar.Add(doneMsg, Severity.Success);
     }
 
     private async Task UncompleteTodo(string guid)
