@@ -412,12 +412,16 @@
             var barPct = (int)(count * 100.0 / Math.Max(mcdMax, 1));
             var moodEmoji = moodChartEmojis.GetValueOrDefault(mood, "💭");
             var barColor = moodColors.GetValueOrDefault(mood, "var(--mud-palette-primary)");
-            <div style="margin-bottom:5px;">
+            var isActiveMoodFilter = MoodFilter == mood;
+            var capturedMood = mood;
+            <div style="margin-bottom:5px;cursor:pointer;border-radius:6px;padding:2px 4px;@(isActiveMoodFilter ? "background:rgba(255,255,255,.12);" : "")"
+                 @onclick="() => OnMoodFilterChanged(capturedMood)"
+                 title="@(isActiveMoodFilter ? "Click to clear filter" : $"Filter by {mood}")">
                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
                     <span style="font-size:0.85rem;min-width:20px;">@moodEmoji</span>
-                    <span style="font-size:0.75rem;color:var(--mud-palette-text-primary);min-width:68px;font-weight:600;">@mood</span>
+                    <span style="font-size:0.75rem;color:var(--mud-palette-text-primary);min-width:68px;font-weight:@(isActiveMoodFilter ? "800" : "600");">@mood@(isActiveMoodFilter ? " ✓" : "")</span>
                     <div style="flex:1;background:var(--mud-palette-lines-default);border-radius:4px;height:10px;overflow:hidden;">
-                        <div style="width:@(barPct)%;height:100%;background:@barColor;border-radius:4px;transition:width .4s ease;"></div>
+                        <div style="width:@(barPct)%;height:100%;background:@barColor;border-radius:4px;transition:width .4s ease;opacity:@(isActiveMoodFilter ? "1" : ".85");"></div>
                     </div>
                     <span style="font-size:0.7rem;color:var(--mud-palette-text-secondary);min-width:32px;text-align:right;">@moodPct%</span>
                 </div>
