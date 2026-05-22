@@ -464,6 +464,12 @@
                   :                           $"⭐ <strong>{ProgressNotesToday} notes today — you're on a roll!</strong> Keep this energy going for the rest of the day!";
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.LocalFireDepartment" Dense="true" Class="mb-3">@((MarkupString)rollingMsg)</MudAlert>
 }
+@if (BiggestDayDate is not null && ProgressNotesToday >= BiggestDayCount && ProgressNotesToday >= 3 && string.IsNullOrWhiteSpace(FilterText))
+{
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mb-3">
+        🏆 <strong>NEW PERSONAL BEST!</strong> @ProgressNotesToday notes in a single day — you just beat your all-time record! That's legendary!
+    </MudAlert>
+}
 @if (ProgressNotesToday >= 1 && DateTime.Now.Hour < 12 && string.IsNullOrWhiteSpace(FilterText))
 {
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.WbSunny" Dense="true" Class="mb-3">

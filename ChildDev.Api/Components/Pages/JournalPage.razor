@@ -66,6 +66,36 @@
     <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.History">@((MarkupString)ljsMsg)</MudAlert>
 }
 
+@if (!HasEntryToday)
+{
+    var wpPrompts = new[] {
+        "What's one thing that went well today and why?",
+        "What's a goal you're excited about right now? Why does it matter?",
+        "Describe a challenge you faced recently. What did you learn?",
+        "What are you most proud of this week?",
+        "What's something kind you did for someone recently?",
+        "If today had a title, what would it be and why?",
+        "What's one skill you want to improve and what's your next step?",
+        "Who has helped you lately? How did it make you feel?",
+        "What made you smile or laugh today?",
+        "What's a fear you want to overcome? What's one small step you could take?",
+        "Describe your mood today in 3 words and explain one of them.",
+        "What's something new you tried recently? How did it go?",
+        "What does your best day look like? How close was today?",
+        "What's a habit you want to build? Why is it important to you?",
+        "What's one thing you'd do differently if you could redo yesterday?",
+        "Who inspires you and what have you learned from them?",
+        "What's a small win you had recently that you haven't celebrated yet?",
+        "What does success mean to you right now?",
+        "What's something you're looking forward to and why?",
+        "What's the most interesting thing you've learned this week?"
+    };
+    var wpIdx = DateTime.Today.DayOfYear % wpPrompts.Length;
+    <MudAlert Severity="Severity.Normal" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.Lightbulb">
+        💡 <strong>Today's prompt:</strong> @wpPrompts[wpIdx]
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" OnClick="OpenAddDialog" Class="ml-2">Write now</MudButton>
+    </MudAlert>
+}
 @if (BestJournalMonth is not null)
 {
     <MudAlert Severity="Severity.Success" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.Star">
