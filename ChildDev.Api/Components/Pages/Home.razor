@@ -739,11 +739,20 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         {
             var naName = na.Goal.GoalText?.Length > 55 ? na.Goal.GoalText[..55] + "…" : na.Goal.GoalText;
             var naDayLabel = na.DaysSince == 1 ? "1 day" : $"{na.DaysSince} days";
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
-                <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Size="Size.Small" Color="Color.Warning" Style="font-size:8px;" />
-                <MudText Typo="Typo.body2" Style="flex:1">"@naName" — no notes in @naDayLabel</MudText>
-                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning"
-                           Href="@($"/goals/{na.Goal.Guid}")">Add note</MudButton>
+            LatestNextStep.TryGetValue(na.Goal.Guid, out var naNextStep);
+            var naNextShort = naNextStep?.Length > 70 ? naNextStep[..70] + "…" : naNextStep;
+            <MudStack Spacing="0" Class="mb-2">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Size="Size.Small" Color="Color.Warning" Style="font-size:8px;" />
+                    <MudText Typo="Typo.body2" Style="flex:1;font-weight:500;">"@naName"</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@naDayLabel ago</MudText>
+                    <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning"
+                               Href="@($"/goals/{na.Goal.Guid}")">Add note</MudButton>
+                </MudStack>
+                @if (!string.IsNullOrWhiteSpace(naNextShort))
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Style="padding-left:20px;font-style:italic;">Next: @naNextShort</MudText>
+                }
             </MudStack>
         }
     </MudPaper>
