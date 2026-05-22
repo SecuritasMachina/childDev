@@ -573,7 +573,15 @@ else
                         <MudCardContent Class="pt-0">
                             @if (!string.IsNullOrWhiteSpace(j.Notes))
                             {
-                                <MudText Typo="Typo.body2">@(jExpanded || j.Notes.Length <= 200 ? j.Notes : j.Notes[..200] + "…")</MudText>
+                                var jNotesDisplay = jExpanded || j.Notes.Length <= 200 ? j.Notes : j.Notes[..200] + "…";
+                                @if (!string.IsNullOrWhiteSpace(FilterText))
+                                {
+                                    <MudText Typo="Typo.body2">@((MarkupString)HighlightMatch(jNotesDisplay, FilterText.Trim()))</MudText>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.body2">@jNotesDisplay</MudText>
+                                }
                                 @if (jWcLabel is not null)
                                 {
                                     <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">@jWcLabel</MudText>
@@ -1408,5 +1416,16 @@ else
         await Analytics.TrackAsync("journal_delete", AccountGuid, "journal");
         Snackbar.Add("Entry deleted.", Severity.Info);
         await LoadEntries();
+    }
+
+    private static string HighlightMatch(string text, string query)
+    {
+        if (string.IsNullOrEmpty(query) || query.Length < 2) return System.Net.WebUtility.HtmlEncode(text);
+        var idx = text.IndexOf(query, StringComparison.OrdinalIgnoreCase);
+        if (idx < 0) return System.Net.WebUtility.HtmlEncode(text);
+        var before = System.Net.WebUtility.HtmlEncode(text[..idx]);
+        var match = System.Net.WebUtility.HtmlEncode(text[idx..(idx + query.Length)]);
+        var after = HighlightMatch(text[(idx + query.Length)..], query);
+        return $"{before}<mark style='background:rgba(63,81,181,.18);color:inherit;border-radius:2px;padding:0 2px;'>{match}</mark>{after}";
     }
 }
