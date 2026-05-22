@@ -1425,11 +1425,20 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
             <MudText Typo="Typo.body2" Align="Align.Center">
                 Amazing work! Every big achievement starts with a single step. 🌟
             </MudText>
+            @if (CompletedGoals.Count >= 1)
+            {
+                <MudText Typo="Typo.caption" Align="Align.Center" Color="Color.Warning" Style="font-weight:600;">
+                    🏆 @CompletedGoals.Count goal@(CompletedGoals.Count == 1 ? "" : "s") completed all-time!
+                </MudText>
+            }
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true"
-                   OnClick="() => ShowCelebration = false">Awesome! 🙌</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Default"
+                   OnClick="() => ShowCelebration = false">Done</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Flag"
+                   OnClick="() => { ShowCelebration = false; OpenAddGoalDialog(); }">Set Next Goal 🎯</MudButton>
     </DialogActions>
 </MudDialog>
 
