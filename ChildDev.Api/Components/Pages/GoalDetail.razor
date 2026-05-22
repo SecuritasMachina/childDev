@@ -562,6 +562,13 @@
         </MudStack>
     </MudPaper>
 }
+@if (ProgressEntries.Any() && string.IsNullOrWhiteSpace(ProgressEntries.First().NextStepItems) && Goal.CompletionDate is null && ProgressEntries.Count >= 2)
+{
+    <MudAlert Severity="Severity.Normal" Icon="@Icons.Material.Filled.TipsAndUpdates" Dense="true" Class="mb-3">
+        💡 <strong>What's your next step?</strong> Adding a next step to your latest note gives you a clear action to take next time.
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Default" OnClick="OpenAddProgressDialog" Class="ml-1">Add note</MudButton>
+    </MudAlert>
+}
 @if (daysSince >= 14 && daysSince < 30 && Goal.CompletionDate is null && ProgressEntries.Count >= 3)
 {
     var obstaclePrompts = new[] {

@@ -565,6 +565,16 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning" Href="/todos" Class="ml-1">View todos</MudButton>
     </MudAlert>
 }
+@if (TodosDueToday >= 1 && OverdueTodoCount == 0 && string.IsNullOrWhiteSpace(FilterText))
+{
+    var tdtLabel = TodosDueToday == 1 && FirstTodoDueTodayTitle is not null
+        ? $"⚡ <strong>Quick win today:</strong> \"{FirstTodoDueTodayTitle}\" is due today — knock it out!"
+        : $"⚡ <strong>{TodosDueToday} todos due today</strong> — great time to knock some out!";
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Bolt" Dense="true" Class="mb-3">
+        @((MarkupString)tdtLabel)
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Info" Href="/todos" Class="ml-1">View todos</MudButton>
+    </MudAlert>
+}
 @{
     string? proximityGoalName = null;
     string? proximityMilestoneEmoji = null;
@@ -1539,6 +1549,8 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private string? NewMeasurableOutcome;
     private int PendingTodoCount;
     private int OverdueTodoCount;
+    private int TodosDueToday;
+    private string? FirstTodoDueTodayTitle;
     private int JournalThisWeek;
     private int TodosCompletedThisWeek;
     private int TodosCompletedToday;
@@ -1582,11 +1594,15 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     {
         var todos = await Db.Todos
             .Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt == null)
-            .Select(t => t.DueDate)
+            .Select(t => new { t.DueDate, t.Title })
             .ToListAsync();
         var todayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+        var tomorrowStartMs = todayStartMs + 86_400_000L;
         PendingTodoCount = todos.Count;
-        OverdueTodoCount = todos.Count(d => d.HasValue && d.Value < todayStartMs);
+        OverdueTodoCount = todos.Count(t => t.DueDate.HasValue && t.DueDate.Value < todayStartMs);
+        TodosDueToday = todos.Count(t => t.DueDate.HasValue && t.DueDate.Value >= todayStartMs && t.DueDate.Value < tomorrowStartMs);
+        var firstDueToday = todos.FirstOrDefault(t => t.DueDate.HasValue && t.DueDate.Value >= todayStartMs && t.DueDate.Value < tomorrowStartMs);
+        FirstTodoDueTodayTitle = firstDueToday?.Title is { Length: > 0 } ttl ? (ttl.Length > 50 ? ttl[..50] + "…" : ttl) : null;
 
         var weekStartMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
         JournalThisWeek = await Db.Journals
