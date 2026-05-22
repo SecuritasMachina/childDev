@@ -322,6 +322,23 @@
     </MudStack>
 }
 
+@{
+    var erMoodEntries = AllEntries.Where(j => !string.IsNullOrWhiteSpace(j.Mood)).ToList();
+    var erWithReason = erMoodEntries.Count(j => !string.IsNullOrWhiteSpace(j.EmotionReason));
+    var erPct = erMoodEntries.Count > 0 ? (int)(erWithReason * 100.0 / erMoodEntries.Count) : 0;
+}
+@if (erMoodEntries.Count >= 5 && erPct < 40)
+{
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">
+        💡 <strong>Tip:</strong> Only @erPct% of your mood entries include a reason. Adding a "why" makes your journal much more insightful to look back on!
+    </MudText>
+}
+else if (erMoodEntries.Count >= 5 && erPct >= 70)
+{
+    <MudText Typo="Typo.caption" Color="Color.Success" Class="mb-2">
+        🌟 <strong>@erPct% of your mood entries have a reason</strong> — deep reflection habit! Your future self will thank you for this!
+    </MudText>
+}
 @* Activity cloud — appears only when entries have activities *@
 @if (AllActivities.Count > 0)
 {

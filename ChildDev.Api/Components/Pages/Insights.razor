@@ -671,6 +671,14 @@ else if (JourneyMonths >= 6)
                      Style="font-size:2rem;" />
             <MudText Typo="Typo.h4" Class="mt-1">@CurrentStreak</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary">Day streak</MudText>
+            @if (LongestStreakEver > CurrentStreak && LongestStreakEver >= 3)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Info">best: @LongestStreakEver days</MudText>
+            }
+            @if (LongestStreakEver >= 3 && CurrentStreak >= LongestStreakEver)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Warning">🏆 All-time best!</MudText>
+            }
         </MudPaper>
     </MudItem>
 </MudGrid>
@@ -689,6 +697,18 @@ else if (JourneyMonths >= 6)
 @if (ActiveDaysLast30 > 0)
 {
     <MudAlert Severity="@zeroDaySeverity" Class="mb-6" Dense="true">@zeroDayMsg</MudAlert>
+}
+@if (LongestStreakEver >= 5 && CurrentStreak >= LongestStreakEver)
+{
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mb-4">
+        🏆 <strong>You're matching your all-time best streak of @LongestStreakEver days!</strong> Don't stop now — every day counts!
+    </MudAlert>
+}
+else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - CurrentStreak <= 3)
+{
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.LocalFireDepartment" Dense="true" Class="mb-4">
+        🔥 <strong>Only @(LongestStreakEver - CurrentStreak) days away from your all-time streak record of @LongestStreakEver days!</strong> Keep the momentum!
+    </MudAlert>
 }
 
 @if (DailyChartSeries.Count > 0)
@@ -756,6 +776,7 @@ else if (JourneyMonths >= 6)
     private int TotalLastWeek;
     private int ActiveDaysLast30;
     private int CurrentStreak;
+    private int LongestStreakEver;
     private List<ChartSeries> DailyChartSeries = [];
     private string[] DailyChartLabels = [];
     private Dictionary<string, int> TopEvents = new();
@@ -1210,6 +1231,20 @@ else if (JourneyMonths >= 6)
             .ToHashSet();
         for (int spi = 0; spi < 7; spi++)
             Last7DaysActive[spi] = allEverDateSet.Contains(DateOnly.FromDateTime(DateTime.Today.AddDays(-6 + spi)));
+
+        // All-time longest streak across all activity
+        var lseSorted = allEverDateSet.OrderBy(d => d).ToList();
+        LongestStreakEver = 0;
+        var lseRun = 0;
+        for (int lsei = 0; lsei < lseSorted.Count; lsei++)
+        {
+            if (lsei == 0 || lseSorted[lsei] == lseSorted[lsei - 1].AddDays(1))
+                lseRun++;
+            else
+                lseRun = 1;
+            if (lseRun > LongestStreakEver) LongestStreakEver = lseRun;
+        }
+
         if (allEver.Count >= 5)
         {
             var bestDayGroup = allEver
