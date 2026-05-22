@@ -48,6 +48,16 @@
               :                       $"⭐ {JournalStreak}-day journaling streak — you're on a roll!";
     <MudAlert Severity="@(JournalStreak >= 7 ? Severity.Success : Severity.Info)" Dense="true" Class="mb-3">@jsMsg</MudAlert>
 }
+@if (JournalStreak >= 1 && !HasEntryToday)
+{
+    var spMsg = JournalStreak >= 7 ? $"⚠️ <strong>Don't break your {JournalStreak}-day streak!</strong> Write a quick journal entry today to keep the fire going."
+              : JournalStreak >= 3 ? $"🛡️ <strong>Protect your {JournalStreak}-day streak!</strong> A short entry today keeps your habit alive."
+              :                      $"✍️ <strong>You're on a {JournalStreak}-day streak</strong> — add an entry today to keep it going!";
+    <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.Warning">
+        @((MarkupString)spMsg)
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning" OnClick="OpenAddDialog" Class="ml-2">Write entry</MudButton>
+    </MudAlert>
+}
 @if (LongestJournalStreak > JournalStreak && LongestJournalStreak >= 3)
 {
     var ljsMsg = JournalStreak >= LongestJournalStreak
@@ -531,6 +541,7 @@ else
     private DateTime? EditEnteredDate;
     private string? _confirmDeleteGuid;
     private int JournalStreak;
+    private bool HasEntryToday;
     private int LongestJournalStreak;
     private int LongestJournalGap;
     private string? BestJournalMonth;
@@ -561,6 +572,7 @@ else
         var journalDates = AllEntries
             .Select(j => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime))
             .ToHashSet();
+        HasEntryToday = journalDates.Contains(DateOnly.FromDateTime(DateTime.Today));
         JournalStreak = 0;
         var jsDay = DateOnly.FromDateTime(DateTime.Today);
         while (journalDates.Contains(jsDay))

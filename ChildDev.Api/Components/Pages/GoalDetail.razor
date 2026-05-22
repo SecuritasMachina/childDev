@@ -749,6 +749,25 @@
             📆 This month: <strong>@mwpCount notes</strong> at <strong>@mwpPace.ToString("F1")/week</strong> pace — keep it up!
         </MudText>
     }
+    var qvCurQtr = (DateTime.Today.Month - 1) / 3 + 1;
+    var qvCurQtrStart = new DateTimeOffset(new DateTime(DateTime.Today.Year, (qvCurQtr - 1) * 3 + 1, 1)).ToUnixTimeMilliseconds();
+    var qvPrevQtrYear = qvCurQtr == 1 ? DateTime.Today.Year - 1 : DateTime.Today.Year;
+    var qvPrevQtr = qvCurQtr == 1 ? 4 : qvCurQtr - 1;
+    var qvPrevQtrStart = new DateTimeOffset(new DateTime(qvPrevQtrYear, (qvPrevQtr - 1) * 3 + 1, 1)).ToUnixTimeMilliseconds();
+    var qvCurCount = ProgressEntries.Count(p => p.UpdatedOn >= qvCurQtrStart);
+    var qvPrevCount = ProgressEntries.Count(p => p.UpdatedOn >= qvPrevQtrStart && p.UpdatedOn < qvCurQtrStart);
+    if (qvPrevCount >= 2 && qvCurCount >= 1)
+    {
+        var qvTrend = qvCurCount > qvPrevCount ? "📈" : qvCurCount == qvPrevCount ? "➡️" : "📉";
+        var qvColor = qvCurCount >= qvPrevCount ? Color.Success : Color.Warning;
+        var qvLabel = qvCurCount > qvPrevCount
+            ? $"up {qvCurCount - qvPrevCount} from Q{qvPrevQtr}"
+            : qvCurCount == qvPrevCount ? "same pace as last quarter"
+            : $"down {qvPrevCount - qvCurCount} from Q{qvPrevQtr}";
+        <MudText Typo="Typo.caption" Color="@qvColor" Class="mb-3">
+            @qvTrend Q@(qvCurQtr) @DateTime.Today.Year: <strong>@qvCurCount notes</strong> · Q@(qvPrevQtr): @qvPrevCount notes — @qvLabel
+        </MudText>
+    }
     var cpTotalWeeks = (int)Math.Max(Math.Ceiling(daysSince / 7.0), 1);
     var cpActiveWeeks = ProgressEntries
         .Select(p => System.Globalization.ISOWeek.GetWeekOfYear(DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime) * 10000
