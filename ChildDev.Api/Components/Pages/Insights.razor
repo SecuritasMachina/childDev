@@ -549,7 +549,17 @@ else if (JourneyMonths >= 6)
                 if (d.Day <= 7) hmMonthLabels.Add((di % 7, d.ToString("MMM")));
             }
         }
+        @{
+            string[] hmDayLabels = ["M", "T", "W", "T", "F", "S", "S"];
+            var hmStartDow = (int)startDay.DayOfWeek; // 0=Sun..6=Sat
+            var hmMondayOffset = (hmStartDow + 6) % 7; // offset to map col→Mon-based label
+        }
         <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;max-width:@(7 * 18 + 18)px;">
+            @for (int col = 0; col < 7; col++)
+            {
+                var lbl = hmDayLabels[(hmMondayOffset + col) % 7];
+                <div style="text-align:center;font-size:9px;color:var(--mud-palette-text-secondary);padding-bottom:2px;font-weight:600;">@lbl</div>
+            }
             @for (int di = 0; di < 84; di++)
             {
                 var day = startDay.AddDays(di);
@@ -579,7 +589,17 @@ else if (JourneyMonths >= 6)
         @{
             var jhStart = jhToday.AddDays(-83);
         }
+        @{
+            string[] jhDayLabels = ["M", "T", "W", "T", "F", "S", "S"];
+            var jhStartDow = (int)jhStart.DayOfWeek;
+            var jhMondayOffset = (jhStartDow + 6) % 7;
+        }
         <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;max-width:@(7 * 18 + 18)px;">
+            @for (int col = 0; col < 7; col++)
+            {
+                var lbl = jhDayLabels[(jhMondayOffset + col) % 7];
+                <div style="text-align:center;font-size:9px;color:var(--mud-palette-text-secondary);padding-bottom:2px;font-weight:600;">@lbl</div>
+            }
             @for (int di = 0; di < 84; di++)
             {
                 var day = jhStart.AddDays(di);
@@ -608,7 +628,17 @@ else if (JourneyMonths >= 6)
         @{
             var thStart = thToday.AddDays(-83);
         }
+        @{
+            string[] thDayLabels = ["M", "T", "W", "T", "F", "S", "S"];
+            var thStartDow = (int)thStart.DayOfWeek;
+            var thMondayOffset = (thStartDow + 6) % 7;
+        }
         <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;max-width:@(7 * 18 + 18)px;">
+            @for (int col = 0; col < 7; col++)
+            {
+                var lbl = thDayLabels[(thMondayOffset + col) % 7];
+                <div style="text-align:center;font-size:9px;color:var(--mud-palette-text-secondary);padding-bottom:2px;font-weight:600;">@lbl</div>
+            }
             @for (int di = 0; di < 84; di++)
             {
                 var day = thStart.AddDays(di);
