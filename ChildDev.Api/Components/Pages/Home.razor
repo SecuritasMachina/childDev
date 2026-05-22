@@ -1580,6 +1580,17 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                 var jDate = DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime;
                 <MudListItem>
                     <MudStack Row="true" AlignItems="AlignItems.Start">
+                        @{
+                            var jMoodEmoji = j.Mood switch {
+                                "happy" => "😊", "excited" => "🤩", "grateful" => "🙏", "proud" => "💪",
+                                "calm" => "😌", "focused" => "🎯", "sad" => "😢", "tired" => "😴",
+                                "anxious" => "😟", "angry" => "😠", _ => null
+                            };
+                        }
+                        @if (jMoodEmoji is not null)
+                        {
+                            <MudText Typo="Typo.body1" Style="line-height:1.4;margin-right:4px;">@jMoodEmoji</MudText>
+                        }
                         <MudStack Spacing="0" Style="flex:1">
                             @{
                                 var displayText = j.Notes ?? j.Activity;
