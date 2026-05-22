@@ -1502,16 +1502,20 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     {
         var todayStartMsQ = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
         <MudList T="string" Dense="true" Class="mb-2 py-0">
-            @foreach (var (title, dueDate) in TopPendingTodos)
+            @foreach (var (guid, title, dueDate) in TopPendingTodos)
             {
                 var isOverdueQ = dueDate.HasValue && dueDate.Value < todayStartMsQ;
                 var isDueTodayQ = dueDate.HasValue && dueDate.Value >= todayStartMsQ && dueDate.Value < todayStartMsQ + 86_400_000L;
                 var dueLabelQ = isOverdueQ ? "overdue" : isDueTodayQ ? "today" : dueDate.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(dueDate.Value).LocalDateTime.ToString("MMM d") : null;
                 var dueLabelColorQ = isOverdueQ ? "var(--mud-palette-error)" : isDueTodayQ ? "var(--mud-palette-warning-darken)" : "var(--mud-palette-text-secondary)";
                 var truncTitle = title.Length > 60 ? title[..60] + "…" : title;
+                var capturedGuid = guid;
                 <MudListItem Style="padding-top:2px;padding-bottom:2px;">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                        <MudIcon Icon="@Icons.Material.Filled.RadioButtonUnchecked" Size="Size.Small" Color="Color.Default" Style="opacity:.5;" />
+                        <MudIconButton Icon="@Icons.Material.Filled.RadioButtonUnchecked" Size="Size.Small"
+                                       Color="Color.Primary" Style="padding:2px;"
+                                       title="Complete todo"
+                                       OnClick="() => QuickCompleteTodo(capturedGuid)" />
                         <MudText Typo="Typo.body2" Style="flex:1;">@truncTitle</MudText>
                         @if (dueLabelQ is not null)
                         {
@@ -1751,7 +1755,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private int OverdueTodoCount;
     private int TodosDueToday;
     private string? FirstTodoDueTodayTitle;
-    private List<(string Title, long? DueDate)> TopPendingTodos = [];
+    private List<(string Guid, string Title, long? DueDate)> TopPendingTodos = [];
     private int JournalThisWeek;
     private int TodosCompletedThisWeek;
     private int TodosCompletedToday;
@@ -1797,7 +1801,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     {
         var todos = await Db.Todos
             .Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt == null)
-            .Select(t => new { t.DueDate, t.Title })
+            .Select(t => new { t.Guid, t.DueDate, t.Title })
             .ToListAsync();
         var todayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
         var tomorrowStartMs = todayStartMs + 86_400_000L;
@@ -1809,7 +1813,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         TopPendingTodos = todos
             .OrderBy(t => t.DueDate ?? long.MaxValue)
             .Take(3)
-            .Select(t => (Title: t.Title ?? "", DueDate: t.DueDate))
+            .Select(t => (Guid: t.Guid, Title: t.Title ?? "", DueDate: t.DueDate))
             .ToList();
 
         var weekStartMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
@@ -2274,6 +2278,22 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         QuickTodoText = string.Empty;
         PendingTodoCount++;
         Snackbar.Add("Todo added!", Severity.Success);
+    }
+
+    private async Task QuickCompleteTodo(string guid)
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var rows = await Db.Todos
+            .Where(t => t.Guid == guid && t.AccountFk == AccountGuid && t.CompletedAt == null)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.CompletedAt, now)
+                .SetProperty(t => t.UpdatedOn, now));
+        if (rows == 0) return;
+        await Analytics.TrackAsync("todo_quick_complete", AccountGuid, "home");
+        TopPendingTodos.RemoveAll(t => t.Guid == guid);
+        PendingTodoCount = Math.Max(0, PendingTodoCount - 1);
+        TodosCompletedToday++;
+        Snackbar.Add("✅ Todo done!", Severity.Success);
     }
 
     private async Task SaveQuickJournal()
