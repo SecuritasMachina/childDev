@@ -137,6 +137,13 @@ else
             <MudChip T="string" Value="@("NoDate")" Variant="Variant.Filled" Color="Color.Info">No Date @(NoDateCount > 0 ? $"({NoDateCount})" : "")</MudChip>
         </MudChipSet>
         <MudSpacer />
+        <MudTooltip Text="@(_groupByGoal ? "Switch to date view" : "Group by goal")">
+            <MudIconButton Icon="@(_groupByGoal ? Icons.Material.Filled.ViewList : Icons.Material.Filled.AccountTree)"
+                           Color="@(_groupByGoal ? Color.Warning : Color.Default)"
+                           Size="Size.Small"
+                           OnClick="ToggleGroupByGoal"
+                           aria-label="Toggle group by goal" />
+        </MudTooltip>
         <MudTextField Value="@FilterText" ValueChanged="@((string v) => OnFilterChanged(v))"
                       Placeholder="Search tasks…" Variant="Variant.Outlined"
                       Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
@@ -156,7 +163,88 @@ else
     <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">No todos matching the current filter.</MudText>
 }
 
-@if (StatusFilter == "All" && string.IsNullOrWhiteSpace(FilterText) && PendingTodos.Any())
+@if (_groupByGoal && StatusFilter == "All" && string.IsNullOrWhiteSpace(FilterText) && PendingTodos.Any())
+{
+    var gbgGroups = PendingTodos
+        .Select(t => { var (gText, gGuid, _) = ParseGoalNotes(t.Notes); return (Todo: t, GoalText: gText, GoalGuid: gGuid); })
+        .GroupBy(x => x.GoalText ?? "")
+        .OrderBy(g => string.IsNullOrEmpty(g.Key) ? 1 : 0)
+        .ThenBy(g => g.Key)
+        .ToList();
+    foreach (var group in gbgGroups)
+    {
+        var gbgGoalText = group.Key;
+        var gbgGoalGuid = group.First().GoalGuid;
+        var gbgTodos = group.Select(x => x.Todo).ToList();
+        @if (!string.IsNullOrEmpty(gbgGoalText))
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-3 mb-1">
+                <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Size="Size.Small" />
+                @if (gbgGoalGuid is not null)
+                {
+                    <MudLink Href="@($"/goals/{gbgGoalGuid}")" Typo="Typo.subtitle2" Color="Color.Warning"
+                             Style="font-weight:700;">@gbgGoalText</MudLink>
+                }
+                else
+                {
+                    <MudText Typo="Typo.subtitle2" Color="Color.Warning" Style="font-weight:700;">@gbgGoalText</MudText>
+                }
+                <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined"
+                         Style="height:18px;font-size:0.68rem;">@gbgTodos.Count</MudChip>
+            </MudStack>
+        }
+        else
+        {
+            <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mt-3 mb-1">No goal linked</MudText>
+        }
+        <MudList T="Todo" Dense="false" Class="mb-0">
+            @foreach (var t in gbgTodos)
+            {
+                var (_, _, gbgRemaining) = ParseGoalNotes(t.Notes);
+                var gbgIsOverdue = t.DueDate.HasValue && t.DueDate.Value < TodayStartMs;
+                <MudListItem>
+                    <MudStack Row="true" AlignItems="AlignItems.Center">
+                        <MudIconButton Icon="@Icons.Material.Filled.RadioButtonUnchecked"
+                                       Color="Color.Primary" Size="Size.Small"
+                                       OnClick="() => CompleteTodo(t.Guid)" aria-label="Complete todo" />
+                        <MudStack Spacing="0" Style="flex:1">
+                            <MudText Typo="Typo.body1" Color="@(gbgIsOverdue ? Color.Error : Color.Default)">@t.Title</MudText>
+                            @if (t.DueDate.HasValue)
+                            {
+                                var gbgDue = DateTimeOffset.FromUnixTimeMilliseconds(t.DueDate.Value).LocalDateTime;
+                                <MudText Typo="Typo.caption" Color="@(gbgIsOverdue ? Color.Error : Color.Secondary)">
+                                    Due @gbgDue.ToString("MMM d")@(gbgIsOverdue ? " — overdue" : "")
+                                </MudText>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(gbgRemaining))
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@gbgRemaining</MudText>
+                            }
+                        </MudStack>
+                        @if (gbgIsOverdue)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Today" Size="Size.Small"
+                                           Color="Color.Info" title="Reschedule to today"
+                                           OnClick="() => RescheduleToday(t.Guid)" aria-label="Reschedule to today" />
+                        }
+                        @if (!t.DueDate.HasValue)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Today" Size="Size.Small"
+                                           Color="Color.Info" title="Set due today"
+                                           OnClick="() => SetDueToday(t.Guid)" aria-label="Set due today" />
+                        }
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                       OnClick="() => OpenEditTodo(t)" aria-label="Edit todo" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                                       Color="Color.Error" OnClick="() => _confirmDeleteGuid = t.Guid" aria-label="Delete todo" />
+                    </MudStack>
+                </MudListItem>
+            }
+        </MudList>
+        <MudDivider Class="mb-1" />
+    }
+}
+else @if (StatusFilter == "All" && string.IsNullOrWhiteSpace(FilterText) && PendingTodos.Any())
 {
     var todayEndMs = TodayStartMs + 86_400_000L;
     var overdueTodos  = PendingTodos.Where(t => t.DueDate.HasValue && t.DueDate.Value < TodayStartMs).ToList();
@@ -566,6 +654,7 @@ else
     private Dictionary<string, string> _goalGuidByName = [];
     private List<(string Guid, string GoalText)> _activeGoals = [];
     private string _newGoalLink = string.Empty;
+    private bool _groupByGoal = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -863,6 +952,13 @@ else
         ShowEditDialog = false;
         Snackbar.Add("Todo updated!", Severity.Success);
         await LoadTodos();
+    }
+
+    private async Task ToggleGroupByGoal()
+    {
+        _groupByGoal = !_groupByGoal;
+        if (_groupByGoal)
+            await Analytics.TrackAsync("todo_group_by_goal", AccountGuid, "todos");
     }
 
     private (string? GoalText, string? GoalGuid, string? RemainingNotes) ParseGoalNotes(string? notes)
