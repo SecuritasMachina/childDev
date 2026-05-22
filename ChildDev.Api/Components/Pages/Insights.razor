@@ -502,6 +502,31 @@ else if (JourneyMonths >= 6)
         }
     </MudAlert>
 }
+@if (GoalMomentumRanking.Count >= 2)
+{
+    var gmMax = Math.Max(GoalMomentumRanking.Max(x => x.Notes28d), 1);
+    <MudPaper Elevation="1" Class="pa-4 mb-6" Style="border-radius:14px;">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
+            <MudIcon Icon="@Icons.Material.Filled.Speed" Color="Color.Primary" Size="Size.Small" />
+            <MudText Typo="Typo.subtitle2">Goal Momentum — Last 28 Days</MudText>
+        </MudStack>
+        @foreach (var (name, guid, notes28d) in GoalMomentumRanking)
+        {
+            var gmPct = (int)(notes28d * 100.0 / gmMax);
+            var gmColor = notes28d == 0 ? "var(--mud-palette-text-disabled)" : gmPct >= 80 ? "var(--mud-palette-success)" : gmPct >= 40 ? "var(--mud-palette-primary)" : "var(--mud-palette-warning)";
+            var gmLabel = name.Length > 45 ? name[..45] + "…" : name;
+            <MudStack Spacing="0" Class="mb-2">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudLink Href="@($"/goals/{guid}")" Typo="Typo.body2" Style="flex:1;font-weight:500;">@gmLabel</MudLink>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Style="min-width:60px;text-align:right;">@notes28d note@(notes28d == 1 ? "" : "s")</MudText>
+                </MudStack>
+                <div style="background:var(--mud-palette-lines-default);border-radius:4px;height:6px;overflow:hidden;">
+                    <div style="@($"width:{gmPct}%;background:{gmColor};height:100%;border-radius:4px;")"></div>
+                </div>
+            </MudStack>
+        }
+    </MudPaper>
+}
 @{
     var commitScore = Math.Min(
         Math.Min(CurrentStreak * 3, 30) +
@@ -1106,6 +1131,7 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
     private double AvgProgressNotesPerWeek;
     private List<(string Mood, int Count)> ThisMonthMoods = [];
     private List<(string Mood, int Count)> LastMonthMoods = [];
+    private List<(string Name, string Guid, int Notes28d)> GoalMomentumRanking = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -1307,6 +1333,30 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
                     NeglectedGoalGuid = neglectedGoal.Guid;
                 }
             }
+        }
+
+        // Goal momentum ranking: active goals by notes in last 28 days
+        if (activeGoalGuids.Count >= 2)
+        {
+            var momentumStartMs = DateTimeOffset.UtcNow.AddDays(-28).ToUnixTimeMilliseconds();
+            var recentCounts = await Db.GoalProgresses
+                .Where(p => activeGoalGuids.Contains(p.GoalFk) && p.DeletedAt == null && p.UpdatedOn >= momentumStartMs)
+                .GroupBy(p => p.GoalFk)
+                .Select(g => new { GoalFk = g.Key, Count = g.Count() })
+                .ToListAsync();
+            var momentumGuids = activeGoalGuids.Take(10).ToList();
+            var momentumGoals = await Db.Goals
+                .Where(g => momentumGuids.Contains(g.Guid) && g.DeletedAt == null)
+                .Select(g => new { g.Guid, g.GoalText })
+                .ToListAsync();
+            GoalMomentumRanking = momentumGoals
+                .Select(g => (
+                    Name: g.GoalText ?? g.Guid,
+                    Guid: g.Guid,
+                    Notes28d: recentCounts.FirstOrDefault(x => x.GoalFk == g.Guid)?.Count ?? 0
+                ))
+                .OrderByDescending(x => x.Notes28d)
+                .ToList();
         }
 
         // Top 5 goals by progress note count for bar chart
