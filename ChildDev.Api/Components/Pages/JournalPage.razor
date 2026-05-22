@@ -538,7 +538,13 @@ else
                         {
                             @foreach (var tag in j.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                             {
-                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@tag</MudChip>
+                                var capturedTag = tag;
+                                var isActiveTag = TagFilter?.Equals(capturedTag, StringComparison.OrdinalIgnoreCase) == true;
+                                <MudChip T="string" Size="Size.Small"
+                                         Variant="@(isActiveTag ? Variant.Filled : Variant.Outlined)"
+                                         Color="@(isActiveTag ? Color.Primary : Color.Default)"
+                                         Style="cursor:pointer;"
+                                         OnClick="() => OnTagFilterChanged(capturedTag)">@capturedTag</MudChip>
                             }
                         }
                         <MudSpacer />
