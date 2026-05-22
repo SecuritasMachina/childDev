@@ -903,7 +903,14 @@ else
                       todayDoneCount >= 3 ? $"⚡ {todayDoneCount} done today — building momentum!" :
                       todayDoneCount == 1 ? "✅ First one done — keep going!" :
                       "✅ Todo completed!";
-        Snackbar.Add(doneMsg, Severity.Success);
+        var completedGuid = guid;
+        Snackbar.Add(doneMsg, Severity.Success, opts =>
+        {
+            opts.Action = "Undo";
+            opts.ActionColor = Color.Default;
+            opts.Onclick = async _ => await UncompleteTodo(completedGuid);
+            opts.VisibleStateDuration = 4000;
+        });
 
         if (linkedGoalGuid is not null && linkedGoalText is not null)
         {
