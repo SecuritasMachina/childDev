@@ -86,9 +86,18 @@
 @foreach (var cat in BadgeCategories)
 {
     var earned = cat.Badges.Count(b => b.Earned);
-    <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2 mt-4" Style="text-transform:uppercase;letter-spacing:1px;">
-        @cat.Icon @cat.Name — @earned / @cat.Badges.Count
-    </MudText>
+    var catPct = cat.Badges.Count > 0 ? (int)(earned * 100.0 / cat.Badges.Count) : 0;
+    var catBarColor = catPct == 100 ? "var(--mud-palette-success)" : catPct >= 50 ? "var(--mud-palette-primary)" : "var(--mud-palette-secondary)";
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-1 mt-4">
+        <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Style="text-transform:uppercase;letter-spacing:1px;flex:1;">
+            @cat.Icon @cat.Name
+        </MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">@earned / @cat.Badges.Count</MudText>
+        @if (catPct == 100) { <MudText Style="font-size:0.9rem;">🏆</MudText> }
+    </MudStack>
+    <div style="background:var(--mud-palette-lines-default);border-radius:4px;height:5px;margin-bottom:12px;overflow:hidden;">
+        <div style="@($"width:{catPct}%;background:{catBarColor};height:100%;border-radius:4px;transition:width .4s ease;")"></div>
+    </div>
     <MudGrid Spacing="3" Class="mb-2">
         @foreach (var badge in cat.Badges)
         {
