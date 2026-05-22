@@ -535,7 +535,7 @@ else if (JourneyMonths >= 6)
             {
                 var day = startDay.AddDays(di);
                 var count = ProgressHeatmap.GetValueOrDefault(day, 0);
-                var bg = count == 0 ? "#e8eaf6" : count == 1 ? "#90CAF9" : count <= 3 ? "#42A5F5" : "#1565C0";
+                var bg = count == 0 ? "var(--mud-palette-background-grey)" : count == 1 ? "#90CAF9" : count <= 3 ? "#42A5F5" : "#1565C0";
                 var tip = count == 0 ? day.ToString("MMM d") : $"{day:MMM d}: {count} note{(count == 1 ? "" : "s")}";
                 var border = day == hmToday ? "2px solid var(--mud-palette-primary)" : "none";
                 <div title="@tip" style="width:100%;aspect-ratio:1;border-radius:3px;background:@bg;border:@border;cursor:default;opacity:@(day > hmToday ? "0.3" : "1")"></div>
@@ -543,7 +543,7 @@ else if (JourneyMonths >= 6)
         </div>
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
             <MudText Typo="Typo.caption" Color="Color.Secondary">Less</MudText>
-            <div style="width:12px;height:12px;border-radius:2px;background:#e8eaf6;"></div>
+            <div style="width:12px;height:12px;border-radius:2px;background:var(--mud-palette-background-grey);"></div>
             <div style="width:12px;height:12px;border-radius:2px;background:#90CAF9;"></div>
             <div style="width:12px;height:12px;border-radius:2px;background:#42A5F5;"></div>
             <div style="width:12px;height:12px;border-radius:2px;background:#1565C0;"></div>
@@ -565,7 +565,7 @@ else if (JourneyMonths >= 6)
             {
                 var day = jhStart.AddDays(di);
                 var count = JournalHeatmap.GetValueOrDefault(day, 0);
-                var bg = count == 0 ? "#e8eaf6" : count == 1 ? "#A5D6A7" : "#4CAF50";
+                var bg = count == 0 ? "var(--mud-palette-background-grey)" : count == 1 ? "#A5D6A7" : "#4CAF50";
                 var tip = count == 0 ? day.ToString("MMM d") : $"{day:MMM d}: {count} entr{(count == 1 ? "y" : "ies")}";
                 var border = day == jhToday ? "2px solid var(--mud-palette-primary)" : "none";
                 <div title="@tip" style="width:100%;aspect-ratio:1;border-radius:3px;background:@bg;border:@border;cursor:default;opacity:@(day > jhToday ? "0.3" : "1")"></div>
@@ -573,7 +573,7 @@ else if (JourneyMonths >= 6)
         </div>
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
             <MudText Typo="Typo.caption" Color="Color.Secondary">No entry</MudText>
-            <div style="width:12px;height:12px;border-radius:2px;background:#e8eaf6;"></div>
+            <div style="width:12px;height:12px;border-radius:2px;background:var(--mud-palette-background-grey);"></div>
             <div style="width:12px;height:12px;border-radius:2px;background:#A5D6A7;"></div>
             <div style="width:12px;height:12px;border-radius:2px;background:#4CAF50;"></div>
             <MudText Typo="Typo.caption" Color="Color.Secondary">Multiple</MudText>
@@ -594,7 +594,7 @@ else if (JourneyMonths >= 6)
             {
                 var day = thStart.AddDays(di);
                 var count = TodoHeatmap.GetValueOrDefault(day, 0);
-                var bg = count == 0 ? "#e8eaf6" : count == 1 ? "#FFCC80" : count <= 3 ? "#FFA726" : "#E65100";
+                var bg = count == 0 ? "var(--mud-palette-background-grey)" : count == 1 ? "#FFCC80" : count <= 3 ? "#FFA726" : "#E65100";
                 var tip = count == 0 ? day.ToString("MMM d") : $"{day:MMM d}: {count} todo{(count == 1 ? "" : "s")} done";
                 var border = day == thToday ? "2px solid var(--mud-palette-primary)" : "none";
                 <div title="@tip" style="width:100%;aspect-ratio:1;border-radius:3px;background:@bg;border:@border;cursor:default;opacity:@(day > thToday ? "0.3" : "1")"></div>
@@ -602,7 +602,7 @@ else if (JourneyMonths >= 6)
         </div>
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
             <MudText Typo="Typo.caption" Color="Color.Secondary">None</MudText>
-            <div style="width:12px;height:12px;border-radius:2px;background:#e8eaf6;"></div>
+            <div style="width:12px;height:12px;border-radius:2px;background:var(--mud-palette-background-grey);"></div>
             <div style="width:12px;height:12px;border-radius:2px;background:#FFCC80;"></div>
             <div style="width:12px;height:12px;border-radius:2px;background:#FFA726;"></div>
             <div style="width:12px;height:12px;border-radius:2px;background:#E65100;"></div>

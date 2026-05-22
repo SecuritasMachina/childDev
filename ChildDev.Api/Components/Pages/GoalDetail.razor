@@ -1356,7 +1356,7 @@ else if (bestGoalStreak >= 2 && goalStreak < bestGoalStreak)
             {
                 var hDay = hmGoalStart.AddDays(hdi);
                 var hCount = hmGoalMap.GetValueOrDefault(hDay, 0);
-                var hBg = hCount == 0 ? "#e8eaf6" : hCount == 1 ? "#90CAF9" : hCount <= 3 ? "#42A5F5" : "#1565C0";
+                var hBg = hCount == 0 ? "var(--mud-palette-background-grey)" : hCount == 1 ? "#90CAF9" : hCount <= 3 ? "#42A5F5" : "#1565C0";
                 var hTip = hCount == 0 ? hDay.ToString("MMM d") : $"{hDay:MMM d}: {hCount} note{(hCount == 1 ? "" : "s")}";
                 <div title="@hTip" style="width:100%;aspect-ratio:1;border-radius:2px;background:@hBg;cursor:default;"></div>
             }
