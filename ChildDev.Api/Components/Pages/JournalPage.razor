@@ -359,54 +359,6 @@
         </MudStack>
     </MudPaper>
 }
-@* "On This Day" memory card — shows a journal entry from ~1 year ago *@
-@{
-    var otdToday = DateTime.Today;
-    var otdMs1YrAgo = new DateTimeOffset(otdToday.AddYears(-1), TimeZoneInfo.Local.GetUtcOffset(otdToday.AddYears(-1))).ToUnixTimeMilliseconds();
-    var otdWindowMs = 7L * 86_400_000L;
-    var otdEntry = AllEntries.FirstOrDefault(j =>
-        j.EnteredDate >= otdMs1YrAgo - otdWindowMs &&
-        j.EnteredDate <= otdMs1YrAgo + otdWindowMs &&
-        (!string.IsNullOrWhiteSpace(j.Notes) || !string.IsNullOrWhiteSpace(j.Mood)));
-}
-@if (otdEntry is not null && string.IsNullOrWhiteSpace(FilterText) && TagFilter == null && MoodFilter == null && DateFilter == "all")
-{
-    var otdDate = DateTimeOffset.FromUnixTimeMilliseconds(otdEntry.EnteredDate).LocalDateTime;
-    var otdDaysAgo = (int)(DateTime.Today - otdDate.Date).TotalDays;
-    var otdDaysLabel = otdDaysAgo >= 365 && otdDaysAgo < 370 ? "1 year ago" : $"{otdDaysAgo} days ago";
-    var otdPreview = !string.IsNullOrWhiteSpace(otdEntry.Notes)
-        ? (otdEntry.Notes.Length > 150 ? otdEntry.Notes[..150] + "…" : otdEntry.Notes)
-        : null;
-    var otdMoodEmojiMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
-        {"happy","😊"}, {"sad","😢"}, {"calm","😌"}, {"excited","🤩"}, {"tired","😴"},
-        {"angry","😠"}, {"anxious","😟"}, {"grateful","🙏"}, {"proud","💪"}, {"focused","🎯"}
-    };
-    var otdMoodLabel = !string.IsNullOrWhiteSpace(otdEntry.Mood)
-        ? $"{otdMoodEmojiMap.GetValueOrDefault(otdEntry.Mood, "💭")} {otdEntry.Mood}"
-        : null;
-    _ = Analytics.TrackAsync("journal_memory_view", AccountGuid, "journal", otdDaysAgo.ToString());
-    <MudPaper Elevation="2" Class="pa-3 mb-4"
-              Style="border-radius:14px;border-left:4px solid var(--mud-palette-warning);background:linear-gradient(135deg,rgba(255,193,7,.06) 0%,rgba(255,255,255,0) 100%);">
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
-            <MudIcon Icon="@Icons.Material.Filled.History" Color="Color.Warning" Size="Size.Small" />
-            <MudText Typo="Typo.caption" Color="Color.Warning" Style="font-weight:700;letter-spacing:0.5px;">ON THIS DAY — @otdDaysLabel</MudText>
-            <MudSpacer />
-            <MudText Typo="Typo.caption" Color="Color.Secondary">@otdDate.ToString("MMMM d, yyyy")</MudText>
-        </MudStack>
-        @if (otdMoodLabel is not null)
-        {
-            <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined" Class="mb-1" Style="font-size:0.72rem;height:22px;">@otdMoodLabel</MudChip>
-        }
-        @if (otdPreview is not null)
-        {
-            <MudText Typo="Typo.body2" Color="Color.Secondary" Style="font-style:italic;">@otdPreview</MudText>
-        }
-        @if (!string.IsNullOrWhiteSpace(otdEntry.Activity))
-        {
-            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">📌 @otdEntry.Activity</MudText>
-        }
-    </MudPaper>
-}
 @* Tag cloud — appears only when entries have tags *@
 @if (AllTags.Count > 0)
 {
