@@ -41,9 +41,13 @@
         @if (NickName is not null)
         {
             <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                <MudButton Color="Color.Inherit" Href="/"
-                           StartIcon="@Icons.Material.Filled.EmojiEvents"
-                           Variant="@(IsActive("/") ? Variant.Outlined : Variant.Text)">Goals</MudButton>
+                <MudBadge Content="@(_meetingSoonCount > 0 ? _meetingSoonCount.ToString() : null)"
+                          Color="Color.Info" Overlap="true" Bordered="true"
+                          Visible="@(_meetingSoonCount > 0)" title="@(_meetingSoonCount > 0 ? $"{_meetingSoonCount} goal meeting(s) this week" : "")">
+                    <MudButton Color="Color.Inherit" Href="/"
+                               StartIcon="@Icons.Material.Filled.EmojiEvents"
+                               Variant="@(IsActive("/") ? Variant.Outlined : Variant.Text)">Goals</MudButton>
+                </MudBadge>
                 <MudBadge Content="@(_overdueTodoCount > 0 ? _overdueTodoCount.ToString() : null)"
                           Color="Color.Error" Overlap="true" Bordered="true"
                           Visible="@(_overdueTodoCount > 0)">
@@ -89,7 +93,7 @@
             </MudDrawerHeader>
             <MudNavMenu>
                 <MudNavLink Href="/" Match="NavLinkMatch.All"
-                            Icon="@Icons.Material.Filled.EmojiEvents" OnClick="CloseDrawer">Goals</MudNavLink>
+                            Icon="@Icons.Material.Filled.EmojiEvents" OnClick="CloseDrawer">Goals@(_meetingSoonCount > 0 ? $" ({_meetingSoonCount} meeting soon)" : "")</MudNavLink>
                 <MudNavLink Href="/todos"
                             Icon="@Icons.Material.Filled.CheckBox" OnClick="CloseDrawer">
                     Todos@(_overdueTodoCount > 0 ? $" ({_overdueTodoCount} overdue)" : "")
@@ -130,6 +134,8 @@
     private int _overdueTodoCount;
     private int _dailyStreak;
     private bool _hasJournalToday;
+
+    private int _meetingSoonCount;
 
     private readonly MudTheme _theme = new()
     {
@@ -174,6 +180,12 @@
                                   && t.CompletedAt == null && t.DueDate.HasValue && t.DueDate < todayStart);
                 _hasJournalToday = await Db.Journals
                     .AnyAsync(j => j.AccountFk == accountGuid && j.DeletedAt == null && j.EnteredDate >= todayStart);
+
+                var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                var next7Ms = nowMs + 7L * 86_400_000L;
+                _meetingSoonCount = await Db.Goals
+                    .CountAsync(g => g.AccountFk == accountGuid && g.DeletedAt == null && g.CompletionDate == null
+                                  && g.NextMeetingDate.HasValue && g.NextMeetingDate.Value > nowMs && g.NextMeetingDate.Value <= next7Ms);
 
                 var recentDays = await Db.GoalProgresses
                     .Where(p => p.AccountFk == accountGuid && p.DeletedAt == null
