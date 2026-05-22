@@ -449,6 +449,21 @@ else
         }
         <MudTextField @bind-Value="NewTitle" Label="What needs to be done?" Variant="Variant.Outlined"
                       Class="mb-4" AutoFocus="true" />
+        @if (_activeGoals.Count > 0)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Link to a goal (optional):</MudText>
+            <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
+                @foreach (var (agGuid, agText) in _activeGoals.Take(6))
+                {
+                    var agShort = agText.Length > 30 ? agText[..30] + "…" : agText;
+                    <MudChip T="string" Size="Size.Small"
+                             Variant="@(_newGoalLink == agText ? Variant.Filled : Variant.Outlined)"
+                             Color="@(_newGoalLink == agText ? Color.Warning : Color.Default)"
+                             Style="cursor:pointer;"
+                             OnClick="() => _newGoalLink = _newGoalLink == agText ? string.Empty : agText">@agShort</MudChip>
+                }
+            </MudStack>
+        }
         <MudTextField @bind-Value="NewNotes" Label="Notes (optional)" Variant="Variant.Outlined"
                       Lines="2" Class="mb-4" />
         <MudDatePicker @bind-Date="NewDueDate" Label="Due date (optional)" Variant="Variant.Outlined" />
@@ -514,6 +529,8 @@ else
     private string? _confirmDeleteGuid;
     private bool _confirmClearCompleted;
     private Dictionary<string, string> _goalGuidByName = [];
+    private List<(string Guid, string GoalText)> _activeGoals = [];
+    private string _newGoalLink = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -564,18 +581,15 @@ else
         WeekDueCount = todos.Count(t =>
             t.DueDate.HasValue && t.DueDate.Value >= weekStartMs && t.DueDate.Value < TodayStartMs + 86_400_000L);
 
-        // Build goal lookup for todos with "Goal: " prefix in notes
-        var goalPrefixTodos = todos.Where(t => t.Notes != null && t.Notes.StartsWith("Goal: ")).ToList();
-        if (goalPrefixTodos.Count > 0)
-        {
-            var goals = await Db.Goals
-                .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null)
-                .Select(g => new { g.Guid, g.GoalText })
-                .ToListAsync();
-            _goalGuidByName = goals
-                .Where(g => !string.IsNullOrWhiteSpace(g.GoalText))
-                .ToDictionary(g => g.GoalText!, g => g.Guid, StringComparer.OrdinalIgnoreCase);
-        }
+        // Load active goals for picker and for "Goal: " prefix display
+        var goals = await Db.Goals
+            .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate == null)
+            .Select(g => new { g.Guid, g.GoalText })
+            .ToListAsync();
+        _activeGoals = goals.Where(g => !string.IsNullOrWhiteSpace(g.GoalText))
+            .Select(g => (g.Guid, g.GoalText!))
+            .ToList();
+        _goalGuidByName = _activeGoals.ToDictionary(g => g.GoalText, g => g.Guid, StringComparer.OrdinalIgnoreCase);
 
         ApplyFilter();
     }
@@ -626,6 +640,7 @@ else
         NewTitle = string.Empty;
         NewNotes = null;
         NewDueDate = null;
+        _newGoalLink = string.Empty;
         ShowAddDialog = true;
     }
 
@@ -634,13 +649,18 @@ else
         var title = NewTitle.Trim();
         if (string.IsNullOrWhiteSpace(title)) return;
 
+        var goalNotes = !string.IsNullOrWhiteSpace(_newGoalLink) ? $"Goal: {_newGoalLink}" : null;
+        var combinedNotes = goalNotes is not null && !string.IsNullOrWhiteSpace(NewNotes)
+            ? $"{goalNotes}\n{NewNotes.Trim()}"
+            : goalNotes ?? (string.IsNullOrWhiteSpace(NewNotes) ? null : NewNotes.Trim());
+
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         Db.Todos.Add(new Todo
         {
             Guid = System.Guid.NewGuid().ToString(),
             AccountFk = AccountGuid!,
             Title = title,
-            Notes = string.IsNullOrWhiteSpace(NewNotes) ? null : NewNotes.Trim(),
+            Notes = combinedNotes,
             DueDate = NewDueDate.HasValue
                 ? new DateTimeOffset(DateTime.SpecifyKind(NewDueDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
                 : null,
