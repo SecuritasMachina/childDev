@@ -51,9 +51,12 @@
                                StartIcon="@Icons.Material.Filled.CheckBox"
                                Variant="@(IsActive("/todos") ? Variant.Outlined : Variant.Text)">Todos</MudButton>
                 </MudBadge>
-                <MudButton Color="Color.Inherit" Href="/journal"
-                           StartIcon="@Icons.Material.Filled.Book"
-                           Variant="@(IsActive("/journal") ? Variant.Outlined : Variant.Text)">Journal</MudButton>
+                <MudBadge Dot="true" Color="Color.Success" Overlap="true" Bordered="true"
+                          Visible="@_hasJournalToday" title="Journaled today ✓">
+                    <MudButton Color="Color.Inherit" Href="/journal"
+                               StartIcon="@Icons.Material.Filled.Book"
+                               Variant="@(IsActive("/journal") ? Variant.Outlined : Variant.Text)">Journal</MudButton>
+                </MudBadge>
                 <MudButton Color="Color.Inherit" Href="/insights"
                            StartIcon="@Icons.Material.Filled.Insights"
                            Variant="@(IsActive("/insights") ? Variant.Outlined : Variant.Text)">Insights</MudButton>
@@ -92,7 +95,7 @@
                     Todos@(_overdueTodoCount > 0 ? $" ({_overdueTodoCount} overdue)" : "")
                 </MudNavLink>
                 <MudNavLink Href="/journal"
-                            Icon="@Icons.Material.Filled.Book" OnClick="CloseDrawer">Journal</MudNavLink>
+                            Icon="@Icons.Material.Filled.Book" OnClick="CloseDrawer">Journal@(_hasJournalToday ? " ✓" : "")</MudNavLink>
                 <MudNavLink Href="/insights"
                             Icon="@Icons.Material.Filled.Insights" OnClick="CloseDrawer">Insights</MudNavLink>
                 <MudDivider Class="my-2" />
@@ -126,6 +129,7 @@
     private bool _darkMode;
     private int _overdueTodoCount;
     private int _dailyStreak;
+    private bool _hasJournalToday;
 
     private readonly MudTheme _theme = new()
     {
@@ -168,6 +172,8 @@
                 _overdueTodoCount = await Db.Todos
                     .CountAsync(t => t.AccountFk == accountGuid && t.DeletedAt == null
                                   && t.CompletedAt == null && t.DueDate.HasValue && t.DueDate < todayStart);
+                _hasJournalToday = await Db.Journals
+                    .AnyAsync(j => j.AccountFk == accountGuid && j.DeletedAt == null && j.EnteredDate >= todayStart);
 
                 var recentDays = await Db.GoalProgresses
                     .Where(p => p.AccountFk == accountGuid && p.DeletedAt == null
