@@ -1597,6 +1597,19 @@ else
     var daysWorking = Math.Max(1, (int)((lastMs - oldest.UpdatedOn) / 86_400_000L) + 1);
     <MudPaper Elevation="0" Class="pa-3 mb-3"
               Style="background:var(--mud-palette-background-grey);border-radius:12px;">
+        @{
+            var sumCount = ProgressEntries.Count;
+            var (sumEmoji, sumLevel, sumNext, sumNextCount, sumPrev) = sumCount switch
+            {
+                >= 50 => ("🌟", "Legendary", null, 0, 50),
+                >= 25 => ("🏆", "Champion", "🌟 Legendary", 50, 25),
+                >= 10 => ("⭐", "Strong", "🏆 Champion", 25, 10),
+                >= 5  => ("🚀", "Momentum", "⭐ Strong", 10, 5),
+                >= 1  => ("⚡", "Getting Started", "🚀 Momentum", 5, 1),
+                _     => ("🌱", "Seedling", "⚡ Getting Started", 1, 0)
+            };
+            var sumPct = sumNextCount > 0 ? (int)((sumCount - sumPrev) * 100.0 / (sumNextCount - sumPrev)) : 100;
+        }
         <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="3" AlignItems="AlignItems.Center">
             <MudStack Spacing="0" AlignItems="AlignItems.Center">
                 <MudText Typo="Typo.caption" Color="Color.Secondary">Started</MudText>
@@ -1606,6 +1619,16 @@ else
             <MudStack Spacing="0" AlignItems="AlignItems.Center">
                 <MudText Typo="Typo.caption" Color="Color.Secondary">Total Notes</MudText>
                 <MudText Typo="Typo.body2" Style="font-weight:600;">@ProgressEntries.Count</MudText>
+            </MudStack>
+            <MudDivider Vertical="true" FlexItem="true" />
+            <MudStack Spacing="0" Style="min-width:120px;">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Level</MudText>
+                <MudText Typo="Typo.body2" Style="font-weight:600;">@sumEmoji @sumLevel</MudText>
+                @if (sumNext is not null)
+                {
+                    <MudProgressLinear Value="@sumPct" Color="Color.Warning" Rounded="true" Size="Size.Small" Class="mt-1" />
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-size:0.65rem;">→ @sumNext in @(sumNextCount - sumCount) more</MudText>
+                }
             </MudStack>
             <MudDivider Vertical="true" FlexItem="true" />
             <MudStack Spacing="0" AlignItems="AlignItems.Center">
