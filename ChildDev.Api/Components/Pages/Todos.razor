@@ -86,6 +86,15 @@
         No todos yet — add one below to get started!
     </MudAlert>
 }
+@if (!AllPendingTodos.Any() && CompletedTodos.Any())
+{
+    var izMsg = CompletedTodos.Count >= 20 ? $"🏆 Inbox zero! You've powered through {CompletedTodos.Count} tasks — truly legendary! Add something new to keep the momentum!"
+              : CompletedTodos.Count >= 5  ? $"🌟 Inbox zero! All {CompletedTodos.Count} tasks done — you're amazing! What's next on your list?"
+              :                              "🎉 Inbox zero! All caught up — add new todos to keep growing!";
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Class="mb-4">
+        @izMsg
+    </MudAlert>
+}
 else
 {
     <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3" Spacing="2">

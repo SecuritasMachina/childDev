@@ -494,6 +494,21 @@
                    Href="@($"/goals/{MostFocusedGoalThisWeekGuid}")" Class="ml-1">View goal</MudButton>
     </MudAlert>
 }
+@{
+    var ngtTodayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+    var ngtYestMs = ngtTodayStartMs - 86_400_000L;
+    var ngtNewGoal = AllActiveGoals.FirstOrDefault(g => g.EnteredDate >= ngtYestMs);
+}
+@if (ngtNewGoal is not null && string.IsNullOrWhiteSpace(FilterText))
+{
+    var ngtName = ngtNewGoal.GoalText?.Length > 55 ? ngtNewGoal.GoalText[..55] + "…" : ngtNewGoal.GoalText;
+    var ngtIsToday = ngtNewGoal.EnteredDate >= ngtTodayStartMs;
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.FiberNew" Dense="true" Class="mb-3">
+        🌱 <strong>@(ngtIsToday ? "New goal today" : "New goal yesterday"):</strong> "@ngtName" — every great achievement starts with a single decision. You've got this!
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Success"
+                   Href="@($"/goals/{ngtNewGoal.Guid}")" Class="ml-1">View goal</MudButton>
+    </MudAlert>
+}
 @if (GoalStreaks.Any() && string.IsNullOrWhiteSpace(FilterText))
 {
     var bestEntry = GoalStreaks.MaxBy(kv => kv.Value);
