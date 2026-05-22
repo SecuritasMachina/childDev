@@ -1739,6 +1739,20 @@ else
         </MudText>
     </TitleContent>
     <DialogContent>
+        @if (_dialogPrevNoteText is not null)
+        {
+            var prevSnip = _dialogPrevNoteText.Length > 120 ? _dialogPrevNoteText[..120] + "…" : _dialogPrevNoteText;
+            <MudPaper Elevation="0" Class="pa-2 mb-3" Style="border-radius:8px;background:var(--mud-palette-background-grey);border-left:3px solid var(--mud-palette-primary-lighten);">
+                <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="1">
+                    <MudStack Spacing="0" Style="flex:1">
+                        <MudText Typo="Typo.caption" Color="Color.Primary" Style="font-weight:600;">📋 Last note:</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@prevSnip</MudText>
+                    </MudStack>
+                    <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
+                               OnClick="@(() => NewNextSteps = _dialogPrevNoteText!)">Use</MudButton>
+                </MudStack>
+            </MudPaper>
+        }
         @if (string.IsNullOrWhiteSpace(NewNextSteps))
         {
             <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">💡 Quick-start prompts:</MudText>
@@ -1752,7 +1766,6 @@ else
         }
         <MudTextField @bind-Value="NewNextSteps"
                       Label="What happened? What's the next step?"
-                      HelperText="@(string.IsNullOrWhiteSpace(NewNextSteps) ? "" : "Pre-filled from your last note — edit or replace as needed")"
                       Variant="Variant.Outlined" Lines="3" Class="mb-4" AutoFocus="true" />
         <MudDatePicker @bind-Date="NewMeetingDate" Label="Next meeting date (optional)" Variant="Variant.Outlined" />
     </DialogContent>
@@ -1816,6 +1829,7 @@ else
     private bool ShowAddDialog;
     private string NewNextSteps = string.Empty;
     private DateTime? NewMeetingDate;
+    private string? _dialogPrevNoteText;
     private bool ShowCelebration;
     private List<ChartSeries> ProgressChartSeries = [];
     private string[] ProgressChartLabels = [];
@@ -1947,9 +1961,9 @@ else
 
     private void OpenAddProgressDialog()
     {
-        // Pre-fill with the most recent note's next steps to reduce blank-page friction
         var lastNote = ProgressEntries.FirstOrDefault();
-        NewNextSteps = !string.IsNullOrWhiteSpace(lastNote?.NextStepItems) ? lastNote.NextStepItems : string.Empty;
+        _dialogPrevNoteText = !string.IsNullOrWhiteSpace(lastNote?.NextStepItems) ? lastNote.NextStepItems : null;
+        NewNextSteps = string.Empty;
         var todayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
         NewMeetingDate = Goal?.NextMeetingDate.HasValue == true && Goal.NextMeetingDate.Value >= todayStartMs
             ? DateTimeOffset.FromUnixTimeMilliseconds(Goal.NextMeetingDate.Value).LocalDateTime
