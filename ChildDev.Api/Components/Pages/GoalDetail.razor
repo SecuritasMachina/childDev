@@ -1143,6 +1143,12 @@
     @if (ProgressEntries.Count >= 5)
     {
         <MudSpacer />
+        <MudTooltip Text="@(_notesOldestFirst ? "Showing: oldest first" : "Showing: newest first")">
+            <MudIconButton Icon="@(_notesOldestFirst ? Icons.Material.Filled.ArrowUpward : Icons.Material.Filled.ArrowDownward)"
+                           Size="Size.Small" Color="Color.Default"
+                           OnClick="() => _notesOldestFirst = !_notesOldestFirst"
+                           aria-label="Toggle sort order" />
+        </MudTooltip>
         <MudTextField Value="@_noteFilter" ValueChanged="@((string v) => _noteFilter = v)"
                       Placeholder="Search notes…" Variant="Variant.Outlined" Margin="Margin.Dense"
                       Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
@@ -1452,9 +1458,12 @@ else if (bestGoalStreak >= 2 && goalStreak < bestGoalStreak)
         .Where(p => !string.IsNullOrWhiteSpace(p.NextStepItems) && p.NextStepItems.Length >= 30)
         .OrderByDescending(p => p.NextStepItems!.Length)
         .FirstOrDefault()?.Guid;
-    var displayedNotes = string.IsNullOrWhiteSpace(_noteFilter)
+    var displayedNotesBase = string.IsNullOrWhiteSpace(_noteFilter)
         ? ProgressEntries
         : ProgressEntries.Where(p => (p.NextStepItems ?? "").Contains(_noteFilter.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
+    var displayedNotes = _notesOldestFirst
+        ? displayedNotesBase.OrderBy(p => p.UpdatedOn).ToList()
+        : displayedNotesBase.OrderByDescending(p => p.UpdatedOn).ToList();
 }
 @if (!ProgressEntries.Any())
 {
@@ -1826,6 +1835,7 @@ else
     private Goal? Goal;
     private List<GoalProgress> ProgressEntries = [];
     private string _noteFilter = string.Empty;
+    private bool _notesOldestFirst;
     private bool ShowAddDialog;
     private string NewNextSteps = string.Empty;
     private DateTime? NewMeetingDate;
