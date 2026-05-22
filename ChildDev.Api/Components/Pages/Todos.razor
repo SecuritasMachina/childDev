@@ -244,6 +244,9 @@ else
                             <MudText Typo="Typo.body1">@t.Title</MudText>
                             @if (!string.IsNullOrWhiteSpace(t.Notes)) { <MudText Typo="Typo.caption" Color="Color.Secondary">@t.Notes</MudText> }
                         </MudStack>
+                        <MudIconButton Icon="@Icons.Material.Filled.Today" Size="Size.Small"
+                                       Color="Color.Info" title="Set due today"
+                                       OnClick="() => SetDueToday(t.Guid)" aria-label="Set due today" />
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditTodo(t)" aria-label="Edit todo" />
                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => _confirmDeleteGuid = t.Guid" aria-label="Delete todo" />
                     </MudStack>
@@ -282,6 +285,12 @@ else
                         <MudIconButton Icon="@Icons.Material.Filled.Snooze" Size="Size.Small"
                                        Color="Color.Warning" title="Snooze to tomorrow"
                                        OnClick="() => SnoozeTodo(t.Guid)" aria-label="Snooze to tomorrow" />
+                    }
+                    @if (!t.DueDate.HasValue)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Today" Size="Size.Small"
+                                       Color="Color.Info" title="Set due today"
+                                       OnClick="() => SetDueToday(t.Guid)" aria-label="Set due today" />
                     }
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
                                    OnClick="() => OpenEditTodo(t)" aria-label="Edit todo" />
@@ -634,6 +643,20 @@ else
         if (rows == 0) return;
         await Analytics.TrackAsync("todo_snooze", AccountGuid, "todos");
         Snackbar.Add("Snoozed to tomorrow.", Severity.Info);
+        await LoadTodos();
+    }
+
+    private async Task SetDueToday(string guid)
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var rows = await Db.Todos
+            .Where(t => t.Guid == guid && t.AccountFk == AccountGuid && t.CompletedAt == null && t.DueDate == null)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.DueDate, TodayStartMs)
+                .SetProperty(t => t.UpdatedOn, now));
+        if (rows == 0) return;
+        await Analytics.TrackAsync("todo_set_due_today", AccountGuid, "todos");
+        Snackbar.Add("Due date set to today.", Severity.Success);
         await LoadTodos();
     }
 
