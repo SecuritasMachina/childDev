@@ -1045,6 +1045,13 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                   Placeholder="Search goals…" Variant="Variant.Outlined"
                   Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
                   Clearable="true" Margin="Margin.Dense" Style="max-width:220px;" />
+    <MudTooltip Text="@(_compactGoalView ? "Switch to card view" : "Switch to compact list view")">
+        <MudIconButton Icon="@(_compactGoalView ? Icons.Material.Filled.ViewModule : Icons.Material.Filled.ViewList)"
+                       Color="@(_compactGoalView ? Color.Primary : Color.Default)"
+                       Size="Size.Small"
+                       OnClick="ToggleCompactView"
+                       aria-label="Toggle compact view" />
+    </MudTooltip>
 </MudStack>
 @{
     var qfNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -1200,6 +1207,49 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     </MudPaper>
 }
 
+@if (_compactGoalView)
+{
+    <MudList T="Goal" Dense="true" Class="mt-2">
+        @foreach (var g in ActiveGoals)
+        {
+            var cgPCount = ProgressCounts.GetValueOrDefault(g.Guid);
+            var cgLastAt = LastProgressAt.GetValueOrDefault(g.Guid);
+            var cgDays   = cgPCount > 0 ? (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - cgLastAt) / 86_400_000L) : -1;
+            var cgHeatColor = cgPCount == 0 ? Color.Default
+                            : cgDays <= 1   ? Color.Success
+                            : cgDays <= 13  ? Color.Warning
+                            : Color.Error;
+            var cgHeatIcon = cgPCount == 0 ? Icons.Material.Filled.FiberNew
+                           : cgDays <= 1   ? Icons.Material.Filled.LocalFireDepartment
+                           : cgDays <= 13  ? Icons.Material.Filled.WbSunny
+                           : Icons.Material.Filled.AcUnit;
+            var cgLastLabel = cgPCount == 0 ? "No notes" : cgDays == 0 ? "Today" : cgDays == 1 ? "Yesterday" : $"{cgDays}d ago";
+            var cgIsPinned = _pinnedGoals.Contains(g.Guid);
+            <MudListItem T="Goal">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudIcon Icon="@cgHeatIcon" Color="@cgHeatColor" Size="Size.Small" />
+                    <MudText Typo="Typo.body2" Style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@g.GoalText</MudText>
+                    <MudChip T="string" Size="Size.Small" Color="@(cgPCount > 0 ? Color.Default : Color.Secondary)" Style="font-size:0.7rem;height:20px;">
+                        @cgPCount note@(cgPCount == 1 ? "" : "s")
+                    </MudChip>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Style="white-space:nowrap;min-width:70px;text-align:right;">@cgLastLabel</MudText>
+                    <MudIconButton Icon="@(cgIsPinned ? Icons.Material.Filled.PushPin : Icons.Material.Outlined.PushPin)"
+                                   Size="Size.Small" Color="@(cgIsPinned ? Color.Warning : Color.Default)"
+                                   OnClick="() => TogglePinGoal(g.Guid)" aria-label="Pin goal" />
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
+                               Href="@($"/goals/{g.Guid}")">View</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="async () => await OpenQuickNote(g.Guid)">Note</MudButton>
+                </MudStack>
+            </MudListItem>
+        }
+    </MudList>
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddCircleOutline"
+               OnClick="OpenAddGoalDialog" Class="mt-2">Add New Goal</MudButton>
+}
+else
+{
 <MudGrid>
     @foreach (var g in ActiveGoals)
     {
@@ -1421,6 +1471,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         </MudCard>
     </MudItem>
 </MudGrid>
+}
 
 @{
     var nowMsAttn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -2064,6 +2115,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private int AnniversaryDays;
     private int AnniversaryDaysUntil;
     private HashSet<string> _pinnedGoals = new();
+    private bool _compactGoalView = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -2086,11 +2138,21 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                 {
                     _pinnedGoals = saved.Split(',', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
                     ApplyFilter();
-                    StateHasChanged();
                 }
+                var compactSaved = await JS.InvokeAsync<string?>("localStorage.getItem", "childdev_compact_goals");
+                if (compactSaved == "true") _compactGoalView = true;
+                StateHasChanged();
             }
             catch { }
         }
+    }
+
+    private async Task ToggleCompactView()
+    {
+        _compactGoalView = !_compactGoalView;
+        try { await JS.InvokeVoidAsync("localStorage.setItem", "childdev_compact_goals", _compactGoalView ? "true" : "false"); }
+        catch { }
+        _ = Analytics.TrackAsync("goal_view_toggle", AccountGuid, "home", _compactGoalView ? "compact" : "card");
     }
 
     private async Task TogglePinGoal(string guid)
