@@ -1617,6 +1617,10 @@ else
                                 <MudIconButton Icon="@Icons.Material.Filled.AddTask" Size="Size.Small"
                                                Color="Color.Info" title="Create todo from this note"
                                                OnClick="() => OpenAddTodoFromNote(p.NextStepItems!)" aria-label="Create todo from note" />
+                                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small"
+                                               Color="Color.Default" title="Copy note text"
+                                               OnClick="() => CopyNoteText(p.NextStepItems!)"
+                                               aria-label="Copy note text" />
                             }
                             <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
                                            Color="Color.Default" OnClick="() => OpenEditProgress(p)" aria-label="Edit progress note" />
@@ -2282,6 +2286,12 @@ else
         _newTodoNotes = null;
         _newTodoDueDate = null;
         _showAddTodoDialog = true;
+    }
+
+    private async Task CopyNoteText(string text)
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        Snackbar.Add("Note copied!", Severity.Info);
     }
 
     private async Task SaveNewTodo()
