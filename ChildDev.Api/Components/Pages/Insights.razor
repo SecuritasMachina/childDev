@@ -599,6 +599,12 @@ else if (JourneyMonths >= 6)
         🏅 <strong>All-time best day:</strong> @BestDayEverDate with <strong>@BestDayEverCount actions</strong>! That was an epic day — can you top it?
     </MudAlert>
 }
+@if (BestWeekEver is not null)
+{
+    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.CalendarViewWeek" Dense="true" Class="mb-4">
+        📅 <strong>All-time best week:</strong> @BestWeekEver with <strong>@BestWeekEverCount actions</strong>! That was a powerhouse week!
+    </MudAlert>
+}
 @if (BestMonthEver is not null)
 {
     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mb-6">
@@ -950,6 +956,8 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
     private List<(string Day, int Count)> WeekdayLeaderboard = [];
     private string? BestDayEverDate;
     private int BestDayEverCount;
+    private string? BestWeekEver;
+    private int BestWeekEverCount;
     private string? BestMonthEver;
     private int BestMonthEverCount;
     private int JournalStreak;
@@ -1464,6 +1472,23 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
             {
                 BestDayEverDate = bestDayGroup.Key.ToString("MMMM d, yyyy");
                 BestDayEverCount = bestDayGroup.Count();
+            }
+
+            var bestWeekGroup = allEver
+                .GroupBy(ms => {
+                    var d = DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime);
+                    var offset = ((int)d.DayOfWeek + 6) % 7;
+                    return d.AddDays(-offset);
+                })
+                .OrderByDescending(g => g.Count())
+                .FirstOrDefault();
+            if (bestWeekGroup is not null && bestWeekGroup.Count() >= 4)
+            {
+                var weekEnd = bestWeekGroup.Key.AddDays(6);
+                BestWeekEver = bestWeekGroup.Key.Year == weekEnd.Year
+                    ? $"{bestWeekGroup.Key:MMM d}–{weekEnd:MMM d, yyyy}"
+                    : $"{bestWeekGroup.Key:MMM d, yyyy}–{weekEnd:MMM d, yyyy}";
+                BestWeekEverCount = bestWeekGroup.Count();
             }
 
             var bestMonthGroup = allEver
