@@ -135,6 +135,10 @@ else if (JourneyMonths >= 6)
                 var apgAvg = (GoalProgressTotal / (double)GoalsTotalAllTime);
                 <MudText Typo="Typo.caption" Color="Color.Secondary">avg @apgAvg.ToString("F1") notes/goal</MudText>
             }
+            @if (AvgProgressNotesPerWeek >= 0.5)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Secondary">avg @AvgProgressNotesPerWeek.ToString("F1")/week</MudText>
+            }
             @if (TotalActiveDaysEver >= 14 && TotalLast30 >= 3)
             {
                 var vtAllTimePace = GoalProgressTotal / (double)TotalActiveDaysEver;
@@ -813,6 +817,7 @@ else if (JourneyMonths >= 6)
     private int MostProductiveQuarterCount;
     private int JourneyYears;
     private int JourneyMonths;
+    private double AvgProgressNotesPerWeek;
 
     protected override async Task OnInitializedAsync()
     {
@@ -1060,6 +1065,14 @@ else if (JourneyMonths >= 6)
         YtdTodosCompleted = allTodosEver.Count(ms => ms >= ytdStartMs);
         var allJournalEver = await Db.Journals.Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null).Select(j => j.EnteredDate).ToListAsync();
         var allProgressEver = await Db.GoalProgresses.Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null).Select(p => p.UpdatedOn).ToListAsync();
+        // Avg notes per week (from first note to now)
+        if (allProgressEver.Count >= 5)
+        {
+            var apwFirstMs = allProgressEver.Min();
+            var apwWeeks = Math.Max((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - apwFirstMs) / (7.0 * 86_400_000.0), 1.0);
+            AvgProgressNotesPerWeek = allProgressEver.Count / apwWeeks;
+        }
+
         // Week-over-week progress note velocity
         var wowNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var wow7Ms = wowNowMs - 7L * 86_400_000L;

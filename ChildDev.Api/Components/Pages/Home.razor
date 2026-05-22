@@ -485,6 +485,15 @@
         <MudText Typo="Typo.caption" Color="@(wowDiff >= 0 ? Color.Success : Color.Warning)" Class="mb-2">@wowMsg</MudText>
     }
 }
+@if (MostFocusedGoalThisWeekName is not null && string.IsNullOrWhiteSpace(FilterText))
+{
+    var mfName = MostFocusedGoalThisWeekName.Length > 55 ? MostFocusedGoalThisWeekName[..55] + "…" : MostFocusedGoalThisWeekName;
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Star" Dense="true" Class="mb-3">
+        🎯 <strong>Most focused this week:</strong> "@mfName" — @MostFocusedGoalThisWeekCount notes! Keep that energy!
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Info"
+                   Href="@($"/goals/{MostFocusedGoalThisWeekGuid}")" Class="ml-1">View goal</MudButton>
+    </MudAlert>
+}
 @if (GoalStreaks.Any() && string.IsNullOrWhiteSpace(FilterText))
 {
     var bestEntry = GoalStreaks.MaxBy(kv => kv.Value);
@@ -1533,6 +1542,9 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private int JournalThisWeek;
     private int TodosCompletedThisWeek;
     private int TodosCompletedToday;
+    private string? MostFocusedGoalThisWeekName;
+    private string? MostFocusedGoalThisWeekGuid;
+    private int MostFocusedGoalThisWeekCount;
     private string QuickJournalText = string.Empty;
     private string QuickTodoText = string.Empty;
     private List<Journal> RecentJournals = [];
@@ -1649,6 +1661,26 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         ProgressThisWeek = weekEntries.Count;
         ProgressLastWeek = allTimestamps.Count(p => p.UpdatedOn >= twoWeeksAgoMs && p.UpdatedOn < weekAgoMs);
         GoalsProgressedThisWeek = weekEntries.Select(p => p.GoalFk).Distinct().Count();
+
+        // Most focused goal this week (when >= 2 different goals were worked)
+        if (GoalsProgressedThisWeek >= 2)
+        {
+            var mfTop = weekEntries
+                .GroupBy(p => p.GoalFk)
+                .Select(g => new { GoalFk = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .FirstOrDefault();
+            if (mfTop?.Count >= 2)
+            {
+                var mfGoal = AllActiveGoals.FirstOrDefault(g => g.Guid == mfTop.GoalFk);
+                if (mfGoal is not null)
+                {
+                    MostFocusedGoalThisWeekName = mfGoal.GoalText;
+                    MostFocusedGoalThisWeekGuid = mfGoal.Guid;
+                    MostFocusedGoalThisWeekCount = mfTop.Count;
+                }
+            }
+        }
 
         // Progress notes logged today across all active goals
         var todayStartMsLocal = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
