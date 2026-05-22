@@ -1197,7 +1197,7 @@
                            OnClick="() => _notesOldestFirst = !_notesOldestFirst"
                            aria-label="Toggle sort order" />
         </MudTooltip>
-        <MudTextField Value="@_noteFilter" ValueChanged="@((string v) => _noteFilter = v)"
+        <MudTextField Value="@_noteFilter" ValueChanged="@((string v) => { _noteFilter = v; _notesPageSize = 10; })"
                       Placeholder="Search notes…" Variant="Variant.Outlined" Margin="Margin.Dense"
                       Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
                       Clearable="true" Immediate="true" Style="max-width:200px;" />
@@ -1509,9 +1509,11 @@ else if (bestGoalStreak >= 2 && goalStreak < bestGoalStreak)
     var displayedNotesBase = string.IsNullOrWhiteSpace(_noteFilter)
         ? ProgressEntries
         : ProgressEntries.Where(p => (p.NextStepItems ?? "").Contains(_noteFilter.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
-    var displayedNotes = _notesOldestFirst
+    var displayedNotesSorted = _notesOldestFirst
         ? displayedNotesBase.OrderBy(p => p.UpdatedOn).ToList()
         : displayedNotesBase.OrderByDescending(p => p.UpdatedOn).ToList();
+    var notesHidden = Math.Max(0, displayedNotesSorted.Count - _notesPageSize);
+    var displayedNotes = displayedNotesSorted.Take(_notesPageSize).ToList();
     // Chronological note numbers (Note #1 = oldest ever, Note #N = newest)
     var noteNumbers = ProgressEntries
         .OrderBy(p => p.UpdatedOn)
@@ -1643,6 +1645,22 @@ else
             </MudTimelineItem>
         }
     </MudTimeline>
+    @if (notesHidden > 0)
+    {
+        <MudButton FullWidth="true" Variant="Variant.Outlined" Color="Color.Secondary"
+                   OnClick="() => _notesPageSize += 20"
+                   StartIcon="@Icons.Material.Filled.ExpandMore">
+            Show @Math.Min(notesHidden, 20) more note@(Math.Min(notesHidden, 20) == 1 ? "" : "s") (@notesHidden hidden)
+        </MudButton>
+    }
+    else if (_notesPageSize > 10 && displayedNotesSorted.Count > 10)
+    {
+        <MudButton FullWidth="true" Variant="Variant.Text" Color="Color.Secondary"
+                   OnClick="() => _notesPageSize = 10"
+                   StartIcon="@Icons.Material.Filled.ExpandLess">
+            Show less
+        </MudButton>
+    }
 }
 
 @if (ProgressEntries.Any())
@@ -2111,6 +2129,7 @@ else
     private List<GoalProgress> ProgressEntries = [];
     private string _noteFilter = string.Empty;
     private bool _notesOldestFirst;
+    private int _notesPageSize = 10;
     private bool ShowAddDialog;
     private string NewNextSteps = string.Empty;
 
