@@ -1,0 +1,12 @@
+{
+  "name": "ChildDev Goals",
+  "short_name": "ChildDev",
+  "description": "Set goals, track your progress, and celebrate every win.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F5F7",
+  "theme_color": "#3949AB",
+  "scope": "/",
+  "lang": "en",
+  "icons": []
+}
