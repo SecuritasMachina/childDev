@@ -594,6 +594,22 @@ else
         <MudTextField @bind-Value="NewMood" Label="Or type your own mood (optional)" Variant="Variant.Outlined" Class="mb-4" />
         <MudTextField @bind-Value="NewEmotionReason" Label="Why did you feel that way? (optional)" Variant="Variant.Outlined"
                       Lines="2" Class="mb-4" />
+        @if (AllTags.Count > 0)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Your tags (tap to add):</MudText>
+            <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-2">
+                @foreach (var (tag, _) in AllTags.Take(6))
+                {
+                    var ntCurrent = NewTags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    var ntActive = ntCurrent.Any(t => t.Equals(tag, StringComparison.OrdinalIgnoreCase));
+                    <MudChip T="string" Size="Size.Small"
+                             Variant="@(ntActive ? Variant.Filled : Variant.Outlined)"
+                             Color="@(ntActive ? Color.Primary : Color.Default)"
+                             Style="cursor:pointer;"
+                             OnClick="@(() => { var parts = NewTags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList(); if (parts.Any(t => t.Equals(tag, StringComparison.OrdinalIgnoreCase))) parts.RemoveAll(t => t.Equals(tag, StringComparison.OrdinalIgnoreCase)); else parts.Add(tag); NewTags = string.Join(", ", parts); })">@tag</MudChip>
+                }
+            </MudStack>
+        }
         <MudTextField @bind-Value="NewTags" Label="Tags (optional, comma-separated)" Variant="Variant.Outlined" Class="mb-4" />
         <MudDatePicker @bind-Date="NewEnteredDate" Label="Entry date" Variant="Variant.Outlined" />
     </DialogContent>
@@ -627,6 +643,22 @@ else
         <MudTextField @bind-Value="EditMood" Label="Or type your own mood (optional)" Variant="Variant.Outlined" Class="mb-4" />
         <MudTextField @bind-Value="EditEmotionReason" Label="Why did you feel that way? (optional)" Variant="Variant.Outlined"
                       Lines="2" Class="mb-4" />
+        @if (AllTags.Count > 0)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Your tags (tap to add):</MudText>
+            <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-2">
+                @foreach (var (tag, _) in AllTags.Take(6))
+                {
+                    var etCurrent = EditTags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    var etActive = etCurrent.Any(t => t.Equals(tag, StringComparison.OrdinalIgnoreCase));
+                    <MudChip T="string" Size="Size.Small"
+                             Variant="@(etActive ? Variant.Filled : Variant.Outlined)"
+                             Color="@(etActive ? Color.Primary : Color.Default)"
+                             Style="cursor:pointer;"
+                             OnClick="@(() => { var parts = EditTags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList(); if (parts.Any(t => t.Equals(tag, StringComparison.OrdinalIgnoreCase))) parts.RemoveAll(t => t.Equals(tag, StringComparison.OrdinalIgnoreCase)); else parts.Add(tag); EditTags = string.Join(", ", parts); })">@tag</MudChip>
+                }
+            </MudStack>
+        }
         <MudTextField @bind-Value="EditTags" Label="Tags (optional, comma-separated)" Variant="Variant.Outlined" Class="mb-4" />
         <MudDatePicker @bind-Date="EditEnteredDate" Label="Entry date" Variant="Variant.Outlined" />
     </DialogContent>
