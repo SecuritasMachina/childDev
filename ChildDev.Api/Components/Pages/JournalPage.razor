@@ -490,6 +490,22 @@ else if (erMoodEntries.Count >= 5 && erPct >= 70)
     </MudStack>
 }
 
+@{
+    var isFiltered = !string.IsNullOrWhiteSpace(FilterText) || DateFilter != "All" || TagFilter is not null || MoodFilter is not null || ActivityFilter is not null;
+}
+@if (isFiltered && AllEntries.Any())
+{
+    var filterParts = new List<string>();
+    if (!string.IsNullOrWhiteSpace(FilterText)) filterParts.Add($"\"{FilterText}\"");
+    if (TagFilter is not null) filterParts.Add($"#{TagFilter}");
+    if (MoodFilter is not null) filterParts.Add($"mood:{MoodFilter}");
+    if (ActivityFilter is not null) filterParts.Add($"activity:{ActivityFilter}");
+    if (DateFilter != "All") filterParts.Add(DateFilter == "Week" ? "this week" : "this month");
+    var filterDesc = filterParts.Count > 0 ? string.Join(", ", filterParts) : "filter";
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">
+        @_filteredEntries.Count of @AllEntries.Count entries matching @filterDesc
+    </MudText>
+}
 @if (!AllEntries.Any())
 {
     <MudText Typo="Typo.body2" Color="Color.Secondary">No journal entries yet. Write the first one!</MudText>
