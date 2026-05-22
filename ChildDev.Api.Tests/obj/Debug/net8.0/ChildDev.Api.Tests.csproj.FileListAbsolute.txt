@@ -461,3 +461,4 @@
 /mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/Microsoft.Extensions.Localization.Abstractions.dll
 /mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/Microsoft.JSInterop.dll
 /mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/bin/Debug/net8.0/MudBlazor.dll
+/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api.Tests/obj/Debug/net8.0/ChildDev.Api.Tests.sourcelink.json

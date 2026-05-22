@@ -70,10 +70,14 @@
     private string? Error;
     private bool _blazorReady;
 
-    protected override Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender) { _blazorReady = true; StateHasChanged(); }
-        return Task.CompletedTask;
+        if (firstRender)
+        {
+            _blazorReady = true;
+            await Analytics.TrackAsync("page_view", null, "register");
+            StateHasChanged();
+        }
     }
 
     private bool ShowPin;
