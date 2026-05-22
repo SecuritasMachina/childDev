@@ -1238,6 +1238,32 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                     <MudChip T="string" Size="Size.Small" Color="@lvlColor" Class="mr-1" Style="font-size:0.72rem;">
                         @lvlEmoji @lvlLabel
                     </MudChip>
+                    @{
+                        var cardNotesToNext = lvlCount switch
+                        {
+                            0       => 1,
+                            < 5     => 5 - lvlCount,
+                            < 10    => 10 - lvlCount,
+                            < 25    => 25 - lvlCount,
+                            < 50    => 50 - lvlCount,
+                            _       => 0
+                        };
+                        var cardNextLvlName = lvlCount switch
+                        {
+                            0       => "⚡ Getting Started",
+                            < 5     => "🚀 Momentum",
+                            < 10    => "⭐ Strong",
+                            < 25    => "🏆 Champion",
+                            < 50    => "🌟 Legendary",
+                            _       => null
+                        };
+                    }
+                    @if (cardNotesToNext > 0 && cardNotesToNext <= 3 && cardNextLvlName is not null)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Info" Class="mt-1 d-block">
+                            ⚡ @cardNotesToNext more note@(cardNotesToNext == 1 ? "" : "s") to @cardNextLvlName!
+                        </MudText>
+                    }
                     @if (daysSinceProgress >= 2 && daysSinceProgress <= 7)
                     {
                         <MudChip T="string" Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Class="mr-1" Style="font-size:0.72rem;">
