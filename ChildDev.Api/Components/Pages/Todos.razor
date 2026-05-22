@@ -176,7 +176,15 @@ else
                         <MudStack Spacing="0" Style="flex:1">
                             <MudText Typo="Typo.body1" Color="Color.Error">@t.Title</MudText>
                             <MudText Typo="Typo.caption" Color="Color.Error">Due @DateTimeOffset.FromUnixTimeMilliseconds(t.DueDate!.Value).LocalDateTime.ToString("MMM d") — overdue</MudText>
-                            @if (!string.IsNullOrWhiteSpace(t.Notes)) { <MudText Typo="Typo.caption" Color="Color.Secondary">@t.Notes</MudText> }
+                            @{var (tGoalText, tGoalGuid, tRemainingNotes) = ParseGoalNotes(t.Notes);}
+                            @if (tGoalText is not null)
+                            {
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
+                                         Icon="@Icons.Material.Filled.EmojiEvents"
+                                         Href="@(tGoalGuid is not null ? $"/goals/{tGoalGuid}" : null)"
+                                         Style="height:20px;font-size:0.7rem;margin:0;">@tGoalText</MudChip>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(tRemainingNotes)) { <MudText Typo="Typo.caption" Color="Color.Secondary">@tRemainingNotes</MudText> }
                         </MudStack>
                         <MudIconButton Icon="@Icons.Material.Filled.Today" Size="Size.Small"
                                        Color="Color.Info" title="Reschedule to today"
@@ -203,7 +211,15 @@ else
                         <MudStack Spacing="0" Style="flex:1">
                             <MudText Typo="Typo.body1">@t.Title</MudText>
                             <MudText Typo="Typo.caption" Color="Color.Warning">Due today</MudText>
-                            @if (!string.IsNullOrWhiteSpace(t.Notes)) { <MudText Typo="Typo.caption" Color="Color.Secondary">@t.Notes</MudText> }
+                            @{var (tGoalText, tGoalGuid, tRemainingNotes) = ParseGoalNotes(t.Notes);}
+                            @if (tGoalText is not null)
+                            {
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
+                                         Icon="@Icons.Material.Filled.EmojiEvents"
+                                         Href="@(tGoalGuid is not null ? $"/goals/{tGoalGuid}" : null)"
+                                         Style="height:20px;font-size:0.7rem;margin:0;">@tGoalText</MudChip>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(tRemainingNotes)) { <MudText Typo="Typo.caption" Color="Color.Secondary">@tRemainingNotes</MudText> }
                         </MudStack>
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditTodo(t)" aria-label="Edit todo" />
                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => _confirmDeleteGuid = t.Guid" aria-label="Delete todo" />
@@ -225,7 +241,15 @@ else
                         <MudStack Spacing="0" Style="flex:1">
                             <MudText Typo="Typo.body1">@t.Title</MudText>
                             <MudText Typo="Typo.caption" Color="Color.Secondary">Due @due.ToString("MMM d")</MudText>
-                            @if (!string.IsNullOrWhiteSpace(t.Notes)) { <MudText Typo="Typo.caption" Color="Color.Secondary">@t.Notes</MudText> }
+                            @{var (tGoalText, tGoalGuid, tRemainingNotes) = ParseGoalNotes(t.Notes);}
+                            @if (tGoalText is not null)
+                            {
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
+                                         Icon="@Icons.Material.Filled.EmojiEvents"
+                                         Href="@(tGoalGuid is not null ? $"/goals/{tGoalGuid}" : null)"
+                                         Style="height:20px;font-size:0.7rem;margin:0;">@tGoalText</MudChip>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(tRemainingNotes)) { <MudText Typo="Typo.caption" Color="Color.Secondary">@tRemainingNotes</MudText> }
                         </MudStack>
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditTodo(t)" aria-label="Edit todo" />
                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => _confirmDeleteGuid = t.Guid" aria-label="Delete todo" />
@@ -245,7 +269,15 @@ else
                         <MudIconButton Icon="@Icons.Material.Filled.RadioButtonUnchecked" Color="Color.Primary" Size="Size.Small" OnClick="() => CompleteTodo(t.Guid)" aria-label="Complete todo" />
                         <MudStack Spacing="0" Style="flex:1">
                             <MudText Typo="Typo.body1">@t.Title</MudText>
-                            @if (!string.IsNullOrWhiteSpace(t.Notes)) { <MudText Typo="Typo.caption" Color="Color.Secondary">@t.Notes</MudText> }
+                            @{var (tGoalText, tGoalGuid, tRemainingNotes) = ParseGoalNotes(t.Notes);}
+                            @if (tGoalText is not null)
+                            {
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
+                                         Icon="@Icons.Material.Filled.EmojiEvents"
+                                         Href="@(tGoalGuid is not null ? $"/goals/{tGoalGuid}" : null)"
+                                         Style="height:20px;font-size:0.7rem;margin:0;">@tGoalText</MudChip>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(tRemainingNotes)) { <MudText Typo="Typo.caption" Color="Color.Secondary">@tRemainingNotes</MudText> }
                         </MudStack>
                         <MudIconButton Icon="@Icons.Material.Filled.Today" Size="Size.Small"
                                        Color="Color.Info" title="Set due today"
@@ -278,10 +310,15 @@ else
                                 Due @due.ToString("MMM d")@(isOverdue ? " — overdue" : "")
                             </MudText>
                         }
-                        @if (!string.IsNullOrWhiteSpace(t.Notes))
+                        @{var (tGoalText2, tGoalGuid2, tRemainingNotes2) = ParseGoalNotes(t.Notes);}
+                        @if (tGoalText2 is not null)
                         {
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">@t.Notes</MudText>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
+                                     Icon="@Icons.Material.Filled.EmojiEvents"
+                                     Href="@(tGoalGuid2 is not null ? $"/goals/{tGoalGuid2}" : null)"
+                                     Style="height:20px;font-size:0.7rem;margin:0;">@tGoalText2</MudChip>
                         }
+                        @if (!string.IsNullOrWhiteSpace(tRemainingNotes2)) { <MudText Typo="Typo.caption" Color="Color.Secondary">@tRemainingNotes2</MudText> }
                     </MudStack>
                     @if (isOverdue)
                     {
@@ -476,6 +513,7 @@ else
     private DateTime? EditDueDate;
     private string? _confirmDeleteGuid;
     private bool _confirmClearCompleted;
+    private Dictionary<string, string> _goalGuidByName = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -525,6 +563,20 @@ else
         }
         WeekDueCount = todos.Count(t =>
             t.DueDate.HasValue && t.DueDate.Value >= weekStartMs && t.DueDate.Value < TodayStartMs + 86_400_000L);
+
+        // Build goal lookup for todos with "Goal: " prefix in notes
+        var goalPrefixTodos = todos.Where(t => t.Notes != null && t.Notes.StartsWith("Goal: ")).ToList();
+        if (goalPrefixTodos.Count > 0)
+        {
+            var goals = await Db.Goals
+                .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null)
+                .Select(g => new { g.Guid, g.GoalText })
+                .ToListAsync();
+            _goalGuidByName = goals
+                .Where(g => !string.IsNullOrWhiteSpace(g.GoalText))
+                .ToDictionary(g => g.GoalText!, g => g.Guid, StringComparer.OrdinalIgnoreCase);
+        }
+
         ApplyFilter();
     }
 
@@ -748,5 +800,17 @@ else
         ShowEditDialog = false;
         Snackbar.Add("Todo updated!", Severity.Success);
         await LoadTodos();
+    }
+
+    private (string? GoalText, string? GoalGuid, string? RemainingNotes) ParseGoalNotes(string? notes)
+    {
+        if (string.IsNullOrWhiteSpace(notes) || !notes.StartsWith("Goal: "))
+            return (null, null, notes);
+        var firstLine = notes.Split('\n')[0];
+        var goalText = firstLine["Goal: ".Length..].Trim();
+        _goalGuidByName.TryGetValue(goalText, out var guid);
+        var remaining = notes.Length > firstLine.Length ? notes[(firstLine.Length + 1)..].Trim() : null;
+        if (string.IsNullOrWhiteSpace(remaining)) remaining = null;
+        return (goalText, guid, remaining);
     }
 }
