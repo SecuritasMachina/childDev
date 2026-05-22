@@ -1738,11 +1738,21 @@ else
         </MudText>
     </TitleContent>
     <DialogContent>
+        <MudChip T="string" Color="Color.Warning" Size="Size.Small" Icon="@Icons.Material.Filled.EmojiEvents"
+                 Variant="Variant.Filled" Class="mb-3" Style="cursor:default;">
+            @(Goal?.GoalText is { Length: > 40 } gt40 ? gt40[..40] + "…" : Goal?.GoalText ?? "")
+        </MudChip>
         <MudTextField @bind-Value="_newTodoTitle" Label="What needs to be done?" Variant="Variant.Outlined"
                       Class="mb-4" AutoFocus="true" />
-        <MudTextField @bind-Value="_newTodoNotes" Label="Notes (optional)" Variant="Variant.Outlined"
+        <MudTextField @bind-Value="_newTodoNotes" Label="Additional notes (optional)" Variant="Variant.Outlined"
                       Lines="2" Class="mb-4" />
-        <MudDatePicker @bind-Date="_newTodoDueDate" Label="Due date (optional)" Variant="Variant.Outlined" />
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+            <MudDatePicker @bind-Date="_newTodoDueDate" Label="Due date (optional)" Variant="Variant.Outlined" Style="flex:1;" />
+            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined"
+                     Style="cursor:pointer;" OnClick="() => _newTodoDueDate = DateTime.Today">Today</MudChip>
+            <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined"
+                     Style="cursor:pointer;" OnClick="() => _newTodoDueDate = DateTime.Today.AddDays(1)">Tomorrow</MudChip>
+        </MudStack>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => _showAddTodoDialog = false">Cancel</MudButton>
@@ -2130,7 +2140,7 @@ else
     private void OpenAddTodoDialog()
     {
         var goalName = Goal?.GoalText ?? string.Empty;
-        _newTodoTitle = goalName.Length > 60 ? goalName[..60] : goalName;
+        _newTodoTitle = string.Empty;
         _newTodoNotes = goalName.Length > 0 ? $"Goal: {goalName}" : null;
         _newTodoDueDate = null;
         _showAddTodoDialog = true;
@@ -2139,7 +2149,7 @@ else
     private void OpenAddTodoFromNote(string noteText)
     {
         _newTodoTitle = noteText.Length > 60 ? noteText[..60] : noteText;
-        _newTodoNotes = Goal?.GoalText is { Length: > 0 } gt ? $"Goal: {gt}" : null;
+        _newTodoNotes = null;
         _newTodoDueDate = null;
         _showAddTodoDialog = true;
     }
@@ -2149,12 +2159,16 @@ else
         var title = _newTodoTitle.Trim();
         if (string.IsNullOrWhiteSpace(title)) return;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goalName = Goal?.GoalText ?? string.Empty;
+        var goalPrefix = goalName.Length > 0 ? $"Goal: {goalName}" : null;
+        var extraNotes = string.IsNullOrWhiteSpace(_newTodoNotes) ? null : _newTodoNotes.Trim();
+        var combinedNotes = goalPrefix is not null && extraNotes is not null ? $"{goalPrefix}\n{extraNotes}" : goalPrefix ?? extraNotes;
         Db.Todos.Add(new ChildDev.Api.Models.Entities.Todo
         {
             Guid = System.Guid.NewGuid().ToString(),
             AccountFk = AccountGuid!,
             Title = title,
-            Notes = string.IsNullOrWhiteSpace(_newTodoNotes) ? null : _newTodoNotes.Trim(),
+            Notes = combinedNotes,
             DueDate = _newTodoDueDate.HasValue
                 ? new DateTimeOffset(DateTime.SpecifyKind(_newTodoDueDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
                 : null,
