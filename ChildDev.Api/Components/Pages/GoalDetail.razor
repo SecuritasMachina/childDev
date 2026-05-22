@@ -1014,6 +1014,29 @@
             </MudStack>
         }
         @{
+            // 6-month sparkline — last 6 full calendar months
+            var spkNow = DateTime.Today;
+            var spkMonths = Enumerable.Range(0, 6)
+                .Select(i => new DateTime(spkNow.Year, spkNow.Month, 1).AddMonths(-5 + i))
+                .ToList();
+            var spkCounts = spkMonths.Select(m => ProgressEntries.Count(p => {
+                var d = DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime;
+                return d.Year == m.Year && d.Month == m.Month;
+            })).ToList();
+            var spkMax = spkCounts.Max();
+            string SpkBar(int c) => c == 0 ? "▁" : c <= spkMax / 5 ? "▂" : c <= spkMax * 2 / 5 ? "▃" : c <= spkMax * 3 / 5 ? "▅" : c <= spkMax * 4 / 5 ? "▇" : "█";
+            var spkStr = string.Concat(spkCounts.Select(c => SpkBar(c)));
+            var spkLabels = string.Join(" ", spkMonths.Select(m => m.ToString("MMM")));
+            var spkLastTwo = spkCounts.TakeLast(2).ToList();
+            var spkTrend = spkLastTwo.Count == 2 && spkMax >= 2 && spkLastTwo[1] > spkLastTwo[0] ? " ⬆️ trending up!" : "";
+        }
+        @if (spkMax >= 1 && activeMonths.Count >= 3)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
+                📊 6-month trend: <span style="font-family:monospace;letter-spacing:2px;font-size:1rem;">@spkStr</span> <span style="opacity:.6;">(@spkLabels)</span>@spkTrend
+            </MudText>
+        }
+        @{
             var topWeekdays = ProgressEntries
                 .Select(p => DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime.DayOfWeek)
                 .GroupBy(d => d)

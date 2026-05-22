@@ -1528,6 +1528,14 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         </MudText>
     </TitleContent>
     <DialogContent>
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Need inspiration? Try one of these:</MudText>
+        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
+            @foreach (var s in new[] { "Read more books 📚", "Get better at math ➕", "Learn a new skill 🎯", "Be more organized 📋", "Exercise regularly 🏃", "Practice an instrument 🎵", "Make more friends 🤝", "Help around the house 🏠", "Learn to cook 🍳", "Improve at a sport ⚽" })
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
+                         Style="cursor:pointer;" OnClick="() => { NewGoalText = s; }">@s</MudChip>
+            }
+        </MudStack>
         <MudTextField @bind-Value="NewGoalText" Label="What's the goal?" Variant="Variant.Outlined"
                       Lines="2" Class="mb-4" AutoFocus="true" />
         <MudTextField @bind-Value="NewMeasurableOutcome" Label="How will you measure success? (optional)"

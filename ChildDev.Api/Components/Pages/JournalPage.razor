@@ -115,6 +115,17 @@
         <MudText Typo="Typo.caption" Color="@(jMomDiff >= 0 ? Color.Success : Color.Warning)" Class="mb-3">@jMomMsg</MudText>
     }
 }
+@if (JournalDaysThisMonth >= 3)
+{
+    var jdtmElapsed = DateTime.Today.Day;
+    var jdtmPct = (int)(JournalDaysThisMonth * 100.0 / jdtmElapsed);
+    var jdtmMsg = jdtmPct >= 80
+        ? $"📅 <strong>{JournalDaysThisMonth} of {jdtmElapsed} days</strong> journaled this month — almost every day! You're a consistency machine! 🔥"
+        : jdtmPct >= 50
+            ? $"📅 <strong>{JournalDaysThisMonth} of {jdtmElapsed} days</strong> journaled this month — more than half the days so far. Solid habit!"
+            : $"📅 <strong>{JournalDaysThisMonth} of {jdtmElapsed} days</strong> journaled this month — can you hit more days before the month ends?";
+    <MudAlert Severity="@(jdtmPct >= 80 ? Severity.Success : Severity.Info)" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.CalendarViewMonth">@((MarkupString)jdtmMsg)</MudAlert>
+}
 @if (MonthTopMood is not null)
 {
     var mtmEmojiMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
@@ -570,6 +581,7 @@ else
     private string JournalThisMonthName = "";
     private int JournalLastMonth;
     private int JournalDaysThisYear;
+    private int JournalDaysThisMonth;
     private string? MonthTopMood;
 
     protected override async Task OnInitializedAsync()
@@ -636,6 +648,10 @@ else
         var jYearStartMs = new DateTimeOffset(new DateTime(jLocalNow.Year, 1, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
         JournalDaysThisYear = AllEntries
             .Where(j => j.EnteredDate >= jYearStartMs)
+            .Select(j => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime))
+            .Distinct().Count();
+        JournalDaysThisMonth = AllEntries
+            .Where(j => j.EnteredDate >= jMonthStartMs)
             .Select(j => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime))
             .Distinct().Count();
         var mtmGroup = AllEntries
