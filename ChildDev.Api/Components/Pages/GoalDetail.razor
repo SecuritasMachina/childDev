@@ -1564,13 +1564,18 @@ else
             prevNoteMs = p.UpdatedOn;
             var isPersonalBest = bestNoteGuid is not null && p.Guid == bestNoteGuid;
             var noteTextLower = (p.NextStepItems ?? "").ToLowerInvariant();
-            var isLearnNote = noteTextLower.Contains("learn") || noteTextLower.Contains("discover") ||
+            var isReflectionNote = (p.NextStepItems ?? "").StartsWith("🏆 Reflection:");
+            var isLearnNote = !isReflectionNote && (noteTextLower.Contains("learn") || noteTextLower.Contains("discover") ||
                               noteTextLower.Contains("realiz") || noteTextLower.Contains("figured out") ||
-                              noteTextLower.Contains("understand") || noteTextLower.Contains("found out");
-            <MudTimelineItem Color="@(isPersonalBest ? Color.Warning : isLearnNote ? Color.Info : Color.Primary)" Size="Size.Small">
+                              noteTextLower.Contains("understand") || noteTextLower.Contains("found out"));
+            <MudTimelineItem Color="@(isReflectionNote ? Color.Success : isPersonalBest ? Color.Warning : isLearnNote ? Color.Info : Color.Primary)" Size="Size.Small">
                 <ItemContent>
-                    <MudPaper Elevation="1" Class="pa-3 mb-2" Style="@(isPersonalBest ? "border:1.5px solid var(--mud-palette-warning);" : isLearnNote ? "border:1.5px solid var(--mud-palette-info);" : "")">
-                        @if (isPersonalBest)
+                    <MudPaper Elevation="1" Class="pa-3 mb-2" Style="@(isReflectionNote ? "border:1.5px solid var(--mud-palette-success);background:rgba(76,175,80,.05);" : isPersonalBest ? "border:1.5px solid var(--mud-palette-warning);" : isLearnNote ? "border:1.5px solid var(--mud-palette-info);" : "")">
+                        @if (isReflectionNote)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Class="mb-1" Style="font-size:0.7rem;">🏆 Completion Reflection</MudChip>
+                        }
+                        @if (isPersonalBest && !isReflectionNote)
                         {
                             <MudChip T="string" Size="Size.Small" Color="Color.Warning" Class="mb-1" Style="font-size:0.7rem;">⭐ Your most detailed note!</MudChip>
                         }
