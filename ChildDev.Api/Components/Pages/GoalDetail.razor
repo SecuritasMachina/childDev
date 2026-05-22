@@ -92,9 +92,27 @@
     var todayQuoteShift = DateTime.Today.DayOfYear % growthQuotes.Length;
     var selectedQuote = growthQuotes[(quoteIdx + todayQuoteShift) % growthQuotes.Length];
 }
+@{
+    var mpMilestones = new[] { 5, 10, 25, 50, 100, 200, 500 };
+    var mpCurrent = Goal.CompletionDate is null ? ProgressEntries.Count : 0;
+    var mpNext = mpMilestones.FirstOrDefault(m => m > mpCurrent);
+    var mpPrev = mpMilestones.LastOrDefault(m => m <= mpCurrent);
+    var mpPct = mpNext > 0 ? (int)((mpCurrent - mpPrev) * 100.0 / (mpNext - mpPrev)) : 100;
+    var mpColor = mpPct >= 80 ? "var(--mud-palette-success)" : mpPct >= 40 ? "var(--mud-palette-primary)" : "var(--mud-palette-secondary)";
+}
 @if (Goal.CompletionDate is null && ProgressEntries.Count >= 1)
 {
-    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-3" Style="font-style:italic;opacity:.8;">💬 @selectedQuote</MudText>
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2" Style="font-style:italic;opacity:.8;">💬 @selectedQuote</MudText>
+    @if (mpNext > 0)
+    {
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Style="white-space:nowrap;">@mpCurrent / @mpNext notes</MudText>
+            <div style="flex:1;background:var(--mud-palette-lines-default);border-radius:6px;height:8px;overflow:hidden;">
+                <div style="width:@(mpPct)%;height:100%;background:@mpColor;border-radius:6px;transition:width .4s ease;"></div>
+            </div>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@mpPct%</MudText>
+        </div>
+    }
 }
 @if (Goal.CompletionDate.HasValue)
 {
