@@ -42,6 +42,15 @@
     </MudPaper>
 }
 
+@if (MonthCompletedCount >= 5 && WeekCompletedCount < MonthCompletedCount)
+{
+    var monthName = DateTime.Today.ToString("MMMM");
+    var mcMsg = MonthCompletedCount >= 25 ? $"🌟 {MonthCompletedCount} todos completed in {monthName} — legendary productivity!"
+              : MonthCompletedCount >= 15 ? $"🏆 {MonthCompletedCount} todos done in {monthName} — champion pace!"
+              : MonthCompletedCount >= 10 ? $"💪 {MonthCompletedCount} todos knocked out in {monthName} — double digits!"
+              :                             $"✅ {MonthCompletedCount} todos completed in {monthName} — solid progress!";
+    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-4" Icon="@Icons.Material.Filled.CalendarMonth">@mcMsg</MudAlert>
+}
 @if (ProductivityStreak >= 2)
 {
     var streakMsg = ProductivityStreak >= 12 ? $"🌟 {ProductivityStreak}-week productivity streak — legendary dedication!"
@@ -391,6 +400,7 @@ else
     private int OverdueCount;
     private int WeekCompletedCount;
     private int WeekDueCount;
+    private int MonthCompletedCount;
     private long NowMs;
     private long TodayStartMs;
     private int FocusCount;
@@ -437,6 +447,8 @@ else
         var todayEndForFocus = TodayStartMs + 86_400_000L;
         FocusCount = AllPendingTodos.Count(t => t.DueDate.HasValue && t.DueDate.Value < todayEndForFocus);
         WeekCompletedCount = CompletedTodos.Count(t => t.CompletedAt >= weekStartMs);
+        var monthStartMs = new DateTimeOffset(new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
+        MonthCompletedCount = CompletedTodos.Count(t => t.CompletedAt >= monthStartMs);
         CompletedTodayCount = CompletedTodos.Count(t => t.CompletedAt >= TodayStartMs);
         // Productivity streak: consecutive 7-day windows ending now with at least 1 completed todo
         ProductivityStreak = 0;

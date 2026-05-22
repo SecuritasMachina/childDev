@@ -947,6 +947,13 @@
                 .Where(p => !string.IsNullOrWhiteSpace(p.NextStepItems))
                 .Sum(p => p.NextStepItems!.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length);
         }
+        @{
+            var estMinsGoal = ProgressEntries.Count * 5;
+            var estTimeLabel = estMinsGoal >= 60 ? $"~{estMinsGoal / 60}h {estMinsGoal % 60}m" : $"~{estMinsGoal} min";
+        }
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">
+            ⏱️ Estimated time invested: <strong>@estTimeLabel</strong> reflecting on this goal
+        </MudText>
         @if (totalWords >= 20)
         {
             <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">
