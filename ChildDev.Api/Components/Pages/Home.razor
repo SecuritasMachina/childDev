@@ -1531,6 +1531,21 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         }
         <MudDivider Class="mb-3" />
     }
+    @if (AllActiveGoals.Count > 0)
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Link to a goal (optional):</MudText>
+        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-2">
+            @foreach (var ag in AllActiveGoals.Take(6))
+            {
+                var agShort = ag.GoalText is { Length: > 30 } t ? t[..30] + "…" : ag.GoalText ?? "";
+                <MudChip T="string" Size="Size.Small"
+                         Variant="@(QuickTodoGoalGuid == ag.Guid ? Variant.Filled : Variant.Outlined)"
+                         Color="@(QuickTodoGoalGuid == ag.Guid ? Color.Warning : Color.Default)"
+                         Style="cursor:pointer;"
+                         OnClick="() => QuickTodoGoalGuid = QuickTodoGoalGuid == ag.Guid ? null : ag.Guid">@agShort</MudChip>
+            }
+        </MudStack>
+    }
     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
         <MudTextField @bind-Value="QuickTodoText"
                       Label="What needs to be done?"
@@ -1772,6 +1787,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private string QuickJournalMood = string.Empty;
     private string QuickTodoText = string.Empty;
     private DateTime? QuickTodoDueDate;
+    private string? QuickTodoGoalGuid;
     private List<Journal> RecentJournals = [];
     private bool ShowCelebration;
     private string? CelebratedGoalText;
@@ -2283,18 +2299,27 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         long? dueDateMs = QuickTodoDueDate.HasValue
             ? new DateTimeOffset(DateTime.SpecifyKind(QuickTodoDueDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
             : null;
+        string? notes = null;
+        if (QuickTodoGoalGuid is not null)
+        {
+            var linkedGoal = AllActiveGoals.FirstOrDefault(g => g.Guid == QuickTodoGoalGuid);
+            if (linkedGoal?.GoalText is { Length: > 0 } gt)
+                notes = $"Goal: {gt}";
+        }
         Db.Todos.Add(new Todo
         {
             Guid = System.Guid.NewGuid().ToString(),
             AccountFk = AccountGuid!,
             Title = title,
+            Notes = notes,
             DueDate = dueDateMs,
             UpdatedOn = now
         });
         await Db.SaveChangesAsync();
-        await Analytics.TrackAsync("todo_quickadd", AccountGuid, "home");
+        await Analytics.TrackAsync("todo_quickadd", AccountGuid, "home", QuickTodoGoalGuid);
         QuickTodoText = string.Empty;
         QuickTodoDueDate = null;
+        QuickTodoGoalGuid = null;
         PendingTodoCount++;
         Snackbar.Add("Todo added!", Severity.Success);
     }
