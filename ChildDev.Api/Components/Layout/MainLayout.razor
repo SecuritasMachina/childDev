@@ -115,8 +115,10 @@
                 <MudNavLink Href="/insights"
                             Icon="@Icons.Material.Filled.Insights" OnClick="CloseDrawer">Insights</MudNavLink>
                 <MudNavLink Href="/achievements"
-                            Icon="@Icons.Material.Filled.EmojiEvents" OnClick="CloseDrawer">Achievements</MudNavLink>
+                            Icon="@Icons.Material.Filled.MilitaryTech" OnClick="CloseDrawer">Achievements</MudNavLink>
                 <MudDivider Class="my-2" />
+                <MudNavLink Icon="@Icons.Material.Filled.Search"
+                            OnClick="@(() => { CloseDrawer(); OpenSearch(); })">Search</MudNavLink>
                 <MudNavLink Href="/settings"
                             Icon="@Icons.Material.Filled.Settings" OnClick="CloseDrawer">Settings</MudNavLink>
                 <MudNavLink Href="/logout" Icon="@Icons.Material.Filled.Logout">Log Out</MudNavLink>
