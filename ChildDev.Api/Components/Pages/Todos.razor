@@ -466,7 +466,15 @@ else
         }
         <MudTextField @bind-Value="NewNotes" Label="Notes (optional)" Variant="Variant.Outlined"
                       Lines="2" Class="mb-4" />
-        <MudDatePicker @bind-Date="NewDueDate" Label="Due date (optional)" Variant="Variant.Outlined" />
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+            <MudDatePicker @bind-Date="NewDueDate" Label="Due date (optional)" Variant="Variant.Outlined" Style="flex:1;" />
+            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined"
+                     Style="cursor:pointer;white-space:nowrap;"
+                     OnClick="() => NewDueDate = DateTime.Today">Today</MudChip>
+            <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined"
+                     Style="cursor:pointer;white-space:nowrap;"
+                     OnClick="() => NewDueDate = DateTime.Today.AddDays(1)">Tomorrow</MudChip>
+        </MudStack>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => ShowAddDialog = false">Cancel</MudButton>
@@ -502,7 +510,15 @@ else
         }
         <MudTextField @bind-Value="EditNotes" Label="Notes (optional)" Variant="Variant.Outlined"
                       Lines="2" Class="mb-4" />
-        <MudDatePicker @bind-Date="EditDueDate" Label="Due date (optional)" Variant="Variant.Outlined" />
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+            <MudDatePicker @bind-Date="EditDueDate" Label="Due date (optional)" Variant="Variant.Outlined" Style="flex:1;" />
+            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined"
+                     Style="cursor:pointer;white-space:nowrap;"
+                     OnClick="() => EditDueDate = DateTime.Today">Today</MudChip>
+            <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined"
+                     Style="cursor:pointer;white-space:nowrap;"
+                     OnClick="() => EditDueDate = DateTime.Today.AddDays(1)">Tomorrow</MudChip>
+        </MudStack>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => ShowEditDialog = false">Cancel</MudButton>
