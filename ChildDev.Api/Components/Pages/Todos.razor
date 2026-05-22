@@ -178,6 +178,9 @@ else
                             <MudText Typo="Typo.caption" Color="Color.Error">Due @DateTimeOffset.FromUnixTimeMilliseconds(t.DueDate!.Value).LocalDateTime.ToString("MMM d") — overdue</MudText>
                             @if (!string.IsNullOrWhiteSpace(t.Notes)) { <MudText Typo="Typo.caption" Color="Color.Secondary">@t.Notes</MudText> }
                         </MudStack>
+                        <MudIconButton Icon="@Icons.Material.Filled.Today" Size="Size.Small"
+                                       Color="Color.Info" title="Reschedule to today"
+                                       OnClick="() => RescheduleToday(t.Guid)" aria-label="Reschedule to today" />
                         <MudIconButton Icon="@Icons.Material.Filled.Snooze" Size="Size.Small"
                                        Color="Color.Warning" title="Snooze to tomorrow"
                                        OnClick="() => SnoozeTodo(t.Guid)" aria-label="Snooze to tomorrow" />
@@ -282,6 +285,9 @@ else
                     </MudStack>
                     @if (isOverdue)
                     {
+                        <MudIconButton Icon="@Icons.Material.Filled.Today" Size="Size.Small"
+                                       Color="Color.Info" title="Reschedule to today"
+                                       OnClick="() => RescheduleToday(t.Guid)" aria-label="Reschedule to today" />
                         <MudIconButton Icon="@Icons.Material.Filled.Snooze" Size="Size.Small"
                                        Color="Color.Warning" title="Snooze to tomorrow"
                                        OnClick="() => SnoozeTodo(t.Guid)" aria-label="Snooze to tomorrow" />
@@ -661,6 +667,20 @@ else
         if (rows == 0) return;
         await Analytics.TrackAsync("todo_set_due_today", AccountGuid, "todos");
         Snackbar.Add("Due date set to today.", Severity.Success);
+        await LoadTodos();
+    }
+
+    private async Task RescheduleToday(string guid)
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var rows = await Db.Todos
+            .Where(t => t.Guid == guid && t.AccountFk == AccountGuid && t.CompletedAt == null && t.DueDate < TodayStartMs)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.DueDate, TodayStartMs)
+                .SetProperty(t => t.UpdatedOn, now));
+        if (rows == 0) return;
+        await Analytics.TrackAsync("todo_reschedule_today", AccountGuid, "todos");
+        Snackbar.Add("Rescheduled to today.", Severity.Info);
         await LoadTodos();
     }
 
