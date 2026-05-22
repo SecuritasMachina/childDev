@@ -24,7 +24,37 @@
 @if (EarnedCount > 0)
 {
     var overallPct = (int)(EarnedCount * 100.0 / TotalBadgeCount);
-    <MudProgressLinear Value="@overallPct" Color="Color.Warning" Rounded="true" Size="Size.Medium" Class="mb-6" />
+    <MudProgressLinear Value="@overallPct" Color="Color.Warning" Rounded="true" Size="Size.Medium" Class="mb-4" />
+}
+
+@{
+    var recentlyEarned = BadgeCategories
+        .SelectMany(c => c.Badges.Where(b => b.Earned && b.EarnedOn.HasValue).Select(b => (b, c)))
+        .OrderByDescending(x => x.b.EarnedOn)
+        .Take(3)
+        .ToList();
+}
+@if (recentlyEarned.Count > 0)
+{
+    <MudPaper Elevation="2" Class="pa-3 mb-5" Style="border-radius:14px;background:linear-gradient(135deg,rgba(255,193,7,.10) 0%,rgba(255,255,255,0) 100%);border:1.5px solid var(--mud-palette-warning);">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+            <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" Size="Size.Small" />
+            <MudText Typo="Typo.overline" Color="Color.Warning" Style="font-weight:700;letter-spacing:1px;">Recently Earned</MudText>
+        </MudStack>
+        <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+            @foreach (var (badge, cat) in recentlyEarned)
+            {
+                <MudPaper Elevation="0" Class="pa-2" Style="@($"border-radius:12px;background:linear-gradient(135deg,{cat.GradientFrom} 0%,{cat.GradientTo} 100%);min-width:100px;text-align:center;")">
+                    <MudText Style="font-size:1.6rem;line-height:1.3;">@badge.Emoji</MudText>
+                    <MudText Typo="Typo.caption" Style="color:white;font-weight:700;display:block;">@badge.Name</MudText>
+                    @if (badge.EarnedOn.HasValue)
+                    {
+                        <MudText Typo="Typo.caption" Style="color:rgba(255,255,255,.75);font-size:0.6rem;">@badge.EarnedOn.Value.ToString("MMM d")</MudText>
+                    }
+                </MudPaper>
+            }
+        </MudStack>
+    </MudPaper>
 }
 
 @foreach (var cat in BadgeCategories)
