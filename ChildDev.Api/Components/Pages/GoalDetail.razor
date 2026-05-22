@@ -4,6 +4,7 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @inject ISnackbar Snackbar
 @inject WebAnalyticsService Analytics
+@inject IJSRuntime JS
 
 <PageTitle>Goal Progress – ChildDev</PageTitle>
 
@@ -1610,6 +1611,9 @@ else
                    StartIcon="@Icons.Material.Filled.Celebration"
                    OnClick="CelebrateToday">🎊 Celebrate!</MudButton>
     }
+    <MudButton Variant="Variant.Outlined" Color="Color.Secondary"
+               StartIcon="@Icons.Material.Filled.ContentCopy"
+               OnClick="CopyGoalSummary" title="Copy goal summary to clipboard">Summary</MudButton>
 </MudStack>
 
 @if (RelatedJournals.Count > 0)
@@ -2263,5 +2267,34 @@ else
         await Analytics.TrackAsync("goal_edit", AccountGuid, "goal_detail", GoalGuid);
         ShowEditDialog = false;
         Snackbar.Add("Goal updated!", Severity.Success);
+    }
+
+    private async Task CopyGoalSummary()
+    {
+        if (Goal is null) return;
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"Goal: {Goal.GoalText}");
+        if (!string.IsNullOrWhiteSpace(Goal.MeasurableOutcome))
+            sb.AppendLine($"Success measure: {Goal.MeasurableOutcome}");
+        sb.AppendLine($"Progress notes: {ProgressEntries.Count}");
+        if (ProgressEntries.Count > 0)
+        {
+            var started = DateTimeOffset.FromUnixTimeMilliseconds(ProgressEntries.Last().UpdatedOn).LocalDateTime;
+            sb.AppendLine($"Started: {started:MMM d, yyyy}");
+        }
+        if (ProgressEntries.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("Recent Progress:");
+            foreach (var p in ProgressEntries.Take(5))
+            {
+                if (string.IsNullOrWhiteSpace(p.NextStepItems)) continue;
+                var d = DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime;
+                sb.AppendLine($"  [{d:MMM d}] {p.NextStepItems}");
+            }
+        }
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", sb.ToString());
+        await Analytics.TrackAsync("goal_copy_summary", AccountGuid, "goal_detail", GoalGuid);
+        Snackbar.Add("Goal summary copied to clipboard!", Severity.Info);
     }
 }
