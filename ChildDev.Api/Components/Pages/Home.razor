@@ -1607,7 +1607,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                   Variant="Variant.Outlined" Lines="2" Class="mb-3" />
     <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">How are you feeling? (optional)</MudText>
     <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
-        @foreach (var (emoji, mood) in new[] { ("😊","happy"), ("🤩","excited"), ("🙏","grateful"), ("💪","proud"), ("😌","calm"), ("😢","sad"), ("😴","tired"), ("😠","angry") })
+        @foreach (var (emoji, mood) in new[] { ("😊","happy"), ("🤩","excited"), ("🙏","grateful"), ("💪","proud"), ("😌","calm"), ("🎯","focused"), ("😢","sad"), ("😴","tired"), ("😟","anxious"), ("😠","angry") })
         {
             <MudChip T="string" Size="Size.Small"
                      Variant="@(QuickJournalMood == mood ? Variant.Filled : Variant.Outlined)"

@@ -447,7 +447,7 @@ else if (JourneyMonths >= 6)
     <MudPaper Elevation="1" Class="pa-3 mb-4 d-flex align-items-center" Style="border-radius:12px;gap:12px;">
         <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Color="Color.Primary" />
         <MudText Typo="Typo.body2">
-            You're most active on <strong>@MostActiveDayName@(MostActiveDayName.EndsWith("s") ? "s" : "s")</strong>
+            You're most active on <strong>@(MostActiveDayName + "s")</strong>
             — @MostActiveDayCount action@(MostActiveDayCount == 1 ? "" : "s") in the last 30 days. 📅
         </MudText>
     </MudPaper>
