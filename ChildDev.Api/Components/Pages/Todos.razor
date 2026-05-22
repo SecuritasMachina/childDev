@@ -589,11 +589,7 @@ else
         {
             <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">💡 Quick ideas:</MudText>
             <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
-                @foreach (var s in new[] {
-                    "Read 20 minutes 📚", "Do homework ✏️", "Practice instrument 🎵",
-                    "Exercise 🏃", "Study for test 📝", "Clean room 🧹",
-                    "Write in journal ✍️", "Review goal progress 🎯", "Practice math ➕"
-                })
+                @foreach (var s in _quickIdeaChips)
                 {
                     <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
                              Style="cursor:pointer;" OnClick="() => NewTitle = s">@s</MudChip>
@@ -687,6 +683,17 @@ else
     private string? SearchParam { get; set; }
 
     private string? AccountGuid;
+
+    private static readonly string[] _quickIdeaChips =
+    [
+        "Read 20 minutes 📚", "Do homework ✏️", "Practice instrument 🎵",
+        "Exercise 🏃", "Study for test 📝", "Clean room 🧹",
+        "Write in journal ✍️", "Review goal progress 🎯", "Practice math ➕",
+        "Work on science project 🔬", "Go for a walk 🚶", "Drink more water 💧",
+        "Draw something 🎨", "Help with chores 🏠", "Practice a skill 💪",
+        "Memorize something new 🧠", "Reach out to a friend 👋", "Prepare for class 📋"
+    ];
+
     private List<Todo> AllPendingTodos = [];
     private List<Todo> CompletedTodos = [];
     private int OverdueCount;

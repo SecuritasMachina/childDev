@@ -2023,11 +2023,19 @@ else
         @if (string.IsNullOrWhiteSpace(NewNextSteps))
         {
             <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">💡 Quick-start prompts:</MudText>
-            <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
+            <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-2">
                 @foreach (var s in NextStepSuggestions)
                 {
                     <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined"
                              OnClick="@(() => NewNextSteps = s)">@s</MudChip>
+                }
+            </MudStack>
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1 mt-2">📝 Structured templates:</MudText>
+            <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
+                @foreach (var (label, template) in _progressTemplates)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined"
+                             OnClick="@(() => NewNextSteps = template)">@label</MudChip>
                 }
             </MudStack>
         }
@@ -2037,7 +2045,7 @@ else
         }
         <MudTextField @bind-Value="NewNextSteps"
                       Label="What happened? What's the next step?"
-                      Variant="Variant.Outlined" Lines="3" Class="mb-4" AutoFocus="true"
+                      Variant="Variant.Outlined" Lines="5" Class="mb-4" AutoFocus="true"
                       Immediate="true" HelperText="@pnWcHelper" />
         <MudDatePicker @bind-Date="NewMeetingDate" Label="Next meeting date (optional)" Variant="Variant.Outlined" />
     </DialogContent>
@@ -2105,6 +2113,14 @@ else
     private bool _notesOldestFirst;
     private bool ShowAddDialog;
     private string NewNextSteps = string.Empty;
+
+    private static readonly (string Label, string Template)[] _progressTemplates =
+    [
+        ("What I did / Next step", "What I did:\n\nNext step:"),
+        ("Tried / Learned / Plan", "What I tried:\n\nWhat I learned:\n\nMy plan next time:"),
+        ("Win + Challenge", "A win today:\n\nChallenge I faced:\n\nHow I'll handle it:"),
+        ("Progress check-in", "Progress so far:\n\nStuck on:\n\nNext action:")
+    ];
     private DateTime? NewMeetingDate;
     private string? _dialogPrevNoteText;
     private bool ShowCelebration;
