@@ -1296,6 +1296,15 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                             @streak week streak! 🔥
                         </MudChip>
                     }
+                    @{
+                        var cardPendingTodos = _pendingTodosByGoalGuid.GetValueOrDefault(g.Guid);
+                    }
+                    @if (cardPendingTodos > 0)
+                    {
+                        <MudChip T="string" Icon="@Icons.Material.Filled.CheckBox" Color="Color.Info" Size="Size.Small" Class="mr-1" Style="font-size:0.72rem;">
+                            @cardPendingTodos todo@(cardPendingTodos == 1 ? "" : "s") open
+                        </MudChip>
+                    }
                     @if (LatestNextStep.TryGetValue(g.Guid, out var nextStep))
                     {
                         var truncated = nextStep.Length > 90 ? nextStep[..90] + "…" : nextStep;
@@ -1812,6 +1821,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private DateTime? NewGoalNextMeetingDate;
     private int PendingTodoCount;
     private int OverdueTodoCount;
+    private Dictionary<string, int> _pendingTodosByGoalGuid = [];
     private int TodosDueToday;
     private string? FirstTodoDueTodayTitle;
     private List<(string Guid, string Title, long? DueDate)> TopPendingTodos = [];
@@ -1863,11 +1873,22 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     {
         var todos = await Db.Todos
             .Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt == null)
-            .Select(t => new { t.Guid, t.DueDate, t.Title })
+            .Select(t => new { t.Guid, t.DueDate, t.Title, t.Notes })
             .ToListAsync();
         var todayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
         var tomorrowStartMs = todayStartMs + 86_400_000L;
         PendingTodoCount = todos.Count;
+        var goalTextToGuid = AllActiveGoals.Where(g => !string.IsNullOrWhiteSpace(g.GoalText))
+            .ToDictionary(g => g.GoalText!, g => g.Guid, StringComparer.OrdinalIgnoreCase);
+        _pendingTodosByGoalGuid = [];
+        foreach (var t in todos.Where(t => t.Notes is not null && t.Notes.StartsWith("Goal: ")))
+        {
+            var prefixText = t.Notes!["Goal: ".Length..];
+            var newlineIdx = prefixText.IndexOf('\n');
+            var goalText = newlineIdx >= 0 ? prefixText[..newlineIdx] : prefixText;
+            if (goalTextToGuid.TryGetValue(goalText, out var gGuid))
+                _pendingTodosByGoalGuid[gGuid] = _pendingTodosByGoalGuid.GetValueOrDefault(gGuid) + 1;
+        }
         OverdueTodoCount = todos.Count(t => t.DueDate.HasValue && t.DueDate.Value < todayStartMs);
         TodosDueToday = todos.Count(t => t.DueDate.HasValue && t.DueDate.Value >= todayStartMs && t.DueDate.Value < tomorrowStartMs);
         var firstDueToday = todos.FirstOrDefault(t => t.DueDate.HasValue && t.DueDate.Value >= todayStartMs && t.DueDate.Value < tomorrowStartMs);
