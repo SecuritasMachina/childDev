@@ -970,16 +970,25 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
 {
     <MudAlert Severity="Severity.Info" Icon="@dowIcon" Dense="true" Class="mb-3">@((MarkupString)dowMsg)</MudAlert>
 }
-<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2" Wrap="Wrap.Wrap" Spacing="1">
     <MudText Typo="Typo.h5">
         <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="mr-2" />
         My Goals
     </MudText>
     <MudSpacer />
+    <MudSelect T="string" Value="@GoalSortOrder" Variant="Variant.Outlined" Margin="Margin.Dense"
+               Label="Sort" Style="max-width:170px;" Dense="true"
+               AdornmentIcon="@Icons.Material.Filled.Sort" Adornment="Adornment.Start"
+               ValueChanged="@((string v) => { GoalSortOrder = v; ApplyFilter(); _ = Analytics.TrackAsync("goal_sort", AccountGuid, "home", v); })">
+        <MudSelectItem T="string" Value="@("attention")">Needs Attention</MudSelectItem>
+        <MudSelectItem T="string" Value="@("most_active")">Most Active</MudSelectItem>
+        <MudSelectItem T="string" Value="@("newest")">Newest First</MudSelectItem>
+        <MudSelectItem T="string" Value="@("alpha")">A → Z</MudSelectItem>
+    </MudSelect>
     <MudTextField Value="@FilterText" ValueChanged="@((string v) => OnFilterChanged(v))"
                   Placeholder="Search goals…" Variant="Variant.Outlined"
                   Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
-                  Clearable="true" Margin="Margin.Dense" Style="max-width:260px;" />
+                  Clearable="true" Margin="Margin.Dense" Style="max-width:220px;" />
 </MudStack>
 <MudStack Row="true" Spacing="1" Class="mb-3" Wrap="Wrap.Wrap">
     <MudChip T="string" Size="Size.Small" Variant="@(QuickFilter == "all" ? Variant.Filled : Variant.Outlined)"
@@ -1693,6 +1702,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private Goal? FeaturedGoal;
     private string FilterText = string.Empty;
     private string QuickFilter = "all";
+    private string GoalSortOrder = "attention";
     private Dictionary<string, int> ProgressCounts = new();
     private Dictionary<string, int> CompletedGoalProgressCounts = new();
     private Dictionary<string, long> LastProgressAt = new();
@@ -2081,14 +2091,8 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
     private void ApplyFilter()
     {
         var nowMsF = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        if (string.IsNullOrWhiteSpace(FilterText) && QuickFilter == "all")
-        {
-            FeaturedGoal = AllActiveGoals.Count >= 2 ? AllActiveGoals[0] : null;
-            ActiveGoals = FeaturedGoal is not null ? AllActiveGoals.Skip(1).ToList() : AllActiveGoals;
-            return;
-        }
-        FeaturedGoal = null;
         IEnumerable<Goal> filtered = AllActiveGoals;
+
         if (!string.IsNullOrWhiteSpace(FilterText))
         {
             var q = FilterText.Trim();
@@ -2104,7 +2108,27 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
             });
         else if (QuickFilter == "streak")
             filtered = filtered.Where(g => GoalStreaks.ContainsKey(g.Guid));
-        ActiveGoals = filtered.ToList();
+
+        // Apply sort order
+        filtered = GoalSortOrder switch
+        {
+            "most_active" => filtered.OrderByDescending(g => ProgressCounts.GetValueOrDefault(g.Guid)),
+            "newest"      => filtered.OrderByDescending(g => g.EnteredDate),
+            "alpha"       => filtered.OrderBy(g => g.GoalText, StringComparer.OrdinalIgnoreCase),
+            _             => filtered // "attention" — already sorted by LoadGoals
+        };
+
+        if (string.IsNullOrWhiteSpace(FilterText) && QuickFilter == "all" && GoalSortOrder == "attention")
+        {
+            var list = filtered.ToList();
+            FeaturedGoal = list.Count >= 2 ? list[0] : null;
+            ActiveGoals = FeaturedGoal is not null ? list.Skip(1).ToList() : list;
+        }
+        else
+        {
+            FeaturedGoal = null;
+            ActiveGoals = filtered.ToList();
+        }
     }
 
     private void SetQuickFilter(string filter)
