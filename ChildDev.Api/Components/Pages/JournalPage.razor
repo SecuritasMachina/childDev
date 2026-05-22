@@ -599,11 +599,23 @@ else
                             {
                                 var capturedTag = tag;
                                 var isActiveTag = TagFilter?.Equals(capturedTag, StringComparison.OrdinalIgnoreCase) == true;
-                                <MudChip T="string" Size="Size.Small"
-                                         Variant="@(isActiveTag ? Variant.Filled : Variant.Outlined)"
-                                         Color="@(isActiveTag ? Color.Primary : Color.Default)"
-                                         Style="cursor:pointer;"
-                                         OnClick="() => OnTagFilterChanged(capturedTag)">@capturedTag</MudChip>
+                                var isGoalTag = _activeGoalNameToGuid.TryGetValue(capturedTag, out var tagGoalGuid);
+                                @if (isGoalTag && tagGoalGuid is not null)
+                                {
+                                    <MudChip T="string" Size="Size.Small"
+                                             Variant="Variant.Outlined" Color="Color.Success"
+                                             Icon="@Icons.Material.Filled.EmojiEvents"
+                                             Href="@($"/goals/{tagGoalGuid}")"
+                                             Style="cursor:pointer;">@capturedTag</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Size="Size.Small"
+                                             Variant="@(isActiveTag ? Variant.Filled : Variant.Outlined)"
+                                             Color="@(isActiveTag ? Color.Primary : Color.Default)"
+                                             Style="cursor:pointer;"
+                                             OnClick="() => OnTagFilterChanged(capturedTag)">@capturedTag</MudChip>
+                                }
                             }
                         }
                         <MudSpacer />
@@ -828,6 +840,7 @@ else
     private List<(string Mood, int Count)> AllMoods = [];
     private List<(string Activity, int Count)> AllActivities = [];
     private List<string> ActiveGoalNames = [];
+    private Dictionary<string, string> _activeGoalNameToGuid = [];
     private bool ShowAddDialog;
     private string NewNotes = string.Empty;
     private string NewActivity = string.Empty;
@@ -866,12 +879,14 @@ else
     {
         AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
         if (AccountGuid is null) return;
-        ActiveGoalNames = await Db.Goals
+        var activeGoals = await Db.Goals
             .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate == null && g.GoalText != null)
             .OrderByDescending(g => g.EnteredDate)
-            .Select(g => g.GoalText!)
+            .Select(g => new { g.GoalText, g.Guid })
             .Take(8)
             .ToListAsync();
+        ActiveGoalNames = activeGoals.Select(g => g.GoalText!).ToList();
+        _activeGoalNameToGuid = activeGoals.ToDictionary(g => g.GoalText!, g => g.Guid, StringComparer.OrdinalIgnoreCase);
         await LoadEntries();
         await Analytics.TrackAsync("page_view", AccountGuid, "journal");
     }
