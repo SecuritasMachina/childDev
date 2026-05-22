@@ -485,6 +485,21 @@ else
     <DialogContent>
         <MudTextField @bind-Value="EditTitle" Label="Task" Variant="Variant.Outlined"
                       Class="mb-4" AutoFocus="true" />
+        @if (_activeGoals.Count > 0)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Link to a goal (optional):</MudText>
+            <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
+                @foreach (var (egGuid, egText) in _activeGoals.Take(6))
+                {
+                    var egShort = egText.Length > 30 ? egText[..30] + "…" : egText;
+                    <MudChip T="string" Size="Size.Small"
+                             Variant="@(_editGoalLink == egText ? Variant.Filled : Variant.Outlined)"
+                             Color="@(_editGoalLink == egText ? Color.Warning : Color.Default)"
+                             Style="cursor:pointer;"
+                             OnClick="() => _editGoalLink = _editGoalLink == egText ? string.Empty : egText">@egShort</MudChip>
+                }
+            </MudStack>
+        }
         <MudTextField @bind-Value="EditNotes" Label="Notes (optional)" Variant="Variant.Outlined"
                       Lines="2" Class="mb-4" />
         <MudDatePicker @bind-Date="EditDueDate" Label="Due date (optional)" Variant="Variant.Outlined" />
@@ -526,6 +541,7 @@ else
     private string EditTitle = string.Empty;
     private string? EditNotes;
     private DateTime? EditDueDate;
+    private string _editGoalLink = string.Empty;
     private string? _confirmDeleteGuid;
     private bool _confirmClearCompleted;
     private Dictionary<string, string> _goalGuidByName = [];
@@ -792,7 +808,9 @@ else
     {
         EditingGuid = todo.Guid;
         EditTitle = todo.Title ?? string.Empty;
-        EditNotes = todo.Notes;
+        var (parsedGoal, _, remaining) = ParseGoalNotes(todo.Notes);
+        _editGoalLink = parsedGoal ?? string.Empty;
+        EditNotes = remaining;
         EditDueDate = todo.DueDate.HasValue
             ? DateTimeOffset.FromUnixTimeMilliseconds(todo.DueDate.Value).LocalDateTime
             : null;
@@ -804,7 +822,11 @@ else
         var title = EditTitle.Trim();
         if (string.IsNullOrWhiteSpace(title) || EditingGuid is null) return;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var notes = string.IsNullOrWhiteSpace(EditNotes) ? null : EditNotes.Trim();
+        var goalNotes = !string.IsNullOrWhiteSpace(_editGoalLink) ? $"Goal: {_editGoalLink}" : null;
+        var remainingNotes = string.IsNullOrWhiteSpace(EditNotes) ? null : EditNotes.Trim();
+        var notes = goalNotes is not null && remainingNotes is not null
+            ? $"{goalNotes}\n{remainingNotes}"
+            : goalNotes ?? remainingNotes;
         long? dueDate = EditDueDate.HasValue
             ? new DateTimeOffset(DateTime.SpecifyKind(EditDueDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
             : null;
