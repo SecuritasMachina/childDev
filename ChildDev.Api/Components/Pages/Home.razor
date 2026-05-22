@@ -277,6 +277,14 @@
                     }
                 </MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">Pending Todo@(PendingTodoCount == 1 ? "" : "s")</MudText>
+                @if (TodosCompletedToday >= 1)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Success">✅ @TodosCompletedToday done today!</MudText>
+                }
+                else if (TodosCompletedThisWeek > 0)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Success">✅ @TodosCompletedThisWeek quick win@(TodosCompletedThisWeek == 1 ? "" : "s") this week</MudText>
+                }
             </MudPaper>
         </MudLink>
     </MudItem>
@@ -286,13 +294,17 @@
                 <MudIcon Icon="@Icons.Material.Filled.Book" Color="Color.Primary" Style="font-size:2rem;" />
                 <MudText Typo="Typo.h4" Class="mt-1">@JournalThisWeek</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">Journal Entr@(JournalThisWeek == 1 ? "y" : "ies") This Week</MudText>
-                @if (TodosCompletedToday >= 1)
+                @if (RecentJournals.Count > 0)
                 {
-                    <MudText Typo="Typo.caption" Color="Color.Success">✅ @TodosCompletedToday done today!</MudText>
+                    var ljMs = RecentJournals[0].EnteredDate;
+                    var ljDays = (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - ljMs) / 86_400_000L);
+                    var ljLabel = ljDays == 0 ? "📝 Entry today!" : ljDays == 1 ? "📝 Entry yesterday" : $"📝 Last entry {ljDays}d ago";
+                    var ljColor = ljDays == 0 ? Color.Success : ljDays <= 2 ? Color.Info : Color.Warning;
+                    <MudText Typo="Typo.caption" Color="@ljColor">@ljLabel</MudText>
                 }
-                else if (TodosCompletedThisWeek > 0)
+                else
                 {
-                    <MudText Typo="Typo.caption" Color="Color.Success">✅ @TodosCompletedThisWeek quick win@(TodosCompletedThisWeek == 1 ? "" : "s") this week</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">No entries yet</MudText>
                 }
             </MudPaper>
         </MudLink>
