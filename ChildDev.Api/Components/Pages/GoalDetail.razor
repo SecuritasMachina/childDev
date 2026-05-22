@@ -48,6 +48,17 @@
                    OnClick="() => _confirmDeleteGoal = true" aria-label="Delete goal" />
 </MudStack>
 
+@if (Goal.CompletionDate is null)
+{
+    <div style="position:fixed;bottom:24px;right:24px;z-index:1000;">
+        <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                Label="Add Note" Size="Size.Medium"
+                OnClick="OpenAddProgressDialog"
+                title="Add progress note"
+                aria-label="Add progress note" />
+    </div>
+}
+
 @{
     var growthQuotes = new[] {
         "\"The secret of getting ahead is getting started.\" — Mark Twain",
