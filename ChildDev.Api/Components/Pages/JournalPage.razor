@@ -582,7 +582,16 @@ else
         <MudTextField @bind-Value="NewNotes" Label="What happened? What did you observe?" Variant="Variant.Outlined"
                       Lines="4" Class="mb-4" AutoFocus="true" />
         <MudTextField @bind-Value="NewActivity" Label="Activity (optional)" Variant="Variant.Outlined" Class="mb-4" />
-        <MudTextField @bind-Value="NewMood" Label="How did you feel? (optional)" Variant="Variant.Outlined" Class="mb-4" />
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">How did you feel? (tap to select or type below)</MudText>
+        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-2">
+            @foreach (var (emoji, mood) in new[] { ("😊","happy"), ("🤩","excited"), ("🙏","grateful"), ("💪","proud"), ("😌","calm"), ("🎯","focused"), ("😢","sad"), ("😴","tired"), ("😟","anxious"), ("😠","angry") })
+            {
+                <MudChip T="string" Size="Size.Small" Variant="@(NewMood == mood ? Variant.Filled : Variant.Outlined)"
+                         Color="@(NewMood == mood ? Color.Primary : Color.Default)"
+                         Style="cursor:pointer;" OnClick="() => NewMood = (NewMood == mood ? string.Empty : mood)">@emoji @mood</MudChip>
+            }
+        </MudStack>
+        <MudTextField @bind-Value="NewMood" Label="Or type your own mood (optional)" Variant="Variant.Outlined" Class="mb-4" />
         <MudTextField @bind-Value="NewEmotionReason" Label="Why did you feel that way? (optional)" Variant="Variant.Outlined"
                       Lines="2" Class="mb-4" />
         <MudTextField @bind-Value="NewTags" Label="Tags (optional, comma-separated)" Variant="Variant.Outlined" Class="mb-4" />
