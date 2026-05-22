@@ -882,10 +882,20 @@ else
         await LoadTodos();
     }
 
+    private static string? TodoAllTimeMilestone(int count) => count switch
+    {
+        10  => "🎉 10 todos completed all-time — you're building real momentum!",
+        25  => "🌟 25 todos completed! You're a getting-things-done champion!",
+        50  => "🏆 50 todos done! Half-century milestone — you're incredibly productive!",
+        100 => "🌟🌟 100 todos completed! LEGENDARY action-taker status achieved!",
+        _   => count % 100 == 0 ? $"🎊 {count} todos completed — absolutely unstoppable!" : null
+    };
+
     private async Task CompleteTodo(string guid)
     {
         var linkedTodo = AllPendingTodos.FirstOrDefault(t => t.Guid == guid);
         var (linkedGoalText, linkedGoalGuid, _) = ParseGoalNotes(linkedTodo?.Notes);
+        var prevCompletedCount = CompletedTodos.Count;
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var rows = await Db.Todos
@@ -897,20 +907,36 @@ else
         await Analytics.TrackAsync("todo_complete", AccountGuid, "todos");
         await LoadTodos();
         var todayDoneCount = CompletedTodos.Count(t => t.CompletedAt >= TodayStartMs);
-        var doneMsg = todayDoneCount >= 10 ? "🔥🔥 LEGENDARY! 10+ todos done today!" :
-                      todayDoneCount >= 7 ? $"🔥 On fire! {todayDoneCount} todos today!" :
-                      todayDoneCount >= 5 ? $"🚀 {todayDoneCount} todos crushed today!" :
-                      todayDoneCount >= 3 ? $"⚡ {todayDoneCount} done today — building momentum!" :
-                      todayDoneCount == 1 ? "✅ First one done — keep going!" :
-                      "✅ Todo completed!";
+        var allTimeMilestone = TodoAllTimeMilestone(prevCompletedCount + 1);
         var completedGuid = guid;
-        Snackbar.Add(doneMsg, Severity.Success, opts =>
+
+        if (allTimeMilestone is not null)
         {
-            opts.Action = "Undo";
-            opts.ActionColor = Color.Default;
-            opts.Onclick = async _ => await UncompleteTodo(completedGuid);
-            opts.VisibleStateDuration = 4000;
-        });
+            await Analytics.TrackAsync("todo_milestone", AccountGuid, "todos", (prevCompletedCount + 1).ToString());
+            Snackbar.Add(allTimeMilestone, Severity.Success, opts =>
+            {
+                opts.Action = "Undo";
+                opts.ActionColor = Color.Default;
+                opts.Onclick = async _ => await UncompleteTodo(completedGuid);
+                opts.VisibleStateDuration = 7000;
+            });
+        }
+        else
+        {
+            var doneMsg = todayDoneCount >= 10 ? "🔥🔥 LEGENDARY! 10+ todos done today!" :
+                          todayDoneCount >= 7 ? $"🔥 On fire! {todayDoneCount} todos today!" :
+                          todayDoneCount >= 5 ? $"🚀 {todayDoneCount} todos crushed today!" :
+                          todayDoneCount >= 3 ? $"⚡ {todayDoneCount} done today — building momentum!" :
+                          todayDoneCount == 1 ? "✅ First one done — keep going!" :
+                          "✅ Todo completed!";
+            Snackbar.Add(doneMsg, Severity.Success, opts =>
+            {
+                opts.Action = "Undo";
+                opts.ActionColor = Color.Default;
+                opts.Onclick = async _ => await UncompleteTodo(completedGuid);
+                opts.VisibleStateDuration = 4000;
+            });
+        }
 
         if (linkedGoalGuid is not null && linkedGoalText is not null)
         {
