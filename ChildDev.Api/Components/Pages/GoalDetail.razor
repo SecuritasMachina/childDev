@@ -347,6 +347,33 @@
     </MudChip>
 }
 @{
+    var waNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    var waCounts = new int[8];
+    for (int wi = 0; wi < 8; wi++)
+    {
+        var waEnd = waNowMs - (long)wi * 7 * 86_400_000L;
+        var waStart = waEnd - 7L * 86_400_000L;
+        waCounts[7 - wi] = Goal.CompletionDate is null ? ProgressEntries.Count(p => p.UpdatedOn >= waStart && p.UpdatedOn < waEnd) : 0;
+    }
+    var waMax = Math.Max(waCounts.Length > 0 ? waCounts.Max() : 0, 1);
+}
+@if (Goal.CompletionDate is null && ProgressEntries.Count >= 3 && daysSince >= 14)
+{
+    <MudPaper Elevation="0" Class="pa-2 mb-3" Style="border-radius:10px;background:var(--mud-palette-background-grey);">
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-weight:600;" Class="mb-1">Notes/week (last 8 weeks):</MudText>
+        <div style="display:flex;align-items:flex-end;gap:3px;height:36px;">
+            @for (int wi = 0; wi < 8; wi++)
+            {
+                var waCount = waCounts[wi];
+                var waBarH = waMax > 0 ? Math.Max((int)(waCount * 100.0 / waMax), waCount > 0 ? 15 : 3) : 3;
+                var waIsNow = wi == 7;
+                var waBarColor = waIsNow ? "var(--mud-palette-primary)" : waCount > 0 ? "var(--mud-palette-primary-lighten)" : "var(--mud-palette-lines-default)";
+                <div title="@(waCount > 0 ? $"{waCount} note{(waCount == 1 ? "" : "s")}" : "No notes")" style="flex:1;height:@(waBarH)%;background:@waBarColor;border-radius:2px 2px 0 0;cursor:default;align-self:flex-end;"></div>
+            }
+        </div>
+    </MudPaper>
+}
+@{
     string? ageMilestoneEmoji = null;
     string? ageMilestoneName = null;
     string? upcomingMilestoneName = null;
