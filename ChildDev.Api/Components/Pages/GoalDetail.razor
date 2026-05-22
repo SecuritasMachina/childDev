@@ -1612,6 +1612,43 @@ else
     }
 </MudStack>
 
+@if (RelatedJournals.Count > 0)
+{
+    <MudPaper Elevation="1" Class="pa-4 mt-4 mb-2" Style="border-radius:12px;">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+            <MudIcon Icon="@Icons.Material.Filled.Book" Color="Color.Primary" Size="Size.Small" />
+            <MudText Typo="Typo.subtitle2" Color="Color.Primary">Related Journal Entries</MudText>
+            <MudSpacer />
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Secondary" Href="/journal">View All</MudButton>
+        </MudStack>
+        <MudList T="string" Dense="true" Class="py-0">
+            @foreach (var j in RelatedJournals)
+            {
+                var rjDate = DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime;
+                var rjDaysAgo = (int)(DateTime.Now - rjDate).TotalDays;
+                var rjWhen = rjDaysAgo == 0 ? "Today" : rjDaysAgo == 1 ? "Yesterday" : $"{rjDaysAgo}d ago";
+                var rjSnip = !string.IsNullOrWhiteSpace(j.Notes) ? (j.Notes.Length > 100 ? j.Notes[..100] + "…" : j.Notes) : "(no notes)";
+                <MudListItem Style="padding-top:3px;padding-bottom:3px;">
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.body2" Style="white-space:normal;">@rjSnip</MudText>
+                        <MudStack Row="true" Spacing="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@rjWhen</MudText>
+                            @if (!string.IsNullOrWhiteSpace(j.Mood))
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">· @j.Mood</MudText>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(j.Tags))
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">· #@j.Tags.Replace(",", " #")</MudText>
+                            }
+                        </MudStack>
+                    </MudStack>
+                </MudListItem>
+            }
+        </MudList>
+    </MudPaper>
+}
+
 <MudDialog @bind-Visible="_showAddTodoDialog">
     <TitleContent>
         <MudText Typo="Typo.h6">
@@ -1862,6 +1899,7 @@ else
     private string _newTodoTitle = string.Empty;
     private string? _newTodoNotes;
     private DateTime? _newTodoDueDate;
+    private List<Journal> RelatedJournals = [];
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -1921,6 +1959,21 @@ else
         if (Goal is null) return;
 
         await LoadProgress();
+
+        // Load journal entries tagged with or mentioning this goal
+        var goalText = Goal.GoalText ?? "";
+        var allJournals = await Db.Journals
+            .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null)
+            .OrderByDescending(j => j.EnteredDate)
+            .Take(200)
+            .ToListAsync();
+        RelatedJournals = allJournals
+            .Where(j =>
+                (!string.IsNullOrWhiteSpace(j.Tags) && j.Tags.Contains(goalText, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(j.Notes) && goalText.Length >= 6 && j.Notes.Contains(goalText, StringComparison.OrdinalIgnoreCase)))
+            .Take(5)
+            .ToList();
+
         await Analytics.TrackAsync("page_view", AccountGuid, "goal_detail", GoalGuid);
     }
 
