@@ -275,18 +275,20 @@ else if (JourneyMonths >= 6)
             <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
             <MudText Typo="Typo.body2" Style="font-weight:700;">🏆 Recent Goal Wins</MudText>
         </MudStack>
-        @foreach (var (name, completionDate, enteredDate) in RecentCompletedGoals)
+        @foreach (var (guid, name, completionDate, enteredDate) in RecentCompletedGoals)
         {
             var rcgDone = DateTimeOffset.FromUnixTimeMilliseconds(completionDate).LocalDateTime;
             var rcgDays = Math.Max((int)((completionDate - enteredDate) / 86_400_000L), 1);
             var rcgDur = rcgDays >= 365 ? $"{rcgDays / 365}yr" : rcgDays >= 30 ? $"{rcgDays / 30}mo" : $"{rcgDays}d";
-            var rcgName = name.Length > 55 ? name[..55] + "…" : name;
+            var rcgName = name.Length > 50 ? name[..50] + "…" : name;
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
                 <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Success" Size="Size.Small" />
                 <MudStack Spacing="0" Style="flex:1;">
                     <MudText Typo="Typo.body2" Style="font-weight:600;">@rcgName</MudText>
                     <MudText Typo="Typo.caption" Color="Color.Secondary">Completed @rcgDone.ToString("MMM d, yyyy") · @rcgDur journey</MudText>
                 </MudStack>
+                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
+                           Href="@($"/goals/{guid}")">View</MudButton>
             </MudStack>
         }
     </MudPaper>
@@ -1076,7 +1078,7 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
     private int GoalsTotalAllTime;
     private int GoalsWithMeasurableOutcome;
     private int YtdGoalsCompleted;
-    private List<(string Name, long CompletionDate, long EnteredDate)> RecentCompletedGoals = [];
+    private List<(string Guid, string Name, long CompletionDate, long EnteredDate)> RecentCompletedGoals = [];
     private int TodosCompletedAllTime;
     private int YtdTodosCompleted;
     private int JournalTotal;
@@ -1183,9 +1185,9 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
             .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate != null)
             .OrderByDescending(g => g.CompletionDate)
             .Take(3)
-            .Select(g => new { g.GoalText, g.CompletionDate, g.EnteredDate })
+            .Select(g => new { g.Guid, g.GoalText, g.CompletionDate, g.EnteredDate })
             .ToListAsync();
-        RecentCompletedGoals = rcgRows.Select(g => (g.GoalText ?? "", g.CompletionDate!.Value, g.EnteredDate)).ToList();
+        RecentCompletedGoals = rcgRows.Select(g => (g.Guid, g.GoalText ?? "", g.CompletionDate!.Value, g.EnteredDate)).ToList();
 
         TodosCompletedAllTime = await Db.Todos
             .CountAsync(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt != null);
