@@ -130,7 +130,7 @@
             </MudCardHeader>
             <MudCardContent>
                 <MudText Typo="Typo.body2" Class="mb-3">
-                    Download a text summary of all your goals, progress notes, and recent journal entries.
+                    Download a complete text record of all your goals, every progress note, and all journal entries.
                 </MudText>
             </MudCardContent>
             <MudCardActions Class="px-4 pb-4">
@@ -330,72 +330,99 @@
         var sb = new System.Text.StringBuilder();
         var now = DateTime.Now;
         sb.AppendLine($"ChildDev Progress Report — {CurrentNickName}");
-        sb.AppendLine($"Generated: {now:MMMM d, yyyy}");
+        sb.AppendLine($"Generated: {now:MMMM d, yyyy h:mm tt}");
         sb.AppendLine(new string('=', 50));
 
         var goals = await Db.Goals
             .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null)
             .OrderByDescending(g => g.EnteredDate)
             .ToListAsync();
+        var allProgressNotes = await Db.GoalProgresses
+            .Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null)
+            .OrderBy(p => p.UpdatedOn)
+            .ToListAsync();
         var activeGoals = goals.Where(g => g.CompletionDate == null).ToList();
         var completedGoals = goals.Where(g => g.CompletionDate != null).ToList();
 
         sb.AppendLine();
         sb.AppendLine($"ACTIVE GOALS ({activeGoals.Count})");
-        sb.AppendLine(new string('-', 30));
+        sb.AppendLine(new string('-', 40));
         foreach (var g in activeGoals)
         {
             sb.AppendLine($"• {g.GoalText}");
             if (!string.IsNullOrWhiteSpace(g.MeasurableOutcome))
                 sb.AppendLine($"  Success measure: {g.MeasurableOutcome}");
-            var noteCount = await Db.GoalProgresses.CountAsync(p => p.GoalFk == g.Guid && p.DeletedAt == null);
-            sb.AppendLine($"  Progress notes: {noteCount}");
-            var latestNote = await Db.GoalProgresses
-                .Where(p => p.GoalFk == g.Guid && p.DeletedAt == null)
-                .OrderByDescending(p => p.UpdatedOn)
-                .FirstOrDefaultAsync();
-            if (latestNote?.NextStepItems is not null)
+            var notes = allProgressNotes.Where(p => p.GoalFk == g.Guid).ToList();
+            sb.AppendLine($"  Progress notes: {notes.Count}");
+            foreach (var note in notes)
             {
-                var snip = latestNote.NextStepItems.Length > 120 ? latestNote.NextStepItems[..120] + "…" : latestNote.NextStepItems;
-                var d = DateTimeOffset.FromUnixTimeMilliseconds(latestNote.UpdatedOn).LocalDateTime;
-                sb.AppendLine($"  Last note ({d:MMM d}): {snip}");
+                var nd = DateTimeOffset.FromUnixTimeMilliseconds(note.UpdatedOn).LocalDateTime;
+                sb.AppendLine($"  [{nd:MMM d, yyyy}]");
+                if (!string.IsNullOrWhiteSpace(note.NextStepItems))
+                {
+                    foreach (var line in note.NextStepItems.Split('\n'))
+                        sb.AppendLine($"    {line}");
+                }
             }
+            sb.AppendLine();
         }
 
         if (completedGoals.Count > 0)
         {
-            sb.AppendLine();
             sb.AppendLine($"COMPLETED GOALS ({completedGoals.Count})");
-            sb.AppendLine(new string('-', 30));
-            foreach (var g in completedGoals.Take(10))
+            sb.AppendLine(new string('-', 40));
+            foreach (var g in completedGoals)
             {
                 var d = DateTimeOffset.FromUnixTimeMilliseconds(g.CompletionDate!.Value).LocalDateTime;
-                sb.AppendLine($"✅ {g.GoalText} (completed {d:MMM d, yyyy})");
+                sb.AppendLine($"✅ {g.GoalText}");
+                sb.AppendLine($"   Completed: {d:MMMM d, yyyy}");
+                if (!string.IsNullOrWhiteSpace(g.MeasurableOutcome))
+                    sb.AppendLine($"   Success measure: {g.MeasurableOutcome}");
+                var notes = allProgressNotes.Where(p => p.GoalFk == g.Guid).ToList();
+                if (notes.Count > 0)
+                {
+                    sb.AppendLine($"   Progress notes: {notes.Count}");
+                    foreach (var note in notes)
+                    {
+                        var nd = DateTimeOffset.FromUnixTimeMilliseconds(note.UpdatedOn).LocalDateTime;
+                        sb.AppendLine($"   [{nd:MMM d, yyyy}]");
+                        if (!string.IsNullOrWhiteSpace(note.NextStepItems))
+                        {
+                            foreach (var line in note.NextStepItems.Split('\n'))
+                                sb.AppendLine($"     {line}");
+                        }
+                    }
+                }
+                sb.AppendLine();
             }
         }
 
-        sb.AppendLine();
-        sb.AppendLine("RECENT JOURNAL ENTRIES");
-        sb.AppendLine(new string('-', 30));
         var journals = await Db.Journals
             .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null)
             .OrderByDescending(j => j.EnteredDate)
-            .Take(10)
             .ToListAsync();
-        foreach (var j in journals)
+        if (journals.Count > 0)
         {
-            var d = DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime;
-            sb.Append($"[{d:MMM d}]");
-            if (!string.IsNullOrWhiteSpace(j.Mood)) sb.Append($" {j.Mood}");
-            if (!string.IsNullOrWhiteSpace(j.Notes))
+            sb.AppendLine($"JOURNAL ENTRIES ({journals.Count})");
+            sb.AppendLine(new string('-', 40));
+            foreach (var j in journals)
             {
-                var snip = j.Notes.Length > 100 ? j.Notes[..100] + "…" : j.Notes;
-                sb.Append($" — {snip}");
+                var d = DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime;
+                sb.Append($"[{d:MMMM d, yyyy}]");
+                if (!string.IsNullOrWhiteSpace(j.Mood)) sb.Append($" {j.Mood}");
+                if (!string.IsNullOrWhiteSpace(j.Activity)) sb.Append($" | {j.Activity}");
+                if (!string.IsNullOrWhiteSpace(j.Tags)) sb.Append($" | #{j.Tags}");
+                sb.AppendLine();
+                if (!string.IsNullOrWhiteSpace(j.Notes))
+                {
+                    foreach (var line in j.Notes.Split('\n'))
+                        sb.AppendLine($"  {line}");
+                }
+                sb.AppendLine();
             }
-            sb.AppendLine();
         }
 
-        sb.AppendLine();
+        sb.AppendLine(new string('=', 50));
         sb.AppendLine($"SUMMARY");
         sb.AppendLine(new string('-', 30));
         sb.AppendLine($"Goals set: {TotalGoals} | Active: {activeGoals.Count} | Completed: {completedGoals.Count}");
