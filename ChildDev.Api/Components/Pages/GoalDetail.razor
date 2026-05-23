@@ -54,6 +54,10 @@
                        title="Print goal summary"
                        OnClick="@(() => JS.InvokeVoidAsync("window.print"))" aria-label="Print goal summary" />
     }
+    <MudTooltip Text="Duplicate goal">
+        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Color="Color.Default" Size="Size.Small"
+                       OnClick="DuplicateGoal" aria-label="Duplicate goal" />
+    </MudTooltip>
     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
                    OnClick="() => _confirmDeleteGoal = true" aria-label="Delete goal" />
 </MudStack>
@@ -2612,6 +2616,26 @@ else
         await Analytics.TrackAsync("goal_delete", AccountGuid, "goal_detail", GoalGuid);
         Snackbar.Add("Goal deleted.", Severity.Info);
         Nav.NavigateTo("/");
+    }
+
+    private async Task DuplicateGoal()
+    {
+        if (Goal is null || AccountGuid is null) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var newGuid = System.Guid.NewGuid().ToString();
+        Db.Goals.Add(new Goal
+        {
+            Guid = newGuid,
+            AccountFk = AccountGuid,
+            GoalText = Goal.GoalText,
+            MeasurableOutcome = Goal.MeasurableOutcome,
+            EnteredDate = now,
+            UpdatedOn = now
+        });
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("goal_duplicate", AccountGuid, "goal_detail", GoalGuid);
+        Snackbar.Add("Goal duplicated! Opening the new copy.", Severity.Success);
+        Nav.NavigateTo($"/goals/{newGuid}");
     }
 
     private async Task ConfirmDeleteProgress()
