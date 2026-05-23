@@ -1665,6 +1665,10 @@ else
             else if (!string.IsNullOrWhiteSpace(_noteFilter)) { <text>No notes matching "@_noteFilter".</text> }
         </MudText>
     }
+    @if (displayedNotes.Any() && (!string.IsNullOrWhiteSpace(_noteFilter) || _noteTypeFilter is not null) && displayedNotesBaseList.Count < ProgressEntries.Count)
+    {
+        <MudText Typo="Typo.caption" Color="Color.Info" Class="mb-2">Showing @displayedNotesBaseList.Count of @ProgressEntries.Count notes</MudText>
+    }
     <MudTimeline TimelinePosition="TimelinePosition.Start" Class="mb-4">
         @{ long? prevNoteMs = null; }
         @for (var noteIdx = 0; noteIdx < displayedNotes.Count; noteIdx++)
