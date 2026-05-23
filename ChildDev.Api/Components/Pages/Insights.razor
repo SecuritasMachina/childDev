@@ -587,6 +587,81 @@ else if (JourneyMonths >= 6)
     </MudText>
 </MudPaper>
 
+@if (CombinedYearHeatmap.Any())
+{
+    var cyToday = DateOnly.FromDateTime(DateTime.Today);
+    var cyStart = cyToday.AddDays(-363);
+    var cyMax = CombinedYearHeatmap.Count > 0 ? CombinedYearHeatmap.Values.Max() : 1;
+    var cyWeeks = 52;
+    // Align start to Monday
+    var cyStartDow = (int)cyStart.DayOfWeek; // 0=Sun..6=Sat
+    var cyOffset = (cyStartDow + 6) % 7; // days to skip to reach Monday
+    var cyAdjStart = cyStart.AddDays(-cyOffset);
+    var cyTotalDays = cyWeeks * 7;
+    string[] cyMonthShort = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    <MudPaper Elevation="1" Class="pa-4 mb-6" Style="border-radius:12px;">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
+            <MudIcon Icon="@Icons.Material.Filled.CalendarMonth" Size="Size.Small" Color="Color.Primary" />
+            <MudText Typo="Typo.subtitle2">Activity This Year — 52-Week Overview</MudText>
+        </MudStack>
+        <div style="overflow-x:auto;">
+            <div style="display:grid;grid-template-columns:repeat(52,1fr);gap:2px;min-width:@(52 * 14 + 60)px;">
+                @* Month labels row *@
+                @{
+                    int lastLabelMonth = -1;
+                    for (int wk = 0; wk < cyWeeks; wk++)
+                    {
+                        var wkFirstDay = cyAdjStart.AddDays(wk * 7);
+                        if (wkFirstDay.Month != lastLabelMonth && wkFirstDay > cyStart)
+                        {
+                            lastLabelMonth = wkFirstDay.Month;
+                            <div style="font-size:8px;color:var(--mud-palette-text-secondary);text-align:center;grid-column:@(wk+1);grid-row:1;">@cyMonthShort[wkFirstDay.Month - 1]</div>
+                        }
+                        else
+                        {
+                            <div style="grid-column:@(wk+1);grid-row:1;"></div>
+                        }
+                    }
+                }
+                @* Day cells: 7 rows × 52 cols *@
+                @for (int row = 0; row < 7; row++)
+                {
+                    for (int wk = 0; wk < cyWeeks; wk++)
+                    {
+                        var day = cyAdjStart.AddDays(wk * 7 + row);
+                        var inRange = day >= cyStart && day <= cyToday;
+                        var count = inRange ? CombinedYearHeatmap.GetValueOrDefault(day, 0) : 0;
+                        var bg = !inRange ? "transparent"
+                               : count == 0 ? "var(--mud-palette-background-grey)"
+                               : count <= 2  ? "#90CAF9"
+                               : count <= 5  ? "#42A5F5"
+                               : "#1565C0";
+                        var border = day == cyToday ? "1px solid var(--mud-palette-primary)" : "none";
+                        var tip = !inRange ? "" : count == 0 ? day.ToString("MMM d") : $"{day:MMM d}: {count} action{(count == 1 ? "" : "s")}";
+                        <div title="@tip" style="width:12px;height:12px;border-radius:2px;background:@bg;border:@border;cursor:default;grid-column:@(wk+1);grid-row:@(row+2);"></div>
+                    }
+                }
+            </div>
+        </div>
+        @{
+            var cyActiveDays = CombinedYearHeatmap.Count;
+            var cyTotalActions = CombinedYearHeatmap.Values.DefaultIfEmpty(0).Sum();
+        }
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2" Wrap="Wrap.Wrap">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">No activity</MudText>
+            <div style="width:12px;height:12px;border-radius:2px;background:var(--mud-palette-background-grey);"></div>
+            <div style="width:12px;height:12px;border-radius:2px;background:#90CAF9;"></div>
+            <div style="width:12px;height:12px;border-radius:2px;background:#42A5F5;"></div>
+            <div style="width:12px;height:12px;border-radius:2px;background:#1565C0;"></div>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Active</MudText>
+            <MudSpacer />
+            <MudText Typo="Typo.caption" Color="Color.Primary" Style="font-weight:600;">
+                @cyActiveDays day@(cyActiveDays == 1 ? "" : "s") active · @cyTotalActions action@(cyTotalActions == 1 ? "" : "s") total
+            </MudText>
+        </MudStack>
+    </MudPaper>
+}
+
 @if (ProgressHeatmap.Any())
 {
     var hmToday = DateOnly.FromDateTime(DateTime.Today);
@@ -1234,6 +1309,7 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
     private int JournalYearDaysElapsed;
     private List<ChartSeries> GoalNotesChartSeries = [];
     private string[] GoalNotesChartLabels = [];
+    private Dictionary<DateOnly, int> CombinedYearHeatmap = new();
 
     // Month-over-month trends
     private int ThisMonthGoals;
@@ -1586,6 +1662,21 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
             .Select(t => t.CompletedAt!.Value)
             .ToListAsync();
         TodoHeatmap = recentTodoCompletedTs
+            .GroupBy(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        // Combined year heatmap: all activity for last 52 weeks (364 days)
+        var day364Ms = DateTimeOffset.UtcNow.AddDays(-364).ToUnixTimeMilliseconds();
+        var yearProgressTs = await Db.GoalProgresses
+            .Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null && p.UpdatedOn >= day364Ms)
+            .Select(p => p.UpdatedOn).ToListAsync();
+        var yearJournalTs = await Db.Journals
+            .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null && j.EnteredDate >= day364Ms)
+            .Select(j => j.EnteredDate).ToListAsync();
+        var yearTodoTs = await Db.Todos
+            .Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt != null && t.CompletedAt >= day364Ms)
+            .Select(t => t.CompletedAt!.Value).ToListAsync();
+        CombinedYearHeatmap = yearProgressTs.Concat(yearJournalTs).Concat(yearTodoTs)
             .GroupBy(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
             .ToDictionary(g => g.Key, g => g.Count());
 
