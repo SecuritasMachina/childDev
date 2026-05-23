@@ -1269,7 +1269,25 @@
     </MudText>
     @if (ProgressEntries.Count >= 5)
     {
+        var learnCount = ProgressEntries.Count(p => { var t = (p.NextStepItems ?? "").ToLowerInvariant(); return !(p.NextStepItems ?? "").StartsWith("🏆 Reflection:") && (t.Contains("learn") || t.Contains("discover") || t.Contains("realiz") || t.Contains("figured out") || t.Contains("understand") || t.Contains("found out")); });
+        var reflectCount = ProgressEntries.Count(p => (p.NextStepItems ?? "").StartsWith("🏆 Reflection:"));
         <MudSpacer />
+        @if (learnCount > 0)
+        {
+            <MudChip T="string" Size="Size.Small"
+                     Color="@(_noteTypeFilter == "learn" ? Color.Info : Color.Default)"
+                     Variant="@(_noteTypeFilter == "learn" ? Variant.Filled : Variant.Outlined)"
+                     OnClick="@(() => { _noteTypeFilter = _noteTypeFilter == "learn" ? null : "learn"; _notesPageSize = 10; })"
+                     Style="cursor:pointer;" title="Filter: learning moments">💡 @learnCount</MudChip>
+        }
+        @if (reflectCount > 0)
+        {
+            <MudChip T="string" Size="Size.Small"
+                     Color="@(_noteTypeFilter == "reflect" ? Color.Success : Color.Default)"
+                     Variant="@(_noteTypeFilter == "reflect" ? Variant.Filled : Variant.Outlined)"
+                     OnClick="@(() => { _noteTypeFilter = _noteTypeFilter == "reflect" ? null : "reflect"; _notesPageSize = 10; })"
+                     Style="cursor:pointer;" title="Filter: completion reflections">🏆 @reflectCount</MudChip>
+        }
         <MudTooltip Text="@(_notesOldestFirst ? "Showing: oldest first" : "Showing: newest first")">
             <MudIconButton Icon="@(_notesOldestFirst ? Icons.Material.Filled.ArrowUpward : Icons.Material.Filled.ArrowDownward)"
                            Size="Size.Small" Color="Color.Default"
@@ -1585,12 +1603,17 @@ else if (bestGoalStreak >= 2 && goalStreak < bestGoalStreak)
         .Where(p => !string.IsNullOrWhiteSpace(p.NextStepItems) && p.NextStepItems.Length >= 30)
         .OrderByDescending(p => p.NextStepItems!.Length)
         .FirstOrDefault()?.Guid;
-    var displayedNotesBase = string.IsNullOrWhiteSpace(_noteFilter)
-        ? ProgressEntries
-        : ProgressEntries.Where(p => (p.NextStepItems ?? "").Contains(_noteFilter.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
+    var displayedNotesBase = ProgressEntries.AsEnumerable();
+    if (!string.IsNullOrWhiteSpace(_noteFilter))
+        displayedNotesBase = displayedNotesBase.Where(p => (p.NextStepItems ?? "").Contains(_noteFilter.Trim(), StringComparison.OrdinalIgnoreCase));
+    if (_noteTypeFilter == "learn")
+        displayedNotesBase = displayedNotesBase.Where(p => { var t = (p.NextStepItems ?? "").ToLowerInvariant(); return !p.NextStepItems!.StartsWith("🏆 Reflection:") && (t.Contains("learn") || t.Contains("discover") || t.Contains("realiz") || t.Contains("figured out") || t.Contains("understand") || t.Contains("found out")); });
+    else if (_noteTypeFilter == "reflect")
+        displayedNotesBase = displayedNotesBase.Where(p => (p.NextStepItems ?? "").StartsWith("🏆 Reflection:"));
+    var displayedNotesBaseList = displayedNotesBase.ToList();
     var displayedNotesSorted = _notesOldestFirst
-        ? displayedNotesBase.OrderBy(p => p.UpdatedOn).ToList()
-        : displayedNotesBase.OrderByDescending(p => p.UpdatedOn).ToList();
+        ? displayedNotesBaseList.OrderBy(p => p.UpdatedOn).ToList()
+        : displayedNotesBaseList.OrderByDescending(p => p.UpdatedOn).ToList();
     var notesHidden = Math.Max(0, displayedNotesSorted.Count - _notesPageSize);
     var displayedNotes = displayedNotesSorted.Take(_notesPageSize).ToList();
     // Chronological note numbers (Note #1 = oldest ever, Note #N = newest)
@@ -1622,9 +1645,13 @@ else if (bestGoalStreak >= 2 && goalStreak < bestGoalStreak)
 }
 else
 {
-    @if (!displayedNotes.Any() && !string.IsNullOrWhiteSpace(_noteFilter))
+    @if (!displayedNotes.Any())
     {
-        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">No notes matching "@_noteFilter".</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+            @if (_noteTypeFilter == "learn") { <text>No learning moments found in these notes.</text> }
+            else if (_noteTypeFilter == "reflect") { <text>No completion reflections found.</text> }
+            else if (!string.IsNullOrWhiteSpace(_noteFilter)) { <text>No notes matching "@_noteFilter".</text> }
+        </MudText>
     }
     <MudTimeline TimelinePosition="TimelinePosition.Start" Class="mb-4">
         @{ long? prevNoteMs = null; }
@@ -2268,6 +2295,7 @@ else
     private Goal? Goal;
     private List<GoalProgress> ProgressEntries = [];
     private string _noteFilter = string.Empty;
+    private string? _noteTypeFilter;
     private bool _notesOldestFirst;
     private int _notesPageSize = 10;
     private bool ShowAddDialog;
