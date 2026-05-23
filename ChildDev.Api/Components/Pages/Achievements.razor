@@ -3,6 +3,8 @@
 @inject NavigationManager Nav
 @inject IHttpContextAccessor HttpContextAccessor
 @inject WebAnalyticsService Analytics
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
 @using Microsoft.EntityFrameworkCore
 
 <PageTitle>Achievements – ChildDev</PageTitle>
@@ -275,6 +277,40 @@
 
         TotalBadgeCount = BadgeCategories.Sum(c => c.Badges.Count);
         EarnedCount = BadgeCategories.Sum(c => c.Badges.Count(b => b.Earned));
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || AccountGuid is null || EarnedCount == 0) return;
+
+        var storageKey = $"childdev_badges_seen_{AccountGuid}";
+        var currentEarned = BadgeCategories
+            .SelectMany(c => c.Badges.Where(b => b.Earned).Select(b => b.Name))
+            .OrderBy(n => n)
+            .ToList();
+
+        try
+        {
+            var seen = await JS.InvokeAsync<string?>("localStorage.getItem", storageKey);
+            var seenSet = string.IsNullOrWhiteSpace(seen)
+                ? new HashSet<string>()
+                : new HashSet<string>(seen.Split('|', StringSplitOptions.RemoveEmptyEntries));
+
+            var newlyEarned = currentEarned.Where(n => !seenSet.Contains(n)).ToList();
+            foreach (var name in newlyEarned)
+            {
+                var badge = BadgeCategories.SelectMany(c => c.Badges).FirstOrDefault(b => b.Name == name);
+                if (badge is not null)
+                {
+                    Snackbar.Add($"{badge.Emoji} You just earned the <strong>{badge.Name}</strong> badge! {badge.Description}", Severity.Success,
+                        config => { config.VisibleStateDuration = 6000; config.HideTransitionDuration = 500; });
+                    await Analytics.TrackAsync("badge_earned_notify", AccountGuid, "achievements", name);
+                }
+            }
+
+            await JS.InvokeVoidAsync("localStorage.setItem", storageKey, string.Join("|", currentEarned));
+        }
+        catch { }
     }
 
     private static Badge MakeBadge(string emoji, string name, string desc, bool earned, DateTime? earnedOn, string? progressHint = null) =>
