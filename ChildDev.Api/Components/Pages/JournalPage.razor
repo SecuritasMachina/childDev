@@ -5,6 +5,7 @@
 @inject ISnackbar Snackbar
 @inject WebAnalyticsService Analytics
 @inject IJSRuntime JS
+@implements IAsyncDisposable
 
 <PageTitle>Journal – ChildDev</PageTitle>
 
@@ -879,6 +880,7 @@ else
     private Dictionary<string, string> _activeGoalNameToGuid = [];
     private bool ShowAddDialog;
     private string NewNotes = string.Empty;
+    private DotNetObjectReference<JournalPage>? _selfRef;
     private string NewActivity = string.Empty;
     private string NewMood = string.Empty;
     private string NewEmotionReason = string.Empty;
@@ -1008,6 +1010,24 @@ else
         await LoadEntries();
         await Analytics.TrackAsync("page_view", AccountGuid, "journal");
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && AccountGuid is not null)
+        {
+            _selfRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("childdev.registerPageShortcut", "n", _selfRef, "OpenAddDialogShortcut");
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("childdev.unregisterPageShortcut"); } catch { }
+        _selfRef?.Dispose();
+    }
+
+    [JSInvokable]
+    public void OpenAddDialogShortcut() => OpenAddDialog();
 
     private async Task LoadEntries()
     {
