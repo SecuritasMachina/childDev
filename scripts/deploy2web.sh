@@ -79,7 +79,7 @@ rsync -az --delete \
 # ── secrets ──────────────────────────────────────────────────────────────────
 
 log_info "Syncing secrets ..."
-scp -i "$SSH_KEY" -o StrictHostKeyChecking=no \
+scp -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=30 \
   "$SECRETS_FILE" \
   "$SSH_HOST:$REMOTE_DIR/.env"
 
@@ -89,7 +89,7 @@ scp -i "$SSH_KEY" -o StrictHostKeyChecking=no \
 
 log_info "Uploading LevelUp.apk ($APK_BYTES bytes) ..."
 ssh_run "mkdir -p $REMOTE_DIR/downloads"
-scp -i "$SSH_KEY" -o StrictHostKeyChecking=no \
+scp -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=30 \
   "$APK_LOCAL" \
   "$SSH_HOST:$REMOTE_DIR/downloads/LevelUp.apk"
 log_info "APK uploaded → /opt/childdev/downloads/LevelUp.apk"
