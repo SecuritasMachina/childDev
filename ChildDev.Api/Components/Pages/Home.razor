@@ -1767,7 +1767,7 @@ else
     {
         <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Link to a goal (optional):</MudText>
         <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-2">
-            @foreach (var ag in AllActiveGoals.Take(6))
+            @foreach (var ag in AllActiveGoals.Take(10))
             {
                 var agShort = ag.GoalText is { Length: > 30 } t ? t[..30] + "…" : ag.GoalText ?? "";
                 <MudChip T="string" Size="Size.Small"
@@ -1915,7 +1915,7 @@ else
     {
         <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Tag a goal (optional):</MudText>
         <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
-            @foreach (var ag2 in AllActiveGoals.Take(5))
+            @foreach (var ag2 in AllActiveGoals.Take(10))
             {
                 var agText2 = ag2.GoalText ?? "";
                 var agShort2 = agText2.Length > 28 ? agText2[..28] + "…" : agText2;
