@@ -539,9 +539,10 @@
             _searchSelectedIdx = Math.Max(_searchSelectedIdx - 1, 0);
             StateHasChanged();
         }
-        else if (e.Key == "Enter" && _searchSelectedIdx >= 0 && _searchSelectedIdx < _searchResults.Count)
+        else if (e.Key == "Enter" && _searchResults.Count > 0)
         {
-            NavigateSearch(_searchResults[_searchSelectedIdx].Href);
+            var idx = _searchSelectedIdx >= 0 ? _searchSelectedIdx : 0;
+            NavigateSearch(_searchResults[idx].Href);
         }
     }
 
