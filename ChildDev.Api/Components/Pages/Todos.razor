@@ -519,12 +519,21 @@ else
                     @foreach (var t in CompletedTodos)
                     {
                         var completedOn = DateTimeOffset.FromUnixTimeMilliseconds(t.CompletedAt!.Value).LocalDateTime;
+                        var (ctGoalText, ctGoalGuid, _) = ParseGoalNotes(t.Notes);
                         <MudListItem>
                             <MudStack Row="true" AlignItems="AlignItems.Center">
                                 <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
                                 <MudStack Spacing="0" Style="flex:1">
                                     <MudText Typo="Typo.body2" Class="text-decoration-line-through">@t.Title</MudText>
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Done @completedOn.ToString("MMM d")</MudText>
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Done @completedOn.ToString("MMM d")</MudText>
+                                        @if (ctGoalText is not null)
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined"
+                                                     Href="@(ctGoalGuid is not null ? $"/goals/{ctGoalGuid}" : null)"
+                                                     Style="height:18px;font-size:0.65rem;margin:0;">@ctGoalText</MudChip>
+                                        }
+                                    </MudStack>
                                 </MudStack>
                                 <MudIconButton Icon="@Icons.Material.Filled.Undo" Size="Size.Small"
                                                Color="Color.Default" OnClick="() => UncompleteTodo(t.Guid)"
