@@ -190,6 +190,7 @@
         var firstGoalDate = goals.Count > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(goals.Min(g => g.EnteredDate)).LocalDateTime : (DateTime?)null;
         var firstCompleteDate = completedGoals.Count > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(completedGoals[0].CompletionDate!.Value).LocalDateTime : (DateTime?)null;
         var goalsWithOutcome = goals.Count(g => !string.IsNullOrWhiteSpace(g.MeasurableOutcome));
+        var speedRunnerCount = completedGoals.Count(g => g.CompletionDate!.Value - g.EnteredDate <= 7L * 86_400_000L);
 
         var progressNotesFull = await Db.GoalProgresses
             .Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null)
@@ -211,6 +212,7 @@
             .Where(p => !string.IsNullOrWhiteSpace(p.NextStepItems))
             .Select(p => p.NextStepItems!.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length)
             .DefaultIfEmpty(0).Max();
+        var winNoteCount = progressNotesFull.Count(p => (p.NextStepItems ?? "").StartsWith("A win today:"));
 
         var todosFull = await Db.Todos
             .Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt.HasValue)
@@ -324,6 +326,7 @@
                 MakeBadge("💫", "Dream Big", "Set 20 goals", goals.Count >= 20, null, goals.Count < 20 ? $"{goals.Count}/20 goals" : null),
                 MakeBadge("📏", "Measurable", "Add success criteria to 3 goals", goalsWithOutcome >= 3, null, goalsWithOutcome < 3 ? $"{goalsWithOutcome}/3 goals with criteria" : null),
                 MakeBadge("⏱️", "Goal On Time", "Complete a goal before its deadline", completedOnTime, null, completedOnTime ? null : "Complete a goal with a due date set"),
+                MakeBadge("⚡", "Speed Runner", "Complete a goal within 7 days of setting it", speedRunnerCount >= 1, null, speedRunnerCount == 0 ? "Complete a goal within 7 days of setting it" : null),
             ]),
             new BadgeCategory("📝", "Progress Notes", "rgba(67,160,71,.85)", "rgba(27,94,32,.9)",
             [
@@ -334,6 +337,7 @@
                 MakeBadge("🖊️", "Word Wizard", "Write a note with 100+ words", maxNoteWordCount >= 100, null, maxNoteWordCount < 100 ? $"Best: {maxNoteWordCount} words" : null),
                 MakeBadge("🤿", "Deep Diver", "Write 20+ notes for a single goal", maxNotesPerGoal >= 20, null, maxNotesPerGoal < 20 ? $"Best: {maxNotesPerGoal} notes for one goal" : null),
                 MakeBadge("📅", "Consistent", "Write progress notes on 5 different days", progressNoteDayCount >= 5, null, progressNoteDayCount < 5 ? $"{progressNoteDayCount}/5 active days" : null),
+                MakeBadge("🏅", "Win Recorder", "Log 5 win notes using the Win + Challenge template", winNoteCount >= 5, null, winNoteCount < 5 ? $"{winNoteCount}/5 win notes" : null),
             ]),
             new BadgeCategory("✅", "Todos", "rgba(229,57,53,.85)", "rgba(183,28,28,.9)",
             [
