@@ -144,6 +144,15 @@
                 : $"📉 {JournalThisWeek} entr{(JournalThisWeek == 1 ? "y" : "ies")} this week vs {JournalLastWeek} last week — can you match your previous pace?";
     var jWowSeverity = JournalLastWeek == 0 || JournalThisWeek >= JournalLastWeek ? Severity.Info : Severity.Normal;
     <MudAlert Severity="@jWowSeverity" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.TrendingUp">@jWowMsg</MudAlert>
+    @if (WeeklyJournalSeries.Count > 0 && WeeklyJournalSeries[0].Data.Any(d => d > 0))
+    {
+        <MudChart ChartType="ChartType.Bar"
+                  ChartSeries="@WeeklyJournalSeries"
+                  XAxisLabels="@WeeklyJournalLabels"
+                  Width="100%" Height="110px"
+                  ChartOptions="@(new ChartOptions { YAxisTicks = 1 })"
+                  Class="mb-3" />
+    }
 }
 @if (JournalThisMonth >= 1)
 {
@@ -921,6 +930,8 @@ else
     private int BestJournalMonthCount;
     private int JournalThisWeek;
     private int JournalLastWeek;
+    private List<ChartSeries> WeeklyJournalSeries = [];
+    private string[] WeeklyJournalLabels = [];
     private int TotalWordsWritten;
     private int JournalThisMonth;
     private string JournalThisMonthName = "";
@@ -1097,6 +1108,22 @@ else
         var wow14JMs = wowNowJMs - 14L * 86_400_000L;
         JournalThisWeek = AllEntries.Count(j => j.EnteredDate >= wow7JMs);
         JournalLastWeek = AllEntries.Count(j => j.EnteredDate >= wow14JMs && j.EnteredDate < wow7JMs);
+
+        // 8-week journal activity chart
+        var jChartCounts = new double[8];
+        var jChartLabels = new string[8];
+        for (int jcw = 0; jcw < 8; jcw++)
+        {
+            var jcwEnd = wowNowJMs - (long)(7 - jcw) * 7 * 86_400_000L;
+            var jcwStart = jcwEnd - 7L * 86_400_000L;
+            jChartCounts[jcw] = AllEntries.Count(j => j.EnteredDate >= jcwStart && j.EnteredDate < jcwEnd);
+            jChartLabels[jcw] = DateTimeOffset.FromUnixTimeMilliseconds(jcwEnd).LocalDateTime.ToString("M/d");
+        }
+        if (jChartCounts.Any(c => c > 0))
+        {
+            WeeklyJournalSeries = [new ChartSeries { Name = "Entries/week", Data = jChartCounts }];
+            WeeklyJournalLabels = jChartLabels;
+        }
 
         TotalWordsWritten = AllEntries
             .Where(j => !string.IsNullOrWhiteSpace(j.Notes))
