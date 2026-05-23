@@ -155,6 +155,12 @@
         await Analytics.TrackAsync("page_view", AccountGuid, "achievements");
 
         // Load aggregate data
+        var account = await Db.Accounts
+            .Where(a => a.Guid == AccountGuid)
+            .Select(a => new { a.CreatedOn })
+            .FirstOrDefaultAsync();
+        var accountAgeDays = account is not null ? (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - account.CreatedOn) / 86_400_000L) : 0;
+
         var goals = await Db.Goals
             .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null)
             .Select(g => new { g.EnteredDate, g.CompletionDate, g.MeasurableOutcome })
@@ -272,6 +278,26 @@
                 MakeBadge("💎", "Two-Week Strong", "Be active 14 days in a row", maxStreak >= 14, null, maxStreak < 14 ? $"Best: {maxStreak} days" : null),
                 MakeBadge("🌟", "Month Master", "Be active 30 days in a row", maxStreak >= 30, null, maxStreak < 30 ? $"Best: {maxStreak} days" : null),
                 MakeBadge("🏆", "Unstoppable", "Be active 100 days in a row", maxStreak >= 100, null, maxStreak < 100 ? $"Best: {maxStreak} days" : null),
+            ]),
+            new BadgeCategory("🌱", "Milestones", "rgba(0,150,136,.85)", "rgba(0,105,92,.9)",
+            [
+                MakeBadge("🌱", "Seedling", "Use the app for 7 days", accountAgeDays >= 7, null, accountAgeDays < 7 ? $"Day {accountAgeDays}/7" : null),
+                MakeBadge("🌿", "Growing", "Use the app for 30 days", accountAgeDays >= 30, null, accountAgeDays < 30 ? $"Day {accountAgeDays}/30" : null),
+                MakeBadge("🌳", "Rooted", "Use the app for 90 days", accountAgeDays >= 90, null, accountAgeDays < 90 ? $"Day {accountAgeDays}/90" : null),
+                MakeBadge("🏅", "Year Strong", "Use the app for 365 days", accountAgeDays >= 365, null, accountAgeDays < 365 ? $"Day {accountAgeDays}/365" : null),
+                MakeBadge("🌈", "Well-Rounded", "Use goals, notes, todos, and journal", goals.Count >= 1 && progressNotes.Count >= 1 && todos.Count >= 1 && journals.Count >= 1, null,
+                    goals.Count == 0 ? "Need: set a goal" : progressNotes.Count == 0 ? "Need: write a progress note" : todos.Count == 0 ? "Need: complete a todo" : journals.Count == 0 ? "Need: write a journal entry" : null),
+                MakeBadge("🎨", "Explorer", "Try all 4 features in one week",
+                    (from ms in progressNotes.Concat(todos).Concat(journals).Concat(goals.Select(g => g.EnteredDate))
+                     let day = DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime)
+                     group day by (day.DayNumber / 7)
+                     into wk
+                     let hasGoal = wk.Any(d => goals.Any(g => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(g.EnteredDate).LocalDateTime) == d))
+                     let hasNote = wk.Any(d => progressNotes.Any(ms2 => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms2).LocalDateTime) == d))
+                     let hasTodo = wk.Any(d => todos.Any(ms2 => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms2).LocalDateTime) == d))
+                     let hasJournal = wk.Any(d => journals.Any(ms2 => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms2).LocalDateTime) == d))
+                     select hasNote && hasTodo && hasJournal).Any(x => x),
+                    null, goals.Count == 0 || progressNotes.Count == 0 || todos.Count == 0 || journals.Count == 0 ? "Use all 4 features in the same week" : null),
             ]),
         ];
 
