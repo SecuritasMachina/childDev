@@ -8,5 +8,7 @@
   "theme_color": "#3949AB",
   "scope": "/",
   "lang": "en",
-  "icons": []
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
 }
