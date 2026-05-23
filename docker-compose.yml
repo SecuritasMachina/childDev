@@ -13,6 +13,7 @@ services:
       - "--entrypoints.websecure.address=[::]:443"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53"
       - "--certificatesresolvers.letsencrypt.acme.email=charlesd@havranek.com"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
     volumes:
@@ -37,12 +38,10 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.childdev.rule=Host(`levelup.havranek.com`) || Host(`levelup.securitasmachina.org`)"
+      - "traefik.http.routers.childdev.rule=Host(`levelup.securitasmachina.org`)"
       - "traefik.http.routers.childdev.entrypoints=websecure"
       - "traefik.http.routers.childdev.tls=true"
       - "traefik.http.routers.childdev.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.childdev.tls.domains[0].main=levelup.havranek.com"
-      - "traefik.http.routers.childdev.tls.domains[0].sans=levelup.securitasmachina.org"
       - "traefik.http.services.childdev.loadbalancer.server.port=8080"
       - "traefik.docker.network=childdev_default"
 
