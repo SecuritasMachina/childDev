@@ -218,6 +218,8 @@ else
         @if (!string.IsNullOrEmpty(gbgGoalText))
         {
             var capturedGbgGoal = gbgGoalText;
+            var gbgDoneCount = !string.IsNullOrEmpty(gbgGoalText) ? CompletedTodos.Count(t => { var (ct, _, _) = ParseGoalNotes(t.Notes); return string.Equals(ct, gbgGoalText, StringComparison.OrdinalIgnoreCase); }) : 0;
+            var gbgCountLabel = gbgDoneCount > 0 ? $"{gbgTodos.Count} open · {gbgDoneCount} done" : $"{gbgTodos.Count}";
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-3 mb-1">
                 <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Size="Size.Small" />
                 @if (gbgGoalGuid is not null)
@@ -229,8 +231,8 @@ else
                 {
                     <MudText Typo="Typo.subtitle2" Color="Color.Warning" Style="font-weight:700;">@gbgGoalText</MudText>
                 }
-                <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined"
-                         Style="height:18px;font-size:0.68rem;">@gbgTodos.Count</MudChip>
+                <MudChip T="string" Size="Size.Small" Color="@(gbgDoneCount > 0 ? Color.Success : Color.Default)" Variant="Variant.Outlined"
+                         Style="height:18px;font-size:0.68rem;">@gbgCountLabel</MudChip>
                 <MudSpacer />
                 <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Warning"
                                title="Add todo for this goal"
