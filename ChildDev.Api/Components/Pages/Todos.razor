@@ -815,7 +815,7 @@ else
 
         var weekStartMs = TodayStartMs - 7L * 86_400_000L;
         AllPendingTodos = todos.Where(t => t.CompletedAt == null).ToList();
-        CompletedTodos = todos.Where(t => t.CompletedAt != null).ToList();
+        CompletedTodos = todos.Where(t => t.CompletedAt != null).OrderByDescending(t => t.CompletedAt).ToList();
         OverdueCount = AllPendingTodos.Count(t => t.DueDate.HasValue && t.DueDate.Value < TodayStartMs);
         var todayEndForFocus = TodayStartMs + 86_400_000L;
         FocusCount = AllPendingTodos.Count(t => t.DueDate.HasValue && t.DueDate.Value < todayEndForFocus);
