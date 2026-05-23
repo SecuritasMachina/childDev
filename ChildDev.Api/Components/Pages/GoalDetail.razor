@@ -2431,9 +2431,14 @@ else
                 sb.AppendLine(p.NextStepItems);
             sb.AppendLine();
         }
-        await JS.InvokeVoidAsync("navigator.clipboard.writeText", sb.ToString().TrimEnd());
+        var summaryText = sb.ToString().TrimEnd();
+        var shareTitle = $"My progress on: {Goal.GoalText}";
+        var result = await JS.InvokeAsync<string>("childdev.shareOrCopy", shareTitle, summaryText);
         await Analytics.TrackAsync("goal_copy_summary", AccountGuid, "goal_detail", GoalGuid);
-        Snackbar.Add($"Progress summary copied! ({ProgressEntries.Count} notes)", Severity.Success);
+        if (result == "shared")
+            Snackbar.Add($"Progress summary shared! ({ProgressEntries.Count} notes)", Severity.Success);
+        else if (result == "copied")
+            Snackbar.Add($"Progress summary copied! ({ProgressEntries.Count} notes)", Severity.Success);
     }
 
     private async Task SaveNewTodo()
