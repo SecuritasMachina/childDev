@@ -313,6 +313,48 @@
     </MudItem>
 </MudGrid>
 
+@{
+    var wcWeek = System.Globalization.ISOWeek.GetWeekOfYear(DateTime.Today);
+    var (wcEmoji, wcTitle, wcDesc, wcTarget, wcCurrent) = (wcWeek % 4) switch
+    {
+        0 => ("📝", "Note Sprint", "Add 5 progress notes across any goals", 5, ProgressThisWeek),
+        1 => ("📓", "Journal Week", "Write 3 journal entries this week", 3, JournalThisWeek),
+        2 => ("✅", "Todo Blitz", "Complete 5 todos this week", 5, TodosCompletedThisWeek),
+        _ => ("🎯", "Goal Explorer", "Work on 3 different goals this week", 3, GoalsProgressedThisWeek),
+    };
+    var wcPct = Math.Min((int)(wcCurrent * 100.0 / wcTarget), 100);
+    var wcDone = wcCurrent >= wcTarget;
+}
+@if (AllActiveGoals.Count > 0 && string.IsNullOrWhiteSpace(FilterText))
+{
+    <MudPaper Elevation="2" Class="pa-3 mb-4" Style="border-radius:14px;background:linear-gradient(135deg,rgba(57,73,171,.08) 0%,rgba(255,193,7,.06) 100%);border:1.5px solid var(--mud-palette-primary);">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+            <MudText Style="font-size:1.2rem;line-height:1;">@wcEmoji</MudText>
+            <MudText Typo="Typo.overline" Color="Color.Primary" Style="font-weight:700;letter-spacing:1px;flex:1;">Weekly Challenge</MudText>
+            @if (wcDone)
+            {
+                <MudChip T="string" Color="Color.Success" Size="Size.Small" Icon="@Icons.Material.Filled.CheckCircle">Complete! 🎉</MudChip>
+            }
+            else
+            {
+                <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined">@wcCurrent / @wcTarget</MudChip>
+            }
+        </MudStack>
+        <MudText Typo="Typo.subtitle2" Color="Color.Primary" Style="font-weight:700;" Class="mb-1">@wcTitle</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">@wcDesc</MudText>
+        <MudProgressLinear Value="@wcPct" Color="@(wcDone ? Color.Success : Color.Primary)" Rounded="true" Size="Size.Medium" />
+        @if (wcDone)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Success" Class="mt-1">🌟 Challenge complete — you crushed it this week!</MudText>
+        }
+        else if (wcCurrent > 0)
+        {
+            var wcLeft = wcTarget - wcCurrent;
+            <MudText Typo="Typo.caption" Color="Color.Primary" Class="mt-1">@wcLeft more to go — you can do this! 💪</MudText>
+        }
+    </MudPaper>
+}
+
 @if ((CompletedGoals.Count >= 1 || TotalProgressNotes >= 5) && string.IsNullOrWhiteSpace(FilterText))
 {
     <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Class="mb-2">
