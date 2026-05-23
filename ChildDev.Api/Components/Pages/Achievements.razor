@@ -221,12 +221,13 @@
 
         var todosFull = await Db.Todos
             .Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt.HasValue)
-            .Select(t => new { t.CompletedAt, t.DueDate })
+            .Select(t => new { t.CompletedAt, t.DueDate, t.Notes })
             .OrderBy(t => t.CompletedAt)
             .ToListAsync();
         var todos = todosFull.Select(t => t.CompletedAt!.Value).ToList();
         var firstTodoDate = todos.Count > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(todos[0]).LocalDateTime : (DateTime?)null;
         var onTimeCount = todosFull.Count(t => t.DueDate.HasValue && t.CompletedAt!.Value <= t.DueDate.Value);
+        var goalLinkedTodoCount = todosFull.Count(t => (t.Notes ?? "").StartsWith("Goal: "));
 
         var journalsFull = await Db.Journals
             .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null)
@@ -351,6 +352,7 @@
                 MakeBadge("⚡", "Productivity Pro", "Complete 100 todos", todos.Count >= 100, todos.Count >= 100 ? DateTimeOffset.FromUnixTimeMilliseconds(todos[99]).LocalDateTime : null, todos.Count < 100 ? $"{todos.Count}/100 todos" : null),
                 MakeBadge("🔥", "Machine", "Complete 500 todos", todos.Count >= 500, todos.Count >= 500 ? DateTimeOffset.FromUnixTimeMilliseconds(todos[499]).LocalDateTime : null, todos.Count < 500 ? $"{todos.Count}/500 todos" : null),
                 MakeBadge("⏰", "On Time", "Complete 5 todos by their due date", onTimeCount >= 5, null, onTimeCount < 5 ? $"{onTimeCount}/5 on-time completions" : null),
+                MakeBadge("🎯", "Goal Supporter", "Complete 5 todos linked to a goal", goalLinkedTodoCount >= 5, null, goalLinkedTodoCount < 5 ? $"{goalLinkedTodoCount}/5 goal-linked todos" : null),
             ]),
             new BadgeCategory("📓", "Journal", "rgba(2,136,209,.85)", "rgba(1,87,155,.9)",
             [
