@@ -1553,6 +1553,8 @@ else
                                 <MudText Typo="Typo.body2">@sg.GoalText</MudText>
                                 <MudText Typo="Typo.caption" Color="@(sgP == 0 ? Color.Info : Color.Warning)">@sgLabel</MudText>
                             </MudStack>
+                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Secondary"
+                                       Href="@($"/goals/{sg.Guid}")">View</MudButton>
                             <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
                                        StartIcon="@Icons.Material.Filled.Add"
                                        OnClick="async () => await OpenQuickNote(sg.Guid)">Add Note</MudButton>
