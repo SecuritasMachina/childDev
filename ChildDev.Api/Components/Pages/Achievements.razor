@@ -26,7 +26,14 @@
 @if (EarnedCount > 0)
 {
     var overallPct = (int)(EarnedCount * 100.0 / TotalBadgeCount);
-    <MudProgressLinear Value="@overallPct" Color="Color.Warning" Rounded="true" Size="Size.Medium" Class="mb-4" />
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
+        <MudProgressLinear Value="@overallPct" Color="Color.Warning" Rounded="true" Size="Size.Medium" Style="flex:1;" />
+        <MudTooltip Text="Share your achievement progress">
+            <MudIconButton Icon="@Icons.Material.Filled.Share" Size="Size.Small" Color="Color.Warning"
+                           OnClick="ShareAchievements" aria-label="Share achievements" />
+        </MudTooltip>
+    </MudStack>
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-3">@overallPct% complete</MudText>
 }
 
 @{
@@ -410,4 +417,23 @@
 
     private static Badge MakeBadge(string emoji, string name, string desc, bool earned, DateTime? earnedOn, string? progressHint = null) =>
         new(emoji, name, desc, earned, earned ? earnedOn : null, earned ? null : progressHint);
+
+    private async Task ShareAchievements()
+    {
+        if (AccountGuid is null) return;
+        var earnedBadges = BadgeCategories
+            .SelectMany(c => c.Badges.Where(b => b.Earned).Select(b => $"{b.Emoji} {b.Name}"))
+            .ToList();
+        var overallPct = TotalBadgeCount > 0 ? (int)(EarnedCount * 100.0 / TotalBadgeCount) : 0;
+        var categoryLines = string.Join("\n", BadgeCategories.Select(c =>
+        {
+            var earned = c.Badges.Count(b => b.Earned);
+            var badges = string.Join(" ", c.Badges.Where(b => b.Earned).Select(b => b.Emoji));
+            return earned == 0 ? null : $"{c.Icon} {c.Name}: {badges} ({earned}/{c.Badges.Count})";
+        }).Where(l => l is not null));
+        var text = $"🏆 My ChildDev Achievements\n\n{EarnedCount} of {TotalBadgeCount} badges earned ({overallPct}%)\n\n{categoryLines}\n\n\"Keep setting goals and seeing them through!\" 🌟";
+        var result = await JS.InvokeAsync<string>("childdev.shareOrCopy", "My Achievements 🏆", text);
+        Snackbar.Add(result == "shared" ? "Achievements shared! 🎉" : "Achievements copied to clipboard! 📋", Severity.Success);
+        await Analytics.TrackAsync("badge_earned_notify", AccountGuid, "achievements", "share_all");
+    }
 }
