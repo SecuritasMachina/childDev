@@ -6,6 +6,7 @@
 @inject WebAnalyticsService Analytics
 @inject IWebHostEnvironment HostEnv
 @inject IJSRuntime JS
+@implements IAsyncDisposable
 
 <PageTitle>My Goals – ChildDev</PageTitle>
 
@@ -2066,6 +2067,7 @@ else
     private string? ComebackGoalGuid;
     private int ComebackGapDays;
     private bool ShowAddDialog;
+    private DotNetObjectReference<Home>? _selfRef;
     private string NewGoalText = string.Empty;
     private string? NewMeasurableOutcome;
     private DateTime? NewGoalExpirationDate;
@@ -2144,8 +2146,23 @@ else
                 StateHasChanged();
             }
             catch { }
+
+            if (AccountGuid is not null)
+            {
+                _selfRef = DotNetObjectReference.Create(this);
+                await JS.InvokeVoidAsync("childdev.registerPageShortcut", "n", _selfRef, "OpenAddGoalShortcut");
+            }
         }
     }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("childdev.unregisterPageShortcut"); } catch { }
+        _selfRef?.Dispose();
+    }
+
+    [JSInvokable]
+    public void OpenAddGoalShortcut() => OpenAddGoalDialog();
 
     private async Task ToggleCompactView()
     {
