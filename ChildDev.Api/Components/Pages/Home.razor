@@ -1594,15 +1594,23 @@ else
                 <MudPaper Elevation="1" Class="pa-3" Style="border-radius:12px;border:1.5px solid var(--mud-palette-warning);background:linear-gradient(135deg,rgba(255,193,7,.06) 0%,rgba(255,255,255,0) 100%);">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                         <MudText Style="font-size:1.4rem;line-height:1;">🏆</MudText>
+                        @{
+                            var agNotes = CompletedGoalProgressCounts.GetValueOrDefault(g.Guid);
+                            var agShareText = g.GoalText is not null ? $"🏆 I achieved my goal: \"{g.GoalText}\"" + (agNotes > 0 ? $" — {agNotes} progress note{(agNotes == 1 ? "" : "s")} logged! 💪 #ChildDev" : " 💪 #ChildDev") : "";
+                            var agCapturedGuid = g.Guid;
+                        }
                         <MudStack Spacing="0" Style="flex:1;min-width:0;">
                             <MudText Typo="Typo.body2" Style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">@titleShort</MudText>
-                            @{
-                                var agNotes = CompletedGoalProgressCounts.GetValueOrDefault(g.Guid);
-                            }
                             <MudText Typo="Typo.caption" Color="Color.Secondary">
                                 @dateLabel@(agNotes > 0 ? $" · {agNotes} note{(agNotes == 1 ? "" : "s")}" : "")
                             </MudText>
                         </MudStack>
+                        <MudTooltip Text="Copy achievement to clipboard">
+                            <MudIconButton Icon="@Icons.Material.Filled.Share" Size="Size.Small"
+                                           Color="Color.Default"
+                                           OnClick="@(async () => await ShareAchievement(agCapturedGuid, agShareText))"
+                                           aria-label="Copy achievement to clipboard" />
+                        </MudTooltip>
                         <MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small"
                                        Color="Color.Warning" Href="@($"/goals/{g.Guid}")" />
                     </MudStack>
@@ -2818,6 +2826,13 @@ else
         Snackbar.Add("Goal deleted.", Severity.Info);
         await LoadGoals();
         await LoadStats();
+    }
+
+    private async Task ShareAchievement(string guid, string text)
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        Snackbar.Add("Achievement copied! 🏆", Severity.Success);
+        await Analytics.TrackAsync("achievement_share", AccountGuid, "home", guid);
     }
 
     private async Task OpenQuickNote(string goalGuid)
