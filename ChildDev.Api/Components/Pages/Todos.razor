@@ -4,6 +4,8 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @inject ISnackbar Snackbar
 @inject WebAnalyticsService Analytics
+@inject IJSRuntime JS
+@implements IAsyncDisposable
 
 <PageTitle>Todos – ChildDev</PageTitle>
 
@@ -473,8 +475,8 @@ else
 }
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-3">
-    <MudTextField @bind-Value="_quickAddTitle"
-                  Placeholder="Quick add a todo — type and press Enter…"
+    <MudTextField @ref="_quickAddRef" @bind-Value="_quickAddTitle"
+                  Placeholder="Quick add a todo — type and press Enter… (press N to focus)"
                   Variant="Variant.Outlined" Margin="Margin.Dense"
                   Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Add"
                   AdornmentColor="Color.Primary"
@@ -735,6 +737,8 @@ else
     private string StatusFilter = "All";
     private string SortBy = "DueDate";
     private string _quickAddTitle = string.Empty;
+    private MudTextField<string>? _quickAddRef;
+    private DotNetObjectReference<Todos>? _selfRef;
     private List<Todo> PendingTodos = [];
     private bool ShowAddDialog;
     private string NewTitle = string.Empty;
@@ -764,6 +768,28 @@ else
             FilterText = SearchParam;
         await LoadTodos();
         await Analytics.TrackAsync("page_view", AccountGuid, "todos");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && AccountGuid is not null)
+        {
+            _selfRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("childdev.registerPageShortcut", "n", _selfRef, "FocusQuickAdd");
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("childdev.unregisterPageShortcut"); } catch { }
+        _selfRef?.Dispose();
+    }
+
+    [JSInvokable]
+    public async Task FocusQuickAdd()
+    {
+        if (_quickAddRef is not null)
+            await _quickAddRef.FocusAsync();
     }
 
     private async Task LoadTodos()

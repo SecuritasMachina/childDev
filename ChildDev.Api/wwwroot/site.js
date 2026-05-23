@@ -13,6 +13,14 @@ window.childdev.shareOrCopy = async function (title, text) {
     return 'copied';
 };
 
+window.childdev.registerPageShortcut = function (key, dotNetRef, method) {
+    window._cdPageShortcut = { key, dotNetRef, method };
+};
+
+window.childdev.unregisterPageShortcut = function () {
+    window._cdPageShortcut = null;
+};
+
 window.childdev.setupSearchHotkey = function (dotNetRef) {
     if (window._cdSearchHotkeyListener) {
         document.removeEventListener('keydown', window._cdSearchHotkeyListener);
@@ -30,6 +38,9 @@ window.childdev.setupSearchHotkey = function (dotNetRef) {
         } else if (e.key === '?') {
             e.preventDefault();
             dotNetRef.invokeMethodAsync('TriggerOpenHelp');
+        } else if (window._cdPageShortcut && e.key === window._cdPageShortcut.key && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            e.preventDefault();
+            window._cdPageShortcut.dotNetRef.invokeMethodAsync(window._cdPageShortcut.method);
         }
     };
     document.addEventListener('keydown', window._cdSearchHotkeyListener);

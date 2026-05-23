@@ -175,6 +175,19 @@
                         </MudStack>
                     }
                     <MudDivider Class="my-3" />
+                    <MudText Typo="Typo.overline" Color="Color.Primary" Style="font-weight:700;letter-spacing:1px;" Class="mb-2">Page Shortcuts</MudText>
+                    @foreach (var (key, desc) in new[] {
+                        ("N", "On Todos: focus quick-add input"),
+                        ("N", "On Goal detail: open Add Note dialog"),
+                    })
+                    {
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3" Spacing="2">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined"
+                                     Style="font-family:monospace;font-weight:700;min-width:90px;justify-content:center;">@key</MudChip>
+                            <MudText Typo="Typo.body2" Style="flex:1;">@desc</MudText>
+                        </MudStack>
+                    }
+                    <MudDivider Class="my-3" />
                     <MudText Typo="Typo.caption" Color="Color.Secondary">
                         Tip: Press <strong>Ctrl+K</strong> from anywhere to instantly search goals, todos, and journal entries.
                     </MudText>

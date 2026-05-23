@@ -5,6 +5,7 @@
 @inject ISnackbar Snackbar
 @inject WebAnalyticsService Analytics
 @inject IJSRuntime JS
+@implements IAsyncDisposable
 
 <PageTitle>@(Goal is not null ? $"{(Goal.GoalText?.Length > 50 ? Goal.GoalText[..50] + "…" : Goal.GoalText)} – ChildDev" : "Goal – ChildDev")</PageTitle>
 
@@ -2192,6 +2193,7 @@ else
     private int _notesPageSize = 10;
     private bool ShowAddDialog;
     private string NewNextSteps = string.Empty;
+    private DotNetObjectReference<GoalDetail>? _selfRef;
 
     private static readonly (string Label, string Template)[] _progressTemplates =
     [
@@ -2232,22 +2234,43 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && ProgressEntries.Count > 0)
+        if (firstRender)
         {
-            var count = ProgressEntries.Count;
-            var (lvlStart, lvlEnd) = count switch
+            if (AccountGuid is not null && Goal?.CompletionDate is null)
             {
-                >= 1 and < 5  => (1,  5),
-                >= 5 and < 10 => (5,  10),
-                >= 10 and < 25=> (10, 25),
-                >= 25 and < 50=> (25, 50),
-                _             => (50, 50)
-            };
-            _animLvlPct = count >= 50 ? 100 : (int)((double)(count - lvlStart) / (lvlEnd - lvlStart) * 100);
-            if (count is 5 or 10 or 25 or 50)
-                await Analytics.TrackAsync("milestone_view", AccountGuid, "goal_detail", $"{GoalGuid}:{count}");
-            await InvokeAsync(StateHasChanged);
+                _selfRef = DotNetObjectReference.Create(this);
+                await JS.InvokeVoidAsync("childdev.registerPageShortcut", "n", _selfRef, "OpenAddNoteShortcut");
+            }
+            if (ProgressEntries.Count > 0)
+            {
+                var count = ProgressEntries.Count;
+                var (lvlStart, lvlEnd) = count switch
+                {
+                    >= 1 and < 5  => (1,  5),
+                    >= 5 and < 10 => (5,  10),
+                    >= 10 and < 25=> (10, 25),
+                    >= 25 and < 50=> (25, 50),
+                    _             => (50, 50)
+                };
+                _animLvlPct = count >= 50 ? 100 : (int)((double)(count - lvlStart) / (lvlEnd - lvlStart) * 100);
+                if (count is 5 or 10 or 25 or 50)
+                    await Analytics.TrackAsync("milestone_view", AccountGuid, "goal_detail", $"{GoalGuid}:{count}");
+                await InvokeAsync(StateHasChanged);
+            }
         }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("childdev.unregisterPageShortcut"); } catch { }
+        _selfRef?.Dispose();
+    }
+
+    [JSInvokable]
+    public void OpenAddNoteShortcut()
+    {
+        if (Goal?.CompletionDate is null)
+            OpenAddProgressDialog();
     }
 
     private List<string> NextStepSuggestions
