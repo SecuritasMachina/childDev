@@ -869,6 +869,36 @@ else if (JourneyMonths >= 6)
     </MudAlert>
 }
 
+@if (JournalThisWeek > 0 || JournalLastWeek > 0)
+{
+    var jwDiff = JournalThisWeek - JournalLastWeek;
+    string jwMsg;
+    Severity jwSev;
+    if (JournalLastWeek == 0)
+    {
+        jwMsg = $"📓 {JournalThisWeek} journal entr{(JournalThisWeek == 1 ? "y" : "ies")} this week — great reflection habit!";
+        jwSev = Severity.Success;
+    }
+    else if (jwDiff > 0)
+    {
+        jwMsg = $"📓 {JournalThisWeek} journal entries this week vs {JournalLastWeek} last week (+{jwDiff}) — your reflection practice is growing! 🌱";
+        jwSev = Severity.Success;
+    }
+    else if (jwDiff == 0)
+    {
+        jwMsg = $"📓 {JournalThisWeek} journal entries this week — matching last week. Consistent reflection habit!";
+        jwSev = Severity.Info;
+    }
+    else
+    {
+        jwMsg = $"📓 {JournalThisWeek} journal entries this week vs {JournalLastWeek} last week — a little less, but every entry counts!";
+        jwSev = Severity.Warning;
+    }
+    <MudAlert Severity="@jwSev" Icon="@Icons.Material.Filled.Book" Dense="true" Class="mb-4">
+        @jwMsg
+    </MudAlert>
+}
+
 @* Month-over-month trends *@
 <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2" Style="text-transform:uppercase;letter-spacing:1px;">
     This Month vs Last Month
@@ -1113,6 +1143,8 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
     private int YtdTodosCompleted;
     private int TodosThisWeek;
     private int TodosLastWeek;
+    private int JournalThisWeek;
+    private int JournalLastWeek;
     private int JournalTotal;
     private double JournalAvgPerMonth;
     private int GoalProgressTotal;
@@ -1545,6 +1577,10 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
         TodosThisWeek = allTodosEver.Count(ms => ms >= wow7MsTodo);
         TodosLastWeek = allTodosEver.Count(ms => ms >= wow14MsTodo && ms < wow7MsTodo);
         var allJournalEver = await Db.Journals.Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null).Select(j => j.EnteredDate).ToListAsync();
+        var wow7MsJournal = wow7MsTodo;
+        var wow14MsJournal = wow14MsTodo;
+        JournalThisWeek = allJournalEver.Count(ms => ms >= wow7MsJournal);
+        JournalLastWeek = allJournalEver.Count(ms => ms >= wow14MsJournal && ms < wow7MsJournal);
         var allProgressEver = await Db.GoalProgresses.Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null).Select(p => p.UpdatedOn).ToListAsync();
         // Avg notes per week (from first note to now)
         if (allProgressEver.Count >= 5)
