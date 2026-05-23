@@ -1,8 +1,8 @@
 using BCrypt.Net;
-using ChildDev.Mobile.Models;
+using LevelUp.Models;
 using SQLite;
 
-namespace ChildDev.Mobile.Services;
+namespace LevelUp.Services;
 
 public class AccountService(SQLiteAsyncConnection db)
 {

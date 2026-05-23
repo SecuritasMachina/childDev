@@ -1,7 +1,8 @@
 @inherits LayoutComponentBase
 @inject NavigationManager Nav
 @inject IHttpContextAccessor HttpContextAccessor
-@inject AppDbContext Db
+@inject IDbContextFactory<AppDbContext> DbFactory
+@implements IDisposable
 @inject IJSRuntime JS
 @inject WebAnalyticsService Analytics
 @using Microsoft.EntityFrameworkCore
@@ -289,6 +290,7 @@
 </MudLayout>
 
 @code {
+    private AppDbContext Db = null!;
     private string? NickName;
     private bool _drawerOpen;
     private bool _darkMode;
@@ -362,6 +364,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Db = DbFactory.CreateDbContext();
         NickName = HttpContextAccessor.HttpContext?.Session.GetString("NickName");
         if (NickName is not null)
         {
@@ -646,4 +649,6 @@
             return uri.AbsolutePath == "/" || uri.AbsolutePath.StartsWith("/goals/");
         return uri.AbsolutePath.StartsWith(path, StringComparison.OrdinalIgnoreCase);
     }
+
+    public void Dispose() => Db?.Dispose();
 }

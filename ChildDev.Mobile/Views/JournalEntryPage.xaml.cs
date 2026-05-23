@@ -1,6 +1,6 @@
-using ChildDev.Mobile.ViewModels;
+using LevelUp.ViewModels;
 
-namespace ChildDev.Mobile.Views;
+namespace LevelUp.Views;
 
 public partial class JournalEntryPage : ContentPage
 {

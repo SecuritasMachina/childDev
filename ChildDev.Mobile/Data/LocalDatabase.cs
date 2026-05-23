@@ -1,7 +1,7 @@
-using ChildDev.Mobile.Models;
+using LevelUp.Models;
 using SQLite;
 
-namespace ChildDev.Mobile.Data;
+namespace LevelUp.Data;
 
 public class LocalDatabase
 {

@@ -1,10 +1,11 @@
 @page "/settings"
-@inject AppDbContext Db
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject NavigationManager Nav
 @inject IHttpContextAccessor HttpContextAccessor
 @inject ISnackbar Snackbar
 @inject WebAnalyticsService Analytics
 @inject IJSRuntime JS
+@implements IDisposable
 
 <PageTitle>Settings – LevelUp</PageTitle>
 
@@ -204,6 +205,7 @@
 </MudPaper>
 
 @code {
+    private AppDbContext Db = null!;
     private string? AccountGuid;
     private string CurrentNickName = string.Empty;
     private string CreatedOnDisplay = string.Empty;
@@ -227,6 +229,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Db = DbFactory.CreateDbContext();
         AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
         if (AccountGuid is null) return;
 
@@ -505,4 +508,6 @@
         HttpContextAccessor.HttpContext?.Session.Clear();
         Nav.NavigateTo("/login", forceLoad: true);
     }
+
+    public void Dispose() => Db?.Dispose();
 }

@@ -1,4 +1,4 @@
-namespace ChildDev.Mobile.Services;
+namespace LevelUp.Services;
 
 public class ConnectivityService
 {

@@ -1,8 +1,8 @@
-using ChildDev.Mobile.Data;
-using ChildDev.Mobile.Models;
+using LevelUp.Data;
+using LevelUp.Models;
 using SQLite;
 
-namespace ChildDev.Mobile.Tests;
+namespace LevelUp.Tests;
 
 public class TodoRepositoryTests : IDisposable
 {

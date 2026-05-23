@@ -1,7 +1,7 @@
 ﻿using ObjCRuntime;
 using UIKit;
 
-namespace ChildDev.Mobile;
+namespace LevelUp;
 
 public class Program
 {

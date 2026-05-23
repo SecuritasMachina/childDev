@@ -1,9 +1,9 @@
 using System.Net.Http.Json;
-using ChildDev.Mobile.Services;
+using LevelUp.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-namespace ChildDev.Mobile.ViewModels;
+namespace LevelUp.ViewModels;
 
 public partial class SettingsViewModel(AccountService accountService, IHttpClientFactory httpFactory) : ObservableObject
 {

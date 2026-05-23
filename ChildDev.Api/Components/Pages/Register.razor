@@ -1,5 +1,5 @@
 @page "/register"
-@inject AppDbContext Db
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject NavigationManager Nav
 @inject IHttpContextAccessor HttpContextAccessor
 @inject WebAnalyticsService Analytics
@@ -136,7 +136,8 @@
             return;
         }
         if (PinMismatch) return;
-        if (await Db.Accounts.AnyAsync(a => a.NickName == nick))
+        await using var db = DbFactory.CreateDbContext();
+        if (await db.Accounts.AnyAsync(a => a.NickName == nick))
         {
             Error = "Nickname already taken.";
             return;
@@ -149,8 +150,8 @@
             PinHash = BCrypt.Net.BCrypt.HashPassword(Pin),
             CreatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
         };
-        Db.Accounts.Add(account);
-        await Db.SaveChangesAsync();
+        db.Accounts.Add(account);
+        await db.SaveChangesAsync();
 
         await Analytics.TrackAsync("register", account.Guid, "register");
         var token = WebAuthTokens.GenerateToken(account.Guid, account.NickName);

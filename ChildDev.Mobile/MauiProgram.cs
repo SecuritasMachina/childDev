@@ -1,10 +1,10 @@
-using ChildDev.Mobile.Data;
-using ChildDev.Mobile.Services;
-using ChildDev.Mobile.ViewModels;
-using ChildDev.Mobile.Views;
+using LevelUp.Data;
+using LevelUp.Services;
+using LevelUp.ViewModels;
+using LevelUp.Views;
 using SQLite;
 
-namespace ChildDev.Mobile;
+namespace LevelUp;
 
 public static class MauiProgram
 {

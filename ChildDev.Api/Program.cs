@@ -15,6 +15,10 @@ var connectionString = builder.Configuration["CHILDDEV_DB_CONNECTION"]
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString),
         mySqlOptions => mySqlOptions.CommandTimeout(8)));
+builder.Services.AddDbContextFactory<AppDbContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString),
+        mySqlOptions => mySqlOptions.CommandTimeout(8)),
+    ServiceLifetime.Scoped);
 
 builder.Services.AddSingleton<JwtService>();
 

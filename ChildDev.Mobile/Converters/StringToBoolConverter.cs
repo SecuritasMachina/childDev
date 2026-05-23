@@ -1,7 +1,7 @@
 using System.Globalization;
 using Microsoft.Maui.Controls;
 
-namespace ChildDev.Mobile.Converters;
+namespace LevelUp.Converters;
 
 public class StringToBoolConverter : IValueConverter
 {

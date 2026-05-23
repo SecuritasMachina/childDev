@@ -1,5 +1,5 @@
 @page "/journal"
-@inject AppDbContext Db
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject NavigationManager Nav
 @inject IHttpContextAccessor HttpContextAccessor
 @inject ISnackbar Snackbar
@@ -880,6 +880,8 @@ else
 </MudDialog>
 
 @code {
+    private AppDbContext Db = null!;
+
     [SupplyParameterFromQuery(Name = "tag")]
     private string? TagParam { get; set; }
 
@@ -1021,6 +1023,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        Db = DbFactory.CreateDbContext();
         AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
         if (AccountGuid is null) return;
         _promptIdx = DateTime.Today.DayOfYear % WpPrompts.Length;
@@ -1053,6 +1056,7 @@ else
     {
         try { await JS.InvokeVoidAsync("childdev.unregisterPageShortcut"); } catch { }
         _selfRef?.Dispose();
+        Db?.Dispose();
     }
 
     [JSInvokable]

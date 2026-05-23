@@ -1,4 +1,4 @@
-namespace ChildDev.Mobile;
+namespace LevelUp;
 
 public partial class AppShell : Shell
 {

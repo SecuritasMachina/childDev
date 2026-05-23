@@ -1,12 +1,12 @@
 using System.Collections.ObjectModel;
-using ChildDev.Mobile.Data;
-using ChildDev.Mobile.Models;
-using ChildDev.Mobile.Services;
+using LevelUp.Data;
+using LevelUp.Models;
+using LevelUp.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Linq;
 
-namespace ChildDev.Mobile.ViewModels;
+namespace LevelUp.ViewModels;
 
 public partial class GoalListViewModel(
     GoalRepository repo,

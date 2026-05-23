@@ -1,9 +1,9 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using ChildDev.Mobile.Data;
-using ChildDev.Mobile.Models;
+using LevelUp.Data;
+using LevelUp.Models;
 
-namespace ChildDev.Mobile.Services;
+namespace LevelUp.Services;
 
 public enum SyncResult { Success, NoServer, Failed }
 

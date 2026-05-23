@@ -1,7 +1,7 @@
 ﻿using Android.App;
 using Android.Runtime;
 
-namespace ChildDev.Mobile;
+namespace LevelUp;
 
 [Application]
 public class MainApplication : MauiApplication

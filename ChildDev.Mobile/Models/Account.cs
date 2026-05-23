@@ -1,6 +1,6 @@
 using SQLite;
 
-namespace ChildDev.Mobile.Models;
+namespace LevelUp.Models;
 
 public class Account
 {

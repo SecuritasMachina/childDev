@@ -1,6 +1,6 @@
-using ChildDev.Mobile.Services;
+using LevelUp.Services;
 
-namespace ChildDev.Mobile;
+namespace LevelUp;
 
 public partial class App : Application
 {

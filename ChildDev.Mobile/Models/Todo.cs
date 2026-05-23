@@ -1,4 +1,4 @@
-namespace ChildDev.Mobile.Models;
+namespace LevelUp.Models;
 
 public class Todo : SyncBase
 {

@@ -1,11 +1,12 @@
 @page "/achievements"
-@inject AppDbContext Db
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject NavigationManager Nav
 @inject IHttpContextAccessor HttpContextAccessor
 @inject WebAnalyticsService Analytics
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
 @using Microsoft.EntityFrameworkCore
+@implements IDisposable
 
 <PageTitle>Achievements – LevelUp</PageTitle>
 
@@ -163,6 +164,7 @@
 }
 
 @code {
+    private AppDbContext Db = null!;
     private string? AccountGuid;
     private int EarnedCount;
     private int TotalBadgeCount;
@@ -174,6 +176,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Db = DbFactory.CreateDbContext();
         AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
         if (AccountGuid is null) return;
 
@@ -472,4 +475,6 @@
         Snackbar.Add(result == "shared" ? "Achievements shared! 🎉" : "Achievements copied to clipboard! 📋", Severity.Success);
         await Analytics.TrackAsync("badge_earned_notify", AccountGuid, "achievements", "share_all");
     }
+
+    public void Dispose() => Db?.Dispose();
 }

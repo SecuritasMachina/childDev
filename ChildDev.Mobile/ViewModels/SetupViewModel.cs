@@ -1,8 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ChildDev.Mobile.Services;
+using LevelUp.Services;
 
-namespace ChildDev.Mobile.ViewModels;
+namespace LevelUp.ViewModels;
 
 public partial class SetupViewModel(AccountService accountService) : ObservableObject
 {

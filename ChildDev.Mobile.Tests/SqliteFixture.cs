@@ -1,4 +1,4 @@
-namespace ChildDev.Mobile.Tests;
+namespace LevelUp.Tests;
 
 public static class SqliteFixture
 {

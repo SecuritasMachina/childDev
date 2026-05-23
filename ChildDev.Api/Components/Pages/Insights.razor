@@ -1,8 +1,9 @@
 @page "/insights"
-@inject AppDbContext Db
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject NavigationManager Nav
 @inject IHttpContextAccessor HttpContextAccessor
 @inject WebAnalyticsService Analytics
+@implements IDisposable
 
 <PageTitle>My Insights – LevelUp</PageTitle>
 
@@ -1250,6 +1251,7 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
 </MudGrid>
 
 @code {
+    private AppDbContext Db = null!;
     private string? AccountGuid;
     private int TotalLast30;
     private int TotalThisWeek;
@@ -1361,6 +1363,7 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
 
     protected override async Task OnInitializedAsync()
     {
+        Db = DbFactory.CreateDbContext();
         AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
         if (AccountGuid is null) return;
         await Task.WhenAll(LoadInsights(), LoadDomainStats());
@@ -2190,4 +2193,6 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
         "register" => "Register",
         _ => page
     };
+
+    public void Dispose() => Db?.Dispose();
 }

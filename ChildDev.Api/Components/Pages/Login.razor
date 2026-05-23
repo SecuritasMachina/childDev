@@ -1,5 +1,5 @@
 @page "/login"
-@inject AppDbContext Db
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject NavigationManager Nav
 @inject IHttpContextAccessor HttpContextAccessor
 @inject WebAnalyticsService Analytics
@@ -75,7 +75,8 @@
     private async Task DoLogin()
     {
         var nick = NickName.Trim();
-        var account = await Db.Accounts.FirstOrDefaultAsync(a => a.NickName == nick);
+        await using var db = DbFactory.CreateDbContext();
+        var account = await db.Accounts.FirstOrDefaultAsync(a => a.NickName == nick);
         if (account is null || !BCrypt.Net.BCrypt.Verify(Pin, account.PinHash))
         {
             Error = "Invalid nickname or PIN.";

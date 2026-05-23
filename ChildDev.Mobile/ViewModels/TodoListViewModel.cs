@@ -1,11 +1,11 @@
 using System.Collections.ObjectModel;
-using ChildDev.Mobile.Data;
-using ChildDev.Mobile.Models;
-using ChildDev.Mobile.Services;
+using LevelUp.Data;
+using LevelUp.Models;
+using LevelUp.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-namespace ChildDev.Mobile.ViewModels;
+namespace LevelUp.ViewModels;
 
 public partial class TodoListViewModel(
     TodoRepository repo,

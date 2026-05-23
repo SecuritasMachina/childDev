@@ -1,5 +1,5 @@
 @page "/"
-@inject AppDbContext Db
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject NavigationManager Nav
 @inject IHttpContextAccessor HttpContextAccessor
 @inject ISnackbar Snackbar
@@ -2319,6 +2319,7 @@ else
 </MudDialog>
 
 @code {
+    private AppDbContext Db = null!;
     private string? AccountGuid;
     private bool ApkExists;
     private List<Goal> AllActiveGoals = [];
@@ -2416,6 +2417,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        Db = DbFactory.CreateDbContext();
         ApkExists = System.IO.File.Exists(System.IO.Path.Combine(HostEnv.WebRootPath, "downloads", "LevelUp.apk"));
         AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
         if (AccountGuid is null) return;
@@ -2454,6 +2456,7 @@ else
     {
         try { await JS.InvokeVoidAsync("childdev.unregisterPageShortcut"); } catch { }
         _selfRef?.Dispose();
+        Db?.Dispose();
     }
 
     [JSInvokable]

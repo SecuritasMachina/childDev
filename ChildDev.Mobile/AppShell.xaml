@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Shell
-    x:Class="ChildDev.Mobile.AppShell"
+    x:Class="LevelUp.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:views="clr-namespace:ChildDev.Mobile.Views"
+    xmlns:views="clr-namespace:LevelUp.Views"
     Shell.FlyoutBehavior="Disabled">
 
     <TabBar>
-        <ShellContent Title="Dashboard" Icon="dashboard.png"
+        <ShellContent Title="Dashboard" Icon="dashboard.svg"
                       ContentTemplate="{DataTemplate views:DashboardPage}" Route="dashboard" />
-        <ShellContent Title="Journal" Icon="journal.png"
+        <ShellContent Title="Journal" Icon="journal.svg"
                       ContentTemplate="{DataTemplate views:JournalListPage}" Route="journal" />
-        <ShellContent Title="Goals" Icon="goals.png"
+        <ShellContent Title="Goals" Icon="goals.svg"
                       ContentTemplate="{DataTemplate views:GoalListPage}" Route="goals" />
-        <ShellContent Title="Todos" Icon="todos.png"
+        <ShellContent Title="Todos" Icon="todos.svg"
                       ContentTemplate="{DataTemplate views:TodoListPage}" Route="todos" />
     </TabBar>
 </Shell>

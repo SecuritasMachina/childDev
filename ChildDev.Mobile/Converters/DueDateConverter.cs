@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace ChildDev.Mobile.Converters;
+namespace LevelUp.Converters;
 
 public class EntryDateConverter : IValueConverter
 {

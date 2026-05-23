@@ -1,11 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
-using ChildDev.Mobile.Data;
-using ChildDev.Mobile.Models;
-using ChildDev.Mobile.Services;
+using LevelUp.Data;
+using LevelUp.Models;
+using LevelUp.Services;
 using SQLite;
 
-namespace ChildDev.Mobile.Tests;
+namespace LevelUp.Tests;
 
 public class SyncServiceTests : IDisposable
 {

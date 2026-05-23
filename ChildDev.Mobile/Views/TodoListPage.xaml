@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:ChildDev.Mobile.ViewModels"
-             xmlns:models="clr-namespace:ChildDev.Mobile.Models"
-             x:Class="ChildDev.Mobile.Views.TodoListPage"
+             xmlns:vm="clr-namespace:LevelUp.ViewModels"
+             xmlns:models="clr-namespace:LevelUp.Models"
+             x:Class="LevelUp.Views.TodoListPage"
              Title="Todos">
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto">
         <Label Grid.Row="0" Text="{Binding StatusMessage}" TextColor="Red"

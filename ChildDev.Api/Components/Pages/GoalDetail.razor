@@ -1,5 +1,5 @@
 @page "/goals/{GoalGuid}"
-@inject AppDbContext Db
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject NavigationManager Nav
 @inject IHttpContextAccessor HttpContextAccessor
 @inject ISnackbar Snackbar
@@ -2364,6 +2364,8 @@ else
 </MudDialog>
 
 @code {
+    private AppDbContext Db = null!;
+
     [Parameter] public string GoalGuid { get; set; } = string.Empty;
 
     private string? AccountGuid;
@@ -2466,6 +2468,7 @@ else
     {
         try { await JS.InvokeVoidAsync("childdev.unregisterPageShortcut"); } catch { }
         _selfRef?.Dispose();
+        Db?.Dispose();
     }
 
     [JSInvokable]
@@ -2506,6 +2509,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        Db = DbFactory.CreateDbContext();
         AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
         if (AccountGuid is null) return;
 
