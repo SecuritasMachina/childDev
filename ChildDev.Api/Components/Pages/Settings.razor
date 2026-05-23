@@ -126,6 +126,32 @@
         <MudCard Elevation="2" Class="mb-4">
             <MudCardHeader>
                 <CardHeaderContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudIcon Icon="@Icons.Material.Filled.Email" Color="Color.Info" />
+                        <MudText Typo="Typo.h6">Email Alerts</MudText>
+                    </MudStack>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudTextField @bind-Value="AlertEmail" Label="Email address" Variant="Variant.Outlined"
+                              Immediate="true" InputType="InputType.Email" Class="mb-3"
+                              HelperText="Leave blank to disable all email alerts" />
+                <MudSwitch @bind-Value="AlertGoalComplete" Color="Color.Success" Class="mb-1"
+                           Label="Email me when I complete a goal" />
+                @if (AlertEmailError is not null)
+                {
+                    <MudAlert Severity="Severity.Error" Class="mt-2">@AlertEmailError</MudAlert>
+                }
+            </MudCardContent>
+            <MudCardActions Class="px-4 pb-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="SaveEmailAlerts"
+                           Disabled="@(AlertEmail == _savedEmail && AlertGoalComplete == _savedAlertGoalComplete)">Save</MudButton>
+            </MudCardActions>
+        </MudCard>
+
+        <MudCard Elevation="2" Class="mb-4">
+            <MudCardHeader>
+                <CardHeaderContent>
                     <MudText Typo="Typo.h6">Progress Report</MudText>
                 </CardHeaderContent>
             </MudCardHeader>
@@ -219,6 +245,12 @@
     private string NewNickName = string.Empty;
     private string? NickNameError;
 
+    private string AlertEmail = string.Empty;
+    private bool AlertGoalComplete;
+    private string? AlertEmailError;
+    private string _savedEmail = string.Empty;
+    private bool _savedAlertGoalComplete;
+
     private string CurrentPin = string.Empty;
     private string NewPin = string.Empty;
     private string ConfirmNewPin = string.Empty;
@@ -235,12 +267,14 @@
 
         var display = await Db.Accounts
             .Where(a => a.Guid == AccountGuid)
-            .Select(a => new { a.NickName, a.CreatedOn })
+            .Select(a => new { a.NickName, a.CreatedOn, a.Email, a.AlertGoalComplete })
             .FirstOrDefaultAsync();
         if (display is null) { Nav.NavigateTo("/login"); return; }
 
         CurrentNickName = display.NickName;
         NewNickName = display.NickName;
+        AlertEmail = _savedEmail = display.Email ?? string.Empty;
+        AlertGoalComplete = _savedAlertGoalComplete = display.AlertGoalComplete;
         CreatedOnDisplay = DateTimeOffset.FromUnixTimeMilliseconds(display.CreatedOn).LocalDateTime.ToString("MMMM d, yyyy");
         TotalGoals = await Db.Goals.CountAsync(g => g.AccountFk == AccountGuid && g.DeletedAt == null);
         TotalGoalsCompleted = await Db.Goals.CountAsync(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate != null);
@@ -317,6 +351,27 @@
         ConfirmNewPin = string.Empty;
         await Analytics.TrackAsync("settings_change_pin", AccountGuid, "settings");
         Snackbar.Add("PIN changed!", Severity.Success);
+    }
+
+    private async Task SaveEmailAlerts()
+    {
+        AlertEmailError = null;
+        var email = AlertEmail.Trim();
+        if (!string.IsNullOrEmpty(email) && !email.Contains('@'))
+        {
+            AlertEmailError = "Enter a valid email address.";
+            return;
+        }
+        var storedEmail = string.IsNullOrWhiteSpace(email) ? null : email;
+        await Db.Accounts
+            .Where(a => a.Guid == AccountGuid)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(a => a.Email, storedEmail)
+                .SetProperty(a => a.AlertGoalComplete, AlertGoalComplete));
+        AlertEmail = _savedEmail = storedEmail ?? string.Empty;
+        _savedAlertGoalComplete = AlertGoalComplete;
+        await Analytics.TrackAsync("settings_save_email_alerts", AccountGuid, "settings");
+        Snackbar.Add("Email alert settings saved!", Severity.Success);
     }
 
     private async Task CopyAccountId()

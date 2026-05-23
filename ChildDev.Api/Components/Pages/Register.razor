@@ -65,6 +65,9 @@
                               @onkeydown="@(async (e) => { if (e.Key == "Enter") await DoRegister(); })"
                               Class="mb-4"
                               Error="@PinMismatch" ErrorText="PINs do not match" />
+                <MudTextField @bind-Value="Email" Label="Email (optional)" Variant="Variant.Outlined"
+                              Immediate="true" InputType="InputType.Email" Class="mb-3"
+                              HelperText="Get notified when you complete a goal" />
                 <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center" Class="mt-1">
                     <MudIcon Icon="@Icons.Material.Filled.Shield" Size="Size.Small" Class="mr-1" />
                     Your data stays on your device and our private servers — never sold, never shared.
@@ -92,6 +95,7 @@
     private string NickName = string.Empty;
     private string Pin = string.Empty;
     private string ConfirmPin = string.Empty;
+    private string Email = string.Empty;
     private bool PinMismatch => ConfirmPin.Length > 0 && Pin != ConfirmPin;
     private string? Error;
     private bool _blazorReady;
@@ -143,12 +147,15 @@
             return;
         }
 
+        var trimmedEmail = Email.Trim();
         var account = new Account
         {
             Guid = System.Guid.NewGuid().ToString(),
             NickName = nick,
             PinHash = BCrypt.Net.BCrypt.HashPassword(Pin),
-            CreatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+            CreatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            Email = string.IsNullOrWhiteSpace(trimmedEmail) ? null : trimmedEmail,
+            AlertGoalComplete = !string.IsNullOrWhiteSpace(trimmedEmail)
         };
         db.Accounts.Add(account);
         await db.SaveChangesAsync();

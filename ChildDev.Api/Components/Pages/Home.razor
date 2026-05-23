@@ -6,6 +6,7 @@
 @inject WebAnalyticsService Analytics
 @inject IWebHostEnvironment HostEnv
 @inject IJSRuntime JS
+@inject EmailService EmailService
 @implements IAsyncDisposable
 
 <PageTitle>Goals – LevelUp</PageTitle>
@@ -2994,11 +2995,24 @@ else
                 .SetProperty(g => g.UpdatedOn, now));
         if (rows == 0) return;
         await Analytics.TrackAsync("goal_complete", AccountGuid, "home", guid);
+        _ = SendGoalCompleteEmailIfEnabled(AllActiveGoals.FirstOrDefault(g => g.Guid == guid)?.GoalText ?? string.Empty);
         CelebratedGoalText = AllActiveGoals.FirstOrDefault(g => g.Guid == guid)?.GoalText;
         _celebratingGoalGuid = guid;
         CelebrationReflection = string.Empty;
         ShowCelebration = true;
         await LoadGoals();
+    }
+
+    private async Task SendGoalCompleteEmailIfEnabled(string goalText)
+    {
+        if (AccountGuid is null) return;
+        await using var db = DbFactory.CreateDbContext();
+        var acct = await db.Accounts
+            .Where(a => a.Guid == AccountGuid)
+            .Select(a => new { a.Email, a.AlertGoalComplete, a.NickName })
+            .FirstOrDefaultAsync();
+        if (acct?.Email is not null && acct.AlertGoalComplete)
+            await EmailService.SendGoalCompleteAsync(acct.Email, acct.NickName, goalText);
     }
 
     private async Task CloseCelebration(bool openNewGoal = false)
