@@ -27,6 +27,9 @@ public partial class GoalListViewModel(
     private string filterText = string.Empty;
 
     [ObservableProperty]
+    private string categoryFilter = "All";
+
+    [ObservableProperty]
     private string entryCountDisplay = string.Empty;
 
     [ObservableProperty]
@@ -34,24 +37,39 @@ public partial class GoalListViewModel(
 
     private List<Goal> _allGoals = [];
 
-    partial void OnFilterTextChanged(string value)
+    partial void OnFilterTextChanged(string value) => ApplyFilters();
+    partial void OnCategoryFilterChanged(string value) => ApplyFilters();
+
+    private void ApplyFilters()
     {
-        if (string.IsNullOrWhiteSpace(value))
+        var textQ = FilterText?.Trim() ?? string.Empty;
+        var catQ = string.IsNullOrEmpty(CategoryFilter) || CategoryFilter == "All" ? null : CategoryFilter;
+
+        var filtered = _allGoals.Where(g =>
+            (string.IsNullOrEmpty(textQ) ||
+                (g.GoalText != null && g.GoalText.Contains(textQ, StringComparison.OrdinalIgnoreCase)) ||
+                (g.MeasurableOutcome != null && g.MeasurableOutcome.Contains(textQ, StringComparison.OrdinalIgnoreCase)) ||
+                (g.LatestNextStepItems != null && g.LatestNextStepItems.Contains(textQ, StringComparison.OrdinalIgnoreCase))) &&
+            (catQ == null || g.Category == catQ)
+        ).ToList();
+
+        Goals = new ObservableCollection<Goal>(filtered);
+
+        if (!string.IsNullOrEmpty(textQ))
         {
-            Goals = new ObservableCollection<Goal>(_allGoals);
-            EmptyMessage = "No goals yet";
-            UpdateEntryCountDisplay();
+            EmptyMessage = $"No matches for \"{textQ}\"";
+            var n = filtered.Count;
+            EntryCountDisplay = $"{n} {(n == 1 ? "goal" : "goals")} matching";
+        }
+        else if (catQ != null)
+        {
+            EmptyMessage = $"No {catQ} goals";
+            EntryCountDisplay = $"{filtered.Count} {catQ.ToLower()} goal{(filtered.Count == 1 ? "" : "s")}";
         }
         else
         {
-            var filtered = _allGoals.Where(g =>
-                (g.GoalText != null && g.GoalText.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
-                (g.MeasurableOutcome != null && g.MeasurableOutcome.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
-                (g.LatestNextStepItems != null && g.LatestNextStepItems.Contains(value, StringComparison.OrdinalIgnoreCase))).ToList();
-            Goals = new ObservableCollection<Goal>(filtered);
-            EmptyMessage = $"No matches for \"{value}\"";
-            var n = filtered.Count;
-            EntryCountDisplay = $"{n} {(n == 1 ? "goal" : "goals")} matching";
+            EmptyMessage = "No goals yet";
+            UpdateEntryCountDisplay();
         }
     }
 
@@ -64,8 +82,7 @@ public partial class GoalListViewModel(
             var account = await accountService.GetAccountAsync();
             if (account is null) return;
             _allGoals = await LoadGoalsWithStepsAsync(account.Guid);
-            Goals = new ObservableCollection<Goal>(_allGoals);
-            UpdateEntryCountDisplay();
+            ApplyFilters();
         }
         catch
         {
@@ -82,8 +99,7 @@ public partial class GoalListViewModel(
             if (account is null) { IsRefreshing = false; return; }
             await syncService.RunAsync(account);
             _allGoals = await LoadGoalsWithStepsAsync(account.Guid);
-            Goals = new ObservableCollection<Goal>(_allGoals);
-            UpdateEntryCountDisplay();
+            ApplyFilters();
             StatusMessage = string.Empty;
         }
         catch
@@ -118,7 +134,8 @@ public partial class GoalListViewModel(
             }
         }
         var active = goals.Where(g => g.CompletionDate is null)
-            .OrderBy(g => g.LatestProgressAt.HasValue ? 1 : 0)
+            .OrderByDescending(g => g.IsPinned)
+            .ThenBy(g => g.LatestProgressAt.HasValue ? 1 : 0)
             .ThenBy(g => g.LatestProgressAt ?? 0)
             .ToList();
         var completed = goals.Where(g => g.CompletionDate is not null)
@@ -134,6 +151,17 @@ public partial class GoalListViewModel(
     [RelayCommand]
     private async Task OpenAsync(Goal goal) =>
         await Shell.Current.GoToAsync($"goals/entry?guid={goal.Guid}");
+
+    [RelayCommand]
+    private async Task TogglePinAsync(Goal goal)
+    {
+        goal.IsPinned = !goal.IsPinned;
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        goal.UpdatedOn = ts;
+        await repo.SaveAsync(goal);
+        _allGoals = await LoadGoalsWithStepsAsync((await accountService.GetAccountAsync())!.Guid);
+        Goals = new ObservableCollection<Goal>(_allGoals);
+    }
 
     [RelayCommand]
     private async Task DeleteAsync(Goal goal)

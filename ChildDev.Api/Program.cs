@@ -122,6 +122,9 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
+    db.Database.ExecuteSqlRaw("ALTER TABLE Goals ADD COLUMN IF NOT EXISTS ProgressPercent INT NULL");
+    db.Database.ExecuteSqlRaw("ALTER TABLE Goals ADD COLUMN IF NOT EXISTS Category VARCHAR(50) NULL");
+    db.Database.ExecuteSqlRaw("ALTER TABLE Goals ADD COLUMN IF NOT EXISTS IsPinned TINYINT(1) NOT NULL DEFAULT 0");
 }
 
 app.Run();

@@ -15,6 +15,34 @@
             <Editor Text="{Binding GoalText}" HeightRequest="100" AutoSize="TextChanges" />
             <Label Text="{Binding GoalTextLength, StringFormat='{0} characters'}"
                    FontSize="11" TextColor="Gray" HorizontalOptions="End" />
+            <!-- Category -->
+            <Label Text="Category" />
+            <Picker SelectedItem="{Binding Category}" Title="Choose a category">
+                <Picker.Items>
+                    <x:String>Academic</x:String>
+                    <x:String>Health</x:String>
+                    <x:String>Social</x:String>
+                    <x:String>Creative</x:String>
+                    <x:String>Hobby</x:String>
+                    <x:String>Other</x:String>
+                </Picker.Items>
+            </Picker>
+
+            <!-- Progress -->
+            <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                <Label Grid.Column="0" Text="Progress" VerticalOptions="Center" />
+                <Label Grid.Column="1" Text="{Binding ProgressPercent, StringFormat='{0}%'}"
+                       FontSize="13" TextColor="Gray" VerticalOptions="Center" />
+            </Grid>
+            <Slider Value="{Binding ProgressPercent}" Minimum="0" Maximum="100" />
+            <ProgressBar Progress="{Binding ProgressBarValue}" ProgressColor="#5C35D9" HeightRequest="6" />
+
+            <!-- Pin -->
+            <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                <Label Grid.Column="0" Text="📌 Pin this goal to top" VerticalOptions="Center" />
+                <Switch Grid.Column="1" IsToggled="{Binding IsPinned}" />
+            </Grid>
+
             <Label Text="Measurable Outcome" />
             <Entry Text="{Binding MeasurableOutcome}" Placeholder="How will you know it's achieved?" />
             <Label Text="{Binding MeasurableOutcomeLength, StringFormat='{0} characters'}"

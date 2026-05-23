@@ -39,7 +39,30 @@
                            Href="@($"/goals/{_nextGoalGuid}")" aria-label="Next goal" />
         </MudTooltip>
     }
-    <MudText Typo="Typo.h5" Style="flex:1">@Goal.GoalText</MudText>
+    <MudStack Spacing="1" Style="flex:1;">
+        <MudText Typo="Typo.h5">@Goal.GoalText</MudText>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap">
+            @if (!string.IsNullOrWhiteSpace(Goal.Category))
+            {
+                var catColor2 = Goal.Category switch {
+                    "Academic" => Color.Primary, "Health" => Color.Success,
+                    "Social" => Color.Info, "Creative" => Color.Secondary,
+                    "Hobby" => Color.Warning, _ => Color.Default };
+                <MudChip T="string" Size="Size.Small" Color="@catColor2">@Goal.Category</MudChip>
+            }
+            @if (Goal.IsPinned)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.PushPin" Color="Color.Warning" Size="Size.Small" title="Pinned goal" />
+            }
+        </MudStack>
+        @if (Goal.ProgressPercent.HasValue)
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudProgressLinear Value="@Goal.ProgressPercent.Value" Color="Color.Primary" Rounded="true" Size="Size.Small" Style="flex:1;max-width:200px;" />
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@Goal.ProgressPercent% complete</MudText>
+            </MudStack>
+        }
+    </MudStack>
     @if (Goal.CompletionDate is null)
     {
         <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" Size="Size.Small"
@@ -2277,6 +2300,20 @@ else
     <DialogContent>
         <MudTextField @bind-Value="EditGoalText" Label="Goal" Variant="Variant.Outlined"
                       Lines="2" Class="mb-4" AutoFocus="true" Immediate="true" />
+        <MudSelect @bind-Value="EditCategory" Label="Category (optional)" Variant="Variant.Outlined" Class="mb-4" Clearable="true">
+            @foreach (var c in new[] { "Academic","Health","Social","Creative","Hobby","Other" })
+            {
+                <MudSelectItem T="string?" Value="@c">@c</MudSelectItem>
+            }
+        </MudSelect>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="mb-4">
+            <MudText Typo="Typo.body2" Style="white-space:nowrap;">Progress: @(EditProgressPercent)%</MudText>
+            <MudSlider @bind-Value="EditProgressPercent" Min="0" Max="100" Step="5" Color="Color.Primary" Style="flex:1;" />
+        </MudStack>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
+            <MudSwitch @bind-Value="EditIsPinned" Color="Color.Warning" />
+            <MudText Typo="Typo.body2">📌 Pin this goal to top</MudText>
+        </MudStack>
         <MudTextField @bind-Value="EditMeasurableOutcome" Label="How will you measure success? (optional)"
                       Variant="Variant.Outlined" Immediate="true" Class="mb-4" />
         <MudDatePicker @bind-Date="EditNextMeetingDate" Label="Next meeting date (optional)"
@@ -2363,6 +2400,9 @@ else
     private string? EditMeasurableOutcome;
     private DateTime? EditNextMeetingDate;
     private DateTime? EditExpirationDate;
+    private string? EditCategory;
+    private int EditProgressPercent;
+    private bool EditIsPinned;
     private bool _confirmDeleteGoal;
     private string? _confirmDeleteProgressGuid;
     private bool ShowMilestone;
@@ -2981,6 +3021,9 @@ else
         EditExpirationDate = Goal?.ExpirationDate.HasValue == true
             ? DateTimeOffset.FromUnixTimeMilliseconds(Goal.ExpirationDate!.Value).LocalDateTime
             : null;
+        EditCategory = Goal?.Category;
+        EditProgressPercent = Goal?.ProgressPercent ?? 0;
+        EditIsPinned = Goal?.IsPinned ?? false;
         ShowEditDialog = true;
     }
 
@@ -2997,6 +3040,9 @@ else
         Goal.ExpirationDate = EditExpirationDate.HasValue
             ? new DateTimeOffset(DateTime.SpecifyKind(EditExpirationDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
             : null;
+        Goal.Category = string.IsNullOrWhiteSpace(EditCategory) ? null : EditCategory;
+        Goal.ProgressPercent = EditProgressPercent > 0 ? EditProgressPercent : null;
+        Goal.IsPinned = EditIsPinned;
         Goal.UpdatedOn = now;
         await Db.SaveChangesAsync();
         await Analytics.TrackAsync("goal_edit", AccountGuid, "goal_detail", GoalGuid);

@@ -23,10 +23,17 @@ public partial class GoalEntryViewModel(
     [ObservableProperty] private bool isExisting;
     [ObservableProperty] private bool isCompleted;
     [ObservableProperty] private string enteredDateDisplay = string.Empty;
+    [ObservableProperty] private string? category;
+    [ObservableProperty] private int progressPercent;
+    [ObservableProperty] private bool isPinned;
 
     [ObservableProperty] private int goalTextLength;
     [ObservableProperty] private int measurableOutcomeLength;
     [ObservableProperty] private int nextStepItemsLength;
+
+    public double ProgressBarValue => ProgressPercent / 100.0;
+
+    partial void OnProgressPercentChanged(int value) => OnPropertyChanged(nameof(ProgressBarValue));
 
     private string _loadedNextStepItems = string.Empty;
 
@@ -66,6 +73,9 @@ public partial class GoalEntryViewModel(
             ExpirationDate = DateTimeOffset.FromUnixTimeMilliseconds(item.ExpirationDate.Value).LocalDateTime;
             HasExpirationDate = true;
         }
+        Category = item.Category;
+        ProgressPercent = item.ProgressPercent ?? 0;
+        IsPinned = item.IsPinned;
         var progress = await progressRepo.GetForGoalAsync(guid);
         NextStepItems = (progress.FirstOrDefault()?.NextStepItems ?? string.Empty).Trim();
         _loadedNextStepItems = NextStepItems;
@@ -86,6 +96,9 @@ public partial class GoalEntryViewModel(
             : await repo.GetAsync(Guid) ?? new Goal { Guid = Guid, AccountFk = account.Guid, EnteredDate = ts };
 
         goal.GoalText = GoalText.Trim();
+        goal.Category = string.IsNullOrWhiteSpace(Category) ? null : Category;
+        goal.ProgressPercent = ProgressPercent > 0 ? ProgressPercent : null;
+        goal.IsPinned = IsPinned;
         goal.MeasurableOutcome = string.IsNullOrWhiteSpace(MeasurableOutcome) ? null : MeasurableOutcome.Trim();
         goal.NextMeetingDate = HasNextMeetingDate
             ? new DateTimeOffset(DateTime.SpecifyKind(NextMeetingDate, DateTimeKind.Local)).ToUnixTimeMilliseconds()

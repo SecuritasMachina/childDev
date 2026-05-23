@@ -33,6 +33,10 @@ public partial class DashboardViewModel(
     [ObservableProperty] private string lastSyncDisplay = string.Empty;
     [ObservableProperty] private string quickJournalText = string.Empty;
     [ObservableProperty] private bool quickJournalSaved;
+    [ObservableProperty] private int weekTodosCompleted;
+    [ObservableProperty] private int weekProgressNotes;
+    [ObservableProperty] private int weekJournalEntries;
+    [ObservableProperty] private bool hasWeeklyWins;
 
     private string _accountGuid = string.Empty;
 
@@ -69,6 +73,15 @@ public partial class DashboardViewModel(
 
         var weekStartMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
         JournalThisWeek = await journalRepo.GetCountSinceAsync(account.Guid, weekStartMs);
+        WeekJournalEntries = JournalThisWeek;
+
+        var completedTodos = await todoRepo.GetCompletedAsync(account.Guid);
+        WeekTodosCompleted = completedTodos.Count(t => t.CompletedAt >= weekStartMs);
+
+        var recentProgress = await progressRepo.GetModifiedSinceAsync(account.Guid, weekStartMs);
+        WeekProgressNotes = recentProgress.Count(p => p.DeletedAt == null);
+
+        HasWeeklyWins = WeekTodosCompleted > 0 || WeekProgressNotes > 0 || WeekJournalEntries > 0;
 
         var goals = await goalRepo.GetAllActiveAsync(account.Guid);
         var activeGoals = goals.Where(g => g.CompletionDate is null).ToList();

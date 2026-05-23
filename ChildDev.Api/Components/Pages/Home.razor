@@ -372,6 +372,36 @@
     </MudItem>
 </MudGrid>
 
+@if (AllActiveGoals.Count > 0 && (TodosCompletedThisWeek > 0 || ProgressThisWeek > 0 || JournalThisWeek > 0))
+{
+    <MudPaper Elevation="2" Class="pa-4 mb-4" Style="border-radius:14px;background:linear-gradient(135deg,rgba(255,193,7,.10) 0%,rgba(255,152,0,.06) 100%);border:1.5px solid var(--mud-palette-warning);">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
+            <MudText Style="font-size:1.4rem;line-height:1;">🏆</MudText>
+            <MudText Typo="Typo.overline" Color="Color.Warning" Style="font-weight:700;letter-spacing:1px;flex:1;">This Week's Wins</MudText>
+        </MudStack>
+        <MudGrid Spacing="2">
+            <MudItem xs="4">
+                <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                    <MudText Typo="Typo.h4" Color="Color.Warning" Style="font-weight:700;">@TodosCompletedThisWeek</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">✅ Todos done</MudText>
+                </MudStack>
+            </MudItem>
+            <MudItem xs="4">
+                <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                    <MudText Typo="Typo.h4" Color="Color.Warning" Style="font-weight:700;">@ProgressThisWeek</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">📝 Progress notes</MudText>
+                </MudStack>
+            </MudItem>
+            <MudItem xs="4">
+                <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                    <MudText Typo="Typo.h4" Color="Color.Warning" Style="font-weight:700;">@JournalThisWeek</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">📓 Journal entries</MudText>
+                </MudStack>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+}
+
 @{
     var wcWeek = System.Globalization.ISOWeek.GetWeekOfYear(DateTime.Today);
     var (wcEmoji, wcTitle, wcDesc, wcTarget, wcCurrent) = (wcWeek % 4) switch
@@ -1195,6 +1225,16 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                  Color="Color.Info" OnClick='() => SetQuickFilter("meeting")'
                  Icon="@Icons.Material.Filled.Event">Meeting Soon (@meetingSoonCount)</MudChip>
     }
+    @foreach (var cat in new[] { "Academic", "Health", "Social", "Creative", "Hobby", "Other" })
+    {
+        var catCount = AllActiveGoals.Count(g => g.Category == cat);
+        if (catCount > 0)
+        {
+            var filterKey = $"cat:{cat}";
+            <MudChip T="string" Size="Size.Small" Variant="@(QuickFilter == filterKey ? Variant.Filled : Variant.Outlined)"
+                     Color="Color.Secondary" OnClick="() => SetQuickFilter(filterKey)">@cat (@catCount)</MudChip>
+        }
+    }
 </MudStack>
 
 @if (!string.IsNullOrWhiteSpace(FilterText) && ActiveGoals.Count == 0)
@@ -1375,6 +1415,14 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                     <MudIcon Icon="@cgHeatIcon" Color="@cgHeatColor" Size="Size.Small" />
                     <MudText Typo="Typo.body2" Style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@((MarkupString)HighlightMatch(g.GoalText ?? "", FilterText.Trim()))</MudText>
+                    @if (!string.IsNullOrWhiteSpace(g.Category))
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Style="font-size:0.68rem;height:20px;">@g.Category</MudChip>
+                    }
+                    @if (g.ProgressPercent.HasValue)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Primary" Style="white-space:nowrap;">@g.ProgressPercent%</MudText>
+                    }
                     <MudChip T="string" Size="Size.Small" Color="@(cgPCount > 0 ? Color.Default : Color.Secondary)" Style="font-size:0.7rem;height:20px;">
                         @cgPCount note@(cgPCount == 1 ? "" : "s")
                     </MudChip>
@@ -1423,9 +1471,24 @@ else
                     </CardHeaderAvatar>
                     <CardHeaderContent>
                         <MudText Typo="Typo.body1">@((MarkupString)HighlightMatch(g.GoalText ?? "", FilterText.Trim()))</MudText>
+                        @if (!string.IsNullOrWhiteSpace(g.Category))
+                        {
+                            var catColor = g.Category switch {
+                                "Academic" => Color.Primary, "Health" => Color.Success,
+                                "Social" => Color.Info, "Creative" => Color.Secondary,
+                                "Hobby" => Color.Warning, _ => Color.Default };
+                            <MudChip T="string" Size="Size.Small" Color="@catColor" Style="font-size:0.68rem;height:20px;" Class="mb-1">@g.Category</MudChip>
+                        }
                         @if (!string.IsNullOrWhiteSpace(GoalOfMonthGuid) && g.Guid == GoalOfMonthGuid)
                         {
                             <MudChip T="string" Size="Size.Small" Color="Color.Warning" Style="font-size:0.68rem;height:20px;" Class="mb-1">🥇 Month's Top Goal</MudChip>
+                        }
+                        @if (g.ProgressPercent.HasValue)
+                        {
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-1">
+                                <MudProgressLinear Value="@g.ProgressPercent.Value" Color="Color.Primary" Rounded="true" Size="Size.Small" Style="flex:1;" />
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@g.ProgressPercent%</MudText>
+                            </MudStack>
                         }
                         @if (g.MeasurableOutcome is not null)
                         {
@@ -2818,6 +2881,11 @@ else
             var mtg7Ms = nowMsF + 7L * 86_400_000L;
             filtered = filtered.Where(g => g.NextMeetingDate.HasValue && g.NextMeetingDate.Value > nowMsF && g.NextMeetingDate.Value <= mtg7Ms)
                                .OrderBy(g => g.NextMeetingDate);
+        }
+        else if (QuickFilter.StartsWith("cat:"))
+        {
+            var catVal = QuickFilter[4..];
+            filtered = filtered.Where(g => g.Category == catVal);
         }
 
         // Apply sort order (pinned goals always float to top)

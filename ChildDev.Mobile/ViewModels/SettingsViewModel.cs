@@ -14,6 +14,7 @@ public partial class SettingsViewModel(AccountService accountService, IHttpClien
     [ObservableProperty] private string statusMessage = string.Empty;
     [ObservableProperty] private string accountGuid = string.Empty;
     [ObservableProperty] private bool isLinkedToServer;
+    public string BuildDisplay { get; } = $"Build: {BuildInfo.BuildTimestamp}";
 
     // Server link fields
     [ObservableProperty] private string serverNickName = string.Empty;

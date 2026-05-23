@@ -14,6 +14,10 @@ public class Goal
     public long EnteredDate { get; set; }
     public string? MeasurableOutcome { get; set; }
     public long? CompletionDate { get; set; }
+    public int? ProgressPercent { get; set; }
+    [MaxLength(50)]
+    public string? Category { get; set; }
+    public bool IsPinned { get; set; }
     public long UpdatedOn { get; set; }
     public long? DeletedAt { get; set; }
 }

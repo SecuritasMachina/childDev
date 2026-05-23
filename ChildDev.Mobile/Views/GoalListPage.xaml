@@ -9,12 +9,24 @@
         <ToolbarItem Text="+" Command="{Binding AddCommand}" />
     </ContentPage.ToolbarItems>
 
-    <Grid RowDefinitions="Auto,Auto,*">
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
         <Label Grid.Row="0" Text="{Binding StatusMessage}" TextColor="Red"
                FontSize="13" Padding="16,8"
                IsVisible="{Binding StatusMessage, Converter={x:StaticResource StringToBoolConverter}}" />
         <SearchBar Grid.Row="1" Placeholder="Search goals..." Text="{Binding FilterText}" Margin="8,0,8,4" />
-        <RefreshView Grid.Row="2" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
+        <!-- Category filter -->
+        <Picker Grid.Row="2" SelectedItem="{Binding CategoryFilter}" Title="Filter by category" Margin="8,0,8,4">
+            <Picker.Items>
+                <x:String>All</x:String>
+                <x:String>Academic</x:String>
+                <x:String>Health</x:String>
+                <x:String>Social</x:String>
+                <x:String>Creative</x:String>
+                <x:String>Hobby</x:String>
+                <x:String>Other</x:String>
+            </Picker.Items>
+        </Picker>
+        <RefreshView Grid.Row="3" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
         <CollectionView ItemsSource="{Binding Goals}">
         <CollectionView.EmptyView>
             <Label Text="{Binding EmptyMessage}" FontSize="18" TextColor="Gray"
@@ -28,6 +40,13 @@
         <CollectionView.ItemTemplate>
             <DataTemplate x:DataType="models:Goal">
                 <SwipeView>
+                    <SwipeView.LeftItems>
+                        <SwipeItems>
+                            <SwipeItem Text="📌 Pin" BackgroundColor="#5C35D9"
+                                       Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GoalListViewModel}}, Path=TogglePinCommand}"
+                                       CommandParameter="{Binding .}" />
+                        </SwipeItems>
+                    </SwipeView.LeftItems>
                     <SwipeView.RightItems>
                         <SwipeItems>
                             <SwipeItem Text="Delete" BackgroundColor="Red"
@@ -49,10 +68,27 @@
                                 CommandParameter="{Binding .}" />
                         </Grid.GestureRecognizers>
                         <VerticalStackLayout>
+                            <!-- Category + pin indicator row -->
+                            <HorizontalStackLayout Spacing="6" Margin="0,0,0,2">
+                                <Label Text="📌" FontSize="11" TextColor="#5C35D9"
+                                       IsVisible="{Binding IsPinned}" />
+                                <Border BackgroundColor="#EDE7F6" Padding="4,1" StrokeShape="RoundRectangle 4" StrokeThickness="0"
+                                        IsVisible="{Binding Category, Converter={x:StaticResource StringToBoolConverter}}">
+                                    <Label Text="{Binding Category}" FontSize="10" TextColor="#5C35D9" />
+                                </Border>
+                            </HorizontalStackLayout>
                             <Label Text="{Binding GoalText}" LineBreakMode="TailTruncation" MaxLines="2" />
                             <Label Text="{Binding MeasurableOutcome}" FontSize="12" TextColor="Gray"
                                    LineBreakMode="TailTruncation" MaxLines="1"
                                    IsVisible="{Binding MeasurableOutcome, Converter={x:StaticResource StringToBoolConverter}}" />
+                            <!-- Progress bar -->
+                            <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0"
+                                  IsVisible="{Binding ProgressPercent, Converter={x:StaticResource NotNullConverter}}">
+                                <ProgressBar Grid.Column="0" Progress="{Binding ProgressBarValue}"
+                                             ProgressColor="#5C35D9" HeightRequest="5" VerticalOptions="Center" />
+                                <Label Grid.Column="1" Text="{Binding ProgressPercent, StringFormat='{0}%'}"
+                                       FontSize="10" TextColor="Gray" Margin="6,0,0,0" />
+                            </Grid>
                             <Label Text="{Binding NextMeetingDate, Converter={x:StaticResource MeetingDateConverter}}"
                                    TextColor="{Binding NextMeetingDate, Converter={x:StaticResource MeetingDateColorConverter}}"
                                    FontSize="11"

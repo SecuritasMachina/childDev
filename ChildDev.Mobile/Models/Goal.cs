@@ -10,6 +10,9 @@ public class Goal : SyncBase
     public long EnteredDate { get; set; }
     public string? MeasurableOutcome { get; set; }
     public long? CompletionDate { get; set; }
+    public int? ProgressPercent { get; set; }
+    public string? Category { get; set; }
+    public bool IsPinned { get; set; }
 
     [Ignore]
     public string? LatestNextStepItems { get; set; }
@@ -19,4 +22,7 @@ public class Goal : SyncBase
 
     [Ignore]
     public bool ShowNoNotesYet => LatestProgressAt is null && CompletionDate is null;
+
+    [Ignore]
+    public double ProgressBarValue => (ProgressPercent ?? 0) / 100.0;
 }

@@ -46,6 +46,10 @@
             <Label Text="{Binding LastSyncDisplay, StringFormat='Last synced: {0}'}" TextColor="Gray" FontSize="12" />
             <Label Text="{Binding StatusMessage}" TextColor="Green"
                    IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <BoxView HeightRequest="1" Color="LightGray" />
+
+            <Label Text="{Binding BuildDisplay}" TextColor="Gray" FontSize="11" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

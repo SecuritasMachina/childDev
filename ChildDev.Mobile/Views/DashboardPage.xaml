@@ -151,6 +151,37 @@
                     </Border>
                 </Grid>
 
+                <!-- Weekly Wins card -->
+                <Border Padding="16,14" StrokeShape="RoundRectangle 14" StrokeThickness="0"
+                        IsVisible="{Binding HasWeeklyWins}">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#FFF9C4" Offset="0"/>
+                            <GradientStop Color="#FFF3E0" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="🏆  This Week's Wins" FontSize="15" FontAttributes="Bold" TextColor="#E65100"/>
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                            <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center">
+                                <Label Text="{Binding WeekTodosCompleted}" FontSize="24" FontAttributes="Bold"
+                                       TextColor="#E65100" HorizontalOptions="Center"/>
+                                <Label Text="Todos done" FontSize="10" TextColor="#BF360C" HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
+                                <Label Text="{Binding WeekProgressNotes}" FontSize="24" FontAttributes="Bold"
+                                       TextColor="#E65100" HorizontalOptions="Center"/>
+                                <Label Text="Progress notes" FontSize="10" TextColor="#BF360C" HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="2" HorizontalOptions="Center">
+                                <Label Text="{Binding WeekJournalEntries}" FontSize="24" FontAttributes="Bold"
+                                       TextColor="#E65100" HorizontalOptions="Center"/>
+                                <Label Text="Journal entries" FontSize="10" TextColor="#BF360C" HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
                 <!-- Section header: Recent journal -->
                 <Label Text="📖  Recent Journal" FontSize="17" FontAttributes="Bold"
                        Margin="0,6,0,0"/>
