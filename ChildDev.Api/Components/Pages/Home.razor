@@ -1204,6 +1204,14 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                            StartIcon="@Icons.Material.Filled.EmojiEvents"
                            OnClick="() => CompleteGoal(fg.Guid)">Mark Complete 🎉</MudButton>
             }
+            @if (AllActiveGoals.Count > 2)
+            {
+                <MudTooltip Text="Show a different focus goal">
+                    <MudIconButton Icon="@Icons.Material.Filled.SkipNext" Size="Size.Small"
+                                   Color="Color.Default" OnClick="SkipFocusGoal"
+                                   aria-label="Skip to next focus goal" />
+                </MudTooltip>
+            }
         </MudStack>
     </MudPaper>
 }
@@ -2040,6 +2048,7 @@ else
     private List<Goal> ActiveGoals = [];
     private List<Goal> CompletedGoals = [];
     private Goal? FeaturedGoal;
+    private HashSet<string> _skippedFocusGoals = [];
     private string FilterText = string.Empty;
     private string QuickFilter = "all";
     private string GoalSortOrder = "attention";
@@ -2565,14 +2574,25 @@ else
         if (string.IsNullOrWhiteSpace(FilterText) && QuickFilter == "all" && GoalSortOrder == "attention")
         {
             var list = filtered.ToList();
-            FeaturedGoal = list.Count >= 2 ? list[0] : null;
-            ActiveGoals = FeaturedGoal is not null ? list.Skip(1).ToList() : list;
+            var candidate = list.FirstOrDefault(g => !_skippedFocusGoals.Contains(g.Guid))
+                            ?? list.FirstOrDefault();
+            FeaturedGoal = list.Count >= 2 ? candidate : null;
+            ActiveGoals = FeaturedGoal is not null ? list.Where(g => g.Guid != FeaturedGoal.Guid).ToList() : list;
         }
         else
         {
             FeaturedGoal = null;
             ActiveGoals = filtered.ToList();
         }
+    }
+
+    private void SkipFocusGoal()
+    {
+        if (FeaturedGoal is null) return;
+        _skippedFocusGoals.Add(FeaturedGoal.Guid);
+        if (_skippedFocusGoals.Count >= AllActiveGoals.Count)
+            _skippedFocusGoals.Clear();
+        ApplyFilter();
     }
 
     private void SetQuickFilter(string filter)
