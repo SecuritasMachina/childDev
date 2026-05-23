@@ -1271,7 +1271,16 @@
     {
         var learnCount = ProgressEntries.Count(p => { var t = (p.NextStepItems ?? "").ToLowerInvariant(); return !(p.NextStepItems ?? "").StartsWith("🏆 Reflection:") && (t.Contains("learn") || t.Contains("discover") || t.Contains("realiz") || t.Contains("figured out") || t.Contains("understand") || t.Contains("found out")); });
         var reflectCount = ProgressEntries.Count(p => (p.NextStepItems ?? "").StartsWith("🏆 Reflection:"));
+        var winCount = ProgressEntries.Count(p => (p.NextStepItems ?? "").StartsWith("A win today:") || (p.NextStepItems ?? "").StartsWith("A win today:\n"));
         <MudSpacer />
+        @if (winCount > 0)
+        {
+            <MudChip T="string" Size="Size.Small"
+                     Color="@(_noteTypeFilter == "win" ? Color.Warning : Color.Default)"
+                     Variant="@(_noteTypeFilter == "win" ? Variant.Filled : Variant.Outlined)"
+                     OnClick="@(() => { _noteTypeFilter = _noteTypeFilter == "win" ? null : "win"; _notesPageSize = 10; })"
+                     Style="cursor:pointer;" title="Filter: win notes">🏅 @winCount</MudChip>
+        }
         @if (learnCount > 0)
         {
             <MudChip T="string" Size="Size.Small"
@@ -1606,7 +1615,9 @@ else if (bestGoalStreak >= 2 && goalStreak < bestGoalStreak)
     var displayedNotesBase = ProgressEntries.AsEnumerable();
     if (!string.IsNullOrWhiteSpace(_noteFilter))
         displayedNotesBase = displayedNotesBase.Where(p => (p.NextStepItems ?? "").Contains(_noteFilter.Trim(), StringComparison.OrdinalIgnoreCase));
-    if (_noteTypeFilter == "learn")
+    if (_noteTypeFilter == "win")
+        displayedNotesBase = displayedNotesBase.Where(p => (p.NextStepItems ?? "").StartsWith("A win today:") || (p.NextStepItems ?? "").StartsWith("A win today:\n"));
+    else if (_noteTypeFilter == "learn")
         displayedNotesBase = displayedNotesBase.Where(p => { var t = (p.NextStepItems ?? "").ToLowerInvariant(); return !p.NextStepItems!.StartsWith("🏆 Reflection:") && (t.Contains("learn") || t.Contains("discover") || t.Contains("realiz") || t.Contains("figured out") || t.Contains("understand") || t.Contains("found out")); });
     else if (_noteTypeFilter == "reflect")
         displayedNotesBase = displayedNotesBase.Where(p => (p.NextStepItems ?? "").StartsWith("🏆 Reflection:"));
@@ -1648,7 +1659,8 @@ else
     @if (!displayedNotes.Any())
     {
         <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
-            @if (_noteTypeFilter == "learn") { <text>No learning moments found in these notes.</text> }
+            @if (_noteTypeFilter == "win") { <text>No win notes found.</text> }
+            else if (_noteTypeFilter == "learn") { <text>No learning moments found in these notes.</text> }
             else if (_noteTypeFilter == "reflect") { <text>No completion reflections found.</text> }
             else if (!string.IsNullOrWhiteSpace(_noteFilter)) { <text>No notes matching "@_noteFilter".</text> }
         </MudText>
