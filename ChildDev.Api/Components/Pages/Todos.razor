@@ -852,7 +852,7 @@ else
         WeekDueCount = todos.Count(t =>
             t.DueDate.HasValue && t.DueDate.Value >= weekStartMs && t.DueDate.Value < TodayStartMs + 86_400_000L);
 
-        // Load active goals for picker and for "Goal: " prefix display
+        // Load active goals for picker
         var goals = await Db.Goals
             .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate == null)
             .Select(g => new { g.Guid, g.GoalText })
@@ -860,7 +860,13 @@ else
         _activeGoals = goals.Where(g => !string.IsNullOrWhiteSpace(g.GoalText))
             .Select(g => (g.Guid, g.GoalText!))
             .ToList();
-        _goalGuidByName = _activeGoals.ToDictionary(g => g.GoalText, g => g.Guid, StringComparer.OrdinalIgnoreCase);
+        // Build GUID lookup from ALL goals (including completed) so chips on completed todos still link correctly
+        var allGoals = await Db.Goals
+            .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null && !string.IsNullOrWhiteSpace(g.GoalText))
+            .Select(g => new { g.Guid, g.GoalText })
+            .ToListAsync();
+        _goalGuidByName = allGoals.GroupBy(g => g.GoalText!, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(grp => grp.Key, grp => grp.First().Guid, StringComparer.OrdinalIgnoreCase);
 
         // Build 8-week completion chart
         const int chartWeeks = 8;
