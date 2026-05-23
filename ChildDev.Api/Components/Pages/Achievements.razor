@@ -163,9 +163,10 @@
 
         var goals = await Db.Goals
             .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null)
-            .Select(g => new { g.EnteredDate, g.CompletionDate, g.MeasurableOutcome })
+            .Select(g => new { g.EnteredDate, g.CompletionDate, g.MeasurableOutcome, g.ExpirationDate })
             .ToListAsync();
         var completedGoals = goals.Where(g => g.CompletionDate.HasValue).OrderBy(g => g.CompletionDate).ToList();
+        var completedOnTime = completedGoals.Any(g => g.ExpirationDate.HasValue && g.CompletionDate!.Value <= g.ExpirationDate.Value);
         var firstGoalDate = goals.Count > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(goals.Min(g => g.EnteredDate)).LocalDateTime : (DateTime?)null;
         var firstCompleteDate = completedGoals.Count > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(completedGoals[0].CompletionDate!.Value).LocalDateTime : (DateTime?)null;
         var goalsWithOutcome = goals.Count(g => !string.IsNullOrWhiteSpace(g.MeasurableOutcome));
@@ -176,6 +177,15 @@
             .OrderBy(p => p.UpdatedOn)
             .ToListAsync();
         var progressNotes = progressNotesFull.Select(p => p.UpdatedOn).ToList();
+        var maxNotesPerGoal = await Db.GoalProgresses
+            .Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null)
+            .GroupBy(p => p.GoalFk)
+            .Select(g => g.Count())
+            .DefaultIfEmpty(0)
+            .MaxAsync();
+        var progressNoteDayCount = progressNotes
+            .Select(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
+            .ToHashSet().Count;
         var firstNoteDate = progressNotes.Count > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(progressNotes[0]).LocalDateTime : (DateTime?)null;
         var maxNoteWordCount = progressNotesFull
             .Where(p => !string.IsNullOrWhiteSpace(p.NextStepItems))
@@ -245,6 +255,7 @@
                 MakeBadge("🚀", "Ambitious", "Set 5 goals", goals.Count >= 5, null, goals.Count < 5 ? $"{goals.Count}/5 goals" : null),
                 MakeBadge("💫", "Dream Big", "Set 20 goals", goals.Count >= 20, null, goals.Count < 20 ? $"{goals.Count}/20 goals" : null),
                 MakeBadge("📏", "Measurable", "Add success criteria to 3 goals", goalsWithOutcome >= 3, null, goalsWithOutcome < 3 ? $"{goalsWithOutcome}/3 goals with criteria" : null),
+                MakeBadge("⏱️", "Goal On Time", "Complete a goal before its deadline", completedOnTime, null, completedOnTime ? null : "Complete a goal with a due date set"),
             ]),
             new BadgeCategory("📝", "Progress Notes", "rgba(67,160,71,.85)", "rgba(27,94,32,.9)",
             [
@@ -253,6 +264,8 @@
                 MakeBadge("🗒️", "Dedicated", "Write 50 progress notes", progressNotes.Count >= 50, progressNotes.Count >= 50 ? DateTimeOffset.FromUnixTimeMilliseconds(progressNotes[49]).LocalDateTime : null, progressNotes.Count < 50 ? $"{progressNotes.Count}/50 notes" : null),
                 MakeBadge("📚", "Master Tracker", "Write 200 progress notes", progressNotes.Count >= 200, progressNotes.Count >= 200 ? DateTimeOffset.FromUnixTimeMilliseconds(progressNotes[199]).LocalDateTime : null, progressNotes.Count < 200 ? $"{progressNotes.Count}/200 notes" : null),
                 MakeBadge("🖊️", "Word Wizard", "Write a note with 100+ words", maxNoteWordCount >= 100, null, maxNoteWordCount < 100 ? $"Best: {maxNoteWordCount} words" : null),
+                MakeBadge("🤿", "Deep Diver", "Write 20+ notes for a single goal", maxNotesPerGoal >= 20, null, maxNotesPerGoal < 20 ? $"Best: {maxNotesPerGoal} notes for one goal" : null),
+                MakeBadge("📅", "Consistent", "Write progress notes on 5 different days", progressNoteDayCount >= 5, null, progressNoteDayCount < 5 ? $"{progressNoteDayCount}/5 active days" : null),
             ]),
             new BadgeCategory("✅", "Todos", "rgba(229,57,53,.85)", "rgba(183,28,28,.9)",
             [
