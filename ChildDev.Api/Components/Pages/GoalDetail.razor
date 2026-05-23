@@ -1648,13 +1648,27 @@ else
                             <MudStack Spacing="0" Style="flex:1">
                                 @if (!string.IsNullOrWhiteSpace(p.NextStepItems))
                                 {
+                                    const int NotePreviewLen = 350;
+                                    var isLong = p.NextStepItems.Length > NotePreviewLen;
+                                    var isExpanded = _expandedNotes.Contains(p.Guid);
+                                    var displayText = isLong && !isExpanded
+                                        ? p.NextStepItems[..NotePreviewLen].TrimEnd() + "…"
+                                        : p.NextStepItems;
                                     @if (!string.IsNullOrWhiteSpace(_noteFilter))
                                     {
-                                        <MudText Typo="Typo.body2">@((MarkupString)HighlightMatch(p.NextStepItems, _noteFilter.Trim()))</MudText>
+                                        <MudText Typo="Typo.body2">@((MarkupString)HighlightMatch(displayText, _noteFilter.Trim()))</MudText>
                                     }
                                     else
                                     {
-                                        <MudText Typo="Typo.body2">@p.NextStepItems</MudText>
+                                        <MudText Typo="Typo.body2" Style="white-space:pre-wrap;">@displayText</MudText>
+                                    }
+                                    @if (isLong)
+                                    {
+                                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
+                                                   Style="padding:0;min-height:unset;font-size:0.75rem;"
+                                                   OnClick="@(() => { if (isExpanded) _expandedNotes.Remove(p.Guid); else _expandedNotes.Add(p.Guid); })">
+                                            @(isExpanded ? "Show less" : "Read more")
+                                        </MudButton>
                                     }
                                 }
                                 @if (p.NextMeetingDate.HasValue)
@@ -2238,6 +2252,7 @@ else
     private List<Todo> RelatedTodos = [];
     private string? _prevGoalGuid;
     private string? _nextGoalGuid;
+    private HashSet<string> _expandedNotes = [];
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
