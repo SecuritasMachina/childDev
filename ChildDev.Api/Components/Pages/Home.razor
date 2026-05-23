@@ -1852,7 +1852,10 @@ else
                 var otdDate = DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime;
                 var otdYearsAgo = DateTime.Today.Year - otdDate.Year;
                 var otdLabel = otdYearsAgo == 1 ? "1 year ago" : $"{otdYearsAgo} years ago";
-                <MudListItem>
+                var otdSearchRaw = j.Notes ?? j.Activity ?? "";
+                var otdSearchWords = string.Join(" ", otdSearchRaw.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(4));
+                var otdHref = !string.IsNullOrWhiteSpace(otdSearchWords) ? $"/journal?search={Uri.EscapeDataString(otdSearchWords)}" : "/journal";
+                <MudListItem Href="@otdHref">
                     <MudStack Row="true" AlignItems="AlignItems.Start">
                         @{
                             var otdMoodEmoji = j.Mood switch {
