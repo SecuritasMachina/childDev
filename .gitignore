@@ -31,3 +31,17 @@ Thumbs.db
 
 # APK release files (deployed separately, not tracked in git)
 *.apk
+
+# Test results
+test-results/
+TestResults/
+*.trx
+*.coverage
+playwright/test-results/
+playwright-report/
+
+# Docker build cache / local volumes
+letsencrypt/
+
+# Node modules (legacy Cordova project)
+childDev/node_modules/

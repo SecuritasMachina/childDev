@@ -1,24 +1,66 @@
 services:
+  traefik:
+    image: traefik:v2.11
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=charlesd@havranek.com"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+    restart: unless-stopped
+
   childdev-api:
     build:
       context: ./ChildDev.Api
       dockerfile: Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      CHILDDEV_DB_CONNECTION: ${CHILDDEV_DB_CONNECTION}
+      CHILDDEV_DB_CONNECTION: "Server=mariadb;Database=childdev;User=childdev;Password=${CHILDDEV_DB_PASSWORD};"
       CHILDDEV_JWT_SECRET: ${CHILDDEV_JWT_SECRET}
-    ports:
-      - "8283:8080"
-    networks:
-      - ai_internal
+    depends_on:
+      mariadb:
+        condition: service_healthy
     volumes:
       - childdev_dataprotection:/root/.aspnet/DataProtection-Keys
-      - ./ChildDev.Api/wwwroot/downloads:/app/wwwroot/downloads
+      - /opt/childdev/downloads:/app/wwwroot/downloads
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.childdev.rule=Host(`levelup.havranek.com`)"
+      - "traefik.http.routers.childdev.entrypoints=websecure"
+      - "traefik.http.routers.childdev.tls=true"
+      - "traefik.http.routers.childdev.tls.certresolver=letsencrypt"
+      - "traefik.http.services.childdev.loadbalancer.server.port=8080"
+
+  mariadb:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: childdev
+      MARIADB_USER: childdev
+      MARIADB_PASSWORD: ${CHILDDEV_DB_PASSWORD}
+    volumes:
+      - childdev_mariadb:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     restart: unless-stopped
 
 volumes:
+  childdev_mariadb:
   childdev_dataprotection:
-
-networks:
-  ai_internal:
-    external: true
+  letsencrypt:
