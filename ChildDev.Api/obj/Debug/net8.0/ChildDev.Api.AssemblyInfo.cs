@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ChildDev.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d71cd7347e9456708b62b22613011931252e70df")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+99d285b6a7b2f0ce2fed5ebd10d56d835fc79722")]
 [assembly: System.Reflection.AssemblyProductAttribute("ChildDev.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ChildDev.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
