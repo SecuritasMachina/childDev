@@ -1266,9 +1266,10 @@ else
         if (!string.IsNullOrWhiteSpace(j.Mood)) sb.AppendLine($"Mood: {j.Mood}");
         if (!string.IsNullOrWhiteSpace(j.Notes)) sb.AppendLine(j.Notes);
         if (!string.IsNullOrWhiteSpace(j.EmotionReason)) sb.AppendLine($"Why: {j.EmotionReason}");
-        await JS.InvokeVoidAsync("navigator.clipboard.writeText", sb.ToString().TrimEnd());
+        var entryText = sb.ToString().TrimEnd();
+        var result = await JS.InvokeAsync<string>("childdev.shareOrCopy", $"Journal — {dt:MMMM d, yyyy}", entryText);
         await Analytics.TrackAsync("journal_copy_entry", AccountGuid, "journal");
-        Snackbar.Add("Journal entry copied!", Severity.Info);
+        Snackbar.Add(result == "shared" ? "Journal entry shared!" : "Journal entry copied!", Severity.Info);
     }
 
     private void OpenAddDialog()
