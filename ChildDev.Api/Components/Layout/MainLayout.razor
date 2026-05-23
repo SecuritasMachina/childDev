@@ -539,6 +539,15 @@
         results.AddRange(goals.Select(g =>
             new SearchResult("Goals", g.GoalText, $"/goals/{g.Guid}", Icons.Material.Filled.EmojiEvents)));
 
+        var completedGoals = await Db.Goals
+            .Where(g => g.AccountFk == accountGuid && g.DeletedAt == null
+                     && g.CompletionDate != null && g.GoalText != null && g.GoalText.Contains(q))
+            .OrderByDescending(g => g.CompletionDate)
+            .Select(g => new { g.Guid, g.GoalText })
+            .Take(3).ToListAsync();
+        results.AddRange(completedGoals.Select(g =>
+            new SearchResult("Completed Goals", g.GoalText ?? "", $"/goals/{g.Guid}", Icons.Material.Filled.CheckCircle)));
+
         var todos = await Db.Todos
             .Where(t => t.AccountFk == accountGuid && t.DeletedAt == null
                      && t.CompletedAt == null && t.Title != null && t.Title.Contains(q))
