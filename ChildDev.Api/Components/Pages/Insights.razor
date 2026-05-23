@@ -1723,7 +1723,7 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
             }
         }
 
-        // Monthly activity trend: last 6 months of progress notes + journal entries
+        // Monthly activity trend: last 6 months of progress notes + journal entries + goal completions
         if (allProgressEver.Count >= 3 || allJournalEver.Count >= 3)
         {
             var today2 = DateTime.Today;
@@ -1748,6 +1748,18 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
                 new ChartSeries { Name = "Progress Notes", Data = progressNotesByMonth },
                 new ChartSeries { Name = "Journal Entries", Data = journalByMonth }
             ];
+            // Add goals completed per month if user has 2+ completions in the window
+            if (durationRows.Count >= 2)
+            {
+                var completionsByMonth = months.Select(m =>
+                {
+                    var mStart = new DateTimeOffset(m, TimeZoneInfo.Local.GetUtcOffset(m)).ToUnixTimeMilliseconds();
+                    var mEnd = new DateTimeOffset(m.AddMonths(1), TimeZoneInfo.Local.GetUtcOffset(m.AddMonths(1))).ToUnixTimeMilliseconds();
+                    return (double)durationRows.Count(r => r.CompletionDate.HasValue && r.CompletionDate.Value >= mStart && r.CompletionDate.Value < mEnd);
+                }).ToArray();
+                if (completionsByMonth.Any(c => c > 0))
+                    MonthlyTrendSeries.Add(new ChartSeries { Name = "Goals Completed", Data = completionsByMonth });
+            }
         }
     }
 
