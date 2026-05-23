@@ -1228,7 +1228,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
             <MudListItem T="Goal">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                     <MudIcon Icon="@cgHeatIcon" Color="@cgHeatColor" Size="Size.Small" />
-                    <MudText Typo="Typo.body2" Style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@g.GoalText</MudText>
+                    <MudText Typo="Typo.body2" Style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@((MarkupString)HighlightMatch(g.GoalText ?? "", FilterText.Trim()))</MudText>
                     <MudChip T="string" Size="Size.Small" Color="@(cgPCount > 0 ? Color.Default : Color.Secondary)" Style="font-size:0.7rem;height:20px;">
                         @cgPCount note@(cgPCount == 1 ? "" : "s")
                     </MudChip>
@@ -1271,7 +1271,7 @@ else
                         </MudAvatar>
                     </CardHeaderAvatar>
                     <CardHeaderContent>
-                        <MudText Typo="Typo.body1">@g.GoalText</MudText>
+                        <MudText Typo="Typo.body1">@((MarkupString)HighlightMatch(g.GoalText ?? "", FilterText.Trim()))</MudText>
                         @if (!string.IsNullOrWhiteSpace(GoalOfMonthGuid) && g.Guid == GoalOfMonthGuid)
                         {
                             <MudChip T="string" Size="Size.Small" Color="Color.Warning" Style="font-size:0.68rem;height:20px;" Class="mb-1">🥇 Month's Top Goal</MudChip>
@@ -2798,5 +2798,16 @@ else
         }
         await LoadStats();
         StateHasChanged();
+    }
+
+    private static string HighlightMatch(string text, string query)
+    {
+        if (string.IsNullOrEmpty(query) || query.Length < 2) return System.Net.WebUtility.HtmlEncode(text);
+        var idx = text.IndexOf(query, StringComparison.OrdinalIgnoreCase);
+        if (idx < 0) return System.Net.WebUtility.HtmlEncode(text);
+        var before = System.Net.WebUtility.HtmlEncode(text[..idx]);
+        var match = System.Net.WebUtility.HtmlEncode(text[idx..(idx + query.Length)]);
+        var after = HighlightMatch(text[(idx + query.Length)..], query);
+        return $"{before}<mark style='background:rgba(63,81,181,.18);color:inherit;border-radius:2px;padding:0 2px;'>{match}</mark>{after}";
     }
 }
