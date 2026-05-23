@@ -50,6 +50,9 @@
         <MudIconButton Icon="@Icons.Material.Filled.Share" Color="Color.Default" Size="Size.Small"
                        title="Copy progress summary to clipboard"
                        OnClick="CopyGoalSummary" aria-label="Copy goal progress summary" />
+        <MudIconButton Icon="@Icons.Material.Filled.Print" Color="Color.Default" Size="Size.Small"
+                       title="Print goal summary"
+                       OnClick="@(() => JS.InvokeVoidAsync("window.print"))" aria-label="Print goal summary" />
     }
     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
                    OnClick="() => _confirmDeleteGoal = true" aria-label="Delete goal" />

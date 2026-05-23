@@ -102,6 +102,48 @@
 /* Level progress bar fill animation (Blazor triggers value change after first render) */
 .level-anim-bar .mud-progress-linear-bar { transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1) !important; }
 
+/* ---- Print styles ---- */
+@media print {
+    /* Hide nav, toolbar, buttons, modals, FAB, snackbars */
+    .mud-appbar,
+    .mud-nav-menu,
+    .mud-drawer,
+    .mud-drawer-overlay,
+    nav,
+    .mud-button,
+    .mud-icon-button,
+    .mud-fab,
+    .mud-snackbar-container,
+    .mud-overlay,
+    .mud-dialog-container,
+    #components-reconnect-modal,
+    [aria-label="Add progress note"],
+    [aria-label="Add todo"],
+    [title="Add todo"] { display: none !important; }
+
+    /* Remove card hover shadows and animations in print */
+    .mud-card, .mud-paper { box-shadow: none !important; border: 1px solid #ddd !important; }
+    .mud-card { transform: none !important; page-break-inside: avoid; }
+
+    /* Improve text contrast for print */
+    body, .mud-typography { color: #000 !important; }
+    .mud-typography-body2, .mud-typography-caption { color: #333 !important; }
+
+    /* Make links visible */
+    a[href]:after { content: none; }
+
+    /* Page breaks */
+    .mud-timeline-item { page-break-inside: avoid; }
+    h5, h6 { page-break-after: avoid; }
+
+    /* Remove background gradients */
+    .mud-paper { background: #fff !important; }
+
+    /* Ensure full width */
+    .mud-main-content { animation: none !important; padding: 0 !important; }
+    .mud-grid { width: 100% !important; }
+}
+
 /* ---- Blazor Server custom reconnect modal ---- */
 #components-reconnect-modal {
     display: none;
