@@ -762,6 +762,16 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         }
     </MudAlert>
 }
+@if (HomeJournalStreak >= 2 && !HomeHasJournalToday && string.IsNullOrWhiteSpace(FilterText))
+{
+    var jsAtRiskMsg = HomeJournalStreak >= 7 ? $"⚠️ <strong>Don't break your {HomeJournalStreak}-day journal streak!</strong> Write a quick entry today to keep the fire going."
+                    : HomeJournalStreak >= 3 ? $"🛡️ <strong>Protect your {HomeJournalStreak}-day journal streak!</strong> A short entry keeps your habit alive."
+                    :                          $"✍️ <strong>You're on a {HomeJournalStreak}-day journal streak</strong> — write today's entry to keep it going!";
+    <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.Book" Dense="true" Class="mb-3">
+        @((MarkupString)jsAtRiskMsg)
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning" Href="/journal" Class="ml-1">Write entry</MudButton>
+    </MudAlert>
+}
 @{
     var naStaleMs = DateTimeOffset.UtcNow.AddDays(-14).ToUnixTimeMilliseconds();
     var naStaleGoals = string.IsNullOrWhiteSpace(FilterText)
@@ -2242,6 +2252,8 @@ else
     private DateTime? _goalTodoDueDate;
     private List<Journal> RecentJournals = [];
     private List<Journal> OnThisDayJournals = [];
+    private int HomeJournalStreak;
+    private bool HomeHasJournalToday;
     private bool ShowCelebration;
     private string? CelebratedGoalText;
     private string? _celebratingGoalGuid;
@@ -2379,6 +2391,22 @@ else
             .OrderByDescending(j => j.EnteredDate)
             .Take(3)
             .ToListAsync();
+
+        // Journal streak for home page nudge
+        var journalDatesRaw = await Db.Journals
+            .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null
+                     && j.EnteredDate >= DateTimeOffset.UtcNow.AddDays(-30).ToUnixTimeMilliseconds())
+            .Select(j => j.EnteredDate)
+            .ToListAsync();
+        var journalDates30 = journalDatesRaw
+            .Select(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
+            .ToHashSet();
+        HomeHasJournalToday = journalDates30.Contains(DateOnly.FromDateTime(DateTime.Today));
+        var jsDay = HomeHasJournalToday
+            ? DateOnly.FromDateTime(DateTime.Today)
+            : DateOnly.FromDateTime(DateTime.Today).AddDays(-1);
+        HomeJournalStreak = 0;
+        while (journalDates30.Contains(jsDay)) { HomeJournalStreak++; jsDay = jsDay.AddDays(-1); }
 
         // On this day: prior-year entries matching today's month+day
         var today = DateTime.Today;
