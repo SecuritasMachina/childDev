@@ -328,6 +328,17 @@ else if (JourneyMonths >= 6)
                 </MudText>
             </MudStack>
         }
+        @if (FastestGoalDays >= 1 && FastestGoalName is not null)
+        {
+            var fgDurStr = FastestGoalDays >= 30 ? $"{FastestGoalDays / 30} month{(FastestGoalDays / 30 == 1 ? "" : "s")}" : $"{FastestGoalDays} day{(FastestGoalDays == 1 ? "" : "s")}";
+            var fgName = FastestGoalName.Length > 45 ? FastestGoalName[..45] + "…" : FastestGoalName;
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-2">
+                <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Small" Color="Color.Warning" />
+                <MudText Typo="Typo.body2">
+                    Fastest win: <strong>"@fgName"</strong> in @fgDurStr ⚡
+                </MudText>
+            </MudStack>
+        }
     </MudPaper>
 }
 
@@ -1128,6 +1139,8 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
     private int NotesLastWeekProgress;
     private string? CompletionVelocityMsg;
     private int AvgGoalCompletionDays;
+    private int FastestGoalDays = -1;
+    private string? FastestGoalName;
     private string? BestProgressDayOfWeek;
     private int BestProgressDayOfWeekCount;
     private string? JournalTimeOfDay;
@@ -1641,10 +1654,15 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
         // Average goal completion lifespan (start to finish)
         var durationRows = await Db.Goals
             .Where(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate != null)
-            .Select(g => new { g.CompletionDate, g.EnteredDate })
+            .Select(g => new { g.CompletionDate, g.EnteredDate, g.GoalText })
             .ToListAsync();
         if (durationRows.Count >= 2)
+        {
             AvgGoalCompletionDays = (int)durationRows.Average(r => (r.CompletionDate!.Value - r.EnteredDate) / 86_400_000.0);
+            var fastest = durationRows.OrderBy(r => r.CompletionDate!.Value - r.EnteredDate).First();
+            FastestGoalDays = (int)Math.Max(1, (fastest.CompletionDate!.Value - fastest.EnteredDate) / 86_400_000.0);
+            FastestGoalName = fastest.GoalText;
+        }
 
         var allEver = allTodosEver.Concat(allJournalEver).Concat(allProgressEver).ToList();
         TotalActiveDaysEver = allEver
