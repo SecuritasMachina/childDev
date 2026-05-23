@@ -170,6 +170,39 @@
     </MudItem>
 </MudGrid>
 
+<MudDivider Class="my-6" />
+<MudPaper Elevation="1" Class="pa-4" Style="border:2px solid var(--mud-palette-error);border-radius:12px;">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2" Spacing="2">
+        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" />
+        <MudText Typo="Typo.h6" Color="Color.Error">Danger Zone</MudText>
+    </MudStack>
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+        Permanently delete your account and all your data — goals, progress notes, journal entries, and todos.
+        This action <strong>cannot be undone</strong>.
+    </MudText>
+    @if (!_showDeleteConfirm)
+    {
+        <MudButton Variant="Variant.Outlined" Color="Color.Error"
+                   StartIcon="@Icons.Material.Filled.DeleteForever"
+                   OnClick="() => _showDeleteConfirm = true">Delete My Account</MudButton>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">
+            Type your nickname <strong>@CurrentNickName</strong> below to confirm permanent deletion.
+        </MudAlert>
+        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+            <MudTextField @bind-Value="_deleteConfirmName" Placeholder="Type your nickname to confirm"
+                          Variant="Variant.Outlined" Margin="Margin.Dense" Style="flex:1;" Immediate="true" />
+            <MudButton Variant="Variant.Filled" Color="Color.Error"
+                       Disabled="@(_deleteConfirmName != CurrentNickName)"
+                       OnClick="DeleteAccount">Delete Everything</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Default"
+                       OnClick="() => { _showDeleteConfirm = false; _deleteConfirmName = string.Empty; }">Cancel</MudButton>
+        </MudStack>
+    }
+</MudPaper>
+
 @code {
     private string? AccountGuid;
     private string CurrentNickName = string.Empty;
@@ -188,6 +221,8 @@
     private string ConfirmNewPin = string.Empty;
     private bool PinMismatch => ConfirmNewPin.Length > 0 && NewPin != ConfirmNewPin;
     private string? PinError;
+    private bool _showDeleteConfirm;
+    private string _deleteConfirmName = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -427,5 +462,18 @@
         await JS.InvokeVoidAsync("eval", $"(function(){{var a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent({System.Text.Json.JsonSerializer.Serialize(json)});a.download={System.Text.Json.JsonSerializer.Serialize(filename)};a.click();}})()");
         await Analytics.TrackAsync("settings_export_json", AccountGuid, "settings");
         Snackbar.Add("Data exported!", Severity.Success);
+    }
+
+    private async Task DeleteAccount()
+    {
+        if (AccountGuid is null || _deleteConfirmName != CurrentNickName) return;
+        await Db.GoalProgresses.Where(p => p.AccountFk == AccountGuid).ExecuteDeleteAsync();
+        await Db.Goals.Where(g => g.AccountFk == AccountGuid).ExecuteDeleteAsync();
+        await Db.Journals.Where(j => j.AccountFk == AccountGuid).ExecuteDeleteAsync();
+        await Db.Todos.Where(t => t.AccountFk == AccountGuid).ExecuteDeleteAsync();
+        await Db.AnalyticsEvents.Where(e => e.AccountGuid == AccountGuid).ExecuteDeleteAsync();
+        await Db.Accounts.Where(a => a.Guid == AccountGuid).ExecuteDeleteAsync();
+        HttpContextAccessor.HttpContext?.Session.Clear();
+        Nav.NavigateTo("/login", forceLoad: true);
     }
 }
