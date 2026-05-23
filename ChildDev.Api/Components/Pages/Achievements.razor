@@ -244,6 +244,54 @@
             if (curStreak > maxStreak) maxStreak = curStreak;
         }
 
+        // Habit badge computations
+        var noteWeekNums = progressNotes
+            .Select(ms => DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime)
+            .Select(dt => dt.Year * 100 + System.Globalization.ISOWeek.GetWeekOfYear(dt))
+            .ToHashSet().OrderBy(w => w).ToList();
+        var distinctNoteWeeks = noteWeekNums.Count;
+        var maxConsecNoteWeeks = 0;
+        var curNoteWks = 0;
+        for (int wi = 0; wi < noteWeekNums.Count; wi++)
+        {
+            if (wi == 0) { curNoteWks = 1; }
+            else
+            {
+                var pv = noteWeekNums[wi - 1]; var cv = noteWeekNums[wi];
+                var py = pv / 100; var pw = pv % 100; var cy = cv / 100; var cw = cv % 100;
+                curNoteWks = (cy == py && cw == pw + 1) || (cy == py + 1 && pw >= 51 && cw == 1) ? curNoteWks + 1 : 1;
+            }
+            if (curNoteWks > maxConsecNoteWeeks) maxConsecNoteWeeks = curNoteWks;
+        }
+
+        var journalDates = journals
+            .Select(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
+            .ToHashSet().OrderBy(d => d).ToList();
+        var maxJournalDayStreak = 0;
+        var curJournalRun = 0;
+        for (int ji = 0; ji < journalDates.Count; ji++)
+        {
+            curJournalRun = (ji == 0 || journalDates[ji] != journalDates[ji - 1].AddDays(1)) ? 1 : curJournalRun + 1;
+            if (curJournalRun > maxJournalDayStreak) maxJournalDayStreak = curJournalRun;
+        }
+
+        var todoDates = todos
+            .Select(ms => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime))
+            .ToHashSet().OrderBy(d => d).ToList();
+        var maxTodoDayStreak = 0;
+        var curTodoRun = 0;
+        for (int ti = 0; ti < todoDates.Count; ti++)
+        {
+            curTodoRun = (ti == 0 || todoDates[ti] != todoDates[ti - 1].AddDays(1)) ? 1 : curTodoRun + 1;
+            if (curTodoRun > maxTodoDayStreak) maxTodoDayStreak = curTodoRun;
+        }
+
+        var weekendWeekCount = allActivityMs
+            .Select(ms => DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime)
+            .Where(dt => dt.DayOfWeek == DayOfWeek.Saturday || dt.DayOfWeek == DayOfWeek.Sunday)
+            .Select(dt => dt.Year * 100 + System.Globalization.ISOWeek.GetWeekOfYear(dt))
+            .Distinct().Count();
+
         BadgeCategories =
         [
             new BadgeCategory("🎯", "Goals", "rgba(57,73,171,.85)", "rgba(40,53,147,.9)",
@@ -312,6 +360,14 @@
                      select hasNote && hasTodo && hasJournal).Any(x => x),
                     null, goals.Count == 0 || progressNotes.Count == 0 || todos.Count == 0 || journals.Count == 0 ? "Use all 4 features in the same week" : null),
             ]),
+        new BadgeCategory("💪", "Habits", "rgba(103,58,183,.85)", "rgba(69,39,160,.9)",
+        [
+            MakeBadge("📆", "Weekly Writer", "Log progress notes in 4 different weeks", distinctNoteWeeks >= 4, null, distinctNoteWeeks < 4 ? $"{distinctNoteWeeks}/4 active weeks" : null),
+            MakeBadge("📓", "Journal Week", "Journal on 7 consecutive days", maxJournalDayStreak >= 7, null, maxJournalDayStreak < 7 ? $"Best: {maxJournalDayStreak} consecutive days" : null),
+            MakeBadge("🎯", "Goal Guardian", "Log progress notes every week for 4 weeks in a row", maxConsecNoteWeeks >= 4, null, maxConsecNoteWeeks < 4 ? $"Best: {maxConsecNoteWeeks} consecutive weeks" : null),
+            MakeBadge("✅", "Daily Doer", "Complete a todo every day for 7 days in a row", maxTodoDayStreak >= 7, null, maxTodoDayStreak < 7 ? $"Best: {maxTodoDayStreak} consecutive days" : null),
+            MakeBadge("🌅", "Weekend Warrior", "Be active on 4 different weekends", weekendWeekCount >= 4, null, weekendWeekCount < 4 ? $"{weekendWeekCount}/4 weekends" : null),
+        ]),
         ];
 
         TotalBadgeCount = BadgeCategories.Sum(c => c.Badges.Count);
