@@ -1292,6 +1292,8 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                     <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small"
                                StartIcon="@Icons.Material.Filled.Add"
                                OnClick="async () => await OpenQuickNote(g.Guid)">Note</MudButton>
+                    <MudIconButton Icon="@Icons.Material.Filled.AddTask" Color="Color.Info" Size="Size.Small"
+                                   OnClick="() => OpenGoalTodoDialog(g.Guid)" aria-label="Add todo for this goal" />
                 </MudStack>
             </MudListItem>
         }
@@ -1499,6 +1501,10 @@ else
                     <MudButton Variant="Variant.Text" Color="Color.Secondary"
                                StartIcon="@Icons.Material.Filled.Add"
                                OnClick="async () => await OpenQuickNote(g.Guid)">Note</MudButton>
+                    <MudTooltip Text="Add a todo linked to this goal">
+                        <MudIconButton Icon="@Icons.Material.Filled.AddTask" Color="Color.Info" Size="Size.Small"
+                                       OnClick="() => OpenGoalTodoDialog(g.Guid)" aria-label="Add todo for this goal" />
+                    </MudTooltip>
                     <MudSpacer />
                     <MudIconButton Icon="@Icons.Material.Filled.CheckCircle"
                                    Color="Color.Success" aria-label="Mark goal complete"
@@ -2018,6 +2024,41 @@ else
     </DialogActions>
 </MudDialog>
 
+@* Quick Add Todo for Goal (from goal card) *@
+<MudDialog @bind-Visible="_showGoalTodoDialog">
+    <TitleContent>
+        <MudStack Spacing="0">
+            <MudText Typo="Typo.h6">
+                <MudIcon Icon="@Icons.Material.Filled.AddTask" Class="mr-2" />
+                Add Todo for Goal
+            </MudText>
+            @if (!string.IsNullOrWhiteSpace(_goalTodoGoalText))
+            {
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@_goalTodoGoalText</MudText>
+            }
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_goalTodoTitle" Label="What needs to be done?" Variant="Variant.Outlined"
+                      Class="mb-3" AutoFocus="true" Immediate="true"
+                      @onkeydown="@(async (e) => { if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(_goalTodoTitle)) await SaveGoalTodo(); })" />
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+            <MudDatePicker @bind-Date="_goalTodoDueDate" Label="Due date (optional)" Variant="Variant.Outlined" Style="flex:1;" />
+            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined"
+                     Style="cursor:pointer;white-space:nowrap;"
+                     OnClick="() => _goalTodoDueDate = DateTime.Today">Today</MudChip>
+            <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined"
+                     Style="cursor:pointer;white-space:nowrap;"
+                     OnClick="() => _goalTodoDueDate = DateTime.Today.AddDays(1)">Tomorrow</MudChip>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _showGoalTodoDialog = false">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveGoalTodo"
+                   Disabled="@string.IsNullOrWhiteSpace(_goalTodoTitle)">Add Todo</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @* Delete Goal Confirmation *@
 <MudDialog Visible="@(_confirmDeleteGoalGuid is not null)" VisibleChanged="@((bool v) => { if (!v) _confirmDeleteGoalGuid = null; })">
     <TitleContent>
@@ -2158,6 +2199,11 @@ else
     private string QuickTodoText = string.Empty;
     private DateTime? QuickTodoDueDate;
     private string? QuickTodoGoalGuid;
+    private bool _showGoalTodoDialog;
+    private string? _goalTodoGoalGuid;
+    private string? _goalTodoGoalText;
+    private string _goalTodoTitle = string.Empty;
+    private DateTime? _goalTodoDueDate;
     private List<Journal> RecentJournals = [];
     private List<Journal> OnThisDayJournals = [];
     private bool ShowCelebration;
@@ -2839,6 +2885,44 @@ else
         QuickTodoGoalGuid = null;
         PendingTodoCount++;
         Snackbar.Add("Todo added!", Severity.Success);
+    }
+
+    private void OpenGoalTodoDialog(string goalGuid)
+    {
+        _goalTodoGoalGuid = goalGuid;
+        _goalTodoGoalText = AllActiveGoals.FirstOrDefault(g => g.Guid == goalGuid)?.GoalText;
+        _goalTodoTitle = string.Empty;
+        _goalTodoDueDate = null;
+        _showGoalTodoDialog = true;
+    }
+
+    private async Task SaveGoalTodo()
+    {
+        var title = _goalTodoTitle.Trim();
+        if (string.IsNullOrWhiteSpace(title) || AccountGuid is null) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        long? dueDateMs = _goalTodoDueDate.HasValue
+            ? new DateTimeOffset(DateTime.SpecifyKind(_goalTodoDueDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
+            : null;
+        string? notes = null;
+        if (_goalTodoGoalText is { Length: > 0 } gt)
+            notes = $"Goal: {gt}";
+        Db.Todos.Add(new Todo
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = AccountGuid,
+            Title = title,
+            Notes = notes,
+            DueDate = dueDateMs,
+            UpdatedOn = now
+        });
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("todo_goal_card_add", AccountGuid, "home", _goalTodoGoalGuid);
+        if (_goalTodoGoalGuid is not null)
+            _pendingTodosByGoalGuid[_goalTodoGoalGuid] = _pendingTodosByGoalGuid.GetValueOrDefault(_goalTodoGoalGuid) + 1;
+        PendingTodoCount++;
+        Snackbar.Add("Todo added!", Severity.Success);
+        _showGoalTodoDialog = false;
     }
 
     private async Task QuickCompleteTodo(string guid)
