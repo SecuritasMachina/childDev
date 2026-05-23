@@ -2225,10 +2225,12 @@ else
 
     private async Task TogglePinGoal(string guid)
     {
-        if (_pinnedGoals.Contains(guid)) _pinnedGoals.Remove(guid);
-        else _pinnedGoals.Add(guid);
+        var pinned = !_pinnedGoals.Contains(guid);
+        if (pinned) _pinnedGoals.Add(guid);
+        else _pinnedGoals.Remove(guid);
         try { await JS.InvokeVoidAsync("localStorage.setItem", "childdev_pinned_goals", string.Join(",", _pinnedGoals)); }
         catch { }
+        _ = Analytics.TrackAsync("goal_pin", AccountGuid, "home", pinned ? "pin" : "unpin");
         ApplyFilter();
     }
 
@@ -2631,6 +2633,7 @@ else
     private void SkipFocusGoal()
     {
         if (FeaturedGoal is null) return;
+        _ = Analytics.TrackAsync("goal_focus_skip", AccountGuid, "home", FeaturedGoal.Guid);
         _skippedFocusGoals.Add(FeaturedGoal.Guid);
         if (_skippedFocusGoals.Count >= AllActiveGoals.Count)
             _skippedFocusGoals.Clear();
