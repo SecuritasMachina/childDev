@@ -1658,6 +1658,12 @@ else
     <DialogActions>
         <MudButton Variant="Variant.Text" Color="Color.Default"
                    OnClick="async () => await CloseCelebration()">Done</MudButton>
+        @if (_celebratingGoalGuid is not null)
+        {
+            <MudButton Variant="Variant.Text" Color="Color.Success"
+                       StartIcon="@Icons.Material.Filled.TrendingUp"
+                       Href="@($"/goals/{_celebratingGoalGuid}")">View Progress</MudButton>
+        }
         <MudButton Variant="Variant.Filled" Color="Color.Primary"
                    StartIcon="@Icons.Material.Filled.Flag"
                    OnClick="async () => await CloseCelebration(openNewGoal: true)">Set Next Goal 🎯</MudButton>
