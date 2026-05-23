@@ -12,7 +12,11 @@
 
 @if (AccountGuid is null)
 {
-    <div class="hero-section" style="min-height:72vh;display:flex;align-items:center;">
+    <div class="hero-section" style="min-height:72vh;display:flex;align-items:center;position:relative;overflow:hidden;">
+        <div class="hero-shimmer"></div>
+        <div class="hero-stars" aria-hidden="true">
+            <span>⭐</span><span>✨</span><span>🌟</span><span>⭐</span><span>✦</span><span>✨</span>
+        </div>
         <MudGrid Spacing="6" Justify="Justify.Center" Style="align-items:center;width:100%;">
             <MudItem xs="12" md="6">
                 <MudText Typo="Typo.overline" Color="Color.Primary" Style="font-weight:700;letter-spacing:2.5px;">
@@ -51,50 +55,98 @@
             </MudItem>
             <MudItem xs="12" md="6">
                 <div class="growth-graphic">
-                    <!-- Inline SVG: child growth journey illustration -->
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 300" width="360" height="300" aria-label="Child growth journey">
+                    <!-- Inline SVG: child growth journey illustration (enhanced) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 310" width="380" height="310" aria-label="Child growth journey illustration" style="filter:drop-shadow(0 8px 28px rgba(57,73,171,.18));">
+                        <defs>
+                            <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#E8EAF6"/>
+                                <stop offset="100%" stop-color="#C5CAE9"/>
+                            </linearGradient>
+                            <linearGradient id="groundGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#9FA8DA"/>
+                                <stop offset="100%" stop-color="#7986CB"/>
+                            </linearGradient>
+                            <linearGradient id="step1" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#B39DDB"/>
+                                <stop offset="100%" stop-color="#9575CD"/>
+                            </linearGradient>
+                            <linearGradient id="step2" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#7E57C2"/>
+                                <stop offset="100%" stop-color="#5E35B1"/>
+                            </linearGradient>
+                            <linearGradient id="step3" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#5C6BC0"/>
+                                <stop offset="100%" stop-color="#3949AB"/>
+                            </linearGradient>
+                            <linearGradient id="step4" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#3949AB"/>
+                                <stop offset="100%" stop-color="#283593"/>
+                            </linearGradient>
+                            <filter id="starGlow" x="-40%" y="-40%" width="180%" height="180%">
+                                <feGaussianBlur stdDeviation="3" result="blur"/>
+                                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                            </filter>
+                            <!-- Rainbow confetti dots for the celebration -->
+                        </defs>
+
+                        <!-- Sky background -->
+                        <rect x="0" y="0" width="380" height="270" rx="16" fill="url(#skyGrad)" opacity=".4"/>
+
                         <!-- Ground -->
-                        <rect x="0" y="260" width="360" height="40" rx="4" fill="#e8eaf6"/>
-                        <!-- Path/steps going upward -->
-                        <rect x="40"  y="240" width="50" height="20" rx="4" fill="#c5cae9"/>
-                        <rect x="110" y="210" width="50" height="50" rx="4" fill="#9fa8da"/>
-                        <rect x="180" y="175" width="50" height="85" rx="4" fill="#7986cb"/>
-                        <rect x="250" y="140" width="50" height="120" rx="4" fill="#3949ab"/>
-                        <!-- Stars above each step -->
-                        <!-- Step 1 star -->
-                        <text x="65"  y="228" text-anchor="middle" font-size="18" class="star-pop">⭐</text>
-                        <!-- Step 2 star -->
-                        <text x="135" y="198" text-anchor="middle" font-size="20" class="star-pop" style="animation-delay:.1s">⭐</text>
-                        <!-- Step 3 star -->
-                        <text x="205" y="163" text-anchor="middle" font-size="22" class="star-pop" style="animation-delay:.2s">⭐</text>
-                        <!-- Step 4 star (trophy) -->
-                        <text x="275" y="125" text-anchor="middle" font-size="30" class="star-pop" style="animation-delay:.3s">🏆</text>
-                        <!-- Kid figure at top step -->
-                        <!-- Body -->
-                        <circle cx="275" cy="100" r="14" fill="#FFB74D" stroke="#F57C00" stroke-width="2"/>
-                        <!-- Smile -->
-                        <path d="M269 103 Q275 108 281 103" stroke="#E65100" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-                        <!-- Eyes -->
-                        <circle cx="271" cy="98" r="2" fill="#333"/>
-                        <circle cx="279" cy="98" r="2" fill="#333"/>
-                        <!-- Arms raised (celebrating) -->
-                        <line x1="261" y1="107" x2="251" y2="95" stroke="#F57C00" stroke-width="3" stroke-linecap="round"/>
-                        <line x1="289" y1="107" x2="299" y2="95" stroke="#F57C00" stroke-width="3" stroke-linecap="round"/>
-                        <!-- Body -->
-                        <rect x="265" y="114" width="20" height="22" rx="4" fill="#3949AB"/>
-                        <!-- Legs -->
-                        <line x1="269" y1="136" x2="265" y2="155" stroke="#3949AB" stroke-width="4" stroke-linecap="round"/>
-                        <line x1="281" y1="136" x2="285" y2="155" stroke="#3949AB" stroke-width="4" stroke-linecap="round"/>
-                        <!-- Floating stars decoration -->
-                        <text x="20"  y="180" font-size="14" opacity=".5">✨</text>
-                        <text x="330" y="200" font-size="12" opacity=".4">✨</text>
-                        <text x="150" y="60"  font-size="10" opacity=".35">⭐</text>
-                        <text x="310" y="80"  font-size="16" opacity=".4">🌟</text>
-                        <!-- Labels on steps -->
-                        <text x="65"  y="253" text-anchor="middle" font-size="9" fill="#5c6bc0" font-weight="600">Start</text>
-                        <text x="135" y="253" text-anchor="middle" font-size="9" fill="#5c6bc0" font-weight="600">Learn</text>
-                        <text x="205" y="253" text-anchor="middle" font-size="9" fill="#fff" font-weight="600">Grow</text>
-                        <text x="275" y="253" text-anchor="middle" font-size="9" fill="#fff" font-weight="600">Win!</text>
+                        <rect x="0" y="268" width="380" height="42" rx="6" fill="url(#groundGrad)" opacity=".6"/>
+
+                        <!-- Steps (staircase) with gradient fills -->
+                        <rect x="28"  y="248" width="55" height="22"  rx="6" fill="url(#step1)"/>
+                        <rect x="103" y="215" width="55" height="55"  rx="6" fill="url(#step2)"/>
+                        <rect x="178" y="178" width="55" height="92"  rx="6" fill="url(#step3)"/>
+                        <rect x="253" y="140" width="55" height="130" rx="6" fill="url(#step4)"/>
+
+                        <!-- Step labels -->
+                        <text x="55"  y="264" text-anchor="middle" font-size="9"  fill="rgba(255,255,255,0.8)" font-weight="700">Start</text>
+                        <text x="130" y="264" text-anchor="middle" font-size="9"  fill="rgba(255,255,255,0.85)" font-weight="700">Learn</text>
+                        <text x="205" y="264" text-anchor="middle" font-size="9"  fill="rgba(255,255,255,0.85)" font-weight="700">Grow</text>
+                        <text x="280" y="264" text-anchor="middle" font-size="9"  fill="#FFD740" font-weight="700">WIN!</text>
+
+                        <!-- Shiny star above each step -->
+                        <text x="55"  y="235" text-anchor="middle" font-size="18" class="star-pop sparkle-twinkle"  filter="url(#starGlow)">⭐</text>
+                        <text x="130" y="202" text-anchor="middle" font-size="20" class="star-pop sparkle-twinkle" filter="url(#starGlow)">⭐</text>
+                        <text x="205" y="166" text-anchor="middle" font-size="22" class="star-pop sparkle-twinkle" filter="url(#starGlow)">⭐</text>
+
+                        <!-- Glowing trophy at top -->
+                        <text x="280" y="125" text-anchor="middle" font-size="34" class="star-pop celeb-emoji" filter="url(#starGlow)">🏆</text>
+
+                        <!-- Kid figure (celebrating at the top) -->
+                        <circle cx="280" cy="96" r="15" fill="#FFB74D" stroke="#F57C00" stroke-width="2"/>
+                        <circle cx="275" cy="94" r="2.2" fill="#4E342E"/>
+                        <circle cx="285" cy="94" r="2.2" fill="#4E342E"/>
+                        <circle cx="276" cy="93" r="0.8" fill="white"/>
+                        <circle cx="286" cy="93" r="0.8" fill="white"/>
+                        <path d="M273 99 Q280 106 287 99" stroke="#E65100" stroke-width="2" fill="none" stroke-linecap="round"/>
+                        <circle cx="272" cy="99" r="3.5" fill="#FFCCBC" opacity=".6"/>
+                        <circle cx="288" cy="99" r="3.5" fill="#FFCCBC" opacity=".6"/>
+                        <rect x="268" y="111" width="24" height="24" rx="5" fill="#5C6BC0"/>
+                        <line x1="268" y1="116" x2="254" y2="102" stroke="#F57C00" stroke-width="3.5" stroke-linecap="round"/>
+                        <line x1="292" y1="116" x2="306" y2="102" stroke="#F57C00" stroke-width="3.5" stroke-linecap="round"/>
+                        <line x1="274" y1="135" x2="270" y2="155" stroke="#3949AB" stroke-width="4.5" stroke-linecap="round"/>
+                        <line x1="286" y1="135" x2="290" y2="155" stroke="#3949AB" stroke-width="4.5" stroke-linecap="round"/>
+                        <ellipse cx="268" cy="157" rx="5" ry="3" fill="#283593"/>
+                        <ellipse cx="292" cy="157" rx="5" ry="3" fill="#283593"/>
+
+                        <!-- Celebration confetti dots (float animation via CSS) -->
+                        <circle cx="235" cy="68" r="4" fill="#FF5252" class="sparkle-float" opacity=".8"/>
+                        <circle cx="248" cy="58" r="3" fill="#FFD740" class="sparkle-float" opacity=".8"/>
+                        <circle cx="310" cy="62" r="3.5" fill="#69F0AE" class="sparkle-float" opacity=".8"/>
+                        <circle cx="323" cy="75" r="2.5" fill="#40C4FF" class="sparkle-float" opacity=".8"/>
+                        <circle cx="260" cy="72" r="2" fill="#FF80AB" class="sparkle-float" opacity=".7"/>
+                        <circle cx="298" cy="54" r="4" fill="#FFAB40" class="sparkle-float" opacity=".75"/>
+
+                        <!-- Ambient sparkles -->
+                        <text x="18"  y="185" font-size="13" opacity=".45" class="sparkle-float">✨</text>
+                        <text x="348" y="195" font-size="11" opacity=".4"  class="sparkle-float">✨</text>
+                        <text x="145" y="52"  font-size="10" opacity=".35" class="sparkle-float">⭐</text>
+                        <text x="328" y="72"  font-size="16" opacity=".4"  class="sparkle-twinkle">🌟</text>
+                        <text x="22"  y="105" font-size="12" opacity=".3"  class="sparkle-twinkle">✦</text>
+                        <text x="355" y="135" font-size="11" opacity=".35" class="sparkle-twinkle">✦</text>
                     </svg>
                 </div>
                 <MudGrid Spacing="2" Class="mt-3">

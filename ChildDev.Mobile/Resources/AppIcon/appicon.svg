@@ -1,4 +1,41 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg width="456" height="456" viewBox="0 0 456 456" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    <rect x="0" y="0" width="456" height="456" fill="#512BD4" />
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="456" height="456" viewBox="0 0 456 456" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6C3DE8"/>
+      <stop offset="100%" stop-color="#3A1AB0"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="42%" r="45%">
+      <stop offset="0%" stop-color="#9B6FFF" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#9B6FFF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Rounded background -->
+  <rect width="456" height="456" rx="96" fill="url(#bgGrad)"/>
+  <!-- Halo -->
+  <ellipse cx="228" cy="200" rx="140" ry="130" fill="url(#halo)"/>
+  <!-- Star (outer r=96, inner r=40, center 228,200) -->
+  <path d="M228,104 L250,162 L314,165 L266,204 L284,268 L228,234 L172,268 L190,204 L142,165 L206,162 Z"
+        fill="#FFD740" filter="url(#glow)"/>
+  <!-- Star highlight -->
+  <path d="M228,124 L244,165 L295,167 L256,198 L271,248 L228,220 L185,248 L200,198 L161,167 L212,165 Z"
+        fill="rgba(255,255,255,0.25)"/>
+  <!-- Small sparkles -->
+  <path d="M98,118 L100.5,126 L109,128.5 L100.5,131 L98,139 L95.5,131 L87,128.5 L95.5,126 Z" fill="rgba(255,255,255,0.7)"/>
+  <path d="M352,105 L354,112 L361,114 L354,116 L352,123 L350,116 L343,114 L350,112 Z" fill="rgba(255,220,80,0.8)"/>
+  <circle cx="80" cy="200" r="5" fill="rgba(255,255,255,0.5)"/>
+  <circle cx="375" cy="210" r="4" fill="rgba(255,220,80,0.6)"/>
+  <circle cx="155" cy="80" r="3" fill="rgba(255,255,255,0.45)"/>
+  <circle cx="300" cy="72" r="3" fill="rgba(255,200,80,0.5)"/>
+  <!-- "CD" initials below star -->
+  <text x="228" y="350"
+        text-anchor="middle"
+        font-family="Arial Black, Arial, Helvetica, sans-serif"
+        font-size="52" font-weight="900"
+        fill="rgba(255,255,255,0.88)"
+        letter-spacing="4">CD</text>
 </svg>

@@ -1,5 +1,76 @@
 /* ChildDev custom styles */
 
+/* ---- Floating sparkle stars (landing page decoration) ---- */
+@keyframes floatUp {
+    0%   { transform: translateY(0)    rotate(0deg)   scale(1);   opacity: 0.7; }
+    50%  { transform: translateY(-18px) rotate(15deg)  scale(1.1); opacity: 1;   }
+    100% { transform: translateY(0)    rotate(0deg)   scale(1);   opacity: 0.7; }
+}
+@keyframes twinkle {
+    0%, 100% { opacity: 0.2; transform: scale(0.7); }
+    50%       { opacity: 1;   transform: scale(1.15); }
+}
+@keyframes orbit {
+    0%   { transform: rotate(0deg)   translateX(30px) rotate(0deg); }
+    100% { transform: rotate(360deg) translateX(30px) rotate(-360deg); }
+}
+.sparkle-float { animation: floatUp 3.8s ease-in-out infinite; }
+.sparkle-float:nth-child(2) { animation-delay: .6s;  animation-duration: 4.2s; }
+.sparkle-float:nth-child(3) { animation-delay: 1.2s; animation-duration: 3.5s; }
+.sparkle-float:nth-child(4) { animation-delay: 1.8s; animation-duration: 4.6s; }
+.sparkle-float:nth-child(5) { animation-delay: 2.4s; animation-duration: 3.9s; }
+.sparkle-twinkle { animation: twinkle 2.2s ease-in-out infinite; }
+.sparkle-twinkle:nth-child(2) { animation-delay: .4s;  animation-duration: 2.8s; }
+.sparkle-twinkle:nth-child(3) { animation-delay: .9s;  animation-duration: 1.9s; }
+.sparkle-twinkle:nth-child(4) { animation-delay: 1.5s; animation-duration: 2.5s; }
+
+/* Hero section floating stars container */
+.hero-stars {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+.hero-stars span {
+    position: absolute;
+    font-size: 1rem;
+    animation: floatUp 4s ease-in-out infinite;
+    user-select: none;
+}
+.hero-stars span:nth-child(1) { top: 12%; left:  8%; animation-delay: 0s;    font-size: 1.2rem; }
+.hero-stars span:nth-child(2) { top: 18%; right: 10%; animation-delay: .7s;   font-size: 0.9rem; }
+.hero-stars span:nth-child(3) { top: 55%; left:  3%; animation-delay: 1.3s;  font-size: 0.8rem; }
+.hero-stars span:nth-child(4) { top: 70%; right:  5%; animation-delay: 2.1s;  font-size: 1.1rem; }
+.hero-stars span:nth-child(5) { top: 35%; left: 90%; animation-delay: 0.4s;  font-size: 0.7rem; }
+.hero-stars span:nth-child(6) { top: 80%; left: 15%; animation-delay: 1.8s;  font-size: 0.9rem; }
+
+/* Pulse ring animation for stat icons */
+@keyframes iconPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(57,73,171,.3); }
+    50%       { box-shadow: 0 0 0 10px rgba(57,73,171,0); }
+}
+.stat-icon-pulse { animation: iconPulse 2.5s ease-in-out infinite; border-radius: 50%; }
+
+/* Shimmer sweep on hero section */
+@keyframes shimmer {
+    0%   { background-position: -400px 0; }
+    100% { background-position: 400px 0;  }
+}
+.hero-shimmer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255,255,255,.04) 40%,
+        rgba(255,255,255,.08) 50%,
+        rgba(255,255,255,.04) 60%,
+        transparent 100%);
+    background-size: 800px 100%;
+    animation: shimmer 4s linear infinite;
+    border-radius: inherit;
+}
+
 /* Smooth page transitions */
 .mud-main-content { animation: fadeIn .25s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }

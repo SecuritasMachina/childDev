@@ -10,117 +10,211 @@
     </ContentPage.ToolbarItems>
 
     <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="16">
+        <VerticalStackLayout Spacing="14">
 
-            <Label Text="{Binding Greeting}" FontSize="20" FontAttributes="Bold"
-                   IsVisible="{Binding Greeting, Converter={StaticResource StringToBoolConverter}}" />
-            <Label Text="{Binding SyncStatus}" FontSize="12" TextColor="Gray"
-                   IsVisible="{Binding SyncStatus, Converter={StaticResource StringToBoolConverter}}" />
-            <Label Text="{Binding LastSyncDisplay}" FontSize="11" TextColor="Gray"
-                   IsVisible="{Binding LastSyncDisplay, Converter={StaticResource StringToBoolConverter}}" />
-            <Label Text="{Binding NextGoalMeeting}" FontSize="13" TextColor="CornflowerBlue"
-                   IsVisible="{Binding HasNextGoalMeeting}" />
-            <Border BackgroundColor="#FFF3CD" Padding="10,6" StrokeShape="RoundRectangle 6"
-                    IsVisible="{Binding HasStaleGoal}">
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding GoToStaleGoalCommand}" />
-                </Border.GestureRecognizers>
-                <Label TextColor="#856404" FontSize="12">
-                    <Label.FormattedText>
-                        <FormattedString>
-                            <Span Text="⚠ Needs attention: " FontAttributes="Bold" />
-                            <Span Text="{Binding StaleGoalText}" />
-                        </FormattedString>
-                    </Label.FormattedText>
-                </Label>
-            </Border>
-
-            <!-- Summary row -->
-            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
-                <Border Grid.Column="0" Padding="12" StrokeShape="RoundRectangle 8">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Command="{Binding GoToGoalsCommand}" />
-                    </Border.GestureRecognizers>
-                    <VerticalStackLayout>
-                        <Label Text="{Binding ActiveGoalCount}" FontSize="28" HorizontalOptions="Center" />
-                        <Label Text="Goals" FontSize="12" HorizontalOptions="Center" />
-                        <Label Text="Add one!" FontSize="10" TextColor="Gray"
-                               HorizontalOptions="Center" IsVisible="{Binding HasNoActiveGoals}" />
-                    </VerticalStackLayout>
-                </Border>
-                <Border Grid.Column="1" Padding="12" StrokeShape="RoundRectangle 8">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Command="{Binding GoToTodosCommand}" />
-                    </Border.GestureRecognizers>
-                    <VerticalStackLayout>
-                        <Label Text="{Binding PendingTodoCount}" FontSize="28" HorizontalOptions="Center" />
-                        <Label Text="Todos" FontSize="12" HorizontalOptions="Center" />
-                        <Label Text="All done!" FontSize="10" TextColor="Gray"
-                               HorizontalOptions="Center" IsVisible="{Binding HasNoPendingTodos}" />
-                        <Label Text="{Binding OverdueTodoCount, StringFormat='{0} overdue'}"
-                               FontSize="10" TextColor="Red" HorizontalOptions="Center"
-                               IsVisible="{Binding HasOverdueTodos}" />
-                    </VerticalStackLayout>
-                </Border>
-                <Border Grid.Column="2" Padding="12" StrokeShape="RoundRectangle 8">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Command="{Binding GoToJournalCommand}" />
-                    </Border.GestureRecognizers>
-                    <VerticalStackLayout>
-                        <Label Text="{Binding JournalThisWeek}" FontSize="28" HorizontalOptions="Center" />
-                        <Label Text="Journal (7d)" FontSize="12" HorizontalOptions="Center" />
-                    </VerticalStackLayout>
-                </Border>
-            </Grid>
-
-            <!-- Recent journal entries -->
-            <Label Text="Recent Journal" FontSize="18" FontAttributes="Bold" />
-            <CollectionView ItemsSource="{Binding RecentJournals}">
-                <CollectionView.EmptyView>
-                    <Label Text="No journal entries yet." TextColor="Gray" Padding="0,4" />
-                </CollectionView.EmptyView>
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="models:Journal">
-                        <Border Padding="12" Margin="0,4" StrokeShape="RoundRectangle 8">
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DashboardViewModel}}, Path=OpenJournalCommand}"
-                                    CommandParameter="{Binding .}" />
-                            </Border.GestureRecognizers>
-                            <Grid ColumnDefinitions="*,Auto">
-                                <Label Text="{Binding DisplayText}" LineBreakMode="TailTruncation" MaxLines="2" />
-                                <Label Grid.Column="1"
-                                       Text="{Binding EnteredDate, Converter={StaticResource EntryDateConverter}}"
-                                       FontSize="11" TextColor="Gray" VerticalOptions="Start" Margin="8,0,0,0" />
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-
-            <!-- Quick journal entry -->
-            <Border Padding="12" StrokeShape="RoundRectangle 8">
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="Quick Journal Entry" FontSize="14" FontAttributes="Bold" />
-                    <Editor Text="{Binding QuickJournalText}"
-                            Placeholder="What happened today? What did you observe?"
-                            HeightRequest="72"
-                            AutoSize="TextChanges" />
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                        <Button Grid.Column="0"
-                                Text="Save Entry"
-                                Command="{Binding QuickAddJournalCommand}"
-                                IsEnabled="{Binding QuickJournalText, Converter={StaticResource StringToBoolConverter}}" />
-                        <Button Grid.Column="1"
-                                Text="+ Full Entry"
-                                Command="{Binding AddJournalCommand}"
-                                BackgroundColor="Transparent"
-                                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Primary}}" />
-                    </Grid>
-                    <Label Text="✓ Saved!" FontSize="12" TextColor="Green"
-                           IsVisible="{Binding QuickJournalSaved}" />
+            <!-- Hero banner -->
+            <Border Margin="0" Padding="0" StrokeThickness="0">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#5C35D9" Offset="0"/>
+                        <GradientStop Color="#3A1AB0" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+                <VerticalStackLayout Padding="20,24,20,20" Spacing="4">
+                    <!-- Stars decoration row -->
+                    <Label Text="✦  ✦  ✦  ✦  ✦"
+                           FontSize="12" TextColor="rgba(255,220,80,0.6)"
+                           HorizontalOptions="Center" Margin="0,0,0,4"/>
+                    <!-- Greeting -->
+                    <Label Text="{Binding Greeting}"
+                           FontSize="22" FontAttributes="Bold"
+                           TextColor="White"
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center"
+                           IsVisible="{Binding Greeting, Converter={StaticResource StringToBoolConverter}}"/>
+                    <!-- Sync status (subtle) -->
+                    <Label Text="{Binding SyncStatus}"
+                           FontSize="11" TextColor="rgba(255,255,255,0.65)"
+                           HorizontalOptions="Center"
+                           IsVisible="{Binding SyncStatus, Converter={StaticResource StringToBoolConverter}}"/>
+                    <Label Text="{Binding LastSyncDisplay}"
+                           FontSize="10" TextColor="rgba(255,255,255,0.5)"
+                           HorizontalOptions="Center"
+                           IsVisible="{Binding LastSyncDisplay, Converter={StaticResource StringToBoolConverter}}"/>
+                    <!-- Motivational tagline when no greeting -->
+                    <Label Text="🌟 Ready to make progress today?"
+                           FontSize="16" TextColor="rgba(255,255,255,0.85)"
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center"
+                           IsVisible="{Binding Greeting, Converter={StaticResource InverseBoolConverter}}"/>
                 </VerticalStackLayout>
             </Border>
+
+            <VerticalStackLayout Padding="16,0,16,16" Spacing="14">
+
+                <!-- Upcoming meeting chip -->
+                <Border BackgroundColor="#E8F4FD" Padding="12,8" StrokeShape="RoundRectangle 10" StrokeThickness="0"
+                        IsVisible="{Binding HasNextGoalMeeting}">
+                    <Label TextColor="#1565C0" FontSize="13" FontAttributes="Bold"
+                           Text="{Binding NextGoalMeeting}"/>
+                </Border>
+
+                <!-- Stale goal warning -->
+                <Border Padding="12,10" StrokeShape="RoundRectangle 10" StrokeThickness="0"
+                        BackgroundColor="#FFF8E1"
+                        IsVisible="{Binding HasStaleGoal}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoToStaleGoalCommand}" />
+                    </Border.GestureRecognizers>
+                    <Label TextColor="#E65100" FontSize="13">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="⚠️  Needs attention: " FontAttributes="Bold" />
+                                <Span Text="{Binding StaleGoalText}" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                </Border>
+
+                <!-- Colorful stat summary cards -->
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+
+                    <!-- Goals card (purple) -->
+                    <Border Grid.Column="0" Padding="12,14" StrokeShape="RoundRectangle 14" StrokeThickness="0">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#7C4DFF" Offset="0"/>
+                                <GradientStop Color="#5C35D9" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding GoToGoalsCommand}" />
+                        </Border.GestureRecognizers>
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="🎯" FontSize="20" HorizontalOptions="Center"/>
+                            <Label Text="{Binding ActiveGoalCount}" FontSize="30" FontAttributes="Bold"
+                                   TextColor="White" HorizontalOptions="Center"/>
+                            <Label Text="Goals" FontSize="11" TextColor="rgba(255,255,255,0.8)"
+                                   HorizontalOptions="Center"/>
+                            <Label Text="Tap to add!" FontSize="9" TextColor="rgba(255,255,255,0.6)"
+                                   HorizontalOptions="Center"
+                                   IsVisible="{Binding HasNoActiveGoals}"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Todos card (coral/red) -->
+                    <Border Grid.Column="1" Padding="12,14" StrokeShape="RoundRectangle 14" StrokeThickness="0">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#FF6B6B" Offset="0"/>
+                                <GradientStop Color="#E53935" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding GoToTodosCommand}" />
+                        </Border.GestureRecognizers>
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="✅" FontSize="20" HorizontalOptions="Center"/>
+                            <Label Text="{Binding PendingTodoCount}" FontSize="30" FontAttributes="Bold"
+                                   TextColor="White" HorizontalOptions="Center"/>
+                            <Label Text="Todos" FontSize="11" TextColor="rgba(255,255,255,0.8)"
+                                   HorizontalOptions="Center"/>
+                            <Label Text="All done! 🎉" FontSize="9" TextColor="rgba(255,255,255,0.7)"
+                                   HorizontalOptions="Center"
+                                   IsVisible="{Binding HasNoPendingTodos}"/>
+                            <Label Text="{Binding OverdueTodoCount, StringFormat='{0} overdue!'}"
+                                   FontSize="9" TextColor="#FFE0E0" HorizontalOptions="Center"
+                                   IsVisible="{Binding HasOverdueTodos}"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Journal card (green/teal) -->
+                    <Border Grid.Column="2" Padding="12,14" StrokeShape="RoundRectangle 14" StrokeThickness="0">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#26C6A0" Offset="0"/>
+                                <GradientStop Color="#00897B" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding GoToJournalCommand}" />
+                        </Border.GestureRecognizers>
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="📓" FontSize="20" HorizontalOptions="Center"/>
+                            <Label Text="{Binding JournalThisWeek}" FontSize="30" FontAttributes="Bold"
+                                   TextColor="White" HorizontalOptions="Center"/>
+                            <Label Text="This Week" FontSize="11" TextColor="rgba(255,255,255,0.8)"
+                                   HorizontalOptions="Center"/>
+                            <Label Text="Journal" FontSize="9" TextColor="rgba(255,255,255,0.6)"
+                                   HorizontalOptions="Center"/>
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <!-- Section header: Recent journal -->
+                <Label Text="📖  Recent Journal" FontSize="17" FontAttributes="Bold"
+                       Margin="0,6,0,0"/>
+
+                <CollectionView ItemsSource="{Binding RecentJournals}">
+                    <CollectionView.EmptyView>
+                        <Border Padding="18,14" StrokeShape="RoundRectangle 12" StrokeThickness="0"
+                                BackgroundColor="#F3F0FF">
+                            <Label Text="📝 No journal entries yet — write your first one below!"
+                                   TextColor="#7C4DFF" FontSize="13" HorizontalTextAlignment="Center"/>
+                        </Border>
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:Journal">
+                            <Border Padding="14,10" Margin="0,4" StrokeShape="RoundRectangle 10">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DashboardViewModel}}, Path=OpenJournalCommand}"
+                                        CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                    <Label Grid.Column="0" Text="📝" FontSize="18" VerticalOptions="Start" Margin="0,1,0,0"/>
+                                    <Label Grid.Column="1" Text="{Binding DisplayText}"
+                                           LineBreakMode="TailTruncation" MaxLines="2" FontSize="13"/>
+                                    <Label Grid.Column="2"
+                                           Text="{Binding EnteredDate, Converter={StaticResource EntryDateConverter}}"
+                                           FontSize="11" TextColor="Gray" VerticalOptions="Start" Margin="4,2,0,0"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Quick journal entry -->
+                <Border Padding="16,14" StrokeShape="RoundRectangle 14">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="rgba(38,198,160,0.06)" Offset="0"/>
+                            <GradientStop Color="rgba(38,198,160,0.03)" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="✍️  Quick Journal Entry" FontSize="15" FontAttributes="Bold"/>
+                        <Editor Text="{Binding QuickJournalText}"
+                                Placeholder="What happened today? What did you observe?"
+                                HeightRequest="72"
+                                AutoSize="TextChanges"/>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <Button Grid.Column="0"
+                                    Text="💾  Save Entry"
+                                    Command="{Binding QuickAddJournalCommand}"
+                                    IsEnabled="{Binding QuickJournalText, Converter={StaticResource StringToBoolConverter}}"/>
+                            <Button Grid.Column="1"
+                                    Text="+ Full"
+                                    Command="{Binding AddJournalCommand}"
+                                    BackgroundColor="Transparent"
+                                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Primary}}"/>
+                        </Grid>
+                        <Label Text="✓ Saved! Great work! 🌟" FontSize="12" TextColor="#00897B"
+                               IsVisible="{Binding QuickJournalSaved}"/>
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
