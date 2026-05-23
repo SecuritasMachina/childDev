@@ -5,7 +5,7 @@
              x:Class="ChildDev.Mobile.Views.SetupPage"
              Title="Welcome">
     <VerticalStackLayout Padding="32" Spacing="20" VerticalOptions="Center">
-        <Label Text="Child Development Journal" FontSize="24" HorizontalOptions="Center" />
+        <Label Text="LevelUp" FontSize="28" FontAttributes="Bold" HorizontalOptions="Center" />
         <Label Text="Set up your account to get started." HorizontalOptions="Center" />
 
         <Entry Placeholder="Your name" Text="{Binding NickName}" />

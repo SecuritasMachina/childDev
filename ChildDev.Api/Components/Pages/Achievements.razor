@@ -7,7 +7,7 @@
 @inject ISnackbar Snackbar
 @using Microsoft.EntityFrameworkCore
 
-<PageTitle>Achievements – ChildDev</PageTitle>
+<PageTitle>Achievements – LevelUp</PageTitle>
 
 @if (AccountGuid is null)
 {
@@ -467,7 +467,7 @@
             var badges = string.Join(" ", c.Badges.Where(b => b.Earned).Select(b => b.Emoji));
             return earned == 0 ? null : $"{c.Icon} {c.Name}: {badges} ({earned}/{c.Badges.Count})";
         }).Where(l => l is not null));
-        var text = $"🏆 My ChildDev Achievements\n\n{EarnedCount} of {TotalBadgeCount} badges earned ({overallPct}%)\n\n{categoryLines}\n\n\"Keep setting goals and seeing them through!\" 🌟";
+        var text = $"🏆 My LevelUp Achievements\n\n{EarnedCount} of {TotalBadgeCount} badges earned ({overallPct}%)\n\n{categoryLines}\n\n\"Keep setting goals and seeing them through!\" 🌟";
         var result = await JS.InvokeAsync<string>("childdev.shareOrCopy", "My Achievements 🏆", text);
         Snackbar.Add(result == "shared" ? "Achievements shared! 🎉" : "Achievements copied to clipboard! 📋", Severity.Success);
         await Analytics.TrackAsync("badge_earned_notify", AccountGuid, "achievements", "share_all");

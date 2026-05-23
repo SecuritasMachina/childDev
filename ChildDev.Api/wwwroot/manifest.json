@@ -1,6 +1,6 @@
 {
-  "name": "ChildDev Goals",
-  "short_name": "ChildDev",
+  "name": "LevelUp",
+  "short_name": "LevelUp",
   "description": "Set goals, track your progress, and celebrate every win.",
   "start_url": "/",
   "display": "standalone",

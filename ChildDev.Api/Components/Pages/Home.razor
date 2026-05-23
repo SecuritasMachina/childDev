@@ -8,7 +8,7 @@
 @inject IJSRuntime JS
 @implements IAsyncDisposable
 
-<PageTitle>My Goals – ChildDev</PageTitle>
+<PageTitle>Goals – LevelUp</PageTitle>
 
 @if (AccountGuid is null)
 {
@@ -29,7 +29,7 @@
                 </MudText>
                 <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-6"
                          Style="max-width:480px;line-height:1.8;font-size:1.05rem;">
-                    ChildDev helps kids and caregivers set meaningful goals, track every step forward, and
+                    LevelUp helps kids and caregivers set meaningful goals, track every step forward, and
                     celebrate achievements along the way.
                 </MudText>
                 <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
@@ -1246,7 +1246,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
             <MudText Typo="Typo.h2" Style="font-size:3rem;">🎯</MudText>
             <MudText Typo="Typo.h5" Color="Color.Primary" Class="mt-2 mb-1">Welcome! Let's set your first goal.</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4" Style="max-width:480px;margin:0 auto;">
-                Goals are the heart of ChildDev. Set a goal, track your progress, and celebrate every step forward!
+                Goals are the heart of LevelUp. Set a goal, track your progress, and celebrate every step forward!
             </MudText>
             <MudGrid Spacing="2" Justify="Justify.Center" Class="mb-4">
                 <MudItem xs="12" sm="4">
@@ -1702,7 +1702,7 @@ else
                         <MudText Style="font-size:1.4rem;line-height:1;">🏆</MudText>
                         @{
                             var agNotes = CompletedGoalProgressCounts.GetValueOrDefault(g.Guid);
-                            var agShareText = g.GoalText is not null ? $"🏆 I achieved my goal: \"{g.GoalText}\"" + (agNotes > 0 ? $" — {agNotes} progress note{(agNotes == 1 ? "" : "s")} logged! 💪 #ChildDev" : " 💪 #ChildDev") : "";
+                            var agShareText = g.GoalText is not null ? $"🏆 I achieved my goal: \"{g.GoalText}\"" + (agNotes > 0 ? $" — {agNotes} progress note{(agNotes == 1 ? "" : "s")} logged! 💪 #LevelUp" : " 💪 #LevelUp") : "";
                             var agCapturedGuid = g.Guid;
                         }
                         <MudStack Spacing="0" Style="flex:1;min-width:0;">

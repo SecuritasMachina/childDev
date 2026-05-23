@@ -6,7 +6,7 @@
 @inject WebAnalyticsService Analytics
 @inject IJSRuntime JS
 
-<PageTitle>Settings – ChildDev</PageTitle>
+<PageTitle>Settings – LevelUp</PageTitle>
 
 @if (AccountGuid is null)
 {
@@ -163,7 +163,7 @@
                 </MudStack>
                 <MudLink Href="/downloads/ChildDev.apk" Color="Color.Primary" Style="font-weight:600;">
                     <MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" Class="mr-1" />
-                    Download ChildDev for Android
+                    Download LevelUp for Android
                 </MudLink>
             </MudCardContent>
         </MudCard>
@@ -329,7 +329,7 @@
         if (AccountGuid is null) return;
         var sb = new System.Text.StringBuilder();
         var now = DateTime.Now;
-        sb.AppendLine($"ChildDev Progress Report — {CurrentNickName}");
+        sb.AppendLine($"LevelUp Progress Report — {CurrentNickName}");
         sb.AppendLine($"Generated: {now:MMMM d, yyyy h:mm tt}");
         sb.AppendLine(new string('=', 50));
 
