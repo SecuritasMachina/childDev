@@ -303,6 +303,13 @@
                     var ljLabel = ljDays == 0 ? "📝 Entry today!" : ljDays == 1 ? "📝 Entry yesterday" : $"📝 Last entry {ljDays}d ago";
                     var ljColor = ljDays == 0 ? Color.Success : ljDays <= 2 ? Color.Info : Color.Warning;
                     <MudText Typo="Typo.caption" Color="@ljColor">@ljLabel</MudText>
+                    @if (HomeJournalStreak >= 2)
+                    {
+                        var jsStatLabel = HomeHasJournalToday
+                            ? (HomeJournalStreak >= 14 ? $"🔥 {HomeJournalStreak}-day streak!" : HomeJournalStreak >= 7 ? $"⭐ {HomeJournalStreak}-day streak!" : $"📓 {HomeJournalStreak}-day streak!")
+                            : $"🛡️ {HomeJournalStreak}-day streak at risk";
+                        <MudText Typo="Typo.caption" Color="@(HomeHasJournalToday ? Color.Success : Color.Warning)">@jsStatLabel</MudText>
+                    }
                 }
                 else
                 {
