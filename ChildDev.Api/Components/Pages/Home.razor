@@ -2612,7 +2612,10 @@ else
             "most_active" => filtered.OrderByDescending(g => _pinnedGoals.Contains(g.Guid)).ThenByDescending(g => ProgressCounts.GetValueOrDefault(g.Guid)),
             "newest"      => filtered.OrderByDescending(g => _pinnedGoals.Contains(g.Guid)).ThenByDescending(g => g.EnteredDate),
             "alpha"       => filtered.OrderByDescending(g => _pinnedGoals.Contains(g.Guid)).ThenBy(g => g.GoalText, StringComparer.OrdinalIgnoreCase),
-            _             => filtered.OrderByDescending(g => _pinnedGoals.Contains(g.Guid)) // "attention" — already sorted by LoadGoals
+            // "attention": goals with no notes first, then by oldest last-progress-date (most neglected first)
+            _             => filtered.OrderByDescending(g => _pinnedGoals.Contains(g.Guid))
+                                     .ThenBy(g => ProgressCounts.GetValueOrDefault(g.Guid) == 0 ? 0 : 1)
+                                     .ThenBy(g => LastProgressAt.GetValueOrDefault(g.Guid, long.MaxValue))
         };
 
         if (string.IsNullOrWhiteSpace(FilterText) && QuickFilter == "all" && GoalSortOrder == "attention")
