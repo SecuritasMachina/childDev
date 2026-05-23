@@ -13,8 +13,8 @@ RESULTS_DIR="/results"
 LOGCAT_FILE="${RESULTS_DIR}/logcat.txt"
 MONKEY_LOG="${RESULTS_DIR}/monkey.txt"
 UNIT_LOG="${RESULTS_DIR}/unit-tests.txt"
-APK_PATH="/src/ChildDev.Mobile/bin/Debug/net8.0-android/com.companyname.childdev.mobile-Signed.apk"
-PACKAGE_NAME="com.companyname.childdev.mobile"
+APK_PATH="/src/ChildDev.Mobile/bin/Debug/net8.0-android/levelup.securitasmachina.org-Signed.apk"
+PACKAGE_NAME="levelup.securitasmachina.org"
 MONKEY_EVENTS="${MONKEY_EVENTS:-500}"
 HOST_ADB_PORT="${HOST_ADB_PORT:-5555}"
 ENABLE_EMULATOR_TESTS="${ENABLE_EMULATOR_TESTS:-false}"
@@ -42,7 +42,7 @@ log "Unit test exit code: $UNIT_EXIT"
 
 # ── Phase 2: Build APK ───────────────────────────────────────────────────────
 log "=== PHASE 2: Build Android APK ==="
-as_test_user "dotnet build /src/ChildDev.Mobile/ChildDev.Mobile.csproj \
+as_test_user "dotnet build /src/ChildDev.Mobile/LevelUp.csproj \
     -f net8.0-android \
     -c Debug \
     /p:JavaSdkDirectory=${JAVA_HOME}" \
@@ -90,7 +90,7 @@ if [ "$ENABLE_EMULATOR_TESTS" = "true" ]; then
 
     # ── Phase 5: Install APK ──────────────────────────────────────────────────
     log "=== PHASE 5: Installing APK ==="
-    [ ! -f "$APK_PATH" ] && APK_PATH="/src/ChildDev.Mobile/bin/Debug/net8.0-android/com.companyname.childdev.mobile.apk"
+    [ ! -f "$APK_PATH" ] && APK_PATH="/src/ChildDev.Mobile/bin/Debug/net8.0-android/levelup.securitasmachina.org.apk"
     log "APK: $APK_PATH"
     adb install -r "$APK_PATH" 2>&1 | tee "${RESULTS_DIR}/install.txt"
 

@@ -22,17 +22,12 @@ public partial class SetupViewModel(AccountService accountService) : ObservableO
     private string errorMessage = string.Empty;
 
     private bool CanCreate => !string.IsNullOrWhiteSpace(NickName)
-        && Pin.Length == 4 && Pin.All(char.IsDigit)
+        && Pin.Length >= 4
         && ConfirmPin == Pin;
 
     [RelayCommand(CanExecute = nameof(CanCreate))]
     private async Task CreateAccountAsync()
     {
-        if (!Pin.All(char.IsDigit))
-        {
-            ErrorMessage = "PIN must be 4 digits";
-            return;
-        }
         if (Pin != ConfirmPin)
         {
             ErrorMessage = "PINs do not match";

@@ -49,7 +49,7 @@ log "Source synced to $BUILD_DIR"
 # ── Phase 3: Build APK ────────────────────────────────────────────────────────
 log "=== PHASE 3: Build Android APK ==="
 rm -rf "$BUILD_DIR/ChildDev.Mobile/bin" "$BUILD_DIR/ChildDev.Mobile/obj"
-dotnet build "$BUILD_DIR/ChildDev.Mobile/ChildDev.Mobile.csproj" \
+dotnet build "$BUILD_DIR/ChildDev.Mobile/LevelUp.csproj" \
     -f net8.0-android \
     -c Debug \
     /p:JavaSdkDirectory="$JAVA_HOME" \

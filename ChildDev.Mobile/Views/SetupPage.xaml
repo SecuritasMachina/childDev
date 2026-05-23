@@ -9,10 +9,8 @@
         <Label Text="Set up your account to get started." HorizontalOptions="Center" />
 
         <Entry Placeholder="Your name" Text="{Binding NickName}" />
-        <Entry Placeholder="4-digit PIN" Text="{Binding Pin}" IsPassword="True" MaxLength="4"
-               Keyboard="Numeric" />
-        <Entry Placeholder="Confirm PIN" Text="{Binding ConfirmPin}" IsPassword="True" MaxLength="4"
-               Keyboard="Numeric" />
+        <Entry Placeholder="PIN (4+ characters)" Text="{Binding Pin}" IsPassword="True" />
+        <Entry Placeholder="Confirm PIN" Text="{Binding ConfirmPin}" IsPassword="True" />
         <Label Text="{Binding ErrorMessage}" TextColor="Red" IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
 
         <Button Text="Get Started" Command="{Binding CreateAccountCommand}" />
