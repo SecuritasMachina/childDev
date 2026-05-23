@@ -60,7 +60,16 @@
     var wowMsg = wowDiff > 0 ? $"📈 +{wowDiff} vs last week ({LastWeekCompletedCount}) — you're getting more done each week!"
                : wowDiff < 0 ? $"📉 {LastWeekCompletedCount} done last week — can you match or beat it this week?"
                :                $"📊 Same pace as last week ({LastWeekCompletedCount}) — nice consistency!";
-    <MudText Typo="Typo.caption" Color="@(wowDiff >= 0 ? Color.Success : Color.Warning)" Class="mb-4">@wowMsg</MudText>
+    <MudText Typo="Typo.caption" Color="@(wowDiff >= 0 ? Color.Success : Color.Warning)" Class="mb-3">@wowMsg</MudText>
+}
+@if (WeeklyChartSeries.Count > 0 && WeeklyChartSeries[0].Data.Any(d => d > 0))
+{
+    <MudChart ChartType="ChartType.Bar"
+              ChartSeries="@WeeklyChartSeries"
+              XAxisLabels="@WeeklyChartLabels"
+              Width="100%" Height="130px"
+              ChartOptions="@(new ChartOptions { YAxisTicks = 1 })"
+              Class="mb-4" />
 }
 @if (MonthCompletedCount >= 5 && WeekCompletedCount < MonthCompletedCount)
 {
@@ -758,6 +767,8 @@ else
     private bool _groupByGoal = false;
     private bool _confirmCompleteAllToday;
     private bool _confirmRescheduleAllOverdue;
+    private List<ChartSeries> WeeklyChartSeries = [];
+    private string[] WeeklyChartLabels = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -841,6 +852,23 @@ else
             .Select(g => (g.Guid, g.GoalText!))
             .ToList();
         _goalGuidByName = _activeGoals.ToDictionary(g => g.GoalText, g => g.Guid, StringComparer.OrdinalIgnoreCase);
+
+        // Build 8-week completion chart
+        const int chartWeeks = 8;
+        var chartCounts = new double[chartWeeks];
+        var chartLabels = new string[chartWeeks];
+        var chartNow = DateTime.Now;
+        for (var i = 0; i < chartWeeks; i++)
+        {
+            var wkStart = chartNow.AddDays(-(chartWeeks - 1 - i) * 7).Date;
+            wkStart = wkStart.AddDays(-(int)wkStart.DayOfWeek);
+            var wkStartMs = new DateTimeOffset(DateTime.SpecifyKind(wkStart, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+            var wkEndMs = wkStartMs + 7L * 24 * 60 * 60 * 1000;
+            chartCounts[i] = CompletedTodos.Count(t => t.CompletedAt >= wkStartMs && t.CompletedAt < wkEndMs);
+            chartLabels[i] = wkStart.ToString("MMM d");
+        }
+        WeeklyChartSeries = [new ChartSeries { Name = "Done", Data = chartCounts }];
+        WeeklyChartLabels = chartLabels;
 
         ApplyFilter();
     }
