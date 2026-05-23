@@ -898,6 +898,35 @@ else if (JourneyMonths >= 6)
         @jwMsg
     </MudAlert>
 }
+@if (GoalsWorkedThisWeek > 0 || GoalsWorkedLastWeek > 0)
+{
+    var gwDiff = GoalsWorkedThisWeek - GoalsWorkedLastWeek;
+    string gwMsg;
+    Severity gwSev;
+    if (GoalsWorkedLastWeek == 0)
+    {
+        gwMsg = $"🎯 You worked on {GoalsWorkedThisWeek} goal{(GoalsWorkedThisWeek == 1 ? "" : "s")} this week — great focus!";
+        gwSev = Severity.Success;
+    }
+    else if (gwDiff > 0)
+    {
+        gwMsg = $"🎯 Working on {GoalsWorkedThisWeek} goal{(GoalsWorkedThisWeek == 1 ? "" : "s")} this week vs {GoalsWorkedLastWeek} last week (+{gwDiff}) — broadening your focus! 🌟";
+        gwSev = Severity.Success;
+    }
+    else if (gwDiff == 0)
+    {
+        gwMsg = $"🎯 {GoalsWorkedThisWeek} goal{(GoalsWorkedThisWeek == 1 ? "" : "s")} worked on this week — same as last week. Consistent focus!";
+        gwSev = Severity.Info;
+    }
+    else
+    {
+        gwMsg = $"🎯 {GoalsWorkedThisWeek} goal{(GoalsWorkedThisWeek == 1 ? "" : "s")} worked on this week vs {GoalsWorkedLastWeek} last week — keep spreading your effort!";
+        gwSev = Severity.Normal;
+    }
+    <MudAlert Severity="@gwSev" Icon="@Icons.Material.Filled.Flag" Dense="true" Class="mb-4">
+        @gwMsg
+    </MudAlert>
+}
 
 @* Month-over-month trends *@
 <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2" Style="text-transform:uppercase;letter-spacing:1px;">
@@ -1145,6 +1174,8 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
     private int TodosLastWeek;
     private int JournalThisWeek;
     private int JournalLastWeek;
+    private int GoalsWorkedThisWeek;
+    private int GoalsWorkedLastWeek;
     private int JournalTotal;
     private double JournalAvgPerMonth;
     private int GoalProgressTotal;
@@ -1582,6 +1613,13 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
         JournalThisWeek = allJournalEver.Count(ms => ms >= wow7MsJournal);
         JournalLastWeek = allJournalEver.Count(ms => ms >= wow14MsJournal && ms < wow7MsJournal);
         var allProgressEver = await Db.GoalProgresses.Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null).Select(p => p.UpdatedOn).ToListAsync();
+        // Unique goals worked on this week vs last week (WoW)
+        var progressGoalWow = await Db.GoalProgresses
+            .Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null && p.UpdatedOn >= wow14MsTodo)
+            .Select(p => new { p.GoalFk, p.UpdatedOn })
+            .ToListAsync();
+        GoalsWorkedThisWeek = progressGoalWow.Where(p => p.UpdatedOn >= wow7MsTodo).Select(p => p.GoalFk).Distinct().Count();
+        GoalsWorkedLastWeek = progressGoalWow.Where(p => p.UpdatedOn >= wow14MsTodo && p.UpdatedOn < wow7MsTodo).Select(p => p.GoalFk).Distinct().Count();
         // Avg notes per week (from first note to now)
         if (allProgressEver.Count >= 5)
         {

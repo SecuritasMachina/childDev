@@ -1081,6 +1081,7 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                ValueChanged="@((string v) => { GoalSortOrder = v; ApplyFilter(); _ = Analytics.TrackAsync("goal_sort", AccountGuid, "home", v); })">
         <MudSelectItem T="string" Value="@("attention")">Needs Attention</MudSelectItem>
         <MudSelectItem T="string" Value="@("most_active")">Most Active</MudSelectItem>
+        <MudSelectItem T="string" Value="@("due_date")">Due Date</MudSelectItem>
         <MudSelectItem T="string" Value="@("newest")">Newest First</MudSelectItem>
         <MudSelectItem T="string" Value="@("alpha")">A → Z</MudSelectItem>
     </MudSelect>
@@ -2674,6 +2675,10 @@ else
             "most_active" => filtered.OrderByDescending(g => _pinnedGoals.Contains(g.Guid)).ThenByDescending(g => ProgressCounts.GetValueOrDefault(g.Guid)),
             "newest"      => filtered.OrderByDescending(g => _pinnedGoals.Contains(g.Guid)).ThenByDescending(g => g.EnteredDate),
             "alpha"       => filtered.OrderByDescending(g => _pinnedGoals.Contains(g.Guid)).ThenBy(g => g.GoalText, StringComparer.OrdinalIgnoreCase),
+            // "due_date": goals with soonest deadline first; goals without a deadline go last
+            "due_date"    => filtered.OrderByDescending(g => _pinnedGoals.Contains(g.Guid))
+                                     .ThenBy(g => g.ExpirationDate.HasValue ? 0 : 1)
+                                     .ThenBy(g => g.ExpirationDate ?? long.MaxValue),
             // "attention": goals with no notes first, then by oldest last-progress-date (most neglected first)
             _             => filtered.OrderByDescending(g => _pinnedGoals.Contains(g.Guid))
                                      .ThenBy(g => ProgressCounts.GetValueOrDefault(g.Guid) == 0 ? 0 : 1)
