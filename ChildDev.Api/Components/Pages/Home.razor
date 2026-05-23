@@ -554,6 +554,15 @@
                    :               $"= Same as last week ({ProgressLastWeek} notes) — steady consistency!";
         <MudText Typo="Typo.caption" Color="@(wowDiff >= 0 ? Color.Success : Color.Warning)" Class="mb-2">@wowMsg</MudText>
     }
+    @if (WeeklyProgressSeries.Count > 0 && WeeklyProgressSeries[0].Data.Any(d => d > 0))
+    {
+        <MudChart ChartType="ChartType.Bar"
+                  ChartSeries="@WeeklyProgressSeries"
+                  XAxisLabels="@WeeklyProgressLabels"
+                  Width="100%" Height="110px"
+                  ChartOptions="@(new ChartOptions { YAxisTicks = 1 })"
+                  Class="mb-3" />
+    }
 }
 @if (MostFocusedGoalThisWeekName is not null && string.IsNullOrWhiteSpace(FilterText))
 {
@@ -2227,6 +2236,8 @@ else
     private string? _quickNotePrevNote;
     private string? _confirmDeleteGoalGuid;
     private bool IsNewWeeklyRecord;
+    private List<ChartSeries> WeeklyProgressSeries = [];
+    private string[] WeeklyProgressLabels = [];
     private int ProgressNotesToday;
     private string? NextMeetingGoalName;
     private int NextMeetingDaysAway;
@@ -2497,6 +2508,23 @@ else
             if (priorCount > priorMaxWeeklyNotes) priorMaxWeeklyNotes = priorCount;
         }
         IsNewWeeklyRecord = ProgressThisWeek > priorMaxWeeklyNotes && ProgressThisWeek >= 3;
+
+        // 8-week progress notes chart
+        var chartCounts = new double[8];
+        var chartLabels = new string[8];
+        for (int cw = 0; cw < 8; cw++)
+        {
+            var cwEnd = nowMsStreak - (long)(7 - cw) * 7 * 86_400_000L;
+            var cwStart = cwEnd - 7L * 86_400_000L;
+            chartCounts[cw] = allTimestamps.Count(p => p.UpdatedOn >= cwStart && p.UpdatedOn < cwEnd);
+            var weekLabel = DateTimeOffset.FromUnixTimeMilliseconds(cwEnd).LocalDateTime;
+            chartLabels[cw] = cw == 7 ? "Now" : weekLabel.ToString("M/d");
+        }
+        if (chartCounts.Any(c => c > 0))
+        {
+            WeeklyProgressSeries = [new ChartSeries { Name = "Notes/week", Data = chartCounts }];
+            WeeklyProgressLabels = chartLabels;
+        }
 
         // Goal of the month: most progress notes in last 30 days
         var monthAgoMs = nowMsStreak - 30L * 86_400_000L;
