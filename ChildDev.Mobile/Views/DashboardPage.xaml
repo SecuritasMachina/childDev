@@ -23,7 +23,7 @@
                 <VerticalStackLayout Padding="20,24,20,20" Spacing="4">
                     <!-- Stars decoration row -->
                     <Label Text="✦  ✦  ✦  ✦  ✦"
-                           FontSize="12" TextColor="rgba(255,220,80,0.6)"
+                           FontSize="12" TextColor="#99FFDC50"
                            HorizontalOptions="Center" Margin="0,0,0,4"/>
                     <!-- Greeting -->
                     <Label Text="{Binding Greeting}"
@@ -34,16 +34,16 @@
                            IsVisible="{Binding Greeting, Converter={StaticResource StringToBoolConverter}}"/>
                     <!-- Sync status (subtle) -->
                     <Label Text="{Binding SyncStatus}"
-                           FontSize="11" TextColor="rgba(255,255,255,0.65)"
+                           FontSize="11" TextColor="#A6FFFFFF"
                            HorizontalOptions="Center"
                            IsVisible="{Binding SyncStatus, Converter={StaticResource StringToBoolConverter}}"/>
                     <Label Text="{Binding LastSyncDisplay}"
-                           FontSize="10" TextColor="rgba(255,255,255,0.5)"
+                           FontSize="10" TextColor="#80FFFFFF"
                            HorizontalOptions="Center"
                            IsVisible="{Binding LastSyncDisplay, Converter={StaticResource StringToBoolConverter}}"/>
                     <!-- Motivational tagline when no greeting -->
                     <Label Text="🌟 Ready to make progress today?"
-                           FontSize="16" TextColor="rgba(255,255,255,0.85)"
+                           FontSize="16" TextColor="#D9FFFFFF"
                            HorizontalOptions="Center"
                            HorizontalTextAlignment="Center"
                            IsVisible="{Binding Greeting, Converter={StaticResource InverseBoolConverter}}"/>
@@ -94,9 +94,9 @@
                             <Label Text="🎯" FontSize="20" HorizontalOptions="Center"/>
                             <Label Text="{Binding ActiveGoalCount}" FontSize="30" FontAttributes="Bold"
                                    TextColor="White" HorizontalOptions="Center"/>
-                            <Label Text="Goals" FontSize="11" TextColor="rgba(255,255,255,0.8)"
+                            <Label Text="Goals" FontSize="11" TextColor="#CCFFFFFF"
                                    HorizontalOptions="Center"/>
-                            <Label Text="Tap to add!" FontSize="9" TextColor="rgba(255,255,255,0.6)"
+                            <Label Text="Tap to add!" FontSize="9" TextColor="#99FFFFFF"
                                    HorizontalOptions="Center"
                                    IsVisible="{Binding HasNoActiveGoals}"/>
                         </VerticalStackLayout>
@@ -117,9 +117,9 @@
                             <Label Text="✅" FontSize="20" HorizontalOptions="Center"/>
                             <Label Text="{Binding PendingTodoCount}" FontSize="30" FontAttributes="Bold"
                                    TextColor="White" HorizontalOptions="Center"/>
-                            <Label Text="Todos" FontSize="11" TextColor="rgba(255,255,255,0.8)"
+                            <Label Text="Todos" FontSize="11" TextColor="#CCFFFFFF"
                                    HorizontalOptions="Center"/>
-                            <Label Text="All done! 🎉" FontSize="9" TextColor="rgba(255,255,255,0.7)"
+                            <Label Text="All done! 🎉" FontSize="9" TextColor="#B3FFFFFF"
                                    HorizontalOptions="Center"
                                    IsVisible="{Binding HasNoPendingTodos}"/>
                             <Label Text="{Binding OverdueTodoCount, StringFormat='{0} overdue!'}"
@@ -143,9 +143,9 @@
                             <Label Text="📓" FontSize="20" HorizontalOptions="Center"/>
                             <Label Text="{Binding JournalThisWeek}" FontSize="30" FontAttributes="Bold"
                                    TextColor="White" HorizontalOptions="Center"/>
-                            <Label Text="This Week" FontSize="11" TextColor="rgba(255,255,255,0.8)"
+                            <Label Text="This Week" FontSize="11" TextColor="#CCFFFFFF"
                                    HorizontalOptions="Center"/>
-                            <Label Text="Journal" FontSize="9" TextColor="rgba(255,255,255,0.6)"
+                            <Label Text="Journal" FontSize="9" TextColor="#99FFFFFF"
                                    HorizontalOptions="Center"/>
                         </VerticalStackLayout>
                     </Border>
@@ -188,8 +188,8 @@
                 <Border Padding="16,14" StrokeShape="RoundRectangle 14">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="rgba(38,198,160,0.06)" Offset="0"/>
-                            <GradientStop Color="rgba(38,198,160,0.03)" Offset="1"/>
+                            <GradientStop Color="#0F26C6A0" Offset="0"/>
+                            <GradientStop Color="#0826C6A0" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
                     <VerticalStackLayout Spacing="10">

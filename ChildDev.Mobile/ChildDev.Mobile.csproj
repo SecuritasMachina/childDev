@@ -11,7 +11,7 @@
 		<Nullable>enable</Nullable>
 
 		<!-- Display name -->
-		<ApplicationTitle>ChildDev.Mobile</ApplicationTitle>
+		<ApplicationTitle>LevelUp</ApplicationTitle>
 
 		<!-- App Identifier -->
 		<ApplicationId>levelup.securitasmachina.org</ApplicationId>

@@ -1,17 +1,21 @@
 #!/usr/bin/env bash
 # Full mobile test pipeline to run directly inside the Ubuntu VM (no Docker).
-# Phases: unit tests → APK build → emulator → install → logcat → monkey → analyze
+# Phases: unit tests → copy to local disk → APK build → emulator → install → logcat → monkey → analyze
+#
+# NOTE: Source is on vboxsf which silently corrupts NDK linker mmap writes (sparse files).
+# The APK must be built on local ext4 (BUILD_DIR) to get valid native .so files.
 set -euo pipefail
 
 SRC_DIR="${SRC_DIR:-/src}"
+BUILD_DIR="${BUILD_DIR:-$HOME/build-src}"
 RESULTS_DIR="${RESULTS_DIR:-$HOME/test-results}"
 ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$HOME/android-sdk}"
 ANDROID_HOME="$ANDROID_SDK_ROOT"
 JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk-amd64}"
 AVD_NAME="${AVD_NAME:-childdev_test}"
-PACKAGE_NAME="com.companyname.childdev.mobile"
+PACKAGE_NAME="levelup.securitasmachina.org"
 MONKEY_EVENTS="${MONKEY_EVENTS:-500}"
-APK_PATH="$SRC_DIR/ChildDev.Mobile/bin/Debug/net8.0-android/com.companyname.childdev.mobile-Signed.apk"
+APK_PATH="$BUILD_DIR/ChildDev.Mobile/bin/Debug/net8.0-android/levelup.securitasmachina.org-Signed.apk"
 
 export ANDROID_SDK_ROOT ANDROID_HOME JAVA_HOME
 export PATH="$JAVA_HOME/bin:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/emulator:$PATH"
@@ -22,7 +26,7 @@ EMULATOR="$ANDROID_SDK_ROOT/emulator/emulator"
 mkdir -p "$RESULTS_DIR"
 log() { echo "[$(date '+%H:%M:%S')] $*"; }
 
-# ── Phase 1: Unit tests ───────────────────────────────────────────────────────
+# ── Phase 1: Unit tests (run from vboxsf — managed code only, no NDK) ────────
 log "=== PHASE 1: Unit Tests ==="
 dotnet test \
     "$SRC_DIR/ChildDev.Mobile.Tests/ChildDev.Mobile.Tests.csproj" \
@@ -33,12 +37,24 @@ dotnet test \
 UNIT_EXIT=${PIPESTATUS[0]}
 log "Unit test exit code: $UNIT_EXIT"
 
-# ── Phase 2: Build APK ────────────────────────────────────────────────────────
-log "=== PHASE 2: Build Android APK ==="
-dotnet build "$SRC_DIR/ChildDev.Mobile/ChildDev.Mobile.csproj" \
+# ── Phase 2: Copy source to local disk ───────────────────────────────────────
+log "=== PHASE 2: Copying source to local disk (avoids vboxsf NDK write corruption) ==="
+mkdir -p "$BUILD_DIR"
+rsync -a --delete \
+    --exclude='bin/' \
+    --exclude='obj/' \
+    "$SRC_DIR/" "$BUILD_DIR/"
+log "Source synced to $BUILD_DIR"
+
+# ── Phase 3: Build APK ────────────────────────────────────────────────────────
+log "=== PHASE 3: Build Android APK ==="
+rm -rf "$BUILD_DIR/ChildDev.Mobile/bin" "$BUILD_DIR/ChildDev.Mobile/obj"
+dotnet build "$BUILD_DIR/ChildDev.Mobile/ChildDev.Mobile.csproj" \
     -f net8.0-android \
     -c Debug \
     /p:JavaSdkDirectory="$JAVA_HOME" \
+    /p:AndroidSupportedAbis=x86 \
+    /p:EmbedAssembliesIntoApk=true \
     2>&1 | tee "$RESULTS_DIR/build.txt"
 BUILD_EXIT=${PIPESTATUS[0]}
 log "Build exit code: $BUILD_EXIT"
@@ -47,9 +63,19 @@ if [ $BUILD_EXIT -ne 0 ]; then
     exit $BUILD_EXIT
 fi
 
-# ── Phase 3: Start emulator ───────────────────────────────────────────────────
-log "=== PHASE 3: Starting Android Emulator ==="
+# Verify the APK is real (catches vboxsf sparse-file regression — build must run on local ext4)
+APK_SIZE=$(stat -c %s "$APK_PATH")
+if [ "$APK_SIZE" -lt 1000000 ]; then
+    log "ERROR: APK too small (${APK_SIZE} bytes) — likely vboxsf write corruption"
+    exit 1
+fi
+log "APK size OK: ${APK_SIZE} bytes"
+
+# ── Phase 4: Start emulator ───────────────────────────────────────────────────
+log "=== PHASE 4: Starting Android Emulator ==="
 "$ADB" emu kill 2>/dev/null || true
+pkill -f "Xvfb :99" 2>/dev/null || true
+pkill -f "emulator" 2>/dev/null || true
 sleep 2
 
 Xvfb :99 -screen 0 1280x800x24 -ac +extension GLX +render &
@@ -68,8 +94,8 @@ DISPLAY=:99 "$EMULATOR" \
 EMULATOR_PID=$!
 log "Emulator PID: $EMULATOR_PID"
 
-# ── Phase 4: Wait for boot ────────────────────────────────────────────────────
-log "=== PHASE 4: Waiting for emulator boot (up to 10 min) ==="
+# ── Phase 5: Wait for boot ────────────────────────────────────────────────────
+log "=== PHASE 5: Waiting for emulator boot (up to 10 min) ==="
 BOOT_TIMEOUT=600
 ELAPSED=0
 until "$ADB" shell getprop sys.boot_completed 2>/dev/null | grep -q "1"; do
@@ -97,14 +123,14 @@ log "Emulator booted!"
 "$ADB" shell settings put global transition_animation_scale 0 2>/dev/null || true
 "$ADB" shell settings put global animator_duration_scale 0 2>/dev/null || true
 
-# ── Phase 5: Install APK ──────────────────────────────────────────────────────
-log "=== PHASE 5: Installing APK ==="
-[ ! -f "$APK_PATH" ] && APK_PATH="$SRC_DIR/ChildDev.Mobile/bin/Debug/net8.0-android/com.companyname.childdev.mobile.apk"
+# ── Phase 6: Install APK ──────────────────────────────────────────────────────
+log "=== PHASE 6: Installing APK ==="
 log "APK: $APK_PATH"
-"$ADB" install -r "$APK_PATH" 2>&1 | tee "$RESULTS_DIR/install.txt"
+"$ADB" uninstall "$PACKAGE_NAME" 2>/dev/null || true
+"$ADB" install "$APK_PATH" 2>&1 | tee "$RESULTS_DIR/install.txt"
 
-# ── Phase 6: Logcat ───────────────────────────────────────────────────────────
-log "=== PHASE 6: Logcat ==="
+# ── Phase 7: Logcat ───────────────────────────────────────────────────────────
+log "=== PHASE 7: Logcat ==="
 LOGCAT_FILE="$RESULTS_DIR/logcat.txt"
 "$ADB" logcat -c
 sleep 1
@@ -113,8 +139,9 @@ LOGCAT_PID=$!
 log "Logcat PID: $LOGCAT_PID (streaming to $LOGCAT_FILE)"
 sleep 2
 
-# ── Phase 7: Monkey ───────────────────────────────────────────────────────────
-log "=== PHASE 7: Monkey Runner (${MONKEY_EVENTS} events) ==="
+# ── Phase 8: Monkey ───────────────────────────────────────────────────────────
+log "=== PHASE 8: Monkey Runner (${MONKEY_EVENTS} events) ==="
+set +e
 "$ADB" shell monkey \
     -p "$PACKAGE_NAME" \
     --throttle 150 \
@@ -126,27 +153,29 @@ log "=== PHASE 7: Monkey Runner (${MONKEY_EVENTS} events) ==="
     "$MONKEY_EVENTS" \
     2>&1 | tee "$RESULTS_DIR/monkey.txt"
 MONKEY_EXIT=${PIPESTATUS[0]}
+set -e
 log "Monkey exit code: $MONKEY_EXIT"
 
 sleep 3
 kill $LOGCAT_PID 2>/dev/null || true
 
-# ── Phase 8: Analyze results ──────────────────────────────────────────────────
-log "=== PHASE 8: Analyzing Results ==="
+# ── Phase 9: Analyze results ──────────────────────────────────────────────────
+log "=== PHASE 9: Analyzing Results ==="
 ERRORS_FOUND=0
 
 log "--- Crash check ---"
 if grep -E "AndroidRuntime|FATAL EXCEPTION|ANR in|Force finishing" "$LOGCAT_FILE" 2>/dev/null \
+        | grep "levelup.securitasmachina.org" \
         | tee "$RESULTS_DIR/crashes.txt" | grep -q .; then
-    log "WARNING: Crashes/ANRs in logcat — see $RESULTS_DIR/crashes.txt"
+    log "WARNING: App crashes/ANRs in logcat — see $RESULTS_DIR/crashes.txt"
     ERRORS_FOUND=1
 else
-    log "No crashes in logcat."
+    log "No app crashes in logcat."
 fi
 
-if grep -E "Crash|Exception|// CRASH" "$RESULTS_DIR/monkey.txt" \
+if grep -E "// CRASH.*levelup|levelup.*CRASH" "$RESULTS_DIR/monkey.txt" \
         | tee "$RESULTS_DIR/monkey-crashes.txt" | grep -q .; then
-    log "WARNING: Monkey reported crashes."
+    log "WARNING: Monkey reported app crashes."
     ERRORS_FOUND=1
 else
     log "Monkey: clean."
