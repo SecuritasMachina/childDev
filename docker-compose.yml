@@ -2,6 +2,8 @@ services:
   traefik:
     image: traefik:v2.11
     network_mode: host
+    environment:
+      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}
     command:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
@@ -9,8 +11,8 @@ services:
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--entrypoints.websecure.address=[::]:443"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
       - "--certificatesresolvers.letsencrypt.acme.email=charlesd@havranek.com"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
     volumes:
@@ -42,6 +44,7 @@ services:
       - "traefik.http.routers.childdev.tls.domains[0].main=levelup.havranek.com"
       - "traefik.http.routers.childdev.tls.domains[0].sans=levelup.securitasmachina.org"
       - "traefik.http.services.childdev.loadbalancer.server.port=8080"
+      - "traefik.docker.network=childdev_default"
 
   mariadb:
     image: mariadb:11
