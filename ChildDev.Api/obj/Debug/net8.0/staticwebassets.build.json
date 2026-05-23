@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "d4NUOC4oVUZDNh/fvbW74fZ6CippAqqMzyUBzykKFCc=",
+  "Hash": "uHUYUYG2U6jJnjxsneJ7kuEsngcmRuCHjaRYxI/6RmQ=",
   "Source": "ChildDev.Api",
   "BasePath": "_content/ChildDev.Api",
   "Mode": "Default",
@@ -55,12 +55,12 @@
       "OriginalItemSpec": "wwwroot/downloads/.gitkeep"
     },
     {
-      "Identity": "/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/wwwroot/downloads/ChildDev.apk",
+      "Identity": "/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/wwwroot/downloads/LevelUp.apk",
       "SourceId": "ChildDev.Api",
       "SourceType": "Discovered",
       "ContentRoot": "/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/wwwroot/",
       "BasePath": "_content/ChildDev.Api",
-      "RelativePath": "downloads/ChildDev.apk",
+      "RelativePath": "downloads/LevelUp.apk",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -71,7 +71,7 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot/downloads/ChildDev.apk"
+      "OriginalItemSpec": "wwwroot/downloads/LevelUp.apk"
     },
     {
       "Identity": "/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/wwwroot/icon.svg",
