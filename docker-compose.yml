@@ -37,10 +37,12 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.childdev.rule=Host(`levelup.havranek.com`)"
+      - "traefik.http.routers.childdev.rule=Host(`levelup.havranek.com`) || Host(`levelup.securitasmachina.org`)"
       - "traefik.http.routers.childdev.entrypoints=websecure"
       - "traefik.http.routers.childdev.tls=true"
       - "traefik.http.routers.childdev.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.childdev.tls.domains[0].main=levelup.havranek.com"
+      - "traefik.http.routers.childdev.tls.domains[0].sans=levelup.securitasmachina.org"
       - "traefik.http.services.childdev.loadbalancer.server.port=8080"
 
   mariadb:
@@ -49,7 +51,7 @@ services:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MARIADB_DATABASE: childdev
       MARIADB_USER: childdev
-      MARIADB_PASSWORD: ${CHILDDEV_DB_PASSWORD}
+      MARIADB_PASSWORD: ${CHILDDEV_DB_PASSWORD:-}
     volumes:
       - childdev_mariadb:/var/lib/mysql
     healthcheck:
