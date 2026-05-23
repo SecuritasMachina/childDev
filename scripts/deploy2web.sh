@@ -66,7 +66,7 @@ fi
 # ── sync source (without APK — APK is uploaded separately below) ─────────────
 
 log_info "Syncing source to $SSH_HOST:$REMOTE_DIR ..."
-rsync -az --delete --info=progress2,stats2 \
+rsync -az --delete --compress --info=progress2,stats2 \
   --exclude='.git' \
   --exclude='*/bin/' \
   --exclude='*/obj/' \
@@ -119,7 +119,7 @@ else
       docker compose -p $PROJECT_NAME -f $COMPOSE_FILE up -d
     "
   else
-    rsync -az --delete --info=progress2,stats2 \
+    rsync -az --delete --compress --info=progress2,stats2 \
       --exclude='wwwroot/downloads/LevelUp.apk' \
       -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
       "$PUBLISH_DIR/" \
