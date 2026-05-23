@@ -31,12 +31,16 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
+    networks:
+      - default
+      - traefik_public
     volumes:
       - childdev_dataprotection:/root/.aspnet/DataProtection-Keys
       - ./ChildDev.Api/wwwroot/downloads:/app/wwwroot/downloads
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=traefik_public"
       - "traefik.http.routers.childdev.rule=Host(`levelup.havranek.com`)"
       - "traefik.http.routers.childdev.entrypoints=websecure"
       - "traefik.http.routers.childdev.tls=true"
@@ -64,3 +68,8 @@ volumes:
   childdev_mariadb:
   childdev_dataprotection:
   letsencrypt:
+
+networks:
+  default:
+  traefik_public:
+    external: true
