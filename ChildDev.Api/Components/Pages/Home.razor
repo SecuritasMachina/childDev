@@ -1673,14 +1673,15 @@ else
             </MudText>
         </MudStack>
         <MudList T="string" Dense="true">
-            @foreach (var (goalText, noteText, ts) in RecentProgressNotes)
+            @foreach (var (goalFk, goalText, noteText, ts) in RecentProgressNotes)
             {
                 var rpaDate = DateTimeOffset.FromUnixTimeMilliseconds(ts).LocalDateTime;
                 var rpaDaysAgo = (int)(DateTime.Now - rpaDate).TotalDays;
                 var rpaWhen = rpaDaysAgo == 0 ? "Today" : rpaDaysAgo == 1 ? "Yesterday" : $"{rpaDaysAgo}d ago";
                 var rpaNote = noteText.Length > 100 ? noteText[..100] + "…" : noteText;
                 var rpaGoal = goalText.Length > 45 ? goalText[..45] + "…" : goalText;
-                <MudListItem>
+                var rpaHref = $"/goals/{goalFk}";
+                <MudListItem Href="@rpaHref">
                     <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="2">
                         <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="Color.Primary" Size="Size.Small" Style="margin-top:2px;" />
                         <MudStack Spacing="0" Style="flex:1;min-width:0;">
@@ -2149,7 +2150,7 @@ else
     private string? CelebratedGoalText;
     private string? _celebratingGoalGuid;
     private string CelebrationReflection = string.Empty;
-    private List<(string GoalText, string NoteText, long Timestamp)> RecentProgressNotes = [];
+    private List<(string GoalFk, string GoalText, string NoteText, long Timestamp)> RecentProgressNotes = [];
     private bool ShowQuickNoteDialog;
     private string? QuickNoteGoalGuid;
     private string? QuickNoteGoalText;
@@ -2564,7 +2565,7 @@ else
             .Select(p => new { p.GoalFk, p.NextStepItems, p.UpdatedOn })
             .ToListAsync();
         RecentProgressNotes = recentRaw
-            .Select(r => (GoalText: goalTextMap.GetValueOrDefault(r.GoalFk, ""), NoteText: r.NextStepItems!, Timestamp: r.UpdatedOn))
+            .Select(r => (GoalFk: r.GoalFk, GoalText: goalTextMap.GetValueOrDefault(r.GoalFk, ""), NoteText: r.NextStepItems!, Timestamp: r.UpdatedOn))
             .ToList();
 
         ApplyFilter();
