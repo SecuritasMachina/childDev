@@ -19,9 +19,15 @@
     <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="mr-2" />
     Achievements
 </MudText>
-<MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
-    @EarnedCount of @TotalBadgeCount badges earned 🏆
-</MudText>
+<MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2" Class="mb-4">
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Style="flex:1;">@EarnedCount of @TotalBadgeCount badges earned 🏆</MudText>
+    <MudChipSet T="string" SelectionMode="SelectionMode.SingleSelection"
+                SelectedValue="@_badgeFilter" SelectedValueChanged="@((string v) => _badgeFilter = v ?? "all")">
+        <MudChip T="string" Value="@("all")" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">All</MudChip>
+        <MudChip T="string" Value="@("earned")" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning">✅ Earned</MudChip>
+        <MudChip T="string" Value="@("locked")" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">🔒 Locked</MudChip>
+    </MudChipSet>
+</MudStack>
 
 @if (EarnedCount > 0)
 {
@@ -99,6 +105,12 @@
 @foreach (var cat in BadgeCategories)
 {
     var earned = cat.Badges.Count(b => b.Earned);
+    var filteredBadges = _badgeFilter switch {
+        "earned" => cat.Badges.Where(b => b.Earned).ToList(),
+        "locked" => cat.Badges.Where(b => !b.Earned).ToList(),
+        _ => cat.Badges
+    };
+    if (!filteredBadges.Any()) continue;
     var catPct = cat.Badges.Count > 0 ? (int)(earned * 100.0 / cat.Badges.Count) : 0;
     var catBarColor = catPct == 100 ? "var(--mud-palette-success)" : catPct >= 50 ? "var(--mud-palette-primary)" : "var(--mud-palette-secondary)";
     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-1 mt-4">
@@ -112,7 +124,7 @@
         <div style="@($"width:{catPct}%;background:{catBarColor};height:100%;border-radius:4px;transition:width .4s ease;")"></div>
     </div>
     <MudGrid Spacing="3" Class="mb-2">
-        @foreach (var badge in cat.Badges)
+        @foreach (var badge in filteredBadges)
         {
             var opacity = badge.Earned ? "1" : "0.38";
             var bg = badge.Earned
@@ -150,6 +162,7 @@
     private int EarnedCount;
     private int TotalBadgeCount;
     private List<BadgeCategory> BadgeCategories = [];
+    private string _badgeFilter = "all";
 
     private record Badge(string Emoji, string Name, string Description, bool Earned, DateTime? EarnedOn = null, string? ProgressHint = null);
     private record BadgeCategory(string Icon, string Name, string GradientFrom, string GradientTo, List<Badge> Badges);
