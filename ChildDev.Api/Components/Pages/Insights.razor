@@ -1038,6 +1038,7 @@ else if (JourneyMonths >= 6)
         var (tColor, tIcon, tLabel) = Trend(ThisMonthTodos, LastMonthTodos);
         var (jColor, jIcon, jLabel) = Trend(ThisMonthJournal, LastMonthJournal);
         var (pColor, pIcon, pLabel) = Trend(ThisMonthProgress, LastMonthProgress);
+        var (gwmColor, gwmIcon, gwmLabel) = Trend(ThisMonthGoalsWorked, LastMonthGoalsWorked);
     }
     <MudStack Spacing="0">
         <MudStack Row="true" AlignItems="AlignItems.Center" Class="pa-3" Style="border-bottom:1px solid rgba(0,0,0,.06);">
@@ -1061,13 +1062,23 @@ else if (JourneyMonths >= 6)
             <MudText Typo="Typo.body2" Style="font-weight:600;min-width:28px;text-align:right">@ThisMonthTodos</MudText>
             <MudText Typo="Typo.caption" Color="@tColor" Style="min-width:52px;text-align:right">@tIcon @tLabel</MudText>
         </MudStack>
-        <MudStack Row="true" AlignItems="AlignItems.Center" Class="pa-3">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="pa-3" Style="border-bottom:1px solid rgba(0,0,0,.06);">
             <MudIcon Icon="@Icons.Material.Filled.Book" Color="Color.Info" Size="Size.Small" Class="mr-2" />
             <MudText Typo="Typo.body2" Style="flex:1">Journal entries</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mr-4">@LastMonthJournal last mo.</MudText>
             <MudText Typo="Typo.body2" Style="font-weight:600;min-width:28px;text-align:right">@ThisMonthJournal</MudText>
             <MudText Typo="Typo.caption" Color="@jColor" Style="min-width:52px;text-align:right">@jIcon @jLabel</MudText>
         </MudStack>
+        @if (ThisMonthGoalsWorked > 0 || LastMonthGoalsWorked > 0)
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="pa-3">
+                <MudIcon Icon="@Icons.Material.Filled.Flag" Color="Color.Primary" Size="Size.Small" Class="mr-2" />
+                <MudText Typo="Typo.body2" Style="flex:1">Goals worked on</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mr-4">@LastMonthGoalsWorked last mo.</MudText>
+                <MudText Typo="Typo.body2" Style="font-weight:600;min-width:28px;text-align:right">@ThisMonthGoalsWorked</MudText>
+                <MudText Typo="Typo.caption" Color="@gwmColor" Style="min-width:52px;text-align:right">@gwmIcon @gwmLabel</MudText>
+            </MudStack>
+        }
     </MudStack>
 </MudPaper>
 
@@ -1320,6 +1331,8 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
     private int LastMonthJournal;
     private int ThisMonthProgress;
     private int LastMonthProgress;
+    private int ThisMonthGoalsWorked;
+    private int LastMonthGoalsWorked;
     private int NotesThisWeekProgress;
     private int ActiveDaysThisWeek;
     private int ActiveDaysLastWeek;
@@ -1631,6 +1644,14 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
         LastMonthProgress = await Db.GoalProgresses
             .CountAsync(p => p.AccountFk == AccountGuid && p.DeletedAt == null
                           && p.UpdatedOn >= lastMonthStart && p.UpdatedOn < thisMonthStart);
+
+        ThisMonthGoalsWorked = await Db.GoalProgresses
+            .Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null && p.UpdatedOn >= thisMonthStart)
+            .Select(p => p.GoalFk).Distinct().CountAsync();
+        LastMonthGoalsWorked = await Db.GoalProgresses
+            .Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null
+                     && p.UpdatedOn >= lastMonthStart && p.UpdatedOn < thisMonthStart)
+            .Select(p => p.GoalFk).Distinct().CountAsync();
 
         // Days since last progress note
         var lastProgressMs = await Db.GoalProgresses

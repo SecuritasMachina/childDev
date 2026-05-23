@@ -1305,6 +1305,13 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                            : Icons.Material.Filled.AcUnit;
             var cgLastLabel = cgPCount == 0 ? "No notes" : cgDays == 0 ? "Today" : cgDays == 1 ? "Yesterday" : $"{cgDays}d ago";
             var cgIsPinned = _pinnedGoals.Contains(g.Guid);
+            string? cgNextStepTodoTitle = null;
+            if (LatestNextStep.TryGetValue(g.Guid, out var cgNS) && !string.IsNullOrWhiteSpace(cgNS))
+            {
+                var cgNsLine = cgNS.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? cgNS;
+                cgNextStepTodoTitle = cgNsLine.Length > 100 ? cgNsLine[..100] : cgNsLine;
+            }
+            var cgCapturedGuid = g.Guid;
             <MudListItem T="Goal">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                     <MudIcon Icon="@cgHeatIcon" Color="@cgHeatColor" Size="Size.Small" />
@@ -1315,14 +1322,17 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                     <MudText Typo="Typo.caption" Color="Color.Secondary" Style="white-space:nowrap;min-width:70px;text-align:right;">@cgLastLabel</MudText>
                     <MudIconButton Icon="@(cgIsPinned ? Icons.Material.Filled.PushPin : Icons.Material.Outlined.PushPin)"
                                    Size="Size.Small" Color="@(cgIsPinned ? Color.Warning : Color.Default)"
-                                   OnClick="() => TogglePinGoal(g.Guid)" aria-label="Pin goal" />
+                                   OnClick="() => TogglePinGoal(cgCapturedGuid)" aria-label="Pin goal" />
                     <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
-                               Href="@($"/goals/{g.Guid}")">View</MudButton>
+                               Href="@($"/goals/{cgCapturedGuid}")">View</MudButton>
                     <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small"
                                StartIcon="@Icons.Material.Filled.Add"
-                               OnClick="async () => await OpenQuickNote(g.Guid)">Note</MudButton>
-                    <MudIconButton Icon="@Icons.Material.Filled.AddTask" Color="Color.Info" Size="Size.Small"
-                                   OnClick="() => OpenGoalTodoDialog(g.Guid)" aria-label="Add todo for this goal" />
+                               OnClick="async () => await OpenQuickNote(cgCapturedGuid)">Note</MudButton>
+                    <MudTooltip Text="@(cgNextStepTodoTitle != null ? $"Create todo from next step" : "Add todo for this goal")">
+                        <MudIconButton Icon="@Icons.Material.Filled.AddTask" Color="Color.Info" Size="Size.Small"
+                                       OnClick="@(cgNextStepTodoTitle != null ? () => OpenGoalTodoDialogWithTitle(cgCapturedGuid, cgNextStepTodoTitle!) : () => OpenGoalTodoDialog(cgCapturedGuid))"
+                                       aria-label="@(cgNextStepTodoTitle != null ? "Create todo from next step" : "Add todo for this goal")" />
+                    </MudTooltip>
                 </MudStack>
             </MudListItem>
         }
