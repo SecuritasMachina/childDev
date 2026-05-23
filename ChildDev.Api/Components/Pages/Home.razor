@@ -1509,9 +1509,18 @@ else
                     @if (LatestNextStep.TryGetValue(g.Guid, out var nextStep))
                     {
                         var truncated = nextStep.Length > 90 ? nextStep[..90] + "…" : nextStep;
-                        <MudText Typo="Typo.caption" Color="Color.Primary" Class="mt-2 d-block">
-                            <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" Style="vertical-align:middle;" /> @truncated
-                        </MudText>
+                        var nsFirstLine = nextStep.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? nextStep;
+                        var nsTodoTitle = nsFirstLine.Length > 100 ? nsFirstLine[..100] : nsFirstLine;
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0" Class="mt-2">
+                            <MudText Typo="Typo.caption" Color="Color.Primary" Style="flex:1;min-width:0;">
+                                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" Style="vertical-align:middle;" /> @truncated
+                            </MudText>
+                            <MudTooltip Text="Create a todo from this next step">
+                                <MudIconButton Icon="@Icons.Material.Filled.AddTask" Size="Size.Small" Color="Color.Info"
+                                               OnClick="() => OpenGoalTodoDialogWithTitle(g.Guid, nsTodoTitle)"
+                                               aria-label="Create todo from next step" Style="margin:-4px -4px -4px 2px;" />
+                            </MudTooltip>
+                        </MudStack>
                     }
                 </MudCardContent>
                 <MudCardActions>
