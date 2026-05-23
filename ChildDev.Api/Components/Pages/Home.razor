@@ -1802,7 +1802,10 @@ else
             @foreach (var j in RecentJournals)
             {
                 var jDate = DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime;
-                <MudListItem>
+                var jSearchText = j.Notes ?? j.Activity ?? "";
+                var jSearchWords = string.Join(" ", jSearchText.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(4));
+                var jHref = !string.IsNullOrWhiteSpace(jSearchWords) ? $"/journal?search={Uri.EscapeDataString(jSearchWords)}" : "/journal";
+                <MudListItem Href="@jHref">
                     <MudStack Row="true" AlignItems="AlignItems.Start">
                         @{
                             var jMoodEmoji = j.Mood switch {
