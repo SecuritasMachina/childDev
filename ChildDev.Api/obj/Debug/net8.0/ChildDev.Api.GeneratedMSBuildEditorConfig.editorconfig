@@ -29,6 +29,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvTWFpbkxheW91dC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Components/Pages/Achievements.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BY2hpZXZlbWVudHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [/mnt/8TB_HDD_DATA/shared/src/childDev/ChildDev.Api/Components/Pages/GoalDetail.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Hb2FsRGV0YWlsLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
