@@ -839,6 +839,36 @@ else if (JourneyMonths >= 6)
     </MudAlert>
 }
 
+@if (TodosThisWeek > 0 || TodosLastWeek > 0)
+{
+    var twDiff = TodosThisWeek - TodosLastWeek;
+    string twMsg;
+    Severity twSev;
+    if (TodosLastWeek == 0)
+    {
+        twMsg = $"✅ {TodosThisWeek} todo{(TodosThisWeek == 1 ? "" : "s")} completed this week — great action-taking!";
+        twSev = Severity.Success;
+    }
+    else if (twDiff > 0)
+    {
+        twMsg = $"✅ {TodosThisWeek} todos done this week vs {TodosLastWeek} last week (+{twDiff}) — you're getting more done! 🚀";
+        twSev = Severity.Success;
+    }
+    else if (twDiff == 0)
+    {
+        twMsg = $"✅ {TodosThisWeek} todos completed this week — matching last week's output. Steady and consistent!";
+        twSev = Severity.Info;
+    }
+    else
+    {
+        twMsg = $"✅ {TodosThisWeek} todos done this week vs {TodosLastWeek} last week — a few less, but the week isn't over!";
+        twSev = Severity.Warning;
+    }
+    <MudAlert Severity="@twSev" Icon="@Icons.Material.Filled.CheckCircle" Dense="true" Class="mb-4">
+        @twMsg
+    </MudAlert>
+}
+
 @* Month-over-month trends *@
 <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2" Style="text-transform:uppercase;letter-spacing:1px;">
     This Month vs Last Month
@@ -1081,6 +1111,8 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
     private List<(string Guid, string Name, long CompletionDate, long EnteredDate)> RecentCompletedGoals = [];
     private int TodosCompletedAllTime;
     private int YtdTodosCompleted;
+    private int TodosThisWeek;
+    private int TodosLastWeek;
     private int JournalTotal;
     private double JournalAvgPerMonth;
     private int GoalProgressTotal;
@@ -1508,6 +1540,10 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
         var allTodosEver = await Db.Todos.Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt != null).Select(t => t.CompletedAt!.Value).ToListAsync();
         var ytdStartMs = new DateTimeOffset(new DateTime(DateTime.Today.Year, 1, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
         YtdTodosCompleted = allTodosEver.Count(ms => ms >= ytdStartMs);
+        var wow7MsTodo = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - 7L * 86_400_000L;
+        var wow14MsTodo = wow7MsTodo - 7L * 86_400_000L;
+        TodosThisWeek = allTodosEver.Count(ms => ms >= wow7MsTodo);
+        TodosLastWeek = allTodosEver.Count(ms => ms >= wow14MsTodo && ms < wow7MsTodo);
         var allJournalEver = await Db.Journals.Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null).Select(j => j.EnteredDate).ToListAsync();
         var allProgressEver = await Db.GoalProgresses.Where(p => p.AccountFk == AccountGuid && p.DeletedAt == null).Select(p => p.UpdatedOn).ToListAsync();
         // Avg notes per week (from first note to now)
