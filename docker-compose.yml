@@ -37,7 +37,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.childdev.rule=Host(`childdev.havranek.com`)"
+      - "traefik.http.routers.childdev.rule=Host(`levelup.havranek.com`)"
       - "traefik.http.routers.childdev.entrypoints=websecure"
       - "traefik.http.routers.childdev.tls=true"
       - "traefik.http.routers.childdev.tls.certresolver=letsencrypt"
