@@ -1845,6 +1845,9 @@ else
     <MudButton Variant="Variant.Outlined" Color="Color.Secondary"
                StartIcon="@Icons.Material.Filled.ContentCopy"
                OnClick="CopyGoalSummary" title="Copy goal summary to clipboard">Summary</MudButton>
+    <MudButton Variant="Variant.Outlined" Color="Color.Default"
+               StartIcon="@Icons.Material.Filled.Book"
+               OnClick="OpenQuickJournalDialog">Journal</MudButton>
 </MudStack>
 
 @if (RelatedTodos.Count > 0)
@@ -2203,6 +2206,30 @@ else
     </DialogActions>
 </MudDialog>
 
+<MudDialog @bind-Visible="_showQuickJournalDialog" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
+    <TitleContent>
+        <MudText Typo="Typo.h6">📓 Journal about this Goal</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-3">
+            This entry will be tagged with your goal: <strong>@(Goal?.GoalText?.Length > 50 ? Goal.GoalText[..50] + "…" : Goal?.GoalText)</strong>
+        </MudText>
+        <MudTextField @bind-Value="_quickJournalNotes"
+                      Label="What happened? What did you learn or feel?"
+                      Variant="Variant.Outlined" Lines="4" FullWidth="true" Immediate="true"
+                      AutoFocus="true" Class="mb-3" />
+        <MudTextField @bind-Value="_quickJournalMood"
+                      Label="Mood (optional)"
+                      Variant="Variant.Outlined" Class="mb-2" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _showQuickJournalDialog = false">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   Disabled="@(string.IsNullOrWhiteSpace(_quickJournalNotes))"
+                   OnClick="SaveQuickJournal">Save Entry</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     [Parameter] public string GoalGuid { get; set; } = string.Empty;
 
@@ -2253,6 +2280,9 @@ else
     private string? _prevGoalGuid;
     private string? _nextGoalGuid;
     private HashSet<string> _expandedNotes = [];
+    private bool _showQuickJournalDialog;
+    private string _quickJournalNotes = string.Empty;
+    private string _quickJournalMood = string.Empty;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -2651,6 +2681,52 @@ else
         await Analytics.TrackAsync("goal_duplicate", AccountGuid, "goal_detail", GoalGuid);
         Snackbar.Add("Goal duplicated! Opening the new copy.", Severity.Success);
         Nav.NavigateTo($"/goals/{newGuid}");
+    }
+
+    private void OpenQuickJournalDialog()
+    {
+        _quickJournalNotes = string.Empty;
+        _quickJournalMood = string.Empty;
+        _showQuickJournalDialog = true;
+    }
+
+    private async Task SaveQuickJournal()
+    {
+        if (string.IsNullOrWhiteSpace(_quickJournalNotes) || AccountGuid is null || Goal is null) return;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goalTag = Goal.GoalText ?? string.Empty;
+        Db.Journals.Add(new Journal
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = AccountGuid,
+            Notes = _quickJournalNotes.Trim(),
+            Mood = string.IsNullOrWhiteSpace(_quickJournalMood) ? null : _quickJournalMood.Trim(),
+            Tags = string.IsNullOrWhiteSpace(goalTag) ? null : goalTag,
+            EnteredDate = now,
+            UpdatedOn = now
+        });
+        await Db.SaveChangesAsync();
+        await Analytics.TrackAsync("journal_add", AccountGuid, "goal_detail", GoalGuid);
+        _showQuickJournalDialog = false;
+        Snackbar.Add("Journal entry saved! 📓", Severity.Success);
+        await LoadRelatedJournals();
+    }
+
+    private async Task LoadRelatedJournals()
+    {
+        if (Goal is null || AccountGuid is null) return;
+        var goalText = Goal.GoalText ?? "";
+        var allJournals = await Db.Journals
+            .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null)
+            .OrderByDescending(j => j.EnteredDate)
+            .Take(200)
+            .ToListAsync();
+        RelatedJournals = allJournals
+            .Where(j =>
+                (!string.IsNullOrWhiteSpace(j.Tags) && j.Tags.Contains(goalText, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(j.Notes) && goalText.Length >= 6 && j.Notes.Contains(goalText, StringComparison.OrdinalIgnoreCase)))
+            .Take(5)
+            .ToList();
     }
 
     private async Task ConfirmDeleteProgress()
