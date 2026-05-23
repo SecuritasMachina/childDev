@@ -193,7 +193,8 @@
                                   Variant="Variant.Text" Margin="Margin.Dense"
                                   Style="flex:1;" Immediate="true"
                                   DebounceInterval="300" OnDebounceIntervalElapsed="RunSearchDebounced"
-                                  AutoFocus="true" />
+                                  AutoFocus="true"
+                                  @onkeydown="OnSearchKeyDown" />
                     <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="CloseSearch" />
                 </MudStack>
                 <div style="overflow-y:auto;max-height:calc(80vh - 64px);">
@@ -211,18 +212,24 @@
                     }
                     else if (_searchResults.Count > 0)
                     {
+                        var flatResults = _searchResults.ToList();
+                        var flatIdx = 0;
                         @foreach (var grp in _searchResults.GroupBy(r => r.Category))
                         {
                             <MudText Typo="Typo.overline" Color="Color.Secondary" Class="px-4 pt-3 pb-1">@grp.Key</MudText>
                             @foreach (var result in grp)
                             {
+                                var isSelected = flatIdx == _searchSelectedIdx;
+                                var capturedIdx = flatIdx;
                                 <MudListItem T="string" OnClick="() => NavigateSearch(result.Href)"
-                                             Style="cursor:pointer;" Dense="true">
+                                             Style="@($"cursor:pointer;{(isSelected ? "background:rgba(63,81,181,.12);" : "")}")" Dense="true">
                                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                        <MudIcon Icon="@result.Icon" Size="Size.Small" Color="Color.Primary" />
-                                        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.875rem;">@((MarkupString)HighlightMatch(result.Text, _searchQuery))</span>
+                                        <MudIcon Icon="@result.Icon" Size="Size.Small" Color="@(isSelected ? Color.Primary : Color.Secondary)" />
+                                        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.875rem;@(isSelected ? "font-weight:600;" : "")">@((MarkupString)HighlightMatch(result.Text, _searchQuery))</span>
+                                        @if (isSelected) { <MudIcon Icon="@Icons.Material.Filled.KeyboardReturn" Size="Size.Small" Color="Color.Secondary" Style="opacity:.5;" /> }
                                     </MudStack>
                                 </MudListItem>
+                                flatIdx++;
                             }
                         }
                     }
@@ -251,6 +258,7 @@
     private string _searchQuery = string.Empty;
     private bool _searchLoading;
     private List<SearchResult> _searchResults = [];
+    private int _searchSelectedIdx = -1;
     private bool _helpOpen;
 
     private record SearchResult(string Category, string Text, string Href, string Icon);
@@ -506,6 +514,7 @@
         }));
 
         _searchResults = results;
+        _searchSelectedIdx = -1;
         _searchLoading = false;
         StateHasChanged();
         await Analytics.TrackAsync("global_search", accountGuid, "layout", $"q:{q},hits:{results.Count}");
@@ -515,6 +524,25 @@
     {
         CloseSearch();
         Nav.NavigateTo(href);
+    }
+
+    private void OnSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (_searchResults.Count == 0) return;
+        if (e.Key == "ArrowDown")
+        {
+            _searchSelectedIdx = Math.Min(_searchSelectedIdx + 1, _searchResults.Count - 1);
+            StateHasChanged();
+        }
+        else if (e.Key == "ArrowUp")
+        {
+            _searchSelectedIdx = Math.Max(_searchSelectedIdx - 1, 0);
+            StateHasChanged();
+        }
+        else if (e.Key == "Enter" && _searchSelectedIdx >= 0 && _searchSelectedIdx < _searchResults.Count)
+        {
+            NavigateSearch(_searchResults[_searchSelectedIdx].Href);
+        }
     }
 
     private static string HighlightMatch(string text, string query)
