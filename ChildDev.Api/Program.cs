@@ -127,11 +127,14 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
-    db.Database.ExecuteSqlRaw("ALTER TABLE Goals ADD COLUMN IF NOT EXISTS ProgressPercent INT NULL");
-    db.Database.ExecuteSqlRaw("ALTER TABLE Goals ADD COLUMN IF NOT EXISTS Category VARCHAR(50) NULL");
-    db.Database.ExecuteSqlRaw("ALTER TABLE Goals ADD COLUMN IF NOT EXISTS IsPinned TINYINT(1) NOT NULL DEFAULT 0");
-    db.Database.ExecuteSqlRaw("ALTER TABLE Accounts ADD COLUMN IF NOT EXISTS Email VARCHAR(200) NULL");
-    db.Database.ExecuteSqlRaw("ALTER TABLE Accounts ADD COLUMN IF NOT EXISTS AlertGoalComplete TINYINT(1) NOT NULL DEFAULT 0");
+    if (db.Database.IsRelational())
+    {
+        db.Database.ExecuteSqlRaw("ALTER TABLE Goals ADD COLUMN IF NOT EXISTS ProgressPercent INT NULL");
+        db.Database.ExecuteSqlRaw("ALTER TABLE Goals ADD COLUMN IF NOT EXISTS Category VARCHAR(50) NULL");
+        db.Database.ExecuteSqlRaw("ALTER TABLE Goals ADD COLUMN IF NOT EXISTS IsPinned TINYINT(1) NOT NULL DEFAULT 0");
+        db.Database.ExecuteSqlRaw("ALTER TABLE Accounts ADD COLUMN IF NOT EXISTS Email VARCHAR(200) NULL");
+        db.Database.ExecuteSqlRaw("ALTER TABLE Accounts ADD COLUMN IF NOT EXISTS AlertGoalComplete TINYINT(1) NOT NULL DEFAULT 0");
+    }
 }
 
 app.Run();
