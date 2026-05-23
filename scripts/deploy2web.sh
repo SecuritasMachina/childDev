@@ -105,8 +105,8 @@ if [[ "$FORCE_REBUILD" == "1" ]]; then
   "
 else
   log_info "Hot deploy: publish locally, copy to container, restart"
-  PUBLISH_DIR="/tmp/childdev-prod-hotdeploy"
-  rm -rf "$PUBLISH_DIR"
+  PUBLISH_DIR="$(mktemp -d /tmp/childdev-hotdeploy-XXXXXX)"
+  trap 'rm -rf "$PUBLISH_DIR" 2>/dev/null || true' EXIT
   dotnet publish "$ROOT_DIR/ChildDev.Api/ChildDev.Api.csproj" \
     -c Release -o "$PUBLISH_DIR" /p:UseAppHost=false --nologo -v minimal
 
@@ -120,12 +120,12 @@ else
     "
   else
     rsync -az --delete \
+      --exclude='wwwroot/downloads/LevelUp.apk' \
       -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
       "$PUBLISH_DIR/" \
       "$SSH_HOST:/tmp/childdev-hotdeploy/"
     ssh_run "docker cp /tmp/childdev-hotdeploy/. $CONTAINER:/app/ && docker restart $CONTAINER"
   fi
-  rm -rf "$PUBLISH_DIR"
 fi
 
 # ── status ───────────────────────────────────────────────────────────────────
