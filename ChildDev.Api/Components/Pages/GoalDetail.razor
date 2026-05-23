@@ -2288,6 +2288,18 @@ else
     {
         if (firstRender)
         {
+            if (AccountGuid is not null && Goal is not null)
+            {
+                try
+                {
+                    var recentKey = $"childdev_recent_goals_{AccountGuid}";
+                    var existing = await JS.InvokeAsync<string?>("localStorage.getItem", recentKey) ?? "";
+                    var parts = existing.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .Where(g => g != GoalGuid).Prepend(GoalGuid).Take(5).ToArray();
+                    await JS.InvokeVoidAsync("localStorage.setItem", recentKey, string.Join(",", parts));
+                }
+                catch { }
+            }
             if (AccountGuid is not null && Goal?.CompletionDate is null)
             {
                 _selfRef = DotNetObjectReference.Create(this);

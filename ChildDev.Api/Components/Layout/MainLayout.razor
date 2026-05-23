@@ -255,6 +255,25 @@
                             }
                         }
                     }
+                    else if (_recentGoals.Count > 0)
+                    {
+                        <MudText Typo="Typo.overline" Color="Color.Secondary" Class="px-4 pt-3 pb-1">Recent Goals</MudText>
+                        @foreach (var (guid, text) in _recentGoals)
+                        {
+                            var shortText = text.Length > 70 ? text[..70] + "…" : text;
+                            <MudListItem T="string" OnClick="@(() => NavigateSearch($"/goals/{guid}"))"
+                                         Style="cursor:pointer;" Dense="true">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudIcon Icon="@Icons.Material.Outlined.History" Size="Size.Small" Color="Color.Secondary" />
+                                    <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.875rem;">@shortText</span>
+                                </MudStack>
+                            </MudListItem>
+                        }
+                        <MudDivider Class="mt-2 mx-4" />
+                        <MudStack AlignItems="AlignItems.Center" Class="pa-3">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Type to search goals, todos, journal…</MudText>
+                        </MudStack>
+                    }
                     else
                     {
                         <MudStack AlignItems="AlignItems.Center" Class="pa-6">
@@ -282,6 +301,7 @@
     private List<SearchResult> _searchResults = [];
     private int _searchSelectedIdx = -1;
     private bool _helpOpen;
+    private List<(string Guid, string Text)> _recentGoals = [];
 
     private record SearchResult(string Category, string Text, string Href, string Icon);
 
@@ -462,6 +482,33 @@
         _searchQuery = string.Empty;
         _searchResults.Clear();
         _searchLoading = false;
+        _ = LoadRecentGoalsAsync();
+    }
+
+    private async Task LoadRecentGoalsAsync()
+    {
+        _recentGoals.Clear();
+        var accountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
+        if (accountGuid is null) return;
+        try
+        {
+            var recentKey = $"childdev_recent_goals_{accountGuid}";
+            var stored = await JS.InvokeAsync<string?>("localStorage.getItem", recentKey);
+            if (string.IsNullOrWhiteSpace(stored)) return;
+            var guids = stored.Split(',', StringSplitOptions.RemoveEmptyEntries).Take(5).ToList();
+            if (guids.Count == 0) return;
+            var goals = await Db.Goals
+                .Where(g => guids.Contains(g.Guid) && g.AccountFk == accountGuid && g.DeletedAt == null)
+                .Select(g => new { g.Guid, g.GoalText })
+                .ToListAsync();
+            _recentGoals = guids
+                .Select(id => goals.FirstOrDefault(g => g.Guid == id))
+                .Where(g => g is not null)
+                .Select(g => (g!.Guid, g.GoalText ?? ""))
+                .ToList();
+            StateHasChanged();
+        }
+        catch { }
     }
 
     private void CloseSearch() => _searchOpen = false;
