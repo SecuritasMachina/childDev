@@ -1717,9 +1717,11 @@ else
                                                 : noteAgeHr < 168
                                                     ? $"{noteAgeHr / 24}d ago"
                                                     : enteredDate.ToString("MMM d, yyyy");
+                                    var pNoteWc = (p.NextStepItems ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
+                                    var pNoteWcSuffix = pNoteWc >= 20 ? $" · {pNoteWc}w" : "";
                                 }
                                 <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                    Note #@noteNum · @noteTimeLabel
+                                    Note #@noteNum · @noteTimeLabel@pNoteWcSuffix
                                 </MudText>
                             </MudStack>
                             @if (!string.IsNullOrWhiteSpace(p.NextStepItems))
