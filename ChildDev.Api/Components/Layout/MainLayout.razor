@@ -590,7 +590,7 @@
             var snippet = (p.NextStepItems ?? "").Length > 70 ? p.NextStepItems![..70] + "…" : p.NextStepItems ?? "";
             var goalName = noteGoalMap.GetValueOrDefault(p.GoalFk, "");
             return new SearchResult("Progress Notes", $"[{goalName[..Math.Min(goalName.Length, 30)]}] {snippet}",
-                $"/goals/{p.GoalFk}", Icons.Material.Filled.TrendingUp);
+                $"/goals/{p.GoalFk}?noteFilter={Uri.EscapeDataString(q)}", Icons.Material.Filled.TrendingUp);
         }));
 
         _searchResults = results;

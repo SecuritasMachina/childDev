@@ -1267,7 +1267,7 @@
             <MudChip T="string" Size="Size.Small" Color="Color.Primary" Class="ml-2">@ProgressEntries.Count</MudChip>
         }
     </MudText>
-    @if (ProgressEntries.Count >= 5)
+    @if (ProgressEntries.Count >= 5 || !string.IsNullOrWhiteSpace(_noteFilter))
     {
         var learnCount = ProgressEntries.Count(p => { var t = (p.NextStepItems ?? "").ToLowerInvariant(); return !(p.NextStepItems ?? "").StartsWith("🏆 Reflection:") && (t.Contains("learn") || t.Contains("discover") || t.Contains("realiz") || t.Contains("figured out") || t.Contains("understand") || t.Contains("found out")); });
         var reflectCount = ProgressEntries.Count(p => (p.NextStepItems ?? "").StartsWith("🏆 Reflection:"));
@@ -2458,6 +2458,13 @@ else
     {
         AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
         if (AccountGuid is null) return;
+
+        // Pre-populate note filter from ?noteFilter= query param (e.g. from global search deep link)
+        var uri = new Uri(Nav.Uri);
+        var qs = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        var noteFilterParam = qs["noteFilter"];
+        if (!string.IsNullOrWhiteSpace(noteFilterParam))
+            _noteFilter = noteFilterParam;
 
         Goal = await Db.Goals.FirstOrDefaultAsync(g => g.Guid == GoalGuid && g.AccountFk == AccountGuid && g.DeletedAt == null);
         if (Goal is null) return;
