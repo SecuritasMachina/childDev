@@ -54,7 +54,7 @@ remove_stale_container() {
 }
 
 compose_cmd() {
-  docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" "$@"
+  docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" --env-file "$SECRETS_FILE" "$@"
 }
 
 do_hot_deploy() {
