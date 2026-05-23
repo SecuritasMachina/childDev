@@ -482,17 +482,19 @@
 
         var journals = await Db.Journals
             .Where(j => j.AccountFk == accountGuid && j.DeletedAt == null
-                     && ((j.Notes != null && j.Notes.Contains(q)) || (j.Tags != null && j.Tags.Contains(q))))
+                     && ((j.Notes != null && j.Notes.Contains(q))
+                      || (j.Tags != null && j.Tags.Contains(q))
+                      || (j.Activity != null && j.Activity.Contains(q))))
             .OrderByDescending(j => j.EnteredDate)
-            .Select(j => new { j.Notes, j.Tags })
+            .Select(j => new { j.Notes, j.Tags, j.Activity })
             .Take(5).ToListAsync();
         results.AddRange(journals.Select(j =>
         {
             var notes = j.Notes ?? "";
             var preview = string.IsNullOrWhiteSpace(notes)
-                ? (j.Tags ?? "")
+                ? (!string.IsNullOrWhiteSpace(j.Activity) ? $"[{j.Activity}] {j.Tags ?? ""}" : j.Tags ?? "")
                 : notes.Length > 80 ? notes[..80] + "…" : notes;
-            return new SearchResult("Journal", preview, $"/journal?search={Uri.EscapeDataString(q)}", Icons.Material.Filled.Book);
+            return new SearchResult("Journal", preview.Trim(), $"/journal?search={Uri.EscapeDataString(q)}", Icons.Material.Filled.Book);
         }));
 
         var progressNotes = await Db.GoalProgresses
