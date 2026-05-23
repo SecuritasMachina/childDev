@@ -237,6 +237,32 @@
         <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">
             🌟 You set this goal and saw it through — that takes real dedication and grit. Be proud of this win!
         </MudText>
+        @{
+            var jhFirstNote = ProgressEntries.Count > 0 ? ProgressEntries.Last() : null;
+            var jhLastNote  = ProgressEntries.Count > 1 ? ProgressEntries.First() : null;
+            var jhFirstText = jhFirstNote?.NextStepItems;
+            var jhLastText  = jhLastNote?.NextStepItems;
+        }
+        @if (!string.IsNullOrWhiteSpace(jhFirstText))
+        {
+            <MudDivider Class="my-2" />
+            <MudText Typo="Typo.overline" Color="Color.Success" Style="font-weight:700;letter-spacing:1px;" Class="mb-1">Journey Highlights</MudText>
+            <MudStack Spacing="2" Class="mb-2">
+                <MudPaper Elevation="0" Class="pa-2" Style="border-radius:8px;border-left:3px solid var(--mud-palette-success);background:rgba(76,175,80,.06);">
+                    <MudText Typo="Typo.caption" Color="Color.Success" Style="font-weight:700;">🌱 How it began</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Style="white-space:pre-wrap;">@(jhFirstText.Length > 200 ? jhFirstText[..200] + "…" : jhFirstText)</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@DateTimeOffset.FromUnixTimeMilliseconds(jhFirstNote!.UpdatedOn).LocalDateTime.ToString("MMM d, yyyy")</MudText>
+                </MudPaper>
+                @if (!string.IsNullOrWhiteSpace(jhLastText))
+                {
+                    <MudPaper Elevation="0" Class="pa-2" Style="border-radius:8px;border-left:3px solid var(--mud-palette-warning);background:rgba(255,193,7,.06);">
+                        <MudText Typo="Typo.caption" Color="Color.Warning" Style="font-weight:700;">🏆 How it ended</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Style="white-space:pre-wrap;">@(jhLastText.Length > 200 ? jhLastText[..200] + "…" : jhLastText)</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@DateTimeOffset.FromUnixTimeMilliseconds(jhLastNote!.UpdatedOn).LocalDateTime.ToString("MMM d, yyyy")</MudText>
+                    </MudPaper>
+                }
+            </MudStack>
+        }
         <MudButton Size="Size.Small" Color="Color.Default" StartIcon="@Icons.Material.Filled.Undo"
                    OnClick="ReopenGoal">Reopen Goal</MudButton>
     </MudPaper>
