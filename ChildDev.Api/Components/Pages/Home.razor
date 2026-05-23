@@ -46,7 +46,7 @@
                 {
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-3">
                         <MudIcon Icon="@Icons.Material.Filled.PhoneAndroid" Color="Color.Success" Size="Size.Small" />
-                        <MudLink Href="/downloads/ChildDev.apk" Target="_blank"
+                        <MudLink Href="/downloads/LevelUp.apk" Target="_blank"
                                  Style="font-size:0.9rem;font-weight:600;color:#388E3C;">
                             Download Android App (.apk)
                         </MudLink>
@@ -2353,7 +2353,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        ApkExists = System.IO.File.Exists(System.IO.Path.Combine(HostEnv.WebRootPath, "downloads", "ChildDev.apk"));
+        ApkExists = System.IO.File.Exists(System.IO.Path.Combine(HostEnv.WebRootPath, "downloads", "LevelUp.apk"));
         AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
         if (AccountGuid is null) return;
         await LoadGoals();

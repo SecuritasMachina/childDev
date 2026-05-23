@@ -25,7 +25,7 @@ if [[ -n "$APK_SRC" ]]; then
   fi
   echo "==> Uploading APK: $APK_SRC"
   scp -o StrictHostKeyChecking=no -i "$SSH_KEY" "$APK_SRC" \
-    "$SERVER:$REMOTE_DIR/ChildDev.Api/wwwroot/downloads/ChildDev.apk"
+    "$SERVER:$REMOTE_DIR/ChildDev.Api/wwwroot/downloads/LevelUp.apk"
 fi
 
 echo "==> Rebuilding and restarting app container..."
@@ -35,5 +35,5 @@ ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" "$SERVER" \
 echo "==> Deploy complete."
 echo "    App: https://childdev.havranek.com"
 if [[ -n "$APK_SRC" ]]; then
-  echo "    APK: https://childdev.havranek.com/downloads/ChildDev.apk"
+  echo "    APK: https://childdev.havranek.com/downloads/LevelUp.apk"
 fi
