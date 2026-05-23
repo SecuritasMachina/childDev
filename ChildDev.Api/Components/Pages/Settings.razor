@@ -52,8 +52,8 @@
                 <MudCardContent>
                     <MudGrid Spacing="2">
                         <MudItem xs="6">
-                            <MudText Typo="Typo.h5" Color="Color.Primary">@TotalGoals</MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">Total Goals</MudText>
+                            <MudText Typo="Typo.h5" Color="Color.Primary">@TotalGoalsCompleted<span style="font-size:1rem;opacity:.6;">/@TotalGoals</span></MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Goals Completed</MudText>
                         </MudItem>
                         <MudItem xs="6">
                             <MudText Typo="Typo.h5" Color="Color.Success">@TotalProgressNotes</MudText>
@@ -208,6 +208,7 @@
     private string CurrentNickName = string.Empty;
     private string CreatedOnDisplay = string.Empty;
     private int TotalGoals;
+    private int TotalGoalsCompleted;
     private int TotalProgressNotes;
     private int TotalJournalEntries;
     private int TotalTodos;
@@ -239,6 +240,7 @@
         NewNickName = display.NickName;
         CreatedOnDisplay = DateTimeOffset.FromUnixTimeMilliseconds(display.CreatedOn).LocalDateTime.ToString("MMMM d, yyyy");
         TotalGoals = await Db.Goals.CountAsync(g => g.AccountFk == AccountGuid && g.DeletedAt == null);
+        TotalGoalsCompleted = await Db.Goals.CountAsync(g => g.AccountFk == AccountGuid && g.DeletedAt == null && g.CompletionDate != null);
         TotalProgressNotes = await Db.GoalProgresses.CountAsync(p => p.AccountFk == AccountGuid && p.DeletedAt == null);
         TotalJournalEntries = await Db.Journals.CountAsync(j => j.AccountFk == AccountGuid && j.DeletedAt == null);
         var allTodos = await Db.Todos.Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null).Select(t => t.CompletedAt).ToListAsync();
