@@ -2276,8 +2276,19 @@ else
                       Label="What happened? What did you learn or feel?"
                       Variant="Variant.Outlined" Lines="4" FullWidth="true" Immediate="true"
                       AutoFocus="true" Class="mb-3" />
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">How did you feel? (tap to select)</MudText>
+        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-2">
+            @foreach (var (emoji, mood) in new[] { ("😊","happy"), ("🤩","excited"), ("🙏","grateful"), ("💪","proud"), ("😌","calm"), ("🎯","focused"), ("😢","sad"), ("😴","tired"), ("😟","anxious"), ("😠","angry") })
+            {
+                <MudChip T="string" Size="Size.Small"
+                         Variant="@(_quickJournalMood == mood ? Variant.Filled : Variant.Outlined)"
+                         Color="@(_quickJournalMood == mood ? Color.Primary : Color.Default)"
+                         Style="cursor:pointer;"
+                         OnClick="() => _quickJournalMood = (_quickJournalMood == mood ? string.Empty : mood)">@emoji @mood</MudChip>
+            }
+        </MudStack>
         <MudTextField @bind-Value="_quickJournalMood"
-                      Label="Mood (optional)"
+                      Label="Or type your own mood (optional)"
                       Variant="Variant.Outlined" Class="mb-2" />
     </DialogContent>
     <DialogActions>
