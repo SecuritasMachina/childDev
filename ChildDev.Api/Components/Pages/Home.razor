@@ -1240,9 +1240,18 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         @if (!string.IsNullOrWhiteSpace(fgNextStep))
         {
             var truncated = fgNextStep.Length > 120 ? fgNextStep[..120] + "…" : fgNextStep;
-            <MudText Typo="Typo.body2" Color="Color.Primary" Class="mb-3">
-                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" Style="vertical-align:middle;" /> @truncated
-            </MudText>
+            var fgNsFirstLine = fgNextStep.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? fgNextStep;
+            var fgTodoTitle = fgNsFirstLine.Length > 100 ? fgNsFirstLine[..100] : fgNsFirstLine;
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
+                <MudText Typo="Typo.body2" Color="Color.Primary" Style="flex:1;">
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" Style="vertical-align:middle;" /> @truncated
+                </MudText>
+                <MudTooltip Text="Create a todo from this next step">
+                    <MudIconButton Icon="@Icons.Material.Filled.AddTask" Size="Size.Small" Color="Color.Info"
+                                   OnClick="() => OpenGoalTodoDialogWithTitle(fg.Guid, fgTodoTitle)"
+                                   aria-label="Create todo from next step" />
+                </MudTooltip>
+            </MudStack>
         }
         <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@($"/goals/{fg.Guid}")"
@@ -2942,6 +2951,16 @@ else
         _goalTodoTitle = string.Empty;
         _goalTodoDueDate = null;
         _showGoalTodoDialog = true;
+    }
+
+    private void OpenGoalTodoDialogWithTitle(string goalGuid, string title)
+    {
+        _goalTodoGoalGuid = goalGuid;
+        _goalTodoGoalText = AllActiveGoals.FirstOrDefault(g => g.Guid == goalGuid)?.GoalText;
+        _goalTodoTitle = title;
+        _goalTodoDueDate = null;
+        _showGoalTodoDialog = true;
+        _ = Analytics.TrackAsync("todo_from_next_step", AccountGuid, "home", goalGuid);
     }
 
     private async Task SaveGoalTodo()
