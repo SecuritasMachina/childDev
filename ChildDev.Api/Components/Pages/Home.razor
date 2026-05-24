@@ -190,12 +190,30 @@
     return;
 }
 
-<MudGrid Class="mb-4">
-    <MudItem xs="12">
-        <MudPaper Elevation="2" Class="pa-4 text-center stat-card-goals" Style="cursor:default;border-radius:12px;">
-            <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Primary" Style="font-size:2rem;" />
-            <MudText Typo="Typo.h4" Class="mt-1">@AllActiveGoals.Count</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">Active Goal@(AllActiveGoals.Count == 1 ? "" : "s")</MudText>
+<MudPaper Elevation="2" Class="pa-4 mb-4 stat-card-goals" Style="border-radius:12px;">
+    <MudGrid Spacing="3" AlignItems="AlignItems.Stretch">
+        <MudItem xs="12" sm="5">
+            <MudStack Spacing="1">
+                <MudStack Row="true" AlignItems="AlignItems.Baseline" Spacing="1" Wrap="Wrap.Wrap">
+                    <MudText Typo="Typo.h3" Color="Color.Primary" Style="font-weight:800;line-height:1;">@AllActiveGoals.Count</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Active Goal@(AllActiveGoals.Count == 1 ? "" : "s")</MudText>
+                </MudStack>
+                <MudText Typo="Typo.overline" Color="Color.Secondary" Style="letter-spacing:1px;">This Week</MudText>
+                <MudStack Row="true" Spacing="3" Wrap="Wrap.Wrap">
+                    <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                        <MudText Typo="Typo.h5" Color="Color.Primary" Style="font-weight:700;">@ProgressThisWeek</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">📝 Notes</MudText>
+                    </MudStack>
+                    <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                        <MudText Typo="Typo.h5" Color="Color.Info" Style="font-weight:700;">@JournalThisWeek</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">📓 Journal</MudText>
+                    </MudStack>
+                    <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                        <MudText Typo="Typo.h5" Color="Color.Success" Style="font-weight:700;">@TodosCompletedThisWeek</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">✅ Todos done</MudText>
+                    </MudStack>
+                </MudStack>
+                <MudDivider Class="my-1" />
             @if (CompletedGoals.Count > 0)
             {
                 var yearStartMs = new DateTimeOffset(new DateTime(DateTime.Today.Year, 1, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
@@ -322,9 +340,98 @@
                     📌 @goalsWithNextStep goal@(goalsWithNextStep == 1 ? "" : "s") with a next step ready
                 </MudText>
             }
-        </MudPaper>
-    </MudItem>
-</MudGrid>
+            </MudStack>
+        </MudItem>
+        <MudItem xs="12" sm="7">
+            @if (WeeklyProgressSeries.Count > 0)
+            {
+                <MudText Typo="Typo.overline" Color="Color.Secondary" Style="letter-spacing:1px;" Class="mb-1">8-Week Activity</MudText>
+                <MudChart ChartType="ChartType.Bar"
+                          ChartSeries="@WeeklyProgressSeries"
+                          XAxisLabels="@WeeklyProgressLabels"
+                          Width="100%" Height="130px"
+                          ChartOptions="@(new ChartOptions { YAxisTicks = 1, ShowLegend = true })" />
+            }
+            @{
+                var dueChipNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                var dueByDay = AllActiveGoals
+                    .Where(g => g.ExpirationDate.HasValue && g.CompletionDate == null)
+                    .Select(g => new { Goal = g, DaysLeft = (int)Math.Ceiling((g.ExpirationDate!.Value - dueChipNowMs) / 86_400_000.0) })
+                    .Where(x => x.DaysLeft >= 0 && x.DaysLeft <= 7)
+                    .GroupBy(x => x.DaysLeft)
+                    .OrderBy(g => g.Key)
+                    .ToList();
+            }
+            @if (dueByDay.Count > 0)
+            {
+                <MudText Typo="Typo.overline" Color="Color.Warning" Style="letter-spacing:1px;" Class="mt-2 mb-1">
+                    Due Within 7 Days (@dueByDay.Sum(g => g.Count()))
+                </MudText>
+                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                    @foreach (var dg in dueByDay)
+                    {
+                        var dayLabel = dg.Key == 0 ? "today" : dg.Key == 1 ? "tomorrow" : $"in {dg.Key}d";
+                        var chipNames = string.Join(", ", dg.Select(x => x.Goal.GoalText?.Length > 25 ? x.Goal.GoalText[..25] + "…" : x.Goal.GoalText));
+                        var firstGuid = dg.First().Goal.Guid;
+                        <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined"
+                                 Href="@($"/goals/{firstGuid}")" Style="font-size:0.7rem;height:26px;">
+                            ⏰ @dayLabel — @chipNames
+                        </MudChip>
+                    }
+                </MudStack>
+            }
+            @{
+                var naStaleMs2 = DateTimeOffset.UtcNow.AddDays(-14).ToUnixTimeMilliseconds();
+                var staleGoalsCard = AllActiveGoals
+                    .Where(g => ProgressCounts.GetValueOrDefault(g.Guid) >= 1
+                             && (!LastProgressAt.TryGetValue(g.Guid, out var sgLp) || sgLp < naStaleMs2))
+                    .Select(g => new {
+                        Goal = g,
+                        DaysSince = (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                            - (LastProgressAt.TryGetValue(g.Guid, out var sgLp2) ? sgLp2 : g.EnteredDate)) / 86_400_000L)
+                    })
+                    .OrderByDescending(x => x.DaysSince)
+                    .Take(5)
+                    .ToList();
+            }
+            @if (staleGoalsCard.Count > 0)
+            {
+                <MudExpansionPanels Class="mt-2" Elevation="0">
+                    <MudExpansionPanel>
+                        <TitleContent>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.NotificationImportant" Color="Color.Warning" Size="Size.Small" />
+                                <MudText Typo="Typo.body2" Color="Color.Warning" Style="font-weight:600;">
+                                    Goals needing attention (@staleGoalsCard.Count)
+                                </MudText>
+                            </MudStack>
+                        </TitleContent>
+                        <ChildContent>
+                            @foreach (var na in staleGoalsCard)
+                            {
+                                var naName2 = na.Goal.GoalText?.Length > 50 ? na.Goal.GoalText[..50] + "…" : na.Goal.GoalText;
+                                LatestNextStep.TryGetValue(na.Goal.Guid, out var naNextStep2);
+                                var naNext2 = naNextStep2?.Length > 60 ? naNextStep2[..60] + "…" : naNextStep2;
+                                <MudStack Spacing="0" Class="mb-2">
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                        <MudText Typo="Typo.body2" Style="flex:1;font-weight:500;">@naName2</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@na.DaysSince d ago</MudText>
+                                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning"
+                                                   Href="@($"/goals/{na.Goal.Guid}")">Note</MudButton>
+                                    </MudStack>
+                                    @if (!string.IsNullOrWhiteSpace(naNext2))
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-style:italic;">→ @naNext2</MudText>
+                                    }
+                                </MudStack>
+                            }
+                        </ChildContent>
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+            }
+        </MudItem>
+    </MudGrid>
+</MudPaper>
 
 <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap" Class="mb-4" AlignItems="AlignItems.Center">
     <MudButton Href="/todos" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.CheckBox"
@@ -351,35 +458,6 @@
     </MudButton>
 </MudStack>
 
-@if (AllActiveGoals.Count > 0 && (TodosCompletedThisWeek > 0 || ProgressThisWeek > 0 || JournalThisWeek > 0))
-{
-    <MudPaper Elevation="2" Class="pa-4 mb-4" Style="border-radius:14px;background:linear-gradient(135deg,rgba(255,193,7,.10) 0%,rgba(255,152,0,.06) 100%);border:1.5px solid var(--mud-palette-warning);">
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
-            <MudText Style="font-size:1.4rem;line-height:1;">🏆</MudText>
-            <MudText Typo="Typo.overline" Color="Color.Warning" Style="font-weight:700;letter-spacing:1px;flex:1;">This Week's Wins</MudText>
-        </MudStack>
-        <MudGrid Spacing="2">
-            <MudItem xs="4">
-                <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                    <MudText Typo="Typo.h4" Color="Color.Warning" Style="font-weight:700;">@TodosCompletedThisWeek</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">✅ Todos done</MudText>
-                </MudStack>
-            </MudItem>
-            <MudItem xs="4">
-                <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                    <MudText Typo="Typo.h4" Color="Color.Warning" Style="font-weight:700;">@ProgressThisWeek</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">📝 Progress notes</MudText>
-                </MudStack>
-            </MudItem>
-            <MudItem xs="4">
-                <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                    <MudText Typo="Typo.h4" Color="Color.Warning" Style="font-weight:700;">@JournalThisWeek</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">📓 Journal entries</MudText>
-                </MudStack>
-            </MudItem>
-        </MudGrid>
-    </MudPaper>
-}
 
 @{
     var wcWeek = System.Globalization.ISOWeek.GetWeekOfYear(DateTime.Today);
@@ -609,30 +687,6 @@
 {
     <MudAlert Severity="Severity.Success" Dense="true" Class="mb-3">@activityAlert</MudAlert>
 }
-@if (ProgressThisWeek > 0 && string.IsNullOrWhiteSpace(FilterText))
-{
-    var wMsg = GoalsProgressedThisWeek == 1
-        ? $"This week: {ProgressThisWeek} progress note{(ProgressThisWeek == 1 ? "" : "s")} on 1 goal! 💪 Keep going!"
-        : $"This week: {ProgressThisWeek} progress note{(ProgressThisWeek == 1 ? "" : "s")} across {GoalsProgressedThisWeek} goals! 🌟 Amazing work!";
-    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.TrendingUp" Dense="true" Class="mb-2">@wMsg</MudAlert>
-    if (ProgressLastWeek > 0)
-    {
-        var wowDiff = ProgressThisWeek - ProgressLastWeek;
-        var wowMsg = wowDiff > 0 ? $"📈 +{wowDiff} vs last week ({ProgressLastWeek}) — you're improving!"
-                   : wowDiff < 0 ? $"📉 {ProgressLastWeek} last week — can you match or beat it this week?"
-                   :               $"= Same as last week ({ProgressLastWeek} notes) — steady consistency!";
-        <MudText Typo="Typo.caption" Color="@(wowDiff >= 0 ? Color.Success : Color.Warning)" Class="mb-2">@wowMsg</MudText>
-    }
-    @if (WeeklyProgressSeries.Count > 0 && WeeklyProgressSeries[0].Data.Any(d => d > 0))
-    {
-        <MudChart ChartType="ChartType.Bar"
-                  ChartSeries="@WeeklyProgressSeries"
-                  XAxisLabels="@WeeklyProgressLabels"
-                  Width="100%" Height="110px"
-                  ChartOptions="@(new ChartOptions { YAxisTicks = 1 })"
-                  Class="mb-3" />
-    }
-}
 @if (MostFocusedGoalThisWeekName is not null && string.IsNullOrWhiteSpace(FilterText))
 {
     var mfName = MostFocusedGoalThisWeekName.Length > 55 ? MostFocusedGoalThisWeekName[..55] + "…" : MostFocusedGoalThisWeekName;
@@ -792,53 +846,6 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         @((MarkupString)jsAtRiskMsg)
         <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning" Href="/journal" Class="ml-1">Write entry</MudButton>
     </MudAlert>
-}
-@{
-    var naStaleMs = DateTimeOffset.UtcNow.AddDays(-14).ToUnixTimeMilliseconds();
-    var naStaleGoals = string.IsNullOrWhiteSpace(FilterText)
-        ? AllActiveGoals
-            .Where(g => ProgressCounts.GetValueOrDefault(g.Guid) >= 1
-                     && (!LastProgressAt.TryGetValue(g.Guid, out var naLp) || naLp < naStaleMs))
-            .Select(g => new {
-                Goal = g,
-                DaysSince = (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-                    - (LastProgressAt.TryGetValue(g.Guid, out var naLp2) ? naLp2 : g.EnteredDate)) / 86_400_000L)
-            })
-            .OrderByDescending(x => x.DaysSince)
-            .Take(5)
-            .ToList()
-        : [];
-}
-@if (naStaleGoals.Count >= 2)
-{
-    <MudPaper Elevation="2" Class="pa-3 mb-4" Style="border-radius:14px;border-left:4px solid var(--mud-palette-warning);background:var(--mud-palette-background-grey);">
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
-            <MudIcon Icon="@Icons.Material.Filled.NotificationImportant" Color="Color.Warning" Size="Size.Small" />
-            <MudText Typo="Typo.subtitle2" Color="Color.Warning" Style="font-weight:700;">
-                @naStaleGoals.Count Goal@(naStaleGoals.Count == 1 ? "" : "s") Waiting for You
-            </MudText>
-        </MudStack>
-        @foreach (var na in naStaleGoals)
-        {
-            var naName = na.Goal.GoalText?.Length > 55 ? na.Goal.GoalText[..55] + "…" : na.Goal.GoalText;
-            var naDayLabel = na.DaysSince == 1 ? "1 day" : $"{na.DaysSince} days";
-            LatestNextStep.TryGetValue(na.Goal.Guid, out var naNextStep);
-            var naNextShort = naNextStep?.Length > 70 ? naNextStep[..70] + "…" : naNextStep;
-            <MudStack Spacing="0" Class="mb-2">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                    <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Size="Size.Small" Color="Color.Warning" Style="font-size:8px;" />
-                    <MudText Typo="Typo.body2" Style="flex:1;font-weight:500;">"@naName"</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">@naDayLabel ago</MudText>
-                    <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning"
-                               Href="@($"/goals/{na.Goal.Guid}")">Add note</MudButton>
-                </MudStack>
-                @if (!string.IsNullOrWhiteSpace(naNextShort))
-                {
-                    <MudText Typo="Typo.caption" Color="Color.Secondary" Style="padding-left:20px;font-style:italic;">Next: @naNextShort</MudText>
-                }
-            </MudStack>
-        }
-    </MudPaper>
 }
 @{
     var nmMilestones576 = new[] { 100, 50, 25, 10, 5 };
@@ -2553,20 +2560,35 @@ else
         }
         IsNewWeeklyRecord = ProgressThisWeek > priorMaxWeeklyNotes && ProgressThisWeek >= 3;
 
-        // 8-week progress notes chart
+        // 8-week chart: notes + journals + todos completed
+        var chartEightWeeksAgo = nowMsStreak - 8L * 7 * 86_400_000L;
+        var chartJournalMs = await Db.Journals
+            .Where(j => j.AccountFk == AccountGuid && j.DeletedAt == null && j.EnteredDate >= chartEightWeeksAgo)
+            .Select(j => j.EnteredDate).ToListAsync();
+        var chartTodoMs = await Db.Todos
+            .Where(t => t.AccountFk == AccountGuid && t.DeletedAt == null && t.CompletedAt != null && t.CompletedAt >= chartEightWeeksAgo)
+            .Select(t => t.CompletedAt!.Value).ToListAsync();
+
         var chartCounts = new double[8];
+        var chartJournalCounts = new double[8];
+        var chartTodoCounts = new double[8];
         var chartLabels = new string[8];
         for (int cw = 0; cw < 8; cw++)
         {
             var cwEnd = nowMsStreak - (long)(7 - cw) * 7 * 86_400_000L;
             var cwStart = cwEnd - 7L * 86_400_000L;
             chartCounts[cw] = allTimestamps.Count(p => p.UpdatedOn >= cwStart && p.UpdatedOn < cwEnd);
-            var weekLabel = DateTimeOffset.FromUnixTimeMilliseconds(cwEnd).LocalDateTime;
-            chartLabels[cw] = cw == 7 ? "Now" : weekLabel.ToString("M/d");
+            chartJournalCounts[cw] = chartJournalMs.Count(j => j >= cwStart && j < cwEnd);
+            chartTodoCounts[cw] = chartTodoMs.Count(t => t >= cwStart && t < cwEnd);
+            chartLabels[cw] = DateTimeOffset.FromUnixTimeMilliseconds(cwEnd).LocalDateTime.ToString("M/d");
         }
-        if (chartCounts.Any(c => c > 0))
+        if (chartCounts.Any(c => c > 0) || chartJournalCounts.Any(c => c > 0) || chartTodoCounts.Any(c => c > 0))
         {
-            WeeklyProgressSeries = [new ChartSeries { Name = "Notes/week", Data = chartCounts }];
+            WeeklyProgressSeries = [
+                new ChartSeries { Name = "Notes", Data = chartCounts },
+                new ChartSeries { Name = "Journal", Data = chartJournalCounts },
+                new ChartSeries { Name = "Todos", Data = chartTodoCounts },
+            ];
             WeeklyProgressLabels = chartLabels;
         }
 
