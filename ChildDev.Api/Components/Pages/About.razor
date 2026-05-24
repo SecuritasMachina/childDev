@@ -1,0 +1,374 @@
+@page "/about"
+
+<PageTitle>About LevelUp – Goal Achievement for Kids</PageTitle>
+
+<HeadContent>
+    <meta name="description" content="LevelUp helps kids set meaningful developmental goals, track progress with notes, and celebrate achievements. Free goal-tracking app for children and caregivers." />
+    <meta name="keywords" content="kids goal setting, children goal tracker, developmental goals, progress tracking for kids, goal achievement app, free kids app" />
+    <meta property="og:title" content="LevelUp – Goal Achievement for Kids" />
+    <meta property="og:description" content="LevelUp helps kids set meaningful developmental goals, track progress with notes, and celebrate achievements. Free for kids, parents, teachers, and caregivers." />
+    <meta property="og:url" content="https://levelup.securitasmachina.org/about" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="LevelUp – Goal Achievement for Kids" />
+    <meta name="twitter:description" content="Free goal-tracking app for kids and caregivers. Set goals, track progress, celebrate wins." />
+    <script type="application/ld+json">
+    {
+      "@@context": "https://schema.org",
+      "@@type": "SoftwareApplication",
+      "name": "LevelUp",
+      "applicationCategory": "EducationApplication",
+      "operatingSystem": "Web, Android",
+      "offers": {
+        "@@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "description": "LevelUp helps kids and caregivers set meaningful developmental goals, track every step forward with progress notes, and celebrate achievements along the way.",
+      "url": "https://levelup.securitasmachina.org",
+      "audience": {
+        "@@type": "EducationalAudience",
+        "educationalRole": "student"
+      },
+      "featureList": [
+        "Goal Setting",
+        "Progress Tracking",
+        "Journal",
+        "Task Management",
+        "Streaks",
+        "Achievements"
+      ]
+    }
+    </script>
+</HeadContent>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-6">
+
+    <!-- Back link -->
+    <MudLink Href="/" Underline="Underline.Hover" Color="Color.Secondary" Typo="Typo.body2" Class="mb-6 d-block">
+        <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" Style="vertical-align:middle;margin-right:4px;" />
+        Back to Home
+    </MudLink>
+
+    <!-- H1 Hero -->
+    <MudText Typo="Typo.h3" Class="mb-3" Style="font-weight:800;line-height:1.2;">
+        LevelUp – Goal Achievement for Kids
+    </MudText>
+    <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-8" Style="max-width:680px;line-height:1.8;font-size:1.05rem;">
+        LevelUp is a free goal-tracking app designed to help kids and their caregivers set meaningful developmental goals,
+        log progress notes, reflect through journaling, and celebrate every win along the way.
+        Available on the web and Android, LevelUp makes it easy to see exactly how far you've come.
+    </MudText>
+
+    <MudDivider Class="mb-8" />
+
+    <!-- What is LevelUp -->
+    <section aria-labelledby="what-is-levelup">
+        <MudText Typo="Typo.h5" id="what-is-levelup" Style="font-weight:700;" Class="mb-3">
+            What is LevelUp?
+        </MudText>
+        <MudText Typo="Typo.body1" Style="line-height:1.8;max-width:680px;" Class="mb-3">
+            LevelUp is a structured, motivating environment where children and the adults who support them can
+            work together on personal growth. Whether a child wants to improve reading skills, build social
+            confidence, stay organized, or accomplish something they've never tried before — LevelUp gives
+            them the tools to track every step of the journey.
+        </MudText>
+        <MudText Typo="Typo.body1" Style="line-height:1.8;max-width:680px;" Class="mb-8">
+            The app is built around <strong>goals as the central concept</strong>. Progress notes, journal entries,
+            and to-do tasks all exist to support goal achievement — not the other way around.
+        </MudText>
+    </section>
+
+    <!-- Key Features -->
+    <section aria-labelledby="key-features" class="mb-8">
+        <MudText Typo="Typo.h5" id="key-features" Style="font-weight:700;" Class="mb-4">
+            Key Features
+        </MudText>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="2" Class="pa-4" Style="border-radius:14px;height:100%;">
+                    <MudStack Spacing="2">
+                        <MudText Style="font-size:2rem;">🎯</MudText>
+                        <MudText Typo="Typo.h6" Style="font-weight:700;">Goals</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Style="line-height:1.7;">
+                            Set specific, measurable developmental goals with optional due dates and success criteria.
+                            Mark goals complete and watch your achievements grow.
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="2" Class="pa-4" Style="border-radius:14px;height:100%;">
+                    <MudStack Spacing="2">
+                        <MudText Style="font-size:2rem;">📝</MudText>
+                        <MudText Typo="Typo.h6" Style="font-weight:700;">Progress Notes</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Style="line-height:1.7;">
+                            Log progress notes for each goal — what went well, what the next steps are, and wins to celebrate.
+                            Build a detailed history of growth over time.
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="2" Class="pa-4" Style="border-radius:14px;height:100%;">
+                    <MudStack Spacing="2">
+                        <MudText Style="font-size:2rem;">📓</MudText>
+                        <MudText Typo="Typo.h6" Style="font-weight:700;">Journal</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Style="line-height:1.7;">
+                            Free-form journaling with mood tracking, tags, and activities. Reflective writing helps
+                            kids connect their daily experiences to their bigger goals.
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="2" Class="pa-4" Style="border-radius:14px;height:100%;">
+                    <MudStack Spacing="2">
+                        <MudText Style="font-size:2rem;">✅</MudText>
+                        <MudText Typo="Typo.h6" Style="font-weight:700;">Todos</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Style="line-height:1.7;">
+                            Break goals into actionable tasks with optional due dates. Link todos directly to goals
+                            so kids can see how today's work connects to the bigger picture.
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="2" Class="pa-4" Style="border-radius:14px;height:100%;">
+                    <MudStack Spacing="2">
+                        <MudText Style="font-size:2rem;">📱</MudText>
+                        <MudText Typo="Typo.h6" Style="font-weight:700;">Android App</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Style="line-height:1.7;">
+                            Download the free LevelUp Android app and track goals on the go — offline capable with
+                            automatic sync when you're back online. Available as a direct APK download.
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="2" Class="pa-4" Style="border-radius:14px;height:100%;">
+                    <MudStack Spacing="2">
+                        <MudText Style="font-size:2rem;">🏆</MudText>
+                        <MudText Typo="Typo.h6" Style="font-weight:700;">Achievements &amp; Streaks</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Style="line-height:1.7;">
+                            Earn badges for milestones, build daily activity streaks, and unlock achievements that
+                            celebrate consistent effort — not just end results.
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </section>
+
+    <!-- Who is it for -->
+    <section aria-labelledby="who-is-it-for" class="mb-8">
+        <MudText Typo="Typo.h5" id="who-is-it-for" Style="font-weight:700;" Class="mb-3">
+            Who is LevelUp For?
+        </MudText>
+        <MudText Typo="Typo.body1" Style="line-height:1.8;max-width:680px;" Class="mb-4">
+            LevelUp is designed for children ages 5–18 and the adults who support them. Whether used
+            independently by older kids or collaboratively with caregivers, the app adapts to many contexts:
+        </MudText>
+        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2" Class="mb-4">
+            <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Medium">
+                <MudIcon Icon="@Icons.Material.Filled.ChildCare" Size="Size.Small" Class="mr-1" />
+                Kids ages 5–18
+            </MudChip>
+            <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Medium">
+                <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Small" Class="mr-1" />
+                Parents &amp; Caregivers
+            </MudChip>
+            <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Medium">
+                <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Small" Class="mr-1" />
+                Teachers &amp; Educators
+            </MudChip>
+            <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Medium">
+                <MudIcon Icon="@Icons.Material.Filled.HealthAndSafety" Size="Size.Small" Class="mr-1" />
+                Therapists &amp; Coaches
+            </MudChip>
+            <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Medium">
+                <MudIcon Icon="@Icons.Material.Filled.FamilyRestroom" Size="Size.Small" Class="mr-1" />
+                Families
+            </MudChip>
+        </MudStack>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Style="line-height:1.7;max-width:680px;">
+            The app is especially well-suited for IEP goal tracking, therapy homework, summer growth plans,
+            and any context where consistent, visible progress matters.
+        </MudText>
+    </section>
+
+    <!-- How it works -->
+    <section aria-labelledby="how-it-works" class="mb-8">
+        <MudText Typo="Typo.h5" id="how-it-works" Style="font-weight:700;" Class="mb-4">
+            How It Works
+        </MudText>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="4">
+                <MudPaper Elevation="1" Class="pa-4 text-center" Style="border-radius:14px;height:100%;border-top:4px solid #3949AB;">
+                    <MudText Style="font-size:2.5rem;margin-bottom:8px;">1️⃣</MudText>
+                    <MudText Typo="Typo.h6" Style="font-weight:700;" Class="mb-2">Set a Goal</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Style="line-height:1.7;">
+                        Write down what you want to achieve. Add a due date and a clear measure of success to
+                        make it concrete and trackable.
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudPaper Elevation="1" Class="pa-4 text-center" Style="border-radius:14px;height:100%;border-top:4px solid #F57C00;">
+                    <MudText Style="font-size:2.5rem;margin-bottom:8px;">2️⃣</MudText>
+                    <MudText Typo="Typo.h6" Style="font-weight:700;" Class="mb-2">Track Progress</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Style="line-height:1.7;">
+                        Log progress notes, complete related tasks, and write journal entries regularly.
+                        LevelUp keeps a full timeline so growth is always visible.
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudPaper Elevation="1" Class="pa-4 text-center" Style="border-radius:14px;height:100%;border-top:4px solid #43A047;">
+                    <MudText Style="font-size:2.5rem;margin-bottom:8px;">3️⃣</MudText>
+                    <MudText Typo="Typo.h6" Style="font-weight:700;" Class="mb-2">Celebrate</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Style="line-height:1.7;">
+                        Mark goals complete, earn achievement badges, and build streaks. Every milestone
+                        is recognized — because the effort matters as much as the result.
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </section>
+
+    <!-- FAQ -->
+    <section aria-labelledby="faq" class="mb-8">
+        <MudText Typo="Typo.h5" id="faq" Style="font-weight:700;" Class="mb-4">
+            Frequently Asked Questions
+        </MudText>
+        <MudExpansionPanels MultiExpansion="true" Elevation="2" Style="border-radius:12px;overflow:hidden;">
+            <MudExpansionPanel>
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Primary" Size="Size.Small" />
+                        <MudText Typo="Typo.subtitle1" Style="font-weight:600;">Is LevelUp free?</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudText Typo="Typo.body2" Style="line-height:1.7;" Class="px-2 pb-2">
+                        Yes — completely free. LevelUp has no paid tiers, no subscriptions, and no in-app purchases.
+                        The web app and Android app are both free to use with a single account that syncs across devices.
+                    </MudText>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel>
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.PhoneAndroid" Color="Color.Primary" Size="Size.Small" />
+                        <MudText Typo="Typo.subtitle1" Style="font-weight:600;">Is there a mobile app?</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudText Typo="Typo.body2" Style="line-height:1.7;" Class="px-2 pb-2">
+                        Yes! LevelUp is available as an Android app (.apk) that you can download directly from the
+                        <MudLink Href="/downloads/LevelUp.apk" Target="_blank" Color="Color.Primary">LevelUp Android download page</MudLink>.
+                        The app works offline and syncs automatically when you reconnect to the internet.
+                        An iOS version is not currently available.
+                    </MudText>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel>
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.ChildCare" Color="Color.Primary" Size="Size.Small" />
+                        <MudText Typo="Typo.subtitle1" Style="font-weight:600;">What age is LevelUp for?</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudText Typo="Typo.body2" Style="line-height:1.7;" Class="px-2 pb-2">
+                        LevelUp is designed for kids of all ages, with the best fit being children aged 5–18.
+                        Younger children (ages 5–8) typically use it with caregiver help, while older children and
+                        teens can use it independently. Adults — including parents, teachers, and therapists — use
+                        LevelUp alongside children to provide context and support.
+                    </MudText>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel>
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="Color.Primary" Size="Size.Small" />
+                        <MudText Typo="Typo.subtitle1" Style="font-weight:600;">How do progress notes work?</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudText Typo="Typo.body2" Style="line-height:1.7;" Class="px-2 pb-2">
+                        Each goal has its own progress note section. You can add a note at any time to record what
+                        happened, describe a win, outline next steps, or flag a challenge. Notes appear in a timeline
+                        so you can clearly see progress over time. You can also use the structured "Win + Challenge"
+                        template to build consistent note-taking habits.
+                    </MudText>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel>
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.FamilyRestroom" Color="Color.Primary" Size="Size.Small" />
+                        <MudText Typo="Typo.subtitle1" Style="font-weight:600;">Can parents use LevelUp too?</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudText Typo="Typo.body2" Style="line-height:1.7;" Class="px-2 pb-2">
+                        Absolutely. LevelUp works great as a collaborative tool between kids and their caregivers.
+                        Parents, teachers, and therapists can log into the same account to add progress notes, review
+                        journal entries, and check in on goal status. LevelUp is designed to make family and caregiver
+                        involvement easy and natural.
+                    </MudText>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel>
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Whatshot" Color="Color.Primary" Size="Size.Small" />
+                        <MudText Typo="Typo.subtitle1" Style="font-weight:600;">What is a goal streak?</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudText Typo="Typo.body2" Style="line-height:1.7;" Class="px-2 pb-2">
+                        A streak counts how many consecutive days you've been active in LevelUp — adding a progress note,
+                        completing a todo, or writing a journal entry all count. Streaks are shown in the app bar and
+                        reset if you miss a day. Longer streaks unlock special achievement badges like "Week Warrior"
+                        (7 days) and "Month Master" (30 days). The streak system rewards consistent daily effort,
+                        not just occasional big moments.
+                    </MudText>
+                </ChildContent>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    </section>
+
+    <!-- Get Started CTA -->
+    <MudPaper Elevation="3" Class="pa-6 mb-6" Style="border-radius:16px;background:linear-gradient(135deg,rgba(57,73,171,.08) 0%,rgba(245,124,0,.06) 100%);border:1.5px solid rgba(57,73,171,.15);">
+        <MudText Typo="Typo.h5" Style="font-weight:700;" Class="mb-2">
+            Ready to Start? 🚀
+        </MudText>
+        <MudText Typo="Typo.body1" Color="Color.Secondary" Style="line-height:1.7;" Class="mb-4">
+            Create a free account in seconds — no email required. Just pick a nickname and a PIN and you're in.
+        </MudText>
+        <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/register"
+                       Size="Size.Large" Style="font-weight:700;min-width:160px;border-radius:12px;">
+                Get Started Free ✨
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/login"
+                       Size="Size.Large" Style="font-weight:600;min-width:130px;border-radius:12px;">
+                Log In
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    <!-- Footer back link -->
+    <MudLink Href="/" Underline="Underline.Hover" Color="Color.Secondary" Typo="Typo.body2">
+        <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" Style="vertical-align:middle;margin-right:4px;" />
+        Back to Home
+    </MudLink>
+
+</MudContainer>
