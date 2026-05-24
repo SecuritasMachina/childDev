@@ -320,6 +320,19 @@
     <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-1">📏 @Goal.MeasurableOutcome</MudText>
     <MudText Typo="Typo.caption" Color="Color.Success" Class="mb-1">🎯 You know exactly where you're headed — clear targets make goals stick!</MudText>
 }
+@if (!string.IsNullOrWhiteSpace(Goal.Steps))
+{
+    <MudPaper Elevation="0" Class="pa-3 mb-3" Style="border-radius:10px;background:var(--mud-palette-background-grey);">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+            <MudIcon Icon="@Icons.Material.Filled.Checklist" Size="Size.Small" Color="Color.Primary" />
+            <MudText Typo="Typo.caption" Color="Color.Primary" Style="font-weight:700;letter-spacing:0.5px;">Plan</MudText>
+        </MudStack>
+        @foreach (var step in Goal.Steps.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+        {
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="ml-1">• @step.Trim()</MudText>
+        }
+    </MudPaper>
+}
 @if (Goal.NextMeetingDate.HasValue)
 {
     var mtgDate = DateTimeOffset.FromUnixTimeMilliseconds(Goal.NextMeetingDate.Value).LocalDateTime;
@@ -2285,6 +2298,9 @@ else
         </MudStack>
         <MudTextField @bind-Value="EditMeasurableOutcome" Label="How will you measure success? (optional)"
                       Variant="Variant.Outlined" Immediate="true" Class="mb-4" />
+        <MudTextField @bind-Value="EditSteps" Label="Steps to achieve this goal (optional)"
+                      Variant="Variant.Outlined" Lines="4" Immediate="true" Class="mb-4"
+                      HelperText="Enter each step on a new line" />
         <MudDatePicker @bind-Date="EditNextMeetingDate" Label="Next meeting date (optional)"
                        Variant="Variant.Outlined" Class="mb-4" />
         <MudDatePicker @bind-Date="EditExpirationDate" Label="Target completion date (optional)"
@@ -2368,6 +2384,7 @@ else
     private bool ShowEditDialog;
     private string EditGoalText = string.Empty;
     private string? EditMeasurableOutcome;
+    private string? EditSteps;
     private DateTime? EditNextMeetingDate;
     private DateTime? EditExpirationDate;
     private string? EditCategory;
@@ -2992,6 +3009,7 @@ else
     {
         EditGoalText = Goal?.GoalText ?? string.Empty;
         EditMeasurableOutcome = Goal?.MeasurableOutcome;
+        EditSteps = Goal?.Steps;
         EditNextMeetingDate = Goal?.NextMeetingDate.HasValue == true
             ? DateTimeOffset.FromUnixTimeMilliseconds(Goal.NextMeetingDate!.Value).LocalDateTime
             : null;
@@ -3011,6 +3029,7 @@ else
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         Goal.GoalText = text;
         Goal.MeasurableOutcome = string.IsNullOrWhiteSpace(EditMeasurableOutcome) ? null : EditMeasurableOutcome.Trim();
+        Goal.Steps = string.IsNullOrWhiteSpace(EditSteps) ? null : EditSteps.Trim();
         Goal.NextMeetingDate = EditNextMeetingDate.HasValue
             ? new DateTimeOffset(DateTime.SpecifyKind(EditNextMeetingDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
             : null;

@@ -13,6 +13,7 @@ public class Goal : SyncBase
     public int? ProgressPercent { get; set; }
     public string? Category { get; set; }
     public bool IsPinned { get; set; }
+    public string? Steps { get; set; }
 
     [Ignore]
     public string? LatestNextStepItems { get; set; }

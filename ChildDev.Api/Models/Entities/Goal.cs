@@ -18,6 +18,7 @@ public class Goal
     [MaxLength(50)]
     public string? Category { get; set; }
     public bool IsPinned { get; set; }
+    public string? Steps { get; set; }
     public long UpdatedOn { get; set; }
     public long? DeletedAt { get; set; }
 }
