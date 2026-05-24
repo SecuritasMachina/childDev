@@ -102,17 +102,17 @@
         <MudCard Elevation="2">
             <MudCardHeader>
                 <CardHeaderContent>
-                    <MudText Typo="Typo.h6">Change PIN</MudText>
+                    <MudText Typo="Typo.h6">Change Password</MudText>
                 </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent>
-                <MudTextField @bind-Value="CurrentPin" Label="Current PIN" InputType="InputType.Password"
+                <MudTextField @bind-Value="CurrentPin" Label="Current Password" InputType="InputType.Password"
                               Variant="Variant.Outlined" Immediate="true" Class="mb-3" />
-                <MudTextField @bind-Value="NewPin" Label="New PIN" InputType="InputType.Password"
+                <MudTextField @bind-Value="NewPin" Label="New Password" InputType="InputType.Password"
                               Variant="Variant.Outlined" Immediate="true" HelperText="At least 4 characters" Class="mb-3" />
-                <MudTextField @bind-Value="ConfirmNewPin" Label="Confirm New PIN" InputType="InputType.Password"
+                <MudTextField @bind-Value="ConfirmNewPin" Label="Confirm New Password" InputType="InputType.Password"
                               Variant="Variant.Outlined" Immediate="true" Class="mb-3"
-                              Error="@PinMismatch" ErrorText="PINs do not match" />
+                              Error="@PinMismatch" ErrorText="Passwords do not match" />
                 @if (PinError is not null)
                 {
                     <MudAlert Severity="Severity.Error" Class="mb-3">@PinError</MudAlert>
@@ -120,7 +120,7 @@
             </MudCardContent>
             <MudCardActions Class="px-4 pb-4">
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ChangePin"
-                           Disabled="@(string.IsNullOrWhiteSpace(CurrentPin) || NewPin.Length < 4 || NewPin != ConfirmNewPin)">Change PIN</MudButton>
+                           Disabled="@(string.IsNullOrWhiteSpace(CurrentPin) || NewPin.Length < 4 || NewPin != ConfirmNewPin)">Change Password</MudButton>
             </MudCardActions>
         </MudCard>
         <MudCard Elevation="2" Class="mb-4">
@@ -180,7 +180,7 @@
             </MudCardHeader>
             <MudCardContent>
                 <MudText Typo="Typo.body2" Class="mb-2">
-                    To sync your goals with the Android app, enter this Account ID and your PIN during login.
+                    To sync your goals with the Android app, enter this Account ID and your password during login.
                 </MudText>
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
                     <MudTextField Value="@AccountGuid" Label="Account ID" Variant="Variant.Outlined"
@@ -322,12 +322,12 @@
         if (PinMismatch) return;
         if (string.IsNullOrWhiteSpace(CurrentPin))
         {
-            PinError = "Enter your current PIN.";
+            PinError = "Enter your current password.";
             return;
         }
         if (NewPin.Length < 4)
         {
-            PinError = "New PIN must be at least 4 characters.";
+            PinError = "New password must be at least 4 characters.";
             return;
         }
 
@@ -338,7 +338,7 @@
         if (pinHash is null) return;
         if (!BCrypt.Net.BCrypt.Verify(CurrentPin, pinHash))
         {
-            PinError = "Current PIN is incorrect.";
+            PinError = "Current password is incorrect.";
             return;
         }
 
@@ -350,7 +350,7 @@
         NewPin = string.Empty;
         ConfirmNewPin = string.Empty;
         await Analytics.TrackAsync("settings_change_pin", AccountGuid, "settings");
-        Snackbar.Add("PIN changed!", Severity.Success);
+        Snackbar.Add("Password changed!", Severity.Success);
     }
 
     private async Task SaveEmailAlerts()

@@ -35,7 +35,7 @@
                               Immediate="true" AutoFocus="true"
                               @onkeydown="@(async (e) => { if (e.Key == "Enter") await DoRegister(); })"
                               Class="mb-4" HelperText="Choose a name (1–50 characters)" />
-                <MudTextField @bind-Value="Pin" Label="PIN" Variant="Variant.Outlined"
+                <MudTextField @bind-Value="Pin" Label="Password" Variant="Variant.Outlined"
                               Immediate="true"
                               InputType="@PinInputType"
                               Adornment="Adornment.End" AdornmentIcon="@PinEyeIcon"
@@ -57,14 +57,14 @@
                         <MudText Typo="Typo.caption" Style="@($"color:{pinStrColor};font-weight:600;")">@pinStrLabel</MudText>
                     </div>
                 }
-                <MudTextField @bind-Value="ConfirmPin" Label="Confirm PIN" Variant="Variant.Outlined"
+                <MudTextField @bind-Value="ConfirmPin" Label="Confirm Password" Variant="Variant.Outlined"
                               Immediate="true"
                               InputType="@ConfirmPinInputType"
                               Adornment="Adornment.End" AdornmentIcon="@ConfirmPinEyeIcon"
                               OnAdornmentClick="ToggleConfirmPinVisibility"
                               @onkeydown="@(async (e) => { if (e.Key == "Enter") await DoRegister(); })"
                               Class="mb-4"
-                              Error="@PinMismatch" ErrorText="PINs do not match" />
+                              Error="@PinMismatch" ErrorText="Passwords do not match" />
                 <MudTextField @bind-Value="Email" Label="Email (optional)" Variant="Variant.Outlined"
                               Immediate="true" InputType="InputType.Email" Class="mb-3"
                               HelperText="Get notified when you complete a goal" />
@@ -136,7 +136,7 @@
         }
         if (Pin.Length < 4)
         {
-            Error = "PIN must be at least 4 characters.";
+            Error = "Password must be at least 4 characters.";
             return;
         }
         if (PinMismatch) return;

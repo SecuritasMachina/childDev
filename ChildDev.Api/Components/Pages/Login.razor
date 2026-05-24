@@ -26,7 +26,7 @@
                 <MudTextField @bind-Value="NickName" Label="Nickname" Variant="Variant.Outlined"
                               Class="mb-4" Immediate="true" AutoFocus="true"
                               @onkeydown="@(async (e) => { if (e.Key == "Enter") await DoLogin(); })" />
-                <MudTextField @bind-Value="Pin" Label="PIN" Variant="Variant.Outlined"
+                <MudTextField @bind-Value="Pin" Label="Password" Variant="Variant.Outlined"
                               Immediate="true"
                               InputType="@PinInputType"
                               Adornment="Adornment.End" AdornmentIcon="@PinEyeIcon"
@@ -79,7 +79,7 @@
         var account = await db.Accounts.FirstOrDefaultAsync(a => a.NickName == nick);
         if (account is null || !BCrypt.Net.BCrypt.Verify(Pin, account.PinHash))
         {
-            Error = "Invalid nickname or PIN.";
+            Error = "Invalid nickname or password.";
             return;
         }
         await Analytics.TrackAsync("login", account.Guid, "login");
