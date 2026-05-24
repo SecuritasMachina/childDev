@@ -536,13 +536,13 @@ else if (erMoodEntries.Count >= 5 && erPct >= 70)
         <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
             Every great journey has a story. Journaling helps you reflect, grow, and see how far you've come.
         </MudText>
-        <MudPaper Elevation="0" Class="pa-3 mb-4 text-left" Style="border-radius:10px;background:rgba(255,255,255,0.7);">
-            <MudText Typo="Typo.caption" Color="Color.Info" Style="font-weight:600;" Class="mb-1">💡 Ideas for your first entry:</MudText>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">• What happened today that you want to remember?</MudText>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">• How are you feeling right now, and why?</MudText>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">• What's something you learned or figured out?</MudText>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">• What are you looking forward to tomorrow?</MudText>
-        </MudPaper>
+        <MudText Typo="Typo.body2" Color="Color.Info" Style="font-weight:600;" Class="mb-1">💡 Ideas for your first entry:</MudText>
+        <MudStack Spacing="1" Class="mb-4 text-left">
+            <MudText Typo="Typo.body2">• What happened today that you want to remember?</MudText>
+            <MudText Typo="Typo.body2">• How are you feeling right now, and why?</MudText>
+            <MudText Typo="Typo.body2">• What's something you learned or figured out?</MudText>
+            <MudText Typo="Typo.body2">• What are you looking forward to tomorrow?</MudText>
+        </MudStack>
         <MudButton Variant="Variant.Filled" Color="Color.Info" Size="Size.Large"
                    StartIcon="@Icons.Material.Filled.Edit"
                    OnClick="OpenAddDialog">Write My First Entry ✨</MudButton>
