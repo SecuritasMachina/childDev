@@ -110,18 +110,123 @@ test.describe('Goals', () => {
     await page.waitForURL(/\/goals\//, { timeout: 8000 });
     await waitForBlazor(page);
 
-    // Add progress note
-    const progressBtn = page.getByRole('button', { name: /Add Progress|Log Progress|New Note/i }).first();
-    if (await progressBtn.isVisible()) {
-      await progressBtn.click();
-      const noteField = page.getByPlaceholder(/progress|note|update/i).first();
-      if (await noteField.isVisible()) {
-        await noteField.pressSequentially('Completed a 1K warm-up run today!', { delay: 20 });
-        const saveBtn = page.getByRole('button', { name: /save|add/i }).last();
-        await saveBtn.click();
-        await expect(page.getByText('Completed a 1K warm-up run today!')).toBeVisible({ timeout: 8000 });
-      }
-    }
+    // Use the always-visible inline form
+    const noteField = page.getByPlaceholder("What happened? What's your next step?");
+    await noteField.waitFor({ state: 'visible', timeout: 8000 });
+    await noteField.click();
+    await noteField.pressSequentially('Completed a 1K warm-up run today!', { delay: 20 });
+
+    const saveBtn = page.getByRole('button', { name: 'Save Note' });
+    await saveBtn.waitFor({ state: 'visible', timeout: 5000 });
+    await saveBtn.click();
+
+    await expect(page.getByText('Completed a 1K warm-up run today!')).toBeVisible({ timeout: 8000 });
+  });
+
+  test('second progress note shows previous note snippet', async ({ page }) => {
+    await registerAndLogin(page);
+    await waitForBlazor(page);
+
+    // Add a goal
+    const addBtn = page.getByRole('button', { name: /Add.*Goal|New.*Goal/i }).first();
+    await addBtn.waitFor({ state: 'visible', timeout: 10000 });
+    await addBtn.click();
+
+    const goalTextField = page.getByLabel("What's the goal?");
+    await goalTextField.waitFor({ state: 'visible', timeout: 5000 });
+    await goalTextField.pressSequentially('Learn to juggle', { delay: 20 });
+
+    await page.getByRole('button', { name: /Add Goal/i }).click();
+    await expect(page.getByText('Learn to juggle')).toBeVisible({ timeout: 8000 });
+
+    // Navigate to detail
+    await page.getByText('Learn to juggle').click();
+    await page.waitForURL(/\/goals\//, { timeout: 8000 });
+    await waitForBlazor(page);
+
+    // Add first progress note
+    const noteField = page.getByPlaceholder("What happened? What's your next step?");
+    await noteField.waitFor({ state: 'visible', timeout: 8000 });
+    await noteField.click();
+    await noteField.pressSequentially('First progress made!', { delay: 20 });
+
+    await page.getByRole('button', { name: 'Save Note' }).click();
+    await expect(page.getByText('First progress made!')).toBeVisible({ timeout: 8000 });
+
+    // Add second progress note
+    await noteField.click();
+    await noteField.pressSequentially('Second step completed', { delay: 20 });
+    await page.getByRole('button', { name: 'Save Note' }).click();
+
+    // First note text should still be visible somewhere on page
+    await expect(page.getByText('First progress made!')).toBeVisible({ timeout: 8000 });
+  });
+
+  test('progress note template chips populate field', async ({ page }) => {
+    await registerAndLogin(page);
+    await waitForBlazor(page);
+
+    // Add a goal
+    const addBtn = page.getByRole('button', { name: /Add.*Goal|New.*Goal/i }).first();
+    await addBtn.waitFor({ state: 'visible', timeout: 10000 });
+    await addBtn.click();
+
+    const goalTextField = page.getByLabel("What's the goal?");
+    await goalTextField.waitFor({ state: 'visible', timeout: 5000 });
+    await goalTextField.pressSequentially('Improve drawing skills', { delay: 20 });
+
+    await page.getByRole('button', { name: /Add Goal/i }).click();
+    await expect(page.getByText('Improve drawing skills')).toBeVisible({ timeout: 8000 });
+
+    // Navigate to detail
+    await page.getByText('Improve drawing skills').click();
+    await page.waitForURL(/\/goals\//, { timeout: 8000 });
+    await waitForBlazor(page);
+
+    // Wait for inline form to appear
+    const noteField = page.getByPlaceholder("What happened? What's your next step?");
+    await noteField.waitFor({ state: 'visible', timeout: 8000 });
+
+    // Click the first available chip button (template chip)
+    const chipButton = page.locator('.mud-chip').first();
+    await chipButton.waitFor({ state: 'visible', timeout: 8000 });
+    await chipButton.click();
+
+    // The textarea should now have non-empty content
+    const noteValue = await noteField.inputValue();
+    expect(noteValue.trim().length).toBeGreaterThan(0);
+  });
+
+  test('completed goal hides progress note form', async ({ page }) => {
+    await registerAndLogin(page);
+    await waitForBlazor(page);
+
+    // Add a goal
+    const addBtn = page.getByRole('button', { name: /Add.*Goal|New.*Goal/i }).first();
+    await addBtn.waitFor({ state: 'visible', timeout: 10000 });
+    await addBtn.click();
+
+    const goalTextField = page.getByLabel("What's the goal?");
+    await goalTextField.waitFor({ state: 'visible', timeout: 5000 });
+    await goalTextField.pressSequentially('Master origami', { delay: 20 });
+
+    await page.getByRole('button', { name: /Add Goal/i }).click();
+    await expect(page.getByText('Master origami')).toBeVisible({ timeout: 8000 });
+
+    // Complete the goal using the "Mark Complete" button on home page
+    const completeBtn = page.getByRole('button', { name: /Mark Complete/i }).first();
+    await completeBtn.waitFor({ state: 'visible', timeout: 8000 });
+    await completeBtn.click();
+
+    // Navigate to the completed goal detail page
+    await expect(page.getByText('Master origami')).toBeVisible({ timeout: 8000 });
+    await page.getByText('Master origami').first().click();
+    await page.waitForURL(/\/goals\//, { timeout: 8000 });
+    await waitForBlazor(page);
+
+    // The inline note form placeholder should NOT be visible for a completed goal
+    const noteField = page.getByPlaceholder("What happened? What's your next step?");
+    await expect(noteField).not.toBeVisible({ timeout: 5000 });
   });
 
   test('complete a goal and see celebration', async ({ page }) => {
