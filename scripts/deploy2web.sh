@@ -66,11 +66,13 @@ fi
 # ── sync source (without APK — APK is uploaded separately below) ─────────────
 
 log_info "Syncing source to $SSH_HOST:$REMOTE_DIR ..."
-rsync -avz --delete --progress --stats \
-  --exclude='.git' \
-  --exclude='*/bin/' \
-  --exclude='*/obj/' \
+rsync -avz --delete --delete-excluded --progress --stats \
+  --exclude='.git/' \
+  --exclude='bin/' \
+  --exclude='obj/' \
+  --exclude='node_modules/' \
   --exclude='test-results/' \
+  --exclude='downloads/' \
   --exclude='*.apk' \
   -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
   "$ROOT_DIR/" \
