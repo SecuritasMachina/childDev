@@ -582,44 +582,32 @@
     <MudText Typo="Typo.body2" Color="Color.Secondary" Style="font-style:italic;">@todayQuote</MudText>
 </MudPaper>
 
-@if (TodosCompletedToday >= 1 && string.IsNullOrWhiteSpace(FilterText))
-{
-    var tdMsg = TodosCompletedToday >= 5 ? $"🏆 <strong>{TodosCompletedToday} todos done today</strong> — legendary action-taker! You're crushing it!"
-            : TodosCompletedToday >= 3 ? $"🔥 <strong>{TodosCompletedToday} todos completed today</strong> — you're in full action mode! Momentum is everything."
-            : TodosCompletedToday == 2 ? "✅ <strong>2 todos done today</strong> — you're building a productive day! Keep the action going!"
-            :                            "✅ <strong>Todo completed today</strong> — every finished task moves you forward. Great start!";
-    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.TaskAlt" Dense="true" Class="mb-3">@((MarkupString)tdMsg)</MudAlert>
+@{
+    // Show at most ONE activity alert — pick the most notable
+    string? activityAlert = null;
+    if (string.IsNullOrWhiteSpace(FilterText))
+    {
+        if (BiggestDayDate is not null && ProgressNotesToday >= BiggestDayCount && ProgressNotesToday >= 3)
+            activityAlert = $"🏆 New personal best! {ProgressNotesToday} notes today — you just beat your all-time record!";
+        else if (IsNewWeeklyRecord)
+            activityAlert = $"🎉 New weekly record! {ProgressThisWeek} notes this week — your best week yet!";
+        else if (ProgressNotesToday >= 5)
+            activityAlert = $"🚀 {ProgressNotesToday} notes today — exceptional! Keep that fire going.";
+        else if (ProgressNotesToday >= 3)
+            activityAlert = $"⭐ {ProgressNotesToday} notes today — great momentum!";
+        else if (TodosCompletedToday >= 3)
+            activityAlert = $"✅ {TodosCompletedToday} todos done today — you're crushing it!";
+        else if (ProgressThisWeek == 1 && ProgressNotesToday >= 1)
+            activityAlert = "🚀 First note of the week — great start!";
+        else if (ProgressNotesToday >= 1 && DateTime.Now.Hour < 12)
+            activityAlert = "🌅 Morning check-in complete — starting the day with purpose!";
+        else if (TodosCompletedToday >= 1)
+            activityAlert = $"✅ {TodosCompletedToday} todo{(TodosCompletedToday == 1 ? "" : "s")} done today — every task counts.";
+    }
 }
-@if (ProgressNotesToday >= 3 && string.IsNullOrWhiteSpace(FilterText))
+@if (activityAlert is not null)
 {
-    var rollingMsg = ProgressNotesToday >= 7 ? $"🔥 <strong>{ProgressNotesToday} notes today — you're UNSTOPPABLE!</strong> That's an extraordinary output day. Go you!"
-                  : ProgressNotesToday >= 5 ? $"🚀 <strong>{ProgressNotesToday} notes today — you're on fire!</strong> This is a truly exceptional day of progress."
-                  :                           $"⭐ <strong>{ProgressNotesToday} notes today — you're on a roll!</strong> Keep this energy going for the rest of the day!";
-    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.LocalFireDepartment" Dense="true" Class="mb-3">@((MarkupString)rollingMsg)</MudAlert>
-}
-@if (BiggestDayDate is not null && ProgressNotesToday >= BiggestDayCount && ProgressNotesToday >= 3 && string.IsNullOrWhiteSpace(FilterText))
-{
-    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mb-3">
-        🏆 <strong>NEW PERSONAL BEST!</strong> @ProgressNotesToday notes in a single day — you just beat your all-time record! That's legendary!
-    </MudAlert>
-}
-@if (ProgressNotesToday >= 1 && DateTime.Now.Hour < 12 && string.IsNullOrWhiteSpace(FilterText))
-{
-    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.WbSunny" Dense="true" Class="mb-3">
-        🌅 <strong>Morning check-in complete!</strong> You're starting the day with purpose — that's how goals get achieved!
-    </MudAlert>
-}
-@if (ProgressThisWeek == 1 && ProgressNotesToday >= 1 && string.IsNullOrWhiteSpace(FilterText))
-{
-    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Flag" Dense="true" Class="mb-3">
-        🚀 <strong>First note of the week — you're off to a great start!</strong> Keep this momentum going and make it your best week yet!
-    </MudAlert>
-}
-@if (IsNewWeeklyRecord && string.IsNullOrWhiteSpace(FilterText))
-{
-    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mb-2">
-        🎉 <strong>NEW PERSONAL RECORD!</strong> @ProgressThisWeek progress notes this week — your best week in months! Incredible! 🌟
-    </MudAlert>
+    <MudAlert Severity="Severity.Success" Dense="true" Class="mb-3">@activityAlert</MudAlert>
 }
 @if (ProgressThisWeek > 0 && string.IsNullOrWhiteSpace(FilterText))
 {
@@ -654,21 +642,7 @@
                    Href="@($"/goals/{MostFocusedGoalThisWeekGuid}")" Class="ml-1">View goal</MudButton>
     </MudAlert>
 }
-@{
-    var ngtTodayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
-    var ngtYestMs = ngtTodayStartMs - 86_400_000L;
-    var ngtNewGoal = AllActiveGoals.FirstOrDefault(g => g.EnteredDate >= ngtYestMs);
-}
-@if (ngtNewGoal is not null && string.IsNullOrWhiteSpace(FilterText))
-{
-    var ngtName = ngtNewGoal.GoalText?.Length > 55 ? ngtNewGoal.GoalText[..55] + "…" : ngtNewGoal.GoalText;
-    var ngtIsToday = ngtNewGoal.EnteredDate >= ngtTodayStartMs;
-    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.FiberNew" Dense="true" Class="mb-3">
-        🌱 <strong>@(ngtIsToday ? "New goal today" : "New goal yesterday"):</strong> "@ngtName" — every great achievement starts with a single decision. You've got this!
-        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Success"
-                   Href="@($"/goals/{ngtNewGoal.Guid}")" Class="ml-1">View goal</MudButton>
-    </MudAlert>
-}
+
 @if (GoalStreaks.Any() && string.IsNullOrWhiteSpace(FilterText))
 {
     var bestEntry = GoalStreaks.MaxBy(kv => kv.Value);
@@ -779,40 +753,6 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
         🎯 <strong>So close!</strong> Just 1 progress note away from the @proximityMilestoneEmoji <strong>@proximityMilestoneLabel</strong> milestone on "@proximityGoalName"!
         <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Success"
                    Href="@proximityGoalHref" Class="ml-1">Add a note</MudButton>
-    </MudAlert>
-}
-@{
-    Goal? zeroNoteGoal = string.IsNullOrWhiteSpace(FilterText)
-        ? AllActiveGoals.FirstOrDefault(g => ProgressCounts.GetValueOrDefault(g.Guid) == 0)
-        : null;
-}
-@if (zeroNoteGoal is not null)
-{
-    var znDaysAgo = (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - zeroNoteGoal.EnteredDate) / 86_400_000L);
-    var znWhen = znDaysAgo == 0 ? "added today" : znDaysAgo == 1 ? "added yesterday" : $"added {znDaysAgo} days ago";
-    var znName = zeroNoteGoal.GoalText?.Length > 55 ? zeroNoteGoal.GoalText[..55] + "…" : zeroNoteGoal.GoalText;
-    <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.SelfImprovement" Dense="true" Class="mb-3">
-        🌱 <strong>"@znName"</strong> (@znWhen) has no notes yet — even one note starts the momentum. You've got this!
-        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning"
-                   Href="@($"/goals/{zeroNoteGoal.Guid}")" Class="ml-1">Add first note</MudButton>
-    </MudAlert>
-}
-@{
-    var ngNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-    var newGoal3dMs = ngNowMs - 3L * 86_400_000L;
-    Goal? ngNewest = string.IsNullOrWhiteSpace(FilterText)
-        ? AllActiveGoals.OrderByDescending(g => g.EnteredDate).FirstOrDefault(g => g.EnteredDate >= newGoal3dMs)
-        : null;
-}
-@if (ngNewest is not null)
-{
-    var ngDaysAgo = (int)((ngNowMs - ngNewest.EnteredDate) / 86_400_000L);
-    var ngWhen = ngDaysAgo == 0 ? "today" : ngDaysAgo == 1 ? "yesterday" : $"{ngDaysAgo} days ago";
-    var ngName = ngNewest.GoalText?.Length > 55 ? ngNewest.GoalText[..55] + "…" : ngNewest.GoalText;
-    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.FiberNew" Dense="true" Class="mb-3">
-        🌱 <strong>New goal added @ngWhen!</strong> "@ngName" — you're already off to a great start. Log your first note to build momentum!
-        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Success"
-                   Href="@($"/goals/{ngNewest.Guid}")" Class="ml-1">View goal</MudButton>
     </MudAlert>
 }
 @if (ComebackGoalName is not null && string.IsNullOrWhiteSpace(FilterText))
@@ -996,20 +936,6 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
                    Href="@($"/goals/{odGoal.Guid}")" Class="ml-1">Reflect on goal</MudButton>
     </MudAlert>
 }
-@{
-    Goal? moGoal = null;
-    if (string.IsNullOrWhiteSpace(FilterText))
-        moGoal = AllActiveGoals.FirstOrDefault(g => string.IsNullOrWhiteSpace(g.MeasurableOutcome) && g.CompletionDate == null);
-}
-@if (moGoal is not null)
-{
-    var moName = moGoal.GoalText?.Length > 45 ? moGoal.GoalText[..45] + "…" : moGoal.GoalText;
-    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.TrackChanges" Dense="true" Class="mb-3">
-        📏 <strong>"@moName"</strong> — knowing exactly where you're headed makes it easier to get there. Add a measurable target!
-        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Info"
-                   Href="@($"/goals/{moGoal.Guid}")" Class="ml-1">Set target</MudButton>
-    </MudAlert>
-}
 @if (AnniversaryGoalName is not null && string.IsNullOrWhiteSpace(FilterText))
 {
     var annivMsg = AnniversaryDaysUntil == 0
@@ -1059,115 +985,60 @@ else @if (ProgressThisWeek == 0 && AllActiveGoals.Count > 0 && string.IsNullOrWh
 }
 
 @{
+    // Single "Today's Focus" card — one goal, one message, one action
     var focusTodayMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
-    var focusGoal = !allGoalsActiveToday && string.IsNullOrWhiteSpace(FilterText) && AllActiveGoals.Count >= 1
-        ? AllActiveGoals.FirstOrDefault(g => !LastProgressAt.TryGetValue(g.Guid, out var fgLat) || fgLat < focusTodayMs)
-        : null;
-}
-@if (focusGoal is not null)
-{
-    var focusName = focusGoal.GoalText?.Length > 60 ? focusGoal.GoalText[..60] + "…" : focusGoal.GoalText;
-    <MudAlert Severity="Severity.Normal" Icon="@Icons.Material.Filled.Lightbulb" Dense="true" Class="mb-3">
-        💡 <strong>Focus on this today:</strong> "@focusName"
-        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
-                   Href="@($"/goals/{focusGoal.Guid}")" Class="ml-1">Add Note</MudButton>
-    </MudAlert>
-}
-@{
-    var mcNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-    Goal? mcBestGoal = null;
-    double mcBestRate = 0;
-    if (AllActiveGoals.Count >= 2 && string.IsNullOrWhiteSpace(FilterText))
+    Goal? focusCardGoal = null;
+    string? focusCardMsg = null;
+    string? focusCardBtn = null;
+    if (!allGoalsActiveToday && string.IsNullOrWhiteSpace(FilterText) && AllActiveGoals.Count >= 1)
     {
-        foreach (var mcG in AllActiveGoals)
+        var fcNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        // Priority 1: goal with no notes at all
+        var zng = AllActiveGoals.FirstOrDefault(g => ProgressCounts.GetValueOrDefault(g.Guid) == 0);
+        if (zng is not null)
         {
-            var mcCount = ProgressCounts.GetValueOrDefault(mcG.Guid);
-            var mcWeeks = Math.Max((mcNowMs - mcG.EnteredDate) / (7.0 * 86_400_000.0), 1.0);
-            var mcRate = mcCount / mcWeeks;
-            if (mcRate > mcBestRate) { mcBestRate = mcRate; mcBestGoal = mcG; }
+            focusCardGoal = zng;
+            var znDays = (int)((fcNowMs - zng.EnteredDate) / 86_400_000L);
+            focusCardMsg = znDays == 0 ? "New today — your first note starts the momentum."
+                         : znDays == 1 ? "Added yesterday — ready for your first progress note?"
+                         : "No notes yet — one note changes everything.";
+            focusCardBtn = "Add first note →";
         }
-        if (mcBestRate < 1.0) mcBestGoal = null;
+        else
+        {
+            // Priority 2: goal not touched today, rotating daily tip
+            var ug = AllActiveGoals.FirstOrDefault(g => !LastProgressAt.TryGetValue(g.Guid, out var fgLat) || fgLat < focusTodayMs);
+            if (ug is not null)
+            {
+                focusCardGoal = ug;
+                var tips = new[] {
+                    "What's the next step that would move this forward the most?",
+                    "What went well recently? What's still in the way?",
+                    "One small action today keeps the momentum going.",
+                    "What would make this week a win for this goal?",
+                    "Picture where you'll be when this is done — feel it!",
+                };
+                var dayKey = DateTime.Today.DayOfYear + DateTime.Today.Year * 366;
+                focusCardMsg = tips[dayKey % tips.Length];
+                focusCardBtn = "Add a note →";
+            }
+        }
     }
 }
-@if (mcBestGoal is not null)
+@if (focusCardGoal is not null)
 {
-    var mcName = mcBestGoal.GoalText?.Length > 55 ? mcBestGoal.GoalText[..55] + "…" : mcBestGoal.GoalText;
-    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Star" Dense="true" Class="mb-3">
-        ⭐ <strong>Most consistent goal:</strong> "@mcName" — @mcBestRate.ToString("F1") notes/week on average! Keep that momentum!
-        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Info"
-                   Href="@($"/goals/{mcBestGoal.Guid}")" Class="ml-1">View</MudButton>
-    </MudAlert>
-}
-@{
-    var lagNowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-    Goal? lagGoal = AllActiveGoals.Count >= 2 && string.IsNullOrWhiteSpace(FilterText)
-        ? AllActiveGoals.MinBy(g => g.EnteredDate)
-        : null;
-    var lagDays = lagGoal is not null ? (int)((lagNowMs - lagGoal.EnteredDate) / 86_400_000L) : 0;
-    if (lagDays < 30) lagGoal = null;
-}
-@if (lagGoal is not null)
-{
-    var lagName = lagGoal.GoalText?.Length > 55 ? lagGoal.GoalText[..55] + "…" : lagGoal.GoalText;
-    var lagLabel = lagDays >= 365 ? $"{lagDays / 365} year{(lagDays / 365 == 1 ? "" : "s")}" : lagDays >= 60 ? $"{lagDays / 30} months" : $"{lagDays} days";
-    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.AccessTime" Dense="true" Class="mb-3">
-        🕰️ <strong>Your most committed goal</strong> has been going for <strong>@lagLabel</strong>: "@lagName" — that's serious long-game thinking!
-        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Info"
-                   Href="@($"/goals/{lagGoal.Guid}")" Class="ml-1">View</MudButton>
-    </MudAlert>
-}
-@{
-    var gotdTips = new[] {
-        "What's one small action you can take on this goal today?",
-        "Picture where you'll be when this goal is done — how does it feel?",
-        "What obstacle has been in your way, and how can you get around it?",
-        "Who could you tell about this goal to stay accountable?",
-        "What's the next step that would move this forward the most?",
-        "How have you already grown while working on this goal?",
-        "What would you do differently if you started fresh today?",
-        "Write down one thing that went well with this goal recently."
-    };
-    var gotdNowDay = DateTime.Today.DayOfYear + DateTime.Today.Year * 366;
-    Goal? gotdGoal = AllActiveGoals.Count >= 2 && string.IsNullOrWhiteSpace(FilterText)
-        ? AllActiveGoals[gotdNowDay % AllActiveGoals.Count]
-        : null;
-    var gotdTip = gotdTips[gotdNowDay % gotdTips.Length];
-}
-@if (gotdGoal is not null)
-{
-    var gotdName = gotdGoal.GoalText?.Length > 55 ? gotdGoal.GoalText[..55] + "…" : gotdGoal.GoalText;
-    <MudAlert Severity="Severity.Normal" Icon="@Icons.Material.Filled.WbSunny" Dense="true" Class="mb-3">
-        ☀️ <strong>Today's spotlight:</strong> "@gotdName" — @gotdTip
-        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Default"
-                   Href="@($"/goals/{gotdGoal.Guid}")" Class="ml-1">View goal</MudButton>
-    </MudAlert>
-}
-@{
-    var dowDay = DateTime.Today.DayOfWeek;
-    string? dowMsg = null;
-    string? dowIcon = null;
-    if (dowDay == DayOfWeek.Wednesday && string.IsNullOrWhiteSpace(FilterText) && AllActiveGoals.Count >= 1)
-    {
-        dowMsg = $"🌟 <strong>Midweek check-in!</strong> You're halfway through — how are your {AllActiveGoals.Count} goal{(AllActiveGoals.Count == 1 ? "" : "s")} coming along?";
-        dowIcon = Icons.Material.Filled.TrackChanges;
-    }
-    else if (dowDay == DayOfWeek.Sunday && string.IsNullOrWhiteSpace(FilterText) && AllActiveGoals.Count >= 1)
-    {
-        var dowWeekNotes = ProgressThisWeek;
-        dowMsg = dowWeekNotes >= 1
-            ? $"📋 <strong>Sunday reset!</strong> You logged {dowWeekNotes} note{(dowWeekNotes == 1 ? "" : "s")} this week — plan your next move for the week ahead!"
-            : "📋 <strong>Sunday reset!</strong> New week starts tomorrow — pick a goal to focus on and make a plan!";
-        dowIcon = Icons.Material.Filled.DateRange;
-    }
-    else if (dowDay == DayOfWeek.Monday && string.IsNullOrWhiteSpace(FilterText) && AllActiveGoals.Count >= 1)
-    {
-        dowMsg = $"🚀 <strong>New week, new momentum!</strong> You have {AllActiveGoals.Count} active goal{(AllActiveGoals.Count == 1 ? "" : "s")} — which one gets your first note this week?";
-        dowIcon = Icons.Material.Filled.RocketLaunch;
-    }
-}
-@if (dowMsg is not null)
-{
-    <MudAlert Severity="Severity.Info" Icon="@dowIcon" Dense="true" Class="mb-3">@((MarkupString)dowMsg)</MudAlert>
+    var fcName = focusCardGoal.GoalText?.Length > 60 ? focusCardGoal.GoalText[..60] + "…" : focusCardGoal.GoalText;
+    <MudPaper Elevation="1" Class="pa-3 mb-3" Style="border-radius:12px;border-left:3px solid var(--mud-palette-primary);">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
+            <MudStack Spacing="0" Style="flex:1;min-width:0;">
+                <MudText Typo="Typo.overline" Color="Color.Primary" Style="font-weight:700;letter-spacing:1px;">Today's Focus</MudText>
+                <MudText Typo="Typo.body2" Style="font-weight:600;">@fcName</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@focusCardMsg</MudText>
+            </MudStack>
+            <MudButton Href="@($"/goals/{focusCardGoal.Guid}")" Variant="Variant.Outlined" Color="Color.Primary"
+                       Size="Size.Small" Style="white-space:nowrap;">@focusCardBtn</MudButton>
+        </MudStack>
+    </MudPaper>
 }
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2" Wrap="Wrap.Wrap" Spacing="1">
     <MudText Typo="Typo.h5">
