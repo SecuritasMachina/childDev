@@ -190,8 +190,8 @@
     return;
 }
 
-<MudGrid Class="mb-6">
-    <MudItem xs="12" sm="4">
+<MudGrid Class="mb-4">
+    <MudItem xs="12">
         <MudPaper Elevation="2" Class="pa-4 text-center stat-card-goals" Style="cursor:default;border-radius:12px;">
             <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Primary" Style="font-size:2rem;" />
             <MudText Typo="Typo.h4" Class="mt-1">@AllActiveGoals.Count</MudText>
@@ -324,58 +324,32 @@
             }
         </MudPaper>
     </MudItem>
-    <MudItem xs="12" sm="4">
-        <MudLink Href="/todos" Underline="Underline.None" Style="display:block;">
-            <MudPaper Elevation="2" Class="pa-4 text-center stat-card-todos" Style="cursor:pointer;border-radius:12px;">
-                <MudIcon Icon="@Icons.Material.Filled.CheckBox" Color="@(OverdueTodoCount > 0 ? Color.Error : Color.Primary)" Style="font-size:2rem;" />
-                <MudText Typo="Typo.h4" Class="mt-1">
-                    @PendingTodoCount
-                    @if (OverdueTodoCount > 0)
-                    {
-                        <MudChip T="string" Color="Color.Error" Size="Size.Small" Class="ml-1">@OverdueTodoCount overdue</MudChip>
-                    }
-                </MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">Pending Todo@(PendingTodoCount == 1 ? "" : "s")</MudText>
-                @if (TodosCompletedToday >= 1)
-                {
-                    <MudText Typo="Typo.caption" Color="Color.Success">✅ @TodosCompletedToday done today!</MudText>
-                }
-                else if (TodosCompletedThisWeek > 0)
-                {
-                    <MudText Typo="Typo.caption" Color="Color.Success">✅ @TodosCompletedThisWeek quick win@(TodosCompletedThisWeek == 1 ? "" : "s") this week</MudText>
-                }
-            </MudPaper>
-        </MudLink>
-    </MudItem>
-    <MudItem xs="12" sm="4">
-        <MudLink Href="/journal" Underline="Underline.None" Style="display:block;">
-            <MudPaper Elevation="2" Class="pa-4 text-center stat-card-journal" Style="cursor:pointer;border-radius:12px;">
-                <MudIcon Icon="@Icons.Material.Filled.Book" Color="Color.Primary" Style="font-size:2rem;" />
-                <MudText Typo="Typo.h4" Class="mt-1">@JournalThisWeek</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">Journal Entr@(JournalThisWeek == 1 ? "y" : "ies") This Week</MudText>
-                @if (RecentJournals.Count > 0)
-                {
-                    var ljMs = RecentJournals[0].EnteredDate;
-                    var ljDays = (int)((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - ljMs) / 86_400_000L);
-                    var ljLabel = ljDays == 0 ? "📝 Entry today!" : ljDays == 1 ? "📝 Entry yesterday" : $"📝 Last entry {ljDays}d ago";
-                    var ljColor = ljDays == 0 ? Color.Success : ljDays <= 2 ? Color.Info : Color.Warning;
-                    <MudText Typo="Typo.caption" Color="@ljColor">@ljLabel</MudText>
-                    @if (HomeJournalStreak >= 2)
-                    {
-                        var jsStatLabel = HomeHasJournalToday
-                            ? (HomeJournalStreak >= 14 ? $"🔥 {HomeJournalStreak}-day streak!" : HomeJournalStreak >= 7 ? $"⭐ {HomeJournalStreak}-day streak!" : $"📓 {HomeJournalStreak}-day streak!")
-                            : $"🛡️ {HomeJournalStreak}-day streak at risk";
-                        <MudText Typo="Typo.caption" Color="@(HomeHasJournalToday ? Color.Success : Color.Warning)">@jsStatLabel</MudText>
-                    }
-                }
-                else
-                {
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">No entries yet</MudText>
-                }
-            </MudPaper>
-        </MudLink>
-    </MudItem>
 </MudGrid>
+
+<MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap" Class="mb-4" AlignItems="AlignItems.Center">
+    <MudButton Href="/todos" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.CheckBox"
+               Color="@(OverdueTodoCount > 0 ? Color.Error : Color.Default)" Size="Size.Small" Style="border-radius:20px;">
+        @if (OverdueTodoCount > 0)
+        {
+            @($"{PendingTodoCount} todos · {OverdueTodoCount} overdue")
+        }
+        else
+        {
+            @($"{PendingTodoCount} todo{(PendingTodoCount == 1 ? "" : "s")} pending")
+        }
+    </MudButton>
+    <MudButton Href="/journal" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Book"
+               Color="Color.Default" Size="Size.Small" Style="border-radius:20px;">
+        @if (JournalThisWeek > 0)
+        {
+            @($"{JournalThisWeek} journal entr{(JournalThisWeek == 1 ? "y" : "ies")} this week")
+        }
+        else
+        {
+            <span>Write a journal entry</span>
+        }
+    </MudButton>
+</MudStack>
 
 @if (AllActiveGoals.Count > 0 && (TodosCompletedThisWeek > 0 || ProgressThisWeek > 0 || JournalThisWeek > 0))
 {
@@ -418,6 +392,8 @@
     };
     var wcPct = Math.Min((int)(wcCurrent * 100.0 / wcTarget), 100);
     var wcDone = wcCurrent >= wcTarget;
+    var wcActionHref = (wcWeek % 4) switch { 1 => "/journal", 2 => "/todos", _ => "/" };
+    var wcActionLabel = (wcWeek % 4) switch { 1 => "Write journal entry", 2 => "View todos", _ => "Add a progress note" };
 }
 @if (AllActiveGoals.Count > 0 && string.IsNullOrWhiteSpace(FilterText))
 {
@@ -441,10 +417,21 @@
         {
             <MudText Typo="Typo.caption" Color="Color.Success" Class="mt-1">🌟 Challenge complete — you crushed it this week!</MudText>
         }
-        else if (wcCurrent > 0)
+        else
         {
             var wcLeft = wcTarget - wcCurrent;
-            <MudText Typo="Typo.caption" Color="Color.Primary" Class="mt-1">@wcLeft more to go — you can do this! 💪</MudText>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-2">
+                @if (wcCurrent > 0)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Primary" Style="flex:1;">@wcLeft more to go — you can do this! 💪</MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Style="flex:1;">Start now and build momentum!</MudText>
+                }
+                <MudButton Href="@wcActionHref" Variant="Variant.Filled" Color="Color.Primary"
+                           Size="Size.Small" Style="border-radius:20px;white-space:nowrap;">@wcActionLabel →</MudButton>
+            </MudStack>
         }
     </MudPaper>
 }
