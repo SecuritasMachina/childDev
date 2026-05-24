@@ -88,13 +88,37 @@
 
 @if (Goal.CompletionDate is null)
 {
-    <div style="position:fixed;bottom:24px;right:24px;z-index:1000;">
-        <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-                Label="Add Note" Size="Size.Medium"
-                OnClick="OpenAddProgressDialog"
-                title="Add progress note"
-                aria-label="Add progress note" />
-    </div>
+    var inlineWc = NewNextSteps.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
+    var inlinePrevNote = ProgressEntries.FirstOrDefault();
+    var inlinePrevSnip = inlinePrevNote is not null && !string.IsNullOrWhiteSpace(inlinePrevNote.NextStepItems)
+        ? (inlinePrevNote.NextStepItems.Length > 100 ? inlinePrevNote.NextStepItems[..100] + "…" : inlinePrevNote.NextStepItems)
+        : null;
+    <MudPaper Elevation="1" Class="pa-3 mb-4" Style="border-radius:12px;">
+        @if (inlinePrevSnip is not null)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2" Style="display:block;">
+                📋 Last: <em>@inlinePrevSnip</em>
+            </MudText>
+        }
+        <MudTextField @ref="_noteTextField" @bind-Value="NewNextSteps"
+                      Placeholder="What happened? What's your next step?"
+                      Variant="Variant.Outlined" Lines="3" Immediate="true"
+                      HelperText="@(inlineWc > 0 ? $"{inlineWc} word{(inlineWc == 1 ? "" : "s")}" : null)" />
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-2" Spacing="1" Wrap="Wrap.Wrap">
+            @foreach (var (label, template) in _progressTemplates)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined"
+                         Style="font-size:0.7rem;height:24px;"
+                         OnClick="@(() => NewNextSteps = template)">@label</MudChip>
+            }
+            <MudSpacer />
+            <MudDatePicker @bind-Date="NewMeetingDate" Label="Meeting date" Variant="Variant.Outlined"
+                           Margin="Margin.Dense" Style="max-width:170px;" Clearable="true" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddProgress"
+                       Disabled="@(string.IsNullOrWhiteSpace(NewNextSteps) && !NewMeetingDate.HasValue)"
+                       Size="Size.Small" StartIcon="@Icons.Material.Filled.Save">Save Note</MudButton>
+        </MudStack>
+    </MudPaper>
 }
 
 @{
@@ -2203,63 +2227,6 @@ else
     </DialogActions>
 </MudDialog>
 
-<MudDialog @bind-Visible="ShowAddDialog">
-    <TitleContent>
-        <MudText Typo="Typo.h6">
-            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Class="mr-2" />
-            New Progress Note
-        </MudText>
-    </TitleContent>
-    <DialogContent>
-        @if (_dialogPrevNoteText is not null)
-        {
-            var prevSnip = _dialogPrevNoteText.Length > 120 ? _dialogPrevNoteText[..120] + "…" : _dialogPrevNoteText;
-            <MudPaper Elevation="0" Class="pa-2 mb-3" Style="border-radius:8px;background:var(--mud-palette-background-grey);border-left:3px solid var(--mud-palette-primary-lighten);">
-                <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="1">
-                    <MudStack Spacing="0" Style="flex:1">
-                        <MudText Typo="Typo.caption" Color="Color.Primary" Style="font-weight:600;">📋 Last note:</MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">@prevSnip</MudText>
-                    </MudStack>
-                    <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
-                               OnClick="@(() => NewNextSteps = _dialogPrevNoteText!)">Use</MudButton>
-                </MudStack>
-            </MudPaper>
-        }
-        @if (string.IsNullOrWhiteSpace(NewNextSteps))
-        {
-            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">💡 Quick-start prompts:</MudText>
-            <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-2">
-                @foreach (var s in NextStepSuggestions)
-                {
-                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined"
-                             OnClick="@(() => NewNextSteps = s)">@s</MudChip>
-                }
-            </MudStack>
-            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1 mt-2">📝 Structured templates:</MudText>
-            <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
-                @foreach (var (label, template) in _progressTemplates)
-                {
-                    <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined"
-                             OnClick="@(() => NewNextSteps = template)">@label</MudChip>
-                }
-            </MudStack>
-        }
-        @{
-            var pnWc = NewNextSteps.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
-            var pnWcHelper = pnWc == 0 ? "Be specific — the more detail, the more you'll see your growth!" : $"{pnWc} word{(pnWc == 1 ? "" : "s")}";
-        }
-        <MudTextField @bind-Value="NewNextSteps"
-                      Label="What happened? What's the next step?"
-                      Variant="Variant.Outlined" Lines="5" Class="mb-4" AutoFocus="true"
-                      Immediate="true" HelperText="@pnWcHelper" />
-        <MudDatePicker @bind-Date="NewMeetingDate" Label="Next meeting date (optional)" Variant="Variant.Outlined" />
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="() => ShowAddDialog = false">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddProgress"
-                   Disabled="@(string.IsNullOrWhiteSpace(NewNextSteps) && !NewMeetingDate.HasValue)">Save</MudButton>
-    </DialogActions>
-</MudDialog>
 
 <MudDialog @bind-Visible="ShowEditProgressDialog">
     <TitleContent>
@@ -2377,8 +2344,8 @@ else
     private string? _noteTypeFilter;
     private bool _notesOldestFirst;
     private int _notesPageSize = 10;
-    private bool ShowAddDialog;
     private string NewNextSteps = string.Empty;
+    private MudTextField<string>? _noteTextField;
     private DotNetObjectReference<GoalDetail>? _selfRef;
 
     private static readonly (string Label, string Template)[] _progressTemplates =
@@ -2390,7 +2357,6 @@ else
         ("🏆 Reflection", "🏆 Reflection: What I'm most proud of:\n\nWhat I learned about myself:\n\nAdvice I'd give my earlier self:")
     ];
     private DateTime? NewMeetingDate;
-    private string? _dialogPrevNoteText;
     private bool ShowCelebration;
     private string _celebrationReflection = string.Empty;
     private List<ChartSeries> ProgressChartSeries = [];
@@ -2612,14 +2578,7 @@ else
 
     private void OpenAddProgressDialog()
     {
-        var lastNote = ProgressEntries.FirstOrDefault();
-        _dialogPrevNoteText = !string.IsNullOrWhiteSpace(lastNote?.NextStepItems) ? lastNote.NextStepItems : null;
-        NewNextSteps = string.Empty;
-        var todayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
-        NewMeetingDate = Goal?.NextMeetingDate.HasValue == true && Goal.NextMeetingDate.Value >= todayStartMs
-            ? DateTimeOffset.FromUnixTimeMilliseconds(Goal.NextMeetingDate.Value).LocalDateTime
-            : null;
-        ShowAddDialog = true;
+        _ = _noteTextField?.FocusAsync();
     }
 
     private void OpenAddTodoDialog()
@@ -2785,7 +2744,6 @@ else
 
         NewNextSteps = string.Empty;
         NewMeetingDate = null;
-        ShowAddDialog = false;
         await LoadProgress();
 
         // Check for encouragement milestones (each coincides with a level-up)
