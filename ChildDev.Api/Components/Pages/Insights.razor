@@ -176,30 +176,6 @@ else if (JourneyMonths >= 6)
 {
     <MudAlert Severity="@freshSeverity" Class="mb-4" Dense="true">@freshMsg</MudAlert>
 }
-@if (NotesThisWeekProgress > 0 || NotesLastWeekProgress > 0)
-{
-    var wowPMsg = NotesLastWeekProgress == 0
-        ? $"📈 {NotesThisWeekProgress} progress note{(NotesThisWeekProgress == 1 ? "" : "s")} this week — great start! Keep the momentum going!"
-        : NotesThisWeekProgress > NotesLastWeekProgress
-            ? $"📈 <strong>{NotesThisWeekProgress} notes this week</strong> vs {NotesLastWeekProgress} last week — you're stepping it up! 🚀"
-            : NotesThisWeekProgress == NotesLastWeekProgress
-                ? $"📊 <strong>{NotesThisWeekProgress} progress notes this week</strong>, same as last week — rock-solid consistency!"
-                : $"📉 {NotesThisWeekProgress} notes this week vs {NotesLastWeekProgress} last week — can you match last week's pace?";
-    var wowPSeverity = NotesLastWeekProgress == 0 || NotesThisWeekProgress >= NotesLastWeekProgress ? Severity.Success : Severity.Normal;
-    <MudAlert Severity="@wowPSeverity" Icon="@Icons.Material.Filled.TrendingUp" Dense="true" Class="mb-4">@((MarkupString)wowPMsg)</MudAlert>
-}
-@if (ActiveDaysThisWeek > 0 || ActiveDaysLastWeek > 0)
-{
-    var adMsg = ActiveDaysLastWeek == 0
-        ? $"📅 You were active on <strong>{ActiveDaysThisWeek} day{(ActiveDaysThisWeek == 1 ? "" : "s")}</strong> this week — great consistency!"
-        : ActiveDaysThisWeek > ActiveDaysLastWeek
-            ? $"📅 <strong>{ActiveDaysThisWeek} active days this week</strong> vs {ActiveDaysLastWeek} last week — you're showing up more! 🌟"
-            : ActiveDaysThisWeek == ActiveDaysLastWeek
-                ? $"📅 <strong>{ActiveDaysThisWeek} active days</strong> this week and last — beautifully consistent!"
-                : $"📅 {ActiveDaysThisWeek} active day{(ActiveDaysThisWeek == 1 ? "" : "s")} this week vs {ActiveDaysLastWeek} last week — aim to match or beat last week!";
-    var adSeverity = ActiveDaysLastWeek == 0 || ActiveDaysThisWeek >= ActiveDaysLastWeek ? Severity.Info : Severity.Normal;
-    <MudAlert Severity="@adSeverity" Icon="@Icons.Material.Filled.CalendarToday" Dense="true" Class="mb-4">@((MarkupString)adMsg)</MudAlert>
-}
 @if (TotalActiveDaysEver >= 7)
 {
     var sphDotStr = string.Concat(Enumerable.Range(0, 7).Select(i => Last7DaysActive[i] ? "✅" : "⬜"));
@@ -208,62 +184,42 @@ else if (JourneyMonths >= 6)
         Your last 7 days: @sphDotStr (@sphActiveCount active)
     </MudText>
 }
-@if (JournalStreak >= 2)
+@if (JournalStreak >= 2 || JournalConsistencyScore30 >= 3 || LongestProgressDayStreak >= 3 || BestProgressDayOfWeek is not null || ProgressTimeOfDay is not null || BestJournalDayOfWeek is not null || JournalTimeOfDay is not null)
 {
-    var jStreakMsg = JournalStreak >= 14 ? $"📓 Journal streak: {JournalStreak} days — that's exceptional consistency! Your reflections are building something meaningful. 🌟"
-                  : JournalStreak >= 7  ? $"📓 Journal streak: {JournalStreak} days! A full week of journaling — you're building a powerful habit! 💪"
-                  :                       $"📓 Journal streak: {JournalStreak} days! Keep writing — every entry adds to your story!";
-    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Book" Dense="true" Class="mb-4">
-        @jStreakMsg
-    </MudAlert>
-}
-
-@if (JournalConsistencyScore30 >= 3)
-{
-    var jcsPct = (int)(JournalConsistencyScore30 * 100.0 / 30);
-    var jcsMsg = jcsPct >= 80 ? $"📓 <strong>{jcsPct}% journaling consistency</strong> last month — {JournalConsistencyScore30} active days! Exceptional habit building!"
-              : jcsPct >= 50 ? $"📓 <strong>{jcsPct}% journaling consistency</strong> — {JournalConsistencyScore30} active days this month. You're building a solid reflection habit!"
-              :                 $"📓 You journaled on {JournalConsistencyScore30} days last month ({jcsPct}% consistency) — every entry counts!";
-    <MudAlert Severity="@(jcsPct >= 80 ? Severity.Success : Severity.Info)" Icon="@Icons.Material.Filled.Book" Dense="true" Class="mb-4">@((MarkupString)jcsMsg)</MudAlert>
-}
-@if (JournalConsistencyScoreYear >= 5 && JournalYearDaysElapsed >= 14)
-{
-    var jcyPct = (int)(JournalConsistencyScoreYear * 100.0 / JournalYearDaysElapsed);
-    var jcyMsg = jcyPct >= 50 ? $"📓 <strong>{jcyPct}% journaling consistency this year</strong> — {JournalConsistencyScoreYear} days logged out of {JournalYearDaysElapsed}! You're making reflection a real habit!"
-               : jcyPct >= 25 ? $"📓 You've journaled on <strong>{JournalConsistencyScoreYear} days</strong> this year ({jcyPct}% consistency) — every entry builds your story!"
-               :                 $"📓 {JournalConsistencyScoreYear} journaling days so far this year — {jcyPct}% consistency. Keep going — small steps add up!";
-    <MudAlert Severity="@(jcyPct >= 50 ? Severity.Success : Severity.Info)" Icon="@Icons.Material.Filled.CalendarMonth" Dense="true" Class="mb-4">@((MarkupString)jcyMsg)</MudAlert>
-}
-@if (LongestProgressDayStreak >= 3)
-{
-    var lpsMsg = LongestProgressDayStreak >= 14 ? $"🌟 All-time best: <strong>{LongestProgressDayStreak} consecutive days</strong> logging progress — that's legendary dedication!"
-              : LongestProgressDayStreak >= 7  ? $"🏆 Your longest daily streak ever: <strong>{LongestProgressDayStreak} days</strong> in a row — champion-level consistency!"
-              :                                   $"⭐ Your longest daily streak: <strong>{LongestProgressDayStreak} days</strong> in a row — every streak starts with one day!";
-    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.LocalFireDepartment" Dense="true" Class="mb-4">@((MarkupString)lpsMsg)</MudAlert>
-}
-@if (BestProgressDayOfWeek is not null)
-{
-    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.CalendarToday" Dense="true" Class="mb-4">
-        📅 You log the most progress notes on <strong>@BestProgressDayOfWeek</strong>s (@BestProgressDayOfWeekCount total) — that's your power day!
-    </MudAlert>
-}
-@if (ProgressTimeOfDay is not null)
-{
-    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Schedule" Dense="true" Class="mb-4">
-        ⏰ You tend to log progress notes in the <strong>@ProgressTimeOfDay</strong> — lean into that rhythm for maximum consistency!
-    </MudAlert>
-}
-@if (BestJournalDayOfWeek is not null)
-{
-    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.MenuBook" Dense="true" Class="mb-4">
-        📓 You journal most on <strong>@BestJournalDayOfWeek</strong>s (@BestJournalDayOfWeekCount entries total) — make that your reflection ritual!
-    </MudAlert>
-}
-@if (JournalTimeOfDay is not null)
-{
-    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.Schedule" Dense="true" Class="mb-4">
-        📓 You tend to journal in the <strong>@JournalTimeOfDay</strong> — that's your natural reflection time. Lean into it for daily consistency!
-    </MudAlert>
+    <MudPaper Elevation="1" Class="pa-3 mb-4" Style="border-radius:12px;">
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-weight:600;letter-spacing:0.5px;" Class="mb-2">📊 Your Habits & Patterns</MudText>
+        <MudStack Spacing="1">
+            @if (JournalStreak >= 2)
+            {
+                <MudText Typo="Typo.body2">📓 Journal streak: <strong>@JournalStreak days</strong>@(JournalStreak >= 7 ? " — incredible habit! 💪" : " — keep writing!")</MudText>
+            }
+            @if (LongestProgressDayStreak >= 3)
+            {
+                <MudText Typo="Typo.body2">🔥 Longest daily progress streak: <strong>@LongestProgressDayStreak days</strong></MudText>
+            }
+            @if (JournalConsistencyScore30 >= 3)
+            {
+                var jcsPct2 = (int)(JournalConsistencyScore30 * 100.0 / 30);
+                <MudText Typo="Typo.body2">📓 Journaled <strong>@JournalConsistencyScore30 days</strong> this month (@jcsPct2% consistency)</MudText>
+            }
+            @if (BestProgressDayOfWeek is not null)
+            {
+                <MudText Typo="Typo.body2">📅 Best progress day: <strong>@BestProgressDayOfWeek</strong> (@BestProgressDayOfWeekCount notes)</MudText>
+            }
+            @if (ProgressTimeOfDay is not null)
+            {
+                <MudText Typo="Typo.body2">⏰ Progress peak: <strong>@ProgressTimeOfDay</strong></MudText>
+            }
+            @if (BestJournalDayOfWeek is not null)
+            {
+                <MudText Typo="Typo.body2">📓 Best journal day: <strong>@BestJournalDayOfWeek</strong> (@BestJournalDayOfWeekCount entries)</MudText>
+            }
+            @if (JournalTimeOfDay is not null)
+            {
+                <MudText Typo="Typo.body2">📓 Journal peak: <strong>@JournalTimeOfDay</strong></MudText>
+            }
+        </MudStack>
+    </MudPaper>
 }
 @if (CompletionVelocityMsg is not null)
 {
@@ -663,136 +619,83 @@ else if (JourneyMonths >= 6)
     </MudPaper>
 }
 
-@if (ProgressHeatmap.Any())
+@if (ProgressHeatmap.Any() || JournalHeatmap.Any() || TodoHeatmap.Any())
 {
-    var hmToday = DateOnly.FromDateTime(DateTime.Today);
+    var hmTodayComb = DateOnly.FromDateTime(DateTime.Today);
     <MudPaper Elevation="1" Class="pa-4 mb-6" Style="border-radius:12px;">
-        <MudText Typo="Typo.subtitle2" Class="mb-3">Progress Notes — Last 12 Weeks</MudText>
+        <MudText Typo="Typo.subtitle2" Class="mb-3">Last 12 Weeks — Activity Heatmaps</MudText>
         @{
-            var startDay = hmToday.AddDays(-83);
-            var hmMonthLabels = new List<(int Col, string Label)>();
-            for (int di = 0; di < 84; di++)
-            {
-                var d = startDay.AddDays(di);
-                if (d.Day <= 7) hmMonthLabels.Add((di % 7, d.ToString("MMM")));
-            }
+            string[] hmDayLabelsComb = ["M", "T", "W", "T", "F", "S", "S"];
+            var hmStartComb = hmTodayComb.AddDays(-83);
+            var hmStartDowComb = (int)hmStartComb.DayOfWeek;
+            var hmMondayOffsetComb = (hmStartDowComb + 6) % 7;
         }
-        @{
-            string[] hmDayLabels = ["M", "T", "W", "T", "F", "S", "S"];
-            var hmStartDow = (int)startDay.DayOfWeek; // 0=Sun..6=Sat
-            var hmMondayOffset = (hmStartDow + 6) % 7; // offset to map col→Mon-based label
+        @if (ProgressHeatmap.Any())
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-weight:600;" Class="mb-1">📝 Progress Notes</MudText>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;max-width:@(7 * 18 + 18)px;margin-bottom:10px;">
+                @for (int col = 0; col < 7; col++)
+                {
+                    <div style="text-align:center;font-size:9px;color:var(--mud-palette-text-secondary);padding-bottom:2px;font-weight:600;">@hmDayLabelsComb[(hmMondayOffsetComb + col) % 7]</div>
+                }
+                @for (int di = 0; di < 84; di++)
+                {
+                    var day = hmStartComb.AddDays(di);
+                    var count = ProgressHeatmap.GetValueOrDefault(day, 0);
+                    var bg = count == 0 ? "var(--mud-palette-background-grey)" : count == 1 ? "#90CAF9" : count <= 3 ? "#42A5F5" : "#1565C0";
+                    var tip = count == 0 ? day.ToString("MMM d") : $"{day:MMM d}: {count} note{(count == 1 ? "" : "s")}";
+                    var border = day == hmTodayComb ? "2px solid var(--mud-palette-primary)" : "none";
+                    <div title="@tip" style="width:100%;aspect-ratio:1;border-radius:3px;background:@bg;border:@border;cursor:default;opacity:@(day > hmTodayComb ? "0.3" : "1")"></div>
+                }
+            </div>
         }
-        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;max-width:@(7 * 18 + 18)px;">
-            @for (int col = 0; col < 7; col++)
-            {
-                var lbl = hmDayLabels[(hmMondayOffset + col) % 7];
-                <div style="text-align:center;font-size:9px;color:var(--mud-palette-text-secondary);padding-bottom:2px;font-weight:600;">@lbl</div>
-            }
-            @for (int di = 0; di < 84; di++)
-            {
-                var day = startDay.AddDays(di);
-                var count = ProgressHeatmap.GetValueOrDefault(day, 0);
-                var bg = count == 0 ? "var(--mud-palette-background-grey)" : count == 1 ? "#90CAF9" : count <= 3 ? "#42A5F5" : "#1565C0";
-                var tip = count == 0 ? day.ToString("MMM d") : $"{day:MMM d}: {count} note{(count == 1 ? "" : "s")}";
-                var border = day == hmToday ? "2px solid var(--mud-palette-primary)" : "none";
-                <div title="@tip" style="width:100%;aspect-ratio:1;border-radius:3px;background:@bg;border:@border;cursor:default;opacity:@(day > hmToday ? "0.3" : "1")"></div>
-            }
-        </div>
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
+        @if (JournalHeatmap.Any())
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-weight:600;" Class="mb-1">📓 Journal</MudText>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;max-width:@(7 * 18 + 18)px;margin-bottom:10px;">
+                @for (int col = 0; col < 7; col++)
+                {
+                    <div style="text-align:center;font-size:9px;color:var(--mud-palette-text-secondary);padding-bottom:2px;font-weight:600;">@hmDayLabelsComb[(hmMondayOffsetComb + col) % 7]</div>
+                }
+                @for (int di = 0; di < 84; di++)
+                {
+                    var day = hmStartComb.AddDays(di);
+                    var count = JournalHeatmap.GetValueOrDefault(day, 0);
+                    var bg = count == 0 ? "var(--mud-palette-background-grey)" : count == 1 ? "#A5D6A7" : "#4CAF50";
+                    var tip = count == 0 ? day.ToString("MMM d") : $"{day:MMM d}: {count} entr{(count == 1 ? "y" : "ies")}";
+                    var border = day == hmTodayComb ? "2px solid var(--mud-palette-primary)" : "none";
+                    <div title="@tip" style="width:100%;aspect-ratio:1;border-radius:3px;background:@bg;border:@border;cursor:default;opacity:@(day > hmTodayComb ? "0.3" : "1")"></div>
+                }
+            </div>
+        }
+        @if (TodoHeatmap.Any())
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-weight:600;" Class="mb-1">✅ Todos</MudText>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;max-width:@(7 * 18 + 18)px;">
+                @for (int col = 0; col < 7; col++)
+                {
+                    <div style="text-align:center;font-size:9px;color:var(--mud-palette-text-secondary);padding-bottom:2px;font-weight:600;">@hmDayLabelsComb[(hmMondayOffsetComb + col) % 7]</div>
+                }
+                @for (int di = 0; di < 84; di++)
+                {
+                    var day = hmStartComb.AddDays(di);
+                    var count = TodoHeatmap.GetValueOrDefault(day, 0);
+                    var bg = count == 0 ? "var(--mud-palette-background-grey)" : count == 1 ? "#FFCC80" : count <= 3 ? "#FFA726" : "#E65100";
+                    var tip = count == 0 ? day.ToString("MMM d") : $"{day:MMM d}: {count} todo{(count == 1 ? "" : "s")} done";
+                    var border = day == hmTodayComb ? "2px solid var(--mud-palette-primary)" : "none";
+                    <div title="@tip" style="width:100%;aspect-ratio:1;border-radius:3px;background:@bg;border:@border;cursor:default;opacity:@(day > hmTodayComb ? "0.3" : "1")"></div>
+                }
+            </div>
+        }
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2" Wrap="Wrap.Wrap">
             <MudText Typo="Typo.caption" Color="Color.Secondary">Less</MudText>
-            <div style="width:12px;height:12px;border-radius:2px;background:var(--mud-palette-background-grey);"></div>
-            <div style="width:12px;height:12px;border-radius:2px;background:#90CAF9;"></div>
-            <div style="width:12px;height:12px;border-radius:2px;background:#42A5F5;"></div>
-            <div style="width:12px;height:12px;border-radius:2px;background:#1565C0;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:var(--mud-palette-background-grey);"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#90CAF9;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#42A5F5;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#1565C0;"></div>
             <MudText Typo="Typo.caption" Color="Color.Secondary">More</MudText>
         </MudStack>
     </MudPaper>
-}
-
-@if (JournalHeatmap.Any())
-{
-    var jhToday = DateOnly.FromDateTime(DateTime.Today);
-    <MudPaper Elevation="1" Class="pa-4 mb-6" Style="border-radius:12px;">
-        <MudText Typo="Typo.subtitle2" Class="mb-3">Journal Activity — Last 12 Weeks</MudText>
-        @{
-            var jhStart = jhToday.AddDays(-83);
-        }
-        @{
-            string[] jhDayLabels = ["M", "T", "W", "T", "F", "S", "S"];
-            var jhStartDow = (int)jhStart.DayOfWeek;
-            var jhMondayOffset = (jhStartDow + 6) % 7;
-        }
-        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;max-width:@(7 * 18 + 18)px;">
-            @for (int col = 0; col < 7; col++)
-            {
-                var lbl = jhDayLabels[(jhMondayOffset + col) % 7];
-                <div style="text-align:center;font-size:9px;color:var(--mud-palette-text-secondary);padding-bottom:2px;font-weight:600;">@lbl</div>
-            }
-            @for (int di = 0; di < 84; di++)
-            {
-                var day = jhStart.AddDays(di);
-                var count = JournalHeatmap.GetValueOrDefault(day, 0);
-                var bg = count == 0 ? "var(--mud-palette-background-grey)" : count == 1 ? "#A5D6A7" : "#4CAF50";
-                var tip = count == 0 ? day.ToString("MMM d") : $"{day:MMM d}: {count} entr{(count == 1 ? "y" : "ies")}";
-                var border = day == jhToday ? "2px solid var(--mud-palette-primary)" : "none";
-                <div title="@tip" style="width:100%;aspect-ratio:1;border-radius:3px;background:@bg;border:@border;cursor:default;opacity:@(day > jhToday ? "0.3" : "1")"></div>
-            }
-        </div>
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
-            <MudText Typo="Typo.caption" Color="Color.Secondary">No entry</MudText>
-            <div style="width:12px;height:12px;border-radius:2px;background:var(--mud-palette-background-grey);"></div>
-            <div style="width:12px;height:12px;border-radius:2px;background:#A5D6A7;"></div>
-            <div style="width:12px;height:12px;border-radius:2px;background:#4CAF50;"></div>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">Multiple</MudText>
-        </MudStack>
-    </MudPaper>
-}
-
-@if (TodoHeatmap.Any())
-{
-    var thToday = DateOnly.FromDateTime(DateTime.Today);
-    <MudPaper Elevation="1" Class="pa-4 mb-6" Style="border-radius:12px;">
-        <MudText Typo="Typo.subtitle2" Class="mb-3">Todos Completed — Last 12 Weeks</MudText>
-        @{
-            var thStart = thToday.AddDays(-83);
-        }
-        @{
-            string[] thDayLabels = ["M", "T", "W", "T", "F", "S", "S"];
-            var thStartDow = (int)thStart.DayOfWeek;
-            var thMondayOffset = (thStartDow + 6) % 7;
-        }
-        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;max-width:@(7 * 18 + 18)px;">
-            @for (int col = 0; col < 7; col++)
-            {
-                var lbl = thDayLabels[(thMondayOffset + col) % 7];
-                <div style="text-align:center;font-size:9px;color:var(--mud-palette-text-secondary);padding-bottom:2px;font-weight:600;">@lbl</div>
-            }
-            @for (int di = 0; di < 84; di++)
-            {
-                var day = thStart.AddDays(di);
-                var count = TodoHeatmap.GetValueOrDefault(day, 0);
-                var bg = count == 0 ? "var(--mud-palette-background-grey)" : count == 1 ? "#FFCC80" : count <= 3 ? "#FFA726" : "#E65100";
-                var tip = count == 0 ? day.ToString("MMM d") : $"{day:MMM d}: {count} todo{(count == 1 ? "" : "s")} done";
-                var border = day == thToday ? "2px solid var(--mud-palette-primary)" : "none";
-                <div title="@tip" style="width:100%;aspect-ratio:1;border-radius:3px;background:@bg;border:@border;cursor:default;opacity:@(day > thToday ? "0.3" : "1")"></div>
-            }
-        </div>
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
-            <MudText Typo="Typo.caption" Color="Color.Secondary">None</MudText>
-            <div style="width:12px;height:12px;border-radius:2px;background:var(--mud-palette-background-grey);"></div>
-            <div style="width:12px;height:12px;border-radius:2px;background:#FFCC80;"></div>
-            <div style="width:12px;height:12px;border-radius:2px;background:#FFA726;"></div>
-            <div style="width:12px;height:12px;border-radius:2px;background:#E65100;"></div>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">Many</MudText>
-        </MudStack>
-    </MudPaper>
-}
-
-@if (TopProgressWeekday is not null)
-{
-    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.CalendarToday" Class="mb-6" Dense="true">
-        📅 Your most active progress day is <strong>@TopProgressWeekday</strong> — @TopProgressWeekdayCount notes logged on that day in the last 5 weeks! Keep the @TopProgressWeekday momentum going! 💪
-    </MudAlert>
 }
 
 @{
@@ -804,218 +707,93 @@ else if (JourneyMonths >= 6)
     var wdMax = WeekdayLeaderboard.Count >= 3 ? WeekdayLeaderboard.Max(x => x.Count) : 0;
     var wdBest = WeekdayLeaderboard.Count >= 3 ? WeekdayLeaderboard[0].Day : "";
 }
-@if (WeekdayLeaderboard.Count >= 3)
+@if (DailyChartSeries.Count > 0 || WeekdayLeaderboard.Count >= 3)
 {
-    <MudPaper Elevation="1" Class="pa-3 mb-6" Style="border-radius:12px;">
-        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-weight:600;letter-spacing:0.5px;" Class="mb-3">
-            📊 Activity by Day of Week (last 90 days)
-        </MudText>
-        @for (int wdi = 0; wdi < 7; wdi++)
+    <MudGrid Class="mb-6">
+        @if (DailyChartSeries.Count > 0)
         {
-            var wdFullName = wdOrdered[wdi];
-            var wdLabel = wdShort[wdi];
-            var wdCount = wdDict.GetValueOrDefault(wdFullName, 0);
-            var wdBarPct = wdMax > 0 ? (int)(wdCount * 100.0 / wdMax) : 0;
-            var wdIsBest = wdFullName == wdBest && wdCount > 0;
-            var wdBarColor = wdIsBest ? "var(--mud-palette-warning)" : wdi < 5 ? "var(--mud-palette-primary)" : "var(--mud-palette-secondary)";
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
-                <span style="font-size:0.75rem;font-weight:@(wdIsBest ? "700" : "400");min-width:30px;color:var(--mud-palette-text-@(wdIsBest ? "primary" : "secondary"));">@wdLabel</span>
-                <div style="flex:1;background:var(--mud-palette-lines-default);border-radius:4px;height:12px;overflow:hidden;">
-                    <div style="width:@(wdBarPct)%;height:100%;background:@wdBarColor;border-radius:4px;transition:width .4s ease;"></div>
-                </div>
-                <span style="font-size:0.7rem;color:var(--mud-palette-text-secondary);min-width:24px;text-align:right;">@wdCount</span>
-                @if (wdIsBest) { <span style="font-size:0.7rem;">🏆</span> }
-            </div>
+            <MudItem xs="12" sm="7">
+                <MudPaper Elevation="1" Class="pa-4" Style="height:100%;">
+                    <MudText Typo="Typo.subtitle2" Class="mb-3">Daily Activity — Last 14 Days</MudText>
+                    <MudChart ChartType="ChartType.Bar"
+                              ChartSeries="@DailyChartSeries"
+                              XAxisLabels="@DailyChartLabels"
+                              Width="100%" Height="160px"
+                              ChartOptions="@(new ChartOptions { YAxisTicks = 1 })" />
+                </MudPaper>
+            </MudItem>
         }
+        @if (WeekdayLeaderboard.Count >= 3)
+        {
+            <MudItem xs="12" sm="5">
+                <MudPaper Elevation="1" Class="pa-3" Style="height:100%;">
+                    @if (TopProgressWeekday is not null)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Info" Class="mb-2">
+                            📅 Most active progress day: <strong>@TopProgressWeekday</strong> (@TopProgressWeekdayCount notes, last 5 weeks) 💪
+                        </MudText>
+                    }
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-weight:600;letter-spacing:0.5px;" Class="mb-3">
+                        📊 Activity by Day of Week (last 90 days)
+                    </MudText>
+                    @for (int wdi = 0; wdi < 7; wdi++)
+                    {
+                        var wdFullName = wdOrdered[wdi];
+                        var wdLabel = wdShort[wdi];
+                        var wdCount = wdDict.GetValueOrDefault(wdFullName, 0);
+                        var wdBarPct = wdMax > 0 ? (int)(wdCount * 100.0 / wdMax) : 0;
+                        var wdIsBest = wdFullName == wdBest && wdCount > 0;
+                        var wdBarColor = wdIsBest ? "var(--mud-palette-warning)" : wdi < 5 ? "var(--mud-palette-primary)" : "var(--mud-palette-secondary)";
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+                            <span style="font-size:0.75rem;font-weight:@(wdIsBest ? "700" : "400");min-width:30px;color:var(--mud-palette-text-@(wdIsBest ? "primary" : "secondary"));">@wdLabel</span>
+                            <div style="flex:1;background:var(--mud-palette-lines-default);border-radius:4px;height:12px;overflow:hidden;">
+                                <div style="width:@(wdBarPct)%;height:100%;background:@wdBarColor;border-radius:4px;transition:width .4s ease;"></div>
+                            </div>
+                            <span style="font-size:0.7rem;color:var(--mud-palette-text-secondary);min-width:24px;text-align:right;">@wdCount</span>
+                            @if (wdIsBest) { <span style="font-size:0.7rem;">🏆</span> }
+                        </div>
+                    }
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+@if (BestDayEverDate is not null || BestWeekEver is not null || BestMonthEver is not null || !string.IsNullOrWhiteSpace(MostActiveGoalName))
+{
+    <MudPaper Elevation="1" Class="pa-3 mb-4" Style="border-radius:12px;">
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-weight:600;letter-spacing:0.5px;" Class="mb-2">🏅 All-Time Records</MudText>
+        <MudStack Spacing="1">
+            @if (BestDayEverDate is not null)
+            {
+                <MudText Typo="Typo.body2">📅 Best day: <strong>@BestDayEverDate</strong> — @BestDayEverCount actions</MudText>
+            }
+            @if (BestWeekEver is not null)
+            {
+                <MudText Typo="Typo.body2">📅 Best week: <strong>@BestWeekEver</strong> — @BestWeekEverCount actions</MudText>
+            }
+            @if (BestMonthEver is not null)
+            {
+                <MudText Typo="Typo.body2">🏆 Best month: <strong>@BestMonthEver</strong> — @BestMonthEverCount actions</MudText>
+            }
+            @if (MostProductiveQuarter is not null && MostProductiveQuarterCount >= 3)
+            {
+                <MudText Typo="Typo.body2">📊 Best quarter: <strong>@MostProductiveQuarter</strong> — @MostProductiveQuarterCount notes</MudText>
+            }
+            @if (!string.IsNullOrWhiteSpace(MostActiveGoalName))
+            {
+                var magShort2 = MostActiveGoalName.Length > 50 ? MostActiveGoalName[..50] + "…" : MostActiveGoalName;
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudText Typo="Typo.body2" Style="flex:1">⭐ Most dedicated: <strong>"@magShort2"</strong> — @MostActiveGoalNoteCount notes</MudText>
+                    @if (!string.IsNullOrWhiteSpace(MostActiveGoalGuid))
+                    {
+                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Success"
+                                   Href="@($"/goals/{MostActiveGoalGuid}")">View</MudButton>
+                    }
+                </MudStack>
+            }
+        </MudStack>
     </MudPaper>
-}
-
-@if (BestDayEverDate is not null)
-{
-    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Star" Dense="true" Class="mb-4">
-        🏅 <strong>All-time best day:</strong> @BestDayEverDate with <strong>@BestDayEverCount actions</strong>! That was an epic day — can you top it?
-    </MudAlert>
-}
-@if (BestWeekEver is not null)
-{
-    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.CalendarViewWeek" Dense="true" Class="mb-4">
-        📅 <strong>All-time best week:</strong> @BestWeekEver with <strong>@BestWeekEverCount actions</strong>! That was a powerhouse week!
-    </MudAlert>
-}
-@if (BestMonthEver is not null)
-{
-    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.EmojiEvents" Dense="true" Class="mb-6">
-        🏆 <strong>Most productive month:</strong> @BestMonthEver with @BestMonthEverCount total actions! That month you were absolutely on fire — what made it so great?
-    </MudAlert>
-}
-@if (MostProductiveQuarter is not null && MostProductiveQuarterCount >= 3)
-{
-    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.CalendarMonth" Dense="true" Class="mb-6">
-        📊 <strong>Most productive quarter:</strong> @MostProductiveQuarter — @MostProductiveQuarterCount progress notes! That was your peak season of goal work!
-    </MudAlert>
-}
-@if (!string.IsNullOrWhiteSpace(MostActiveGoalName))
-{
-    var magShort = MostActiveGoalName.Length > 55 ? MostActiveGoalName[..55] + "…" : MostActiveGoalName;
-    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Star" Dense="true" Class="mb-6">
-        ⭐ <strong>Your most dedicated goal:</strong> "@magShort" — @MostActiveGoalNoteCount notes! That goal has seen your best work!
-        @if (!string.IsNullOrWhiteSpace(MostActiveGoalGuid))
-        {
-            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Success"
-                       Href="@($"/goals/{MostActiveGoalGuid}")" Class="ml-1">View</MudButton>
-        }
-    </MudAlert>
-}
-
-@if (ThisMonthProgress > 0)
-{
-    var monthName = DateTime.Today.ToString("MMMM");
-    string monthCalloutMsg;
-    Severity monthCalloutSeverity;
-    if (LastMonthProgress == 0)
-    {
-        monthCalloutMsg = $"📝 You've written {ThisMonthProgress} progress note{(ThisMonthProgress == 1 ? "" : "s")} in {monthName} — great start!";
-        monthCalloutSeverity = Severity.Success;
-    }
-    else if (ThisMonthProgress > LastMonthProgress)
-    {
-        var diff = ThisMonthProgress - LastMonthProgress;
-        monthCalloutMsg = $"🚀 {monthName} is shaping up to be your best month! {ThisMonthProgress} progress notes and counting (+{diff} vs last month) — keep it going!";
-        monthCalloutSeverity = Severity.Success;
-    }
-    else if (ThisMonthProgress == LastMonthProgress)
-    {
-        monthCalloutMsg = $"📝 Matching last month's pace — {ThisMonthProgress} progress notes in {monthName} so far. Finish strong!";
-        monthCalloutSeverity = Severity.Info;
-    }
-    else
-    {
-        var daysLeft = DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month) - DateTime.Today.Day;
-        monthCalloutMsg = $"💪 {ThisMonthProgress} progress notes in {monthName} so far — {daysLeft} day{(daysLeft == 1 ? "" : "s")} left to match last month's {LastMonthProgress}. You've got this!";
-        monthCalloutSeverity = Severity.Warning;
-    }
-    <MudAlert Severity="@monthCalloutSeverity" Icon="@Icons.Material.Filled.TrendingUp" Dense="true" Class="mb-4">
-        @monthCalloutMsg
-    </MudAlert>
-}
-
-@if (NotesThisWeekProgress > 0 || NotesLastWeekProgress > 0)
-{
-    var wowDiff = NotesThisWeekProgress - NotesLastWeekProgress;
-    string wowMsg;
-    Severity wowSev;
-    if (NotesLastWeekProgress == 0)
-    {
-        wowMsg = $"📈 {NotesThisWeekProgress} progress note{(NotesThisWeekProgress == 1 ? "" : "s")} this week — great start! Keep the momentum going!";
-        wowSev = Severity.Success;
-    }
-    else if (wowDiff > 0)
-    {
-        wowMsg = $"🚀 {NotesThisWeekProgress} progress notes this week vs {NotesLastWeekProgress} last week (+{wowDiff}) — you're accelerating! 🔥";
-        wowSev = Severity.Success;
-    }
-    else if (wowDiff == 0)
-    {
-        wowMsg = $"📝 {NotesThisWeekProgress} progress notes this week — matching last week's pace. Consistent!";
-        wowSev = Severity.Info;
-    }
-    else
-    {
-        wowMsg = $"💪 {NotesThisWeekProgress} progress notes this week vs {NotesLastWeekProgress} last week — a little behind, but the week isn't over!";
-        wowSev = Severity.Warning;
-    }
-    <MudAlert Severity="@wowSev" Icon="@Icons.Material.Filled.Speed" Dense="true" Class="mb-4">
-        @wowMsg
-    </MudAlert>
-}
-
-@if (TodosThisWeek > 0 || TodosLastWeek > 0)
-{
-    var twDiff = TodosThisWeek - TodosLastWeek;
-    string twMsg;
-    Severity twSev;
-    if (TodosLastWeek == 0)
-    {
-        twMsg = $"✅ {TodosThisWeek} todo{(TodosThisWeek == 1 ? "" : "s")} completed this week — great action-taking!";
-        twSev = Severity.Success;
-    }
-    else if (twDiff > 0)
-    {
-        twMsg = $"✅ {TodosThisWeek} todos done this week vs {TodosLastWeek} last week (+{twDiff}) — you're getting more done! 🚀";
-        twSev = Severity.Success;
-    }
-    else if (twDiff == 0)
-    {
-        twMsg = $"✅ {TodosThisWeek} todos completed this week — matching last week's output. Steady and consistent!";
-        twSev = Severity.Info;
-    }
-    else
-    {
-        twMsg = $"✅ {TodosThisWeek} todos done this week vs {TodosLastWeek} last week — a few less, but the week isn't over!";
-        twSev = Severity.Warning;
-    }
-    <MudAlert Severity="@twSev" Icon="@Icons.Material.Filled.CheckCircle" Dense="true" Class="mb-4">
-        @twMsg
-    </MudAlert>
-}
-
-@if (JournalThisWeek > 0 || JournalLastWeek > 0)
-{
-    var jwDiff = JournalThisWeek - JournalLastWeek;
-    string jwMsg;
-    Severity jwSev;
-    if (JournalLastWeek == 0)
-    {
-        jwMsg = $"📓 {JournalThisWeek} journal entr{(JournalThisWeek == 1 ? "y" : "ies")} this week — great reflection habit!";
-        jwSev = Severity.Success;
-    }
-    else if (jwDiff > 0)
-    {
-        jwMsg = $"📓 {JournalThisWeek} journal entries this week vs {JournalLastWeek} last week (+{jwDiff}) — your reflection practice is growing! 🌱";
-        jwSev = Severity.Success;
-    }
-    else if (jwDiff == 0)
-    {
-        jwMsg = $"📓 {JournalThisWeek} journal entries this week — matching last week. Consistent reflection habit!";
-        jwSev = Severity.Info;
-    }
-    else
-    {
-        jwMsg = $"📓 {JournalThisWeek} journal entries this week vs {JournalLastWeek} last week — a little less, but every entry counts!";
-        jwSev = Severity.Warning;
-    }
-    <MudAlert Severity="@jwSev" Icon="@Icons.Material.Filled.Book" Dense="true" Class="mb-4">
-        @jwMsg
-    </MudAlert>
-}
-@if (GoalsWorkedThisWeek > 0 || GoalsWorkedLastWeek > 0)
-{
-    var gwDiff = GoalsWorkedThisWeek - GoalsWorkedLastWeek;
-    string gwMsg;
-    Severity gwSev;
-    if (GoalsWorkedLastWeek == 0)
-    {
-        gwMsg = $"🎯 You worked on {GoalsWorkedThisWeek} goal{(GoalsWorkedThisWeek == 1 ? "" : "s")} this week — great focus!";
-        gwSev = Severity.Success;
-    }
-    else if (gwDiff > 0)
-    {
-        gwMsg = $"🎯 Working on {GoalsWorkedThisWeek} goal{(GoalsWorkedThisWeek == 1 ? "" : "s")} this week vs {GoalsWorkedLastWeek} last week (+{gwDiff}) — broadening your focus! 🌟";
-        gwSev = Severity.Success;
-    }
-    else if (gwDiff == 0)
-    {
-        gwMsg = $"🎯 {GoalsWorkedThisWeek} goal{(GoalsWorkedThisWeek == 1 ? "" : "s")} worked on this week — same as last week. Consistent focus!";
-        gwSev = Severity.Info;
-    }
-    else
-    {
-        gwMsg = $"🎯 {GoalsWorkedThisWeek} goal{(GoalsWorkedThisWeek == 1 ? "" : "s")} worked on this week vs {GoalsWorkedLastWeek} last week — keep spreading your effort!";
-        gwSev = Severity.Normal;
-    }
-    <MudAlert Severity="@gwSev" Icon="@Icons.Material.Filled.Flag" Dense="true" Class="mb-4">
-        @gwMsg
-    </MudAlert>
 }
 
 @* Month-over-month trends *@
@@ -1181,17 +959,6 @@ else if (LongestStreakEver >= 5 && CurrentStreak >= 3 && LongestStreakEver - Cur
     </MudAlert>
 }
 
-@if (DailyChartSeries.Count > 0)
-{
-    <MudPaper Elevation="1" Class="pa-4 mb-6">
-        <MudText Typo="Typo.subtitle2" Class="mb-3">Daily Activity — Last 14 Days</MudText>
-        <MudChart ChartType="ChartType.Bar"
-                  ChartSeries="@DailyChartSeries"
-                  XAxisLabels="@DailyChartLabels"
-                  Width="100%" Height="160px"
-                  ChartOptions="@(new ChartOptions { YAxisTicks = 1 })" />
-    </MudPaper>
-}
 @if (MonthlyTrendSeries.Count > 0)
 {
     <MudPaper Elevation="1" Class="pa-4 mb-6">
