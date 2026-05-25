@@ -152,6 +152,7 @@ public partial class TodoListViewModel(
             UpdatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
         };
         await repo.SaveAsync(todo);
+        analytics.Track("todo_add");
         _allTodos.Insert(0, todo);
         if (string.IsNullOrWhiteSpace(FilterText) ||
             (todo.Title?.Contains(FilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||

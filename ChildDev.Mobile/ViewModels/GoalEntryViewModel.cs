@@ -34,6 +34,7 @@ public partial class GoalEntryViewModel(
     [ObservableProperty] private int measurableOutcomeLength;
     [ObservableProperty] private int nextStepItemsLength;
     [ObservableProperty] private string tierLabel = string.Empty;
+    [ObservableProperty] private string nextTierLabel = string.Empty;
     [ObservableProperty] private int progressNotesCount;
     [ObservableProperty] private ObservableCollection<GoalProgress> progressHistory = [];
     [ObservableProperty] private bool hasProgressHistory;
@@ -100,6 +101,16 @@ public partial class GoalEntryViewModel(
             >= 15  => "🚀 Apprentice",
             >= 5   => "🌱 Beginner",
             _      => string.Empty
+        };
+        NextTierLabel = ProgressNotesCount switch
+        {
+            >= 200 => string.Empty,
+            >= 100 => $"{200 - ProgressNotesCount} more notes to 🌟 Legend",
+            >= 60  => $"{100 - ProgressNotesCount} more notes to 🏆 Master",
+            >= 30  => $"{60 - ProgressNotesCount} more notes to 💎 Expert",
+            >= 15  => $"{30 - ProgressNotesCount} more notes to ⭐ Skilled",
+            >= 5   => $"{15 - ProgressNotesCount} more notes to 🚀 Apprentice",
+            _      => $"{5 - ProgressNotesCount} more notes to 🌱 Beginner"
         };
         EnteredDateDisplay = DateTimeOffset.FromUnixTimeMilliseconds(item.EnteredDate).LocalDateTime.ToString("ddd, MMM d yyyy");
         IsExisting = true;

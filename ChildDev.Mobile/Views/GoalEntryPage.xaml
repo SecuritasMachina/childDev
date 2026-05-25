@@ -15,6 +15,9 @@
                     <Label Grid.Column="1" Text="{Binding TierLabel}" FontSize="12" TextColor="#5C35D9"
                            IsVisible="{Binding TierLabel, Converter={StaticResource StringToBoolConverter}}" />
                 </Grid>
+                <Label Text="{Binding NextTierLabel}" FontSize="11" TextColor="#7E57C2"
+                       HorizontalOptions="End"
+                       IsVisible="{Binding NextTierLabel, Converter={StaticResource StringToBoolConverter}}" />
                 <Label Text="Goal" />
                 <Editor Text="{Binding GoalText}" HeightRequest="100" AutoSize="TextChanges" />
                 <Label Text="{Binding GoalTextLength, StringFormat='{0} characters'}"
