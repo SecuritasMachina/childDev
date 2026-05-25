@@ -6785,3 +6785,38 @@ Updated `SettingsPage.xaml` with a conditional section:
 
 **Impact:** 218 API tests — all passing.
 
+
+---
+
+## 2026-05-25 — UX: Notes-to-next-tier countdown on GoalDetail (this session)
+
+**What:** GoalDetail.razor now shows "X more notes to reach 🚀 Apprentice!" below the notes milestone progress bar. Uses tier thresholds: Beginner (5), Apprentice (15), Skilled (30), Expert (60), Master (100), Legend (200).
+
+**Why:** Users could see the milestone bar (X/Y notes) but had no context about what the milestone meant. The tier countdown gives the number a purpose — a named achievement goal that maps to the broader gamification system.
+
+**Impact:** 235 API tests, 248 mobile tests — all passing.
+
+---
+
+## 2026-05-25 — Test: GoalProgress UpdatedOn=0 exclusion from delta (this session)
+
+**What:** Added `Sync_RecordWithUpdatedOnZero_ExcludedFromDelta` to GoalProgressSyncTests verifying strict `>` boundary behavior at UpdatedOn=1 vs LastSyncAt=0 and LastSyncAt=1.
+
+**Impact:** 235 API tests.
+
+---
+
+## 2026-05-25 — UX: Achievement tier labels on mobile goal list (this session)
+
+**What:** Mobile GoalListPage now shows "🌱 Beginner" through "🌟 Legend" tier label per goal based on progress note count. Extended `GetLatestProgressInfoAsync` to return `COUNT(*)`, added `TierLabel` computed property to Goal model.
+
+**Impact:** 248 mobile tests.
+
+---
+
+## 2026-05-25 — UX: Overall tier label on mobile dashboard hero (this session)
+
+**What:** Mobile DashboardPage hero section now shows the user's overall tier (e.g., "🚀 Apprentice") computed from total progress notes across all active goals. Uses already-fetched progressInfo data — zero extra queries.
+
+**Impact:** 248 mobile tests.
+
