@@ -26,6 +26,7 @@ public partial class GoalEntryViewModel(
     [ObservableProperty] private string? category;
     [ObservableProperty] private int progressPercent;
     [ObservableProperty] private bool isPinned;
+    [ObservableProperty] private string steps = string.Empty;
 
     [ObservableProperty] private int goalTextLength;
     [ObservableProperty] private int measurableOutcomeLength;
@@ -76,6 +77,7 @@ public partial class GoalEntryViewModel(
         Category = item.Category;
         ProgressPercent = item.ProgressPercent ?? 0;
         IsPinned = item.IsPinned;
+        Steps = item.Steps ?? string.Empty;
         var progress = await progressRepo.GetForGoalAsync(guid);
         NextStepItems = (progress.FirstOrDefault()?.NextStepItems ?? string.Empty).Trim();
         _loadedNextStepItems = NextStepItems;
@@ -99,6 +101,7 @@ public partial class GoalEntryViewModel(
         goal.Category = string.IsNullOrWhiteSpace(Category) ? null : Category;
         goal.ProgressPercent = ProgressPercent > 0 ? ProgressPercent : null;
         goal.IsPinned = IsPinned;
+        goal.Steps = string.IsNullOrWhiteSpace(Steps) ? null : Steps.Trim();
         goal.MeasurableOutcome = string.IsNullOrWhiteSpace(MeasurableOutcome) ? null : MeasurableOutcome.Trim();
         goal.NextMeetingDate = HasNextMeetingDate
             ? new DateTimeOffset(DateTime.SpecifyKind(NextMeetingDate, DateTimeKind.Local)).ToUnixTimeMilliseconds()

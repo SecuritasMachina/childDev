@@ -45,7 +45,10 @@
                 <Entry Text="{Binding MeasurableOutcome}" Placeholder="How will you know it's achieved?" />
                 <Label Text="{Binding MeasurableOutcomeLength, StringFormat='{0} characters'}"
                        FontSize="11" TextColor="Gray" HorizontalOptions="End" />
-                <Label Text="Next Steps" />
+                <Label Text="Plan (Steps to Achieve)" />
+                <Editor Text="{Binding Steps}" HeightRequest="100" AutoSize="TextChanges"
+                        Placeholder="Enter each step on a new line — break your goal into small, achievable actions" />
+                <Label Text="Progress Notes" />
                 <Editor Text="{Binding NextStepItems}" HeightRequest="80" AutoSize="TextChanges" />
                 <Label Text="{Binding NextStepItemsLength, StringFormat='{0} characters'}"
                        FontSize="11" TextColor="Gray" HorizontalOptions="End" />
