@@ -31,6 +31,8 @@ public partial class GoalEntryViewModel(
     [ObservableProperty] private int goalTextLength;
     [ObservableProperty] private int measurableOutcomeLength;
     [ObservableProperty] private int nextStepItemsLength;
+    [ObservableProperty] private string tierLabel = string.Empty;
+    [ObservableProperty] private int progressNotesCount;
 
     public double ProgressBarValue => ProgressPercent / 100.0;
 
@@ -81,6 +83,17 @@ public partial class GoalEntryViewModel(
         var progress = await progressRepo.GetForGoalAsync(guid);
         NextStepItems = (progress.FirstOrDefault()?.NextStepItems ?? string.Empty).Trim();
         _loadedNextStepItems = NextStepItems;
+        ProgressNotesCount = progress.Count;
+        TierLabel = ProgressNotesCount switch
+        {
+            >= 200 => "🌟 Legend",
+            >= 100 => "🏆 Master",
+            >= 60  => "💎 Expert",
+            >= 30  => "⭐ Skilled",
+            >= 15  => "🚀 Apprentice",
+            >= 5   => "🌱 Beginner",
+            _      => string.Empty
+        };
         EnteredDateDisplay = DateTimeOffset.FromUnixTimeMilliseconds(item.EnteredDate).LocalDateTime.ToString("ddd, MMM d yyyy");
         IsExisting = true;
         IsCompleted = item.CompletionDate.HasValue;
