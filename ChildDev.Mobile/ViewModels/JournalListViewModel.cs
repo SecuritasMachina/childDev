@@ -57,6 +57,7 @@ public partial class JournalListViewModel(
     ];
 
     private List<Journal> _allJournals = [];
+    private int _promptIdx;
 
     partial void OnFilterTextChanged(string value)
     {
@@ -98,7 +99,8 @@ public partial class JournalListViewModel(
                 ? $"{(streak >= 14 ? "🌟" : streak >= 7 ? "🔥" : "⭐")} {streak}-day journaling streak!"
                 : string.Empty;
             HasTodayEntry = await repo.HasEntryTodayAsync(account.Guid);
-            TodayPrompt = Prompts[(int)(DateOnly.FromDateTime(DateTime.Today).DayNumber % Prompts.Length)];
+            _promptIdx = (int)(DateOnly.FromDateTime(DateTime.Today).DayNumber % Prompts.Length);
+            TodayPrompt = Prompts[_promptIdx];
         }
         catch
         {
@@ -139,6 +141,13 @@ public partial class JournalListViewModel(
     {
         var count = _allJournals.Count;
         EntryCountDisplay = $"{count} {(count == 1 ? "entry" : "entries")}";
+    }
+
+    [RelayCommand]
+    private void ShufflePrompt()
+    {
+        _promptIdx = (_promptIdx + 1) % Prompts.Length;
+        TodayPrompt = Prompts[_promptIdx];
     }
 
     [RelayCommand]
