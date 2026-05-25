@@ -106,6 +106,8 @@
                                    IsVisible="{Binding LatestProgressAt, Converter={StaticResource NotNullConverter}}" />
                             <Label Text="No notes yet" FontSize="10" TextColor="Gray"
                                    IsVisible="{Binding ShowNoNotesYet}" />
+                            <Label Text="{Binding TierLabel}" FontSize="10" TextColor="#5C35D9"
+                                   IsVisible="{Binding TierLabel, Converter={StaticResource StringToBoolConverter}}" />
                         </VerticalStackLayout>
                         <Label Grid.Column="1" Text="✓ Done" FontSize="11" TextColor="Green"
                                VerticalOptions="Start" Margin="8,2,0,0"

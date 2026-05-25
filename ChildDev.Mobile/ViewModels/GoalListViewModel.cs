@@ -131,6 +131,7 @@ public partial class GoalListViewModel(
             {
                 g.LatestNextStepItems = p.Steps;
                 g.LatestProgressAt = p.UpdatedOn;
+                g.ProgressNotesCount = p.Count;
             }
         }
         var active = goals.Where(g => g.CompletionDate is null)

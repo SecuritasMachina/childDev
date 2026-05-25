@@ -22,8 +22,23 @@ public class Goal : SyncBase
     public long? LatestProgressAt { get; set; }
 
     [Ignore]
+    public int ProgressNotesCount { get; set; }
+
+    [Ignore]
     public bool ShowNoNotesYet => LatestProgressAt is null && CompletionDate is null;
 
     [Ignore]
     public double ProgressBarValue => (ProgressPercent ?? 0) / 100.0;
+
+    [Ignore]
+    public string TierLabel => ProgressNotesCount switch
+    {
+        >= 200 => "🌟 Legend",
+        >= 100 => "🏆 Master",
+        >= 60  => "💎 Expert",
+        >= 30  => "⭐ Skilled",
+        >= 15  => "🚀 Apprentice",
+        >= 5   => "🌱 Beginner",
+        _      => string.Empty
+    };
 }
