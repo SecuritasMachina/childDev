@@ -6820,3 +6820,29 @@ Updated `SettingsPage.xaml` with a conditional section:
 
 **Impact:** 248 mobile tests.
 
+
+---
+
+## 2026-05-25 — UX: Tier label on mobile goal entry page (this session)
+
+**What:** Mobile GoalEntryPage now shows the per-goal tier label ("🌱 Beginner" through "🌟 Legend") in the header row next to the entered date for existing goals.
+
+**Impact:** 248 mobile tests.
+
+---
+
+## 2026-05-25 — UX: Overall tier badge on web home stats card (this session)
+
+**What:** Added an overall tier chip (🌱 Beginner through 🌟 Legend) to the web home page stats section alongside the total progress notes count. Uses the same thresholds as mobile dashboard (5/20/50/100/200/500). Provides web/mobile parity for the overall tier feature.
+
+**Impact:** 235 API tests — all passing.
+
+---
+
+## 2026-05-25 — UX: Progress note history on mobile goal entry page (this session)
+
+**What:** When opening an existing goal on mobile, the last 4 previous progress notes (excluding the current/most-recent one shown in the editor) are displayed below the notes editor as a "Previous Notes" mini-history. Notes without text (meeting-date-only) are filtered out. Uses `GetForGoalAsync` data already fetched.
+
+**Why:** Users could only see the most recent progress note when editing a goal. Having context of previous notes helps continuity (especially during caregiver-child review meetings).
+
+**Impact:** 248 mobile tests — all passing.
