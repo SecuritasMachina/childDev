@@ -9,7 +9,7 @@
         <ToolbarItem Text="+" Command="{Binding AddCommand}" />
     </ContentPage.ToolbarItems>
 
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*">
         <Label Grid.Row="0" Text="{Binding StatusMessage}" TextColor="Red"
                FontSize="13" Padding="16,8"
                IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}" />
@@ -19,8 +19,14 @@
                 IsVisible="{Binding StreakDisplay, Converter={StaticResource StringToBoolConverter}}">
             <Label Text="{Binding StreakDisplay}" FontSize="13" FontAttributes="Bold" TextColor="#5C35D9" />
         </Border>
+        <!-- Streak protection warning (only when streak active but no entry today) -->
+        <Border Grid.Row="2" BackgroundColor="#FFF3E0" Padding="12,8" StrokeShape="RoundRectangle 8" StrokeThickness="0"
+                Margin="8,2,8,2"
+                IsVisible="{Binding HasStreakWarning}">
+            <Label Text="{Binding StreakWarning}" FontSize="12" FontAttributes="Bold" TextColor="#E65100"/>
+        </Border>
         <!-- Today's writing prompt (only if no entry today) -->
-        <Border Grid.Row="2" BackgroundColor="#F3F0FF" Padding="12,10" StrokeShape="RoundRectangle 8" StrokeThickness="0"
+        <Border Grid.Row="3" BackgroundColor="#F3F0FF" Padding="12,10" StrokeShape="RoundRectangle 8" StrokeThickness="0"
                 Margin="8,2,8,4">
             <Border.Triggers>
                 <DataTrigger TargetType="Border" Binding="{Binding HasTodayEntry}" Value="True">
@@ -40,8 +46,8 @@
                         BorderColor="#C5CAE9" BorderWidth="1" />
             </Grid>
         </Border>
-        <SearchBar Grid.Row="3" Placeholder="Search entries..." Text="{Binding FilterText}" Margin="8,0,8,4" />
-        <RefreshView Grid.Row="4" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
+        <SearchBar Grid.Row="4" Placeholder="Search entries..." Text="{Binding FilterText}" Margin="8,0,8,4" />
+        <RefreshView Grid.Row="5" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
         <CollectionView ItemsSource="{Binding Journals}">
         <CollectionView.EmptyView>
             <Label Text="{Binding EmptyMessage}" FontSize="18" TextColor="Gray"

@@ -40,6 +40,12 @@ public partial class JournalListViewModel(
     [ObservableProperty]
     private bool hasTodayEntry;
 
+    [ObservableProperty]
+    private string streakWarning = string.Empty;
+
+    [ObservableProperty]
+    private bool hasStreakWarning;
+
     private static readonly string[] Prompts =
     [
         "What's one thing you learned today?",
@@ -99,8 +105,10 @@ public partial class JournalListViewModel(
                 ? $"{(streak >= 14 ? "🌟" : streak >= 7 ? "🔥" : "⭐")} {streak}-day journaling streak!"
                 : string.Empty;
             HasTodayEntry = await repo.HasEntryTodayAsync(account.Guid);
+            UpdateStreakWarning(streak, HasTodayEntry);
             _promptIdx = (int)(DateOnly.FromDateTime(DateTime.Today).DayNumber % Prompts.Length);
             TodayPrompt = Prompts[_promptIdx];
+            UpdateStreakWarning(streak, HasTodayEntry);
         }
         catch
         {
@@ -125,6 +133,7 @@ public partial class JournalListViewModel(
                 ? $"{(streak >= 14 ? "🌟" : streak >= 7 ? "🔥" : "⭐")} {streak}-day journaling streak!"
                 : string.Empty;
             HasTodayEntry = await repo.HasEntryTodayAsync(account.Guid);
+            UpdateStreakWarning(streak, HasTodayEntry);
             StatusMessage = string.Empty;
         }
         catch
@@ -141,6 +150,22 @@ public partial class JournalListViewModel(
     {
         var count = _allJournals.Count;
         EntryCountDisplay = $"{count} {(count == 1 ? "entry" : "entries")}";
+    }
+
+    private void UpdateStreakWarning(int streak, bool hasTodayEntry)
+    {
+        if (streak >= 3 && !hasTodayEntry)
+        {
+            StreakWarning = streak >= 7
+                ? $"⚠️ Don't break your {streak}-day streak! Write a quick entry today."
+                : $"🛡️ Protect your {streak}-day streak — add an entry today!";
+            HasStreakWarning = true;
+        }
+        else
+        {
+            StreakWarning = string.Empty;
+            HasStreakWarning = false;
+        }
     }
 
     [RelayCommand]
