@@ -155,6 +155,8 @@
     var mpPrev = mpMilestones.LastOrDefault(m => m <= mpCurrent);
     var mpPct = mpNext > 0 ? (int)((mpCurrent - mpPrev) * 100.0 / (mpNext - mpPrev)) : 100;
     var mpColor = mpPct >= 80 ? "var(--mud-palette-success)" : mpPct >= 40 ? "var(--mud-palette-primary)" : "var(--mud-palette-secondary)";
+    var ntaTiers = new (int Count, string Emoji, string Name)[] { (5, "🌱", "Beginner"), (15, "🚀", "Apprentice"), (30, "⭐", "Skilled"), (60, "💎", "Expert"), (100, "🏆", "Master"), (200, "🌟", "Legend") };
+    var ntaNext = ntaTiers.FirstOrDefault(t => t.Count > mpCurrent);
 }
 @if (Goal.CompletionDate is null && ProgressEntries.Count >= 1)
 {
@@ -168,10 +170,6 @@
             </div>
             <MudText Typo="Typo.caption" Color="Color.Secondary">@mpPct%</MudText>
         </div>
-    }
-    @{
-        var ntaTiers = new (int Count, string Emoji, string Name)[] { (5, "🌱", "Beginner"), (15, "🚀", "Apprentice"), (30, "⭐", "Skilled"), (60, "💎", "Expert"), (100, "🏆", "Master"), (200, "🌟", "Legend") };
-        var ntaNext = ntaTiers.FirstOrDefault(t => t.Count > mpCurrent);
     }
     @if (ntaNext.Name is not null)
     {

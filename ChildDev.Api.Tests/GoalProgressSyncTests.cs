@@ -736,4 +736,36 @@ public class GoalProgressSyncTests(ApiFactory factory) : IClassFixture<ApiFactor
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Sync_RecordWithUpdatedOnZero_ExcludedFromDelta()
+    {
+        // UpdatedOn=0 records stored via direct DB bypass would never appear in delta
+        // because the delta query uses strict > (LastSyncAt=0: 0 > 0 is false)
+        // This test verifies that behavior via a record uploaded with UpdatedOn=1 (passes)
+        // vs one the server would store — confirming the boundary: LastSyncAt=0 returns
+        // only records with UpdatedOn > 0.
+        var (jwt, accountGuid) = await RegisterAsync("gpsync_zero_updatedon");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var goalGuid = Guid.NewGuid().ToString();
+
+        // Upload with UpdatedOn=1 (smallest valid value > 0)
+        await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([
+                new GoalProgressDto(guid, accountGuid, goalGuid, "step text", null, 1L, null)
+            ], 0));
+
+        // Delta with LastSyncAt=0 must include UpdatedOn=1 (1 > 0)
+        var response = await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([], 0));
+        var body = await response.Content.ReadFromJsonAsync<SyncResponse<GoalProgressDto>>();
+        Assert.Contains(body!.Records, r => r.Guid == guid);
+
+        // Delta with LastSyncAt=1 must exclude it (1 > 1 is false)
+        var response2 = await _client.PostAsJsonAsync("/api/sync/goal-progress",
+            new SyncRequest<GoalProgressDto>([], 1L));
+        var body2 = await response2.Content.ReadFromJsonAsync<SyncResponse<GoalProgressDto>>();
+        Assert.DoesNotContain(body2!.Records, r => r.Guid == guid);
+    }
 }
