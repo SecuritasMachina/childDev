@@ -11,6 +11,7 @@ namespace LevelUp.ViewModels;
 public partial class GoalEntryViewModel(
     GoalRepository repo,
     GoalProgressRepository progressRepo,
+    TodoRepository todoRepo,
     AccountService accountService,
     MobileAnalyticsService analytics) : ObservableObject
 {
@@ -38,6 +39,8 @@ public partial class GoalEntryViewModel(
     [ObservableProperty] private int progressNotesCount;
     [ObservableProperty] private ObservableCollection<GoalProgress> progressHistory = [];
     [ObservableProperty] private bool hasProgressHistory;
+    [ObservableProperty] private ObservableCollection<Todo> linkedTodos = [];
+    [ObservableProperty] private bool hasLinkedTodos;
 
     public double ProgressBarValue => ProgressPercent / 100.0;
 
@@ -116,6 +119,19 @@ public partial class GoalEntryViewModel(
         IsExisting = true;
         IsCompleted = item.CompletionDate.HasValue;
         analytics.Track("goal_view", item.Category);
+
+        var account = await accountService.GetAccountAsync();
+        if (account is not null)
+        {
+            var pending = await todoRepo.GetPendingAsync(account.Guid);
+            var goalPrefix = $"Goal: {item.GoalText?.Trim()}";
+            var linked = pending
+                .Where(t => t.Notes != null &&
+                    t.Notes.StartsWith(goalPrefix, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            LinkedTodos = new ObservableCollection<Todo>(linked);
+            HasLinkedTodos = linked.Count > 0;
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanSave))]
@@ -167,6 +183,15 @@ public partial class GoalEntryViewModel(
     {
         if (!NextStepItems.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
             NextStepItems = prefix;
+    }
+
+    [RelayCommand]
+    private async Task CompleteLinkedTodoAsync(Todo todo)
+    {
+        await todoRepo.CompleteAsync(todo.Guid);
+        analytics.Track("goal_todo_complete_inline", null);
+        LinkedTodos.Remove(todo);
+        HasLinkedTodos = LinkedTodos.Count > 0;
     }
 
     [RelayCommand]
