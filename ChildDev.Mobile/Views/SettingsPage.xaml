@@ -35,7 +35,7 @@
                 <Label Text="Link to Server Account" FontAttributes="Bold" FontSize="13" />
                 <Label Text="Enter your server account credentials to enable sync." TextColor="Gray" FontSize="12" />
                 <Entry Text="{Binding ServerNickName}" Placeholder="Server nickname" />
-                <Entry Text="{Binding ServerPin}" Placeholder="Server PIN" IsPassword="True" />
+                <Entry Text="{Binding ServerPin}" Placeholder="Server password" IsPassword="True" />
                 <Button Text="Link to Server" Command="{Binding LinkToServerCommand}"
                         BackgroundColor="CornflowerBlue" TextColor="White"
                         IsEnabled="{Binding IsLinking, Converter={StaticResource InverseBoolConverter}}" />

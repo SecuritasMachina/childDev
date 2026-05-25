@@ -30,7 +30,7 @@ public partial class SetupViewModel(AccountService accountService) : ObservableO
     {
         if (Pin != ConfirmPin)
         {
-            ErrorMessage = "PINs do not match";
+            ErrorMessage = "Passwords do not match";
             return;
         }
 

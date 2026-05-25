@@ -76,7 +76,7 @@ public partial class SettingsViewModel(AccountService accountService, IHttpClien
         var url = ServerUrl.Trim().TrimEnd('/');
         if (string.IsNullOrEmpty(url)) { StatusMessage = "Save a server URL first."; return; }
         if (string.IsNullOrWhiteSpace(ServerNickName)) { StatusMessage = "Enter your server account nickname."; return; }
-        if (string.IsNullOrWhiteSpace(ServerPin)) { StatusMessage = "Enter your server account PIN."; return; }
+        if (string.IsNullOrWhiteSpace(ServerPin)) { StatusMessage = "Enter your server account password."; return; }
 
         IsLinking = true;
         StatusMessage = "Linking...";
@@ -89,7 +89,7 @@ public partial class SettingsViewModel(AccountService accountService, IHttpClien
 
             if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
-                StatusMessage = "Incorrect nickname or PIN.";
+                StatusMessage = "Incorrect nickname or password.";
                 return;
             }
             response.EnsureSuccessStatusCode();
