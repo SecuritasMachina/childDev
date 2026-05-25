@@ -161,13 +161,24 @@
     <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2" Style="font-style:italic;opacity:.8;">💬 @selectedQuote</MudText>
     @if (mpNext > 0)
     {
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
             <MudText Typo="Typo.caption" Color="Color.Secondary" Style="white-space:nowrap;">@mpCurrent / @mpNext notes</MudText>
             <div style="flex:1;background:var(--mud-palette-lines-default);border-radius:6px;height:8px;overflow:hidden;">
                 <div style="width:@(mpPct)%;height:100%;background:@mpColor;border-radius:6px;transition:width .4s ease;"></div>
             </div>
             <MudText Typo="Typo.caption" Color="Color.Secondary">@mpPct%</MudText>
         </div>
+    }
+    @{
+        var ntaTiers = new (int Count, string Emoji, string Name)[] { (5, "🌱", "Beginner"), (15, "🚀", "Apprentice"), (30, "⭐", "Skilled"), (60, "💎", "Expert"), (100, "🏆", "Master"), (200, "🌟", "Legend") };
+        var ntaNext = ntaTiers.FirstOrDefault(t => t.Count > mpCurrent);
+    }
+    @if (ntaNext.Name is not null)
+    {
+        var ntaNeeded = ntaNext.Count - mpCurrent;
+        <MudText Typo="Typo.caption" Color="Color.Primary" Class="mb-3">
+            @(ntaNeeded == 1 ? "1 more note" : $"{ntaNeeded} more notes") to reach @ntaNext.Emoji @ntaNext.Name!
+        </MudText>
     }
 }
 @if (Goal.CompletionDate.HasValue)
