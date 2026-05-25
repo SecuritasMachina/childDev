@@ -57,7 +57,12 @@
                 <Label Text="Plan (Steps to Achieve)" />
                 <Editor Text="{Binding Steps}" HeightRequest="100" AutoSize="TextChanges"
                         Placeholder="Enter each step on a new line — break your goal into small, achievable actions" />
-                <Label Text="Progress Notes" />
+                <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                    <Label Grid.Column="0" Text="Progress Notes" VerticalOptions="Center"/>
+                    <Label Grid.Column="1" Text="{Binding ProgressNotesCount, StringFormat='{0} total'}"
+                           FontSize="11" TextColor="#7E57C2" VerticalOptions="Center"
+                           IsVisible="{Binding IsExisting}"/>
+                </Grid>
                 <Editor Text="{Binding NextStepItems}" HeightRequest="80" AutoSize="TextChanges" />
                 <Label Text="{Binding NextStepItemsLength, StringFormat='{0} characters'}"
                        FontSize="11" TextColor="Gray" HorizontalOptions="End" />
