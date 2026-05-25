@@ -45,6 +45,9 @@
                             <SwipeItem Text="📌 Pin" BackgroundColor="#5C35D9"
                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GoalListViewModel}}, Path=TogglePinCommand}"
                                        CommandParameter="{Binding .}" />
+                            <SwipeItem Text="📝 Note" BackgroundColor="#26C6A0"
+                                       Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GoalListViewModel}}, Path=QuickNoteCommand}"
+                                       CommandParameter="{Binding .}" />
                         </SwipeItems>
                     </SwipeView.LeftItems>
                     <SwipeView.RightItems>

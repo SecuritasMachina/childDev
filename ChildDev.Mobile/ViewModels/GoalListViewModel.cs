@@ -177,4 +177,32 @@ public partial class GoalListViewModel(
         Goals.Remove(goal);
         UpdateEntryCountDisplay();
     }
+
+    [RelayCommand]
+    private async Task QuickNoteAsync(Goal goal)
+    {
+        var note = await Shell.Current.DisplayPromptAsync(
+            "📝 Quick Note",
+            $"Add a progress note for:\n\"{(goal.GoalText?.Length > 60 ? goal.GoalText[..60] + "…" : goal.GoalText)}\"",
+            accept: "Save", cancel: "Cancel",
+            placeholder: "What progress did you make?",
+            maxLength: 500,
+            keyboard: Keyboard.Text);
+        if (string.IsNullOrWhiteSpace(note)) return;
+        var account = await accountService.GetAccountAsync();
+        if (account is null) return;
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await progressRepo.SaveAsync(new GoalProgress
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = account.Guid,
+            GoalFk = goal.Guid,
+            NextStepItems = note.Trim(),
+            UpdatedOn = ts
+        });
+        analytics.Track("goal_quick_note", goal.Category);
+        _allGoals = await LoadGoalsWithStepsAsync(account.Guid);
+        Goals = new ObservableCollection<Goal>(_allGoals);
+        await Shell.Current.DisplayAlert("✅ Note Saved!", "Great work keeping your goal moving forward! 🌟", "OK");
+    }
 }
