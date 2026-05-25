@@ -251,6 +251,35 @@ public partial class DashboardViewModel(
     }
 
     [RelayCommand]
+    private async Task QuickNoteForFocusGoalAsync()
+    {
+        if (string.IsNullOrEmpty(StaleGoalGuid)) return;
+        var goalName = StaleGoalText.Length > 60 ? StaleGoalText[..60] + "…" : StaleGoalText;
+        var note = await Shell.Current.DisplayPromptAsync(
+            "📝 Quick Note",
+            $"Progress note for:\n\"{goalName}\"",
+            accept: "Save", cancel: "Cancel",
+            placeholder: "What progress did you make?",
+            maxLength: 500,
+            keyboard: Keyboard.Text);
+        if (string.IsNullOrWhiteSpace(note)) return;
+        if (string.IsNullOrEmpty(_accountGuid)) return;
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await progressRepo.SaveAsync(new GoalProgress
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = _accountGuid,
+            GoalFk = StaleGoalGuid,
+            NextStepItems = note.Trim(),
+            UpdatedOn = ts
+        });
+        analytics.Track("dashboard_quick_note_focus");
+        StaleGoalText = string.Empty;
+        StaleGoalGuid = string.Empty;
+        HasStaleGoal = false;
+    }
+
+    [RelayCommand]
     private async Task AddJournalAsync() =>
         await Shell.Current.GoToAsync("journal/entry");
 

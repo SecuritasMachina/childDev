@@ -72,21 +72,32 @@
                            Text="{Binding NextGoalMeeting}"/>
                 </Border>
 
-                <!-- Stale goal warning -->
-                <Border Padding="12,10" StrokeShape="RoundRectangle 10" StrokeThickness="0"
-                        BackgroundColor="#FFF8E1"
+                <!-- Today's Focus card -->
+                <Border Padding="16,14" StrokeShape="RoundRectangle 14" StrokeThickness="0"
                         IsVisible="{Binding HasStaleGoal}">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Command="{Binding GoToStaleGoalCommand}" />
-                    </Border.GestureRecognizers>
-                    <Label TextColor="#E65100" FontSize="13">
-                        <Label.FormattedText>
-                            <FormattedString>
-                                <Span Text="⚠️  Needs attention: " FontAttributes="Bold" />
-                                <Span Text="{Binding StaleGoalText}" />
-                            </FormattedString>
-                        </Label.FormattedText>
-                    </Label>
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#FFF9C4" Offset="0"/>
+                            <GradientStop Color="#FFF3E0" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="🎯  Today's Focus" FontSize="12" TextColor="#E65100"
+                               FontAttributes="Bold" />
+                        <Label Text="{Binding StaleGoalText}" FontSize="14" TextColor="#BF360C"
+                               LineBreakMode="TailTruncation" MaxLines="2" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <Button Grid.Column="0" Text="+ Quick Note"
+                                    Command="{Binding QuickNoteForFocusGoalCommand}"
+                                    BackgroundColor="#FF9800" TextColor="White"
+                                    FontSize="12" Padding="10,6" CornerRadius="8" />
+                            <Button Grid.Column="1" Text="View →"
+                                    Command="{Binding GoToStaleGoalCommand}"
+                                    BackgroundColor="Transparent" TextColor="#E65100"
+                                    FontSize="12" Padding="10,6" CornerRadius="8"
+                                    BorderColor="#FFB74D" BorderWidth="1" />
+                        </Grid>
+                    </VerticalStackLayout>
                 </Border>
 
                 <!-- Colorful stat summary cards -->
