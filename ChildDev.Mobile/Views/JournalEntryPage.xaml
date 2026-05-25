@@ -66,7 +66,30 @@
             <Label Text="{Binding EmotionReasonLength, StringFormat='{0} characters'}"
                    FontSize="11" TextColor="Gray" HorizontalOptions="End" />
             <Label Text="Tags" />
-            <Entry Text="{Binding Tags}" Placeholder="comma-separated" />
+            <FlexLayout Wrap="Wrap" Direction="Row" JustifyContent="Start" AlignItems="Start">
+                <Button Text="🏫 school" Command="{Binding ToggleTagCommand}" CommandParameter="school"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                <Button Text="👨‍👩‍👧 family" Command="{Binding ToggleTagCommand}" CommandParameter="family"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                <Button Text="👫 friends" Command="{Binding ToggleTagCommand}" CommandParameter="friends"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                <Button Text="🎯 goals" Command="{Binding ToggleTagCommand}" CommandParameter="goals"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                <Button Text="⚽ sports" Command="{Binding ToggleTagCommand}" CommandParameter="sports"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                <Button Text="🎨 creative" Command="{Binding ToggleTagCommand}" CommandParameter="creative"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                <Button Text="💪 health" Command="{Binding ToggleTagCommand}" CommandParameter="health"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+            </FlexLayout>
+            <Entry Text="{Binding Tags}" Placeholder="comma-separated, or tap chips above" />
             <Label Text="{Binding TagsLength, StringFormat='{0} characters'}"
                    FontSize="11" TextColor="Gray" HorizontalOptions="End" />
             <Button Text="Delete Entry" Command="{Binding DeleteCommand}"

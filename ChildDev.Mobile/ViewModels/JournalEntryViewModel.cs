@@ -47,6 +47,20 @@ public partial class JournalEntryViewModel(
     [RelayCommand]
     private void SetActivity(string value) => Activity = value;
 
+    [RelayCommand]
+    private void ToggleTag(string tag)
+    {
+        var existing = Tags ?? string.Empty;
+        var parts = existing.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                             .ToList();
+        var idx = parts.FindIndex(t => string.Equals(t, tag, StringComparison.OrdinalIgnoreCase));
+        if (idx >= 0)
+            parts.RemoveAt(idx);
+        else
+            parts.Add(tag);
+        Tags = string.Join(", ", parts);
+    }
+
     partial void OnMoodChanged(string value) => MoodLength = value?.Length ?? 0;
     partial void OnEmotionReasonChanged(string value) => EmotionReasonLength = value?.Length ?? 0;
     partial void OnTagsChanged(string value) => TagsLength = value?.Length ?? 0;
