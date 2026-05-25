@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using LevelUp.Data;
 using LevelUp.Models;
 using LevelUp.Services;
@@ -9,6 +10,7 @@ namespace LevelUp.ViewModels;
 [QueryProperty(nameof(Guid), "guid")]
 public partial class TodoEntryViewModel(
     TodoRepository repo,
+    GoalRepository goalRepo,
     AccountService accountService,
     MobileAnalyticsService analytics) : ObservableObject
 {
@@ -21,8 +23,26 @@ public partial class TodoEntryViewModel(
     [ObservableProperty] private DateTime dueDate = DateTime.Today.AddDays(1);
     [ObservableProperty] private bool isExisting;
     [ObservableProperty] private bool isCompleted;
+    [ObservableProperty] private ObservableCollection<Goal> availableGoals = [];
+    [ObservableProperty] private Goal? linkedGoal;
 
     private bool CanSave() => !string.IsNullOrWhiteSpace(Title);
+
+    partial void OnLinkedGoalChanged(Goal? value)
+    {
+        if (value is null) return;
+        var goalPrefix = $"Goal: {value.GoalText}";
+        var existingNotes = Notes ?? string.Empty;
+        if (existingNotes.StartsWith("Goal: ", StringComparison.OrdinalIgnoreCase))
+        {
+            var afterGoalLine = existingNotes.Contains('\n') ? existingNotes[(existingNotes.IndexOf('\n') + 1)..] : string.Empty;
+            Notes = string.IsNullOrWhiteSpace(afterGoalLine) ? goalPrefix : $"{goalPrefix}\n{afterGoalLine}";
+        }
+        else
+        {
+            Notes = string.IsNullOrWhiteSpace(existingNotes) ? goalPrefix : $"{goalPrefix}\n{existingNotes}";
+        }
+    }
 
     [RelayCommand]
     private void SetDueToday() { DueDate = DateTime.Today; HasDueDate = true; }
@@ -50,10 +70,28 @@ public partial class TodoEntryViewModel(
     {
         if (!string.IsNullOrEmpty(value))
             LoadAsync(value).FireAndForget();
+        else
+            LoadGoalsAsync().FireAndForget();
+    }
+
+    private async Task LoadGoalsAsync()
+    {
+        var account = await accountService.GetAccountAsync();
+        if (account is null) return;
+        var goals = await goalRepo.GetAllActiveAsync(account.Guid);
+        var active = goals.Where(g => g.CompletionDate is null).ToList();
+        AvailableGoals = new ObservableCollection<Goal>(active);
     }
 
     private async Task LoadAsync(string guid)
     {
+        var account = await accountService.GetAccountAsync();
+        if (account is not null)
+        {
+            var goals = await goalRepo.GetAllActiveAsync(account.Guid);
+            var active = goals.Where(g => g.CompletionDate is null).ToList();
+            AvailableGoals = new ObservableCollection<Goal>(active);
+        }
         var item = await repo.GetAsync(guid);
         if (item is null) return;
         Title = item.Title ?? string.Empty;
@@ -65,6 +103,14 @@ public partial class TodoEntryViewModel(
         }
         IsExisting = true;
         IsCompleted = item.CompletedAt.HasValue;
+        // Detect linked goal from Notes prefix
+        if (!string.IsNullOrWhiteSpace(Notes) && Notes.StartsWith("Goal: ", StringComparison.OrdinalIgnoreCase))
+        {
+            var goalLine = Notes.Contains('\n') ? Notes[..Notes.IndexOf('\n')] : Notes;
+            var goalText = goalLine["Goal: ".Length..].Trim();
+            LinkedGoal = AvailableGoals.FirstOrDefault(g =>
+                string.Equals(g.GoalText?.Trim(), goalText, StringComparison.OrdinalIgnoreCase));
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanSave))]

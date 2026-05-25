@@ -13,6 +13,12 @@
             <Entry Text="{Binding Title}" Placeholder="What needs to be done?" />
             <Label Text="{Binding TitleLength, StringFormat='{0} characters'}"
                    FontSize="11" TextColor="Gray" HorizontalOptions="End" />
+            <!-- Link to Goal -->
+            <Label Text="Link to Goal (optional)" />
+            <Picker Title="Choose a goal..."
+                    ItemsSource="{Binding AvailableGoals}"
+                    ItemDisplayBinding="{Binding GoalText}"
+                    SelectedItem="{Binding LinkedGoal}" />
             <Label Text="Notes" />
             <Editor Text="{Binding Notes}" Placeholder="Optional details..." HeightRequest="80" AutoSize="TextChanges" />
             <Label Text="{Binding NotesLength, StringFormat='{0} characters'}"
