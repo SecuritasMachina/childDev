@@ -166,14 +166,30 @@
 
                 <!-- Weekly Challenge card -->
                 <Border Padding="14,12" StrokeShape="RoundRectangle 14" StrokeThickness="0"
-                        IsVisible="{Binding HasWeeklyChallenge}"
-                        BackgroundColor="#F3F0FF">
+                        IsVisible="{Binding HasWeeklyChallenge}">
+                    <Border.Triggers>
+                        <DataTrigger TargetType="Border" Binding="{Binding WeeklyChallengeDone}" Value="False">
+                            <Setter Property="BackgroundColor" Value="#F3F0FF"/>
+                        </DataTrigger>
+                        <DataTrigger TargetType="Border" Binding="{Binding WeeklyChallengeDone}" Value="True">
+                            <Setter Property="BackgroundColor" Value="#E8F5E9"/>
+                        </DataTrigger>
+                    </Border.Triggers>
                     <VerticalStackLayout Spacing="6">
                         <Grid ColumnDefinitions="*,Auto">
                             <Label Grid.Column="0" Text="{Binding WeeklyChallengeTitle}"
                                    FontSize="13" FontAttributes="Bold" TextColor="#5C35D9" />
                             <Label Grid.Column="1" Text="{Binding WeeklyChallengeStatus}"
-                                   FontSize="12" TextColor="#5C35D9" FontAttributes="Bold" />
+                                   FontSize="12" FontAttributes="Bold">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label" Binding="{Binding WeeklyChallengeDone}" Value="False">
+                                        <Setter Property="TextColor" Value="#5C35D9"/>
+                                    </DataTrigger>
+                                    <DataTrigger TargetType="Label" Binding="{Binding WeeklyChallengeDone}" Value="True">
+                                        <Setter Property="TextColor" Value="#2E7D32"/>
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
                         </Grid>
                         <Label Text="{Binding WeeklyChallengeDesc}" FontSize="12" TextColor="#7E57C2" />
                         <ProgressBar Progress="{Binding WeeklyChallengePctValue}" ProgressColor="#5C35D9" HeightRequest="5" />
