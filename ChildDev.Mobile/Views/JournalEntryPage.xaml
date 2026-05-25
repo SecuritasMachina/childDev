@@ -17,10 +17,47 @@
             <Label Text="{Binding NotesWordCount, StringFormat='{0} words'}"
                    FontSize="11" TextColor="Gray" HorizontalOptions="End" />
             <Label Text="Activity" />
+            <FlexLayout Wrap="Wrap" Direction="Row" JustifyContent="Start" AlignItems="Start">
+                <Button Text="📚 Reading" Command="{Binding SetActivityCommand}" CommandParameter="Reading"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                <Button Text="🎨 Drawing" Command="{Binding SetActivityCommand}" CommandParameter="Drawing"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                <Button Text="⚽ Sports" Command="{Binding SetActivityCommand}" CommandParameter="Sports"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                <Button Text="🎵 Music" Command="{Binding SetActivityCommand}" CommandParameter="Music"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                <Button Text="📝 Homework" Command="{Binding SetActivityCommand}" CommandParameter="Homework"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+            </FlexLayout>
             <Entry Text="{Binding Activity}" Placeholder="e.g. Reading, Drawing" />
             <Label Text="{Binding ActivityLength, StringFormat='{0} characters'}"
                    FontSize="11" TextColor="Gray" HorizontalOptions="End" />
             <Label Text="How did you feel?" />
+            <FlexLayout Wrap="Wrap" Direction="Row" JustifyContent="Start" AlignItems="Start">
+                <Button Text="😊 Happy" Command="{Binding SetMoodCommand}" CommandParameter="Happy"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                <Button Text="😤 Focused" Command="{Binding SetMoodCommand}" CommandParameter="Focused"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                <Button Text="😅 Excited" Command="{Binding SetMoodCommand}" CommandParameter="Excited"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                <Button Text="😴 Tired" Command="{Binding SetMoodCommand}" CommandParameter="Tired"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                <Button Text="🙁 Frustrated" Command="{Binding SetMoodCommand}" CommandParameter="Frustrated"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                <Button Text="😐 Okay" Command="{Binding SetMoodCommand}" CommandParameter="Okay"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+            </FlexLayout>
             <Entry Text="{Binding Mood}" Placeholder="e.g. Happy, Focused" />
             <Label Text="{Binding MoodLength, StringFormat='{0} characters'}"
                    FontSize="11" TextColor="Gray" HorizontalOptions="End" />

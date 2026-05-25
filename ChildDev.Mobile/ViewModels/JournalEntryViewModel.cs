@@ -41,6 +41,12 @@ public partial class JournalEntryViewModel(
         SaveCommand.NotifyCanExecuteChanged();
     }
 
+    [RelayCommand]
+    private void SetMood(string value) => Mood = value;
+
+    [RelayCommand]
+    private void SetActivity(string value) => Activity = value;
+
     partial void OnMoodChanged(string value) => MoodLength = value?.Length ?? 0;
     partial void OnEmotionReasonChanged(string value) => EmotionReasonLength = value?.Length ?? 0;
     partial void OnTagsChanged(string value) => TagsLength = value?.Length ?? 0;
