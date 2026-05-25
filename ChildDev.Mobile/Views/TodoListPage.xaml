@@ -8,7 +8,7 @@
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto">
         <Label Grid.Row="0" Text="{Binding StatusMessage}" TextColor="Red"
                FontSize="13" Padding="16,8"
-               IsVisible="{Binding StatusMessage, Converter={x:StaticResource StringToBoolConverter}}" />
+               IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}" />
         <Label Grid.Row="1"
                Text="{Binding OverdueTodoCount, StringFormat='{0} task(s) overdue'}"
                BackgroundColor="#FFEEEE" TextColor="Red" FontSize="12" Padding="16,6"
@@ -61,13 +61,13 @@
                                                 <Label Text="{Binding Title}" />
                                                 <Label Text="{Binding Notes}" FontSize="12" TextColor="Gray"
                                                        LineBreakMode="TailTruncation" MaxLines="1"
-                                                       IsVisible="{Binding Notes, Converter={x:StaticResource StringToBoolConverter}}" />
+                                                       IsVisible="{Binding Notes, Converter={StaticResource StringToBoolConverter}}" />
                                             </VerticalStackLayout>
                                             <Label Grid.Column="1"
-                                                   Text="{Binding DueDate, Converter={x:StaticResource DueDateLabelConverter}}"
-                                                   TextColor="{Binding DueDate, Converter={x:StaticResource DueDateColorConverter}}"
+                                                   Text="{Binding DueDate, Converter={StaticResource DueDateLabelConverter}}"
+                                                   TextColor="{Binding DueDate, Converter={StaticResource DueDateColorConverter}}"
                                                    FontSize="11" VerticalOptions="Center"
-                                                   IsVisible="{Binding DueDate, Converter={x:StaticResource NotNullConverter}}" />
+                                                   IsVisible="{Binding DueDate, Converter={StaticResource NotNullConverter}}" />
                                         </Grid>
                                     </Grid>
                                 </SwipeView>

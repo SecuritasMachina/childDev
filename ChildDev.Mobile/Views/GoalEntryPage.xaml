@@ -3,81 +3,90 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="LevelUp.Views.GoalEntryPage"
              Title="Goal">
-    <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Save" Command="{Binding SaveCommand}" />
-    </ContentPage.ToolbarItems>
 
-    <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="12">
-            <Label Text="{Binding EnteredDateDisplay}" FontSize="12" TextColor="Gray"
-                   IsVisible="{Binding EnteredDateDisplay, Converter={x:StaticResource StringToBoolConverter}}" />
-            <Label Text="Goal" />
-            <Editor Text="{Binding GoalText}" HeightRequest="100" AutoSize="TextChanges" />
-            <Label Text="{Binding GoalTextLength, StringFormat='{0} characters'}"
-                   FontSize="11" TextColor="Gray" HorizontalOptions="End" />
-            <!-- Category -->
-            <Label Text="Category" />
-            <Picker SelectedItem="{Binding Category}" Title="Choose a category">
-                <Picker.Items>
-                    <x:String>Academic</x:String>
-                    <x:String>Health</x:String>
-                    <x:String>Social</x:String>
-                    <x:String>Creative</x:String>
-                    <x:String>Hobby</x:String>
-                    <x:String>Other</x:String>
-                </Picker.Items>
-            </Picker>
+    <Grid RowDefinitions="*,Auto">
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Padding="16" Spacing="12">
+                <Label Text="{Binding EnteredDateDisplay}" FontSize="12" TextColor="Gray"
+                       IsVisible="{Binding EnteredDateDisplay, Converter={StaticResource StringToBoolConverter}}" />
+                <Label Text="Goal" />
+                <Editor Text="{Binding GoalText}" HeightRequest="100" AutoSize="TextChanges" />
+                <Label Text="{Binding GoalTextLength, StringFormat='{0} characters'}"
+                       FontSize="11" TextColor="Gray" HorizontalOptions="End" />
+                <!-- Category -->
+                <Label Text="Category" />
+                <Picker SelectedItem="{Binding Category}" Title="Choose a category">
+                    <Picker.Items>
+                        <x:String>Academic</x:String>
+                        <x:String>Health</x:String>
+                        <x:String>Social</x:String>
+                        <x:String>Creative</x:String>
+                        <x:String>Hobby</x:String>
+                        <x:String>Other</x:String>
+                    </Picker.Items>
+                </Picker>
 
-            <!-- Progress -->
-            <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
-                <Label Grid.Column="0" Text="Progress" VerticalOptions="Center" />
-                <Label Grid.Column="1" Text="{Binding ProgressPercent, StringFormat='{0}%'}"
-                       FontSize="13" TextColor="Gray" VerticalOptions="Center" />
-            </Grid>
-            <Slider Value="{Binding ProgressPercent}" Minimum="0" Maximum="100" />
-            <ProgressBar Progress="{Binding ProgressBarValue}" ProgressColor="#5C35D9" HeightRequest="6" />
+                <!-- Progress -->
+                <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                    <Label Grid.Column="0" Text="Progress" VerticalOptions="Center" />
+                    <Label Grid.Column="1" Text="{Binding ProgressPercent, StringFormat='{0}%'}"
+                           FontSize="13" TextColor="Gray" VerticalOptions="Center" />
+                </Grid>
+                <Slider Value="{Binding ProgressPercent}" Minimum="0" Maximum="100" />
+                <ProgressBar Progress="{Binding ProgressBarValue}" ProgressColor="#5C35D9" HeightRequest="6" />
 
-            <!-- Pin -->
-            <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
-                <Label Grid.Column="0" Text="📌 Pin this goal to top" VerticalOptions="Center" />
-                <Switch Grid.Column="1" IsToggled="{Binding IsPinned}" />
-            </Grid>
+                <!-- Pin -->
+                <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                    <Label Grid.Column="0" Text="📌 Pin this goal to top" VerticalOptions="Center" />
+                    <Switch Grid.Column="1" IsToggled="{Binding IsPinned}" />
+                </Grid>
 
-            <Label Text="Measurable Outcome" />
-            <Entry Text="{Binding MeasurableOutcome}" Placeholder="How will you know it's achieved?" />
-            <Label Text="{Binding MeasurableOutcomeLength, StringFormat='{0} characters'}"
-                   FontSize="11" TextColor="Gray" HorizontalOptions="End" />
-            <Label Text="Next Steps" />
-            <Editor Text="{Binding NextStepItems}" HeightRequest="80" AutoSize="TextChanges" />
-            <Label Text="{Binding NextStepItemsLength, StringFormat='{0} characters'}"
-                   FontSize="11" TextColor="Gray" HorizontalOptions="End" />
-            <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
-                <Label Grid.Column="0" Text="Next Meeting Date" VerticalOptions="Center" />
-                <Switch Grid.Column="1" IsToggled="{Binding HasNextMeetingDate}" />
-            </Grid>
-            <DatePicker Date="{Binding NextMeetingDate}"
-                        IsVisible="{Binding HasNextMeetingDate}" />
-            <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
-                <Label Grid.Column="0" Text="Target Completion Date" VerticalOptions="Center" />
-                <Switch Grid.Column="1" IsToggled="{Binding HasExpirationDate}" />
-            </Grid>
-            <DatePicker Date="{Binding ExpirationDate}"
-                        IsVisible="{Binding HasExpirationDate}" />
-            <Button Text="Mark as Complete" Command="{Binding MarkCompleteCommand}"
-                    BackgroundColor="Green" TextColor="White"
-                    IsVisible="{Binding IsExisting}" Margin="0,8,0,0">
-                <Button.Triggers>
-                    <DataTrigger TargetType="Button" Binding="{Binding IsCompleted}" Value="True">
-                        <Setter Property="IsVisible" Value="False" />
-                    </DataTrigger>
-                </Button.Triggers>
-            </Button>
-            <Button Text="Reopen Goal" Command="{Binding ReopenCommand}"
-                    BackgroundColor="CornflowerBlue" TextColor="White"
-                    IsVisible="{Binding IsCompleted}" Margin="0,4,0,0" />
-            <Button Text="Delete Goal" Command="{Binding DeleteCommand}"
-                    BackgroundColor="Red" TextColor="White"
-                    IsVisible="{Binding IsExisting}" Margin="0,4,0,0" />
-        </VerticalStackLayout>
-    </ScrollView>
+                <Label Text="Measurable Outcome" />
+                <Entry Text="{Binding MeasurableOutcome}" Placeholder="How will you know it's achieved?" />
+                <Label Text="{Binding MeasurableOutcomeLength, StringFormat='{0} characters'}"
+                       FontSize="11" TextColor="Gray" HorizontalOptions="End" />
+                <Label Text="Next Steps" />
+                <Editor Text="{Binding NextStepItems}" HeightRequest="80" AutoSize="TextChanges" />
+                <Label Text="{Binding NextStepItemsLength, StringFormat='{0} characters'}"
+                       FontSize="11" TextColor="Gray" HorizontalOptions="End" />
+                <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                    <Label Grid.Column="0" Text="Next Meeting Date" VerticalOptions="Center" />
+                    <Switch Grid.Column="1" IsToggled="{Binding HasNextMeetingDate}" />
+                </Grid>
+                <DatePicker Date="{Binding NextMeetingDate}"
+                            IsVisible="{Binding HasNextMeetingDate}" />
+                <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                    <Label Grid.Column="0" Text="Target Completion Date" VerticalOptions="Center" />
+                    <Switch Grid.Column="1" IsToggled="{Binding HasExpirationDate}" />
+                </Grid>
+                <DatePicker Date="{Binding ExpirationDate}"
+                            IsVisible="{Binding HasExpirationDate}" />
+                <Button Text="Mark as Complete" Command="{Binding MarkCompleteCommand}"
+                        BackgroundColor="Green" TextColor="White"
+                        IsVisible="{Binding IsExisting}" Margin="0,8,0,0">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding IsCompleted}" Value="True">
+                            <Setter Property="IsVisible" Value="False" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Reopen Goal" Command="{Binding ReopenCommand}"
+                        BackgroundColor="CornflowerBlue" TextColor="White"
+                        IsVisible="{Binding IsCompleted}" Margin="0,4,0,0" />
+                <Button Text="Delete Goal" Command="{Binding DeleteCommand}"
+                        BackgroundColor="Red" TextColor="White"
+                        IsVisible="{Binding IsExisting}" Margin="0,4,0,0" />
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Save button pinned above keyboard -->
+        <Button Grid.Row="1"
+                Text="Save Goal"
+                Command="{Binding SaveCommand}"
+                BackgroundColor="#5C35D9"
+                TextColor="White"
+                FontAttributes="Bold"
+                Margin="16,8"
+                CornerRadius="10" />
+    </Grid>
 </ContentPage>
