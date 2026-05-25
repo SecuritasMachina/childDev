@@ -107,6 +107,10 @@ if [[ "$FORCE_REBUILD" == "1" ]]; then
   "
 else
   log_info "Hot deploy: publish locally, copy to container, restart"
+  BUILD_TS="$(TZ='America/New_York' date +'%Y-%m-%d %I:%M %p ET')"
+  sed -i "s|public const string BuildTimestamp = .*|public const string BuildTimestamp = \"$BUILD_TS\";|" \
+    "$ROOT_DIR/ChildDev.Api/BuildInfo.cs"
+  log_info "Build timestamp stamped: $BUILD_TS"
   PUBLISH_DIR="$(mktemp -d /tmp/childdev-hotdeploy-XXXXXX)"
   trap 'rm -rf "$PUBLISH_DIR" 2>/dev/null || true' EXIT
   dotnet publish "$ROOT_DIR/ChildDev.Api/ChildDev.Api.csproj" \
