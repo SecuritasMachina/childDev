@@ -39,6 +39,13 @@ public partial class DashboardViewModel(
     [ObservableProperty] private bool hasWeeklyWins;
     [ObservableProperty] private string overallTierLabel = string.Empty;
     [ObservableProperty] private int totalProgressNotes;
+    [ObservableProperty] private string weeklyChallengeTitle = string.Empty;
+    [ObservableProperty] private string weeklyChallengeDesc = string.Empty;
+    [ObservableProperty] private string weeklyChallengeStatus = string.Empty;
+    [ObservableProperty] private string weeklyChallengeMotivation = string.Empty;
+    [ObservableProperty] private double weeklyChallengePctValue;
+    [ObservableProperty] private bool weeklyChallengeDone;
+    [ObservableProperty] private bool hasWeeklyChallenge;
 
     private string _accountGuid = string.Empty;
 
@@ -143,6 +150,45 @@ public partial class DashboardViewModel(
             StaleGoalText = string.Empty;
             StaleGoalGuid = string.Empty;
             HasStaleGoal = false;
+        }
+
+        // Weekly challenge — rotates every week
+        if (activeGoals.Count > 0)
+        {
+            var wcWeek = System.Globalization.ISOWeek.GetWeekOfYear(DateTime.Today);
+            int wcTarget, wcCurrent;
+            string wcEmoji, wcTitle, wcDesc;
+            switch (wcWeek % 4)
+            {
+                case 0:
+                    wcEmoji = "📝"; wcTitle = "Note Sprint"; wcDesc = "Add 5 progress notes across any goals";
+                    wcTarget = 5; wcCurrent = WeekProgressNotes; break;
+                case 1:
+                    wcEmoji = "📓"; wcTitle = "Journal Week"; wcDesc = "Write 3 journal entries this week";
+                    wcTarget = 3; wcCurrent = WeekJournalEntries; break;
+                case 2:
+                    wcEmoji = "✅"; wcTitle = "Todo Blitz"; wcDesc = "Complete 5 todos this week";
+                    wcTarget = 5; wcCurrent = WeekTodosCompleted; break;
+                default:
+                    wcEmoji = "🎯"; wcTitle = "Goal Explorer"; wcDesc = "Work on 3 different goals this week";
+                    wcTarget = 3; wcCurrent = recentProgress.Where(p => p.DeletedAt == null).Select(p => p.GoalFk).Distinct().Count(); break;
+            }
+            var wcDone = wcCurrent >= wcTarget;
+            WeeklyChallengeTitle = $"{wcEmoji} {wcTitle}";
+            WeeklyChallengeDesc = wcDesc;
+            WeeklyChallengeDone = wcDone;
+            WeeklyChallengePctValue = Math.Min(wcCurrent / (double)wcTarget, 1.0);
+            WeeklyChallengeStatus = wcDone ? "✓ Done! 🎉" : $"{wcCurrent}/{wcTarget}";
+            var wcLeft = wcTarget - wcCurrent;
+            WeeklyChallengeMotivation = wcDone
+                ? "🌟 Challenge complete — you crushed it this week!"
+                : wcCurrent > 0 ? $"{wcLeft} more to go — you can do this! 💪"
+                : "Start now and build momentum!";
+            HasWeeklyChallenge = true;
+        }
+        else
+        {
+            HasWeeklyChallenge = false;
         }
     }
 
