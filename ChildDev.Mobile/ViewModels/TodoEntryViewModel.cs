@@ -9,7 +9,8 @@ namespace LevelUp.ViewModels;
 [QueryProperty(nameof(Guid), "guid")]
 public partial class TodoEntryViewModel(
     TodoRepository repo,
-    AccountService accountService) : ObservableObject
+    AccountService accountService,
+    MobileAnalyticsService analytics) : ObservableObject
 {
     [ObservableProperty] private string guid = string.Empty;
     [ObservableProperty] private string title = string.Empty;
@@ -70,6 +71,7 @@ public partial class TodoEntryViewModel(
             : null;
 
         await repo.SaveAsync(todo);
+        analytics.Track(string.IsNullOrEmpty(Guid) ? "todo_create" : "todo_edit");
         await Shell.Current.GoToAsync("..");
     }
 
@@ -78,6 +80,7 @@ public partial class TodoEntryViewModel(
     {
         if (string.IsNullOrEmpty(Guid)) return;
         await repo.CompleteAsync(Guid);
+        analytics.Track("todo_complete");
         await Shell.Current.GoToAsync("..");
     }
 
