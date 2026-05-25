@@ -10,7 +10,8 @@ namespace LevelUp.ViewModels;
 public partial class JournalListViewModel(
     JournalRepository repo,
     AccountService accountService,
-    SyncService syncService) : ObservableObject
+    SyncService syncService,
+    MobileAnalyticsService analytics) : ObservableObject
 {
     [ObservableProperty]
     private ObservableCollection<Journal> journals = [];
@@ -62,6 +63,7 @@ public partial class JournalListViewModel(
             StatusMessage = string.Empty;
             var account = await accountService.GetAccountAsync();
             if (account is null) return;
+            analytics.Track("journal_list_view");
             var items = await repo.GetAllActiveAsync(account.Guid);
             _allJournals = items;
             Journals = new ObservableCollection<Journal>(items);

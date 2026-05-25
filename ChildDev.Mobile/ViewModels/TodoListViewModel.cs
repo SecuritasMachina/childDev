@@ -87,6 +87,7 @@ public partial class TodoListViewModel(
             StatusMessage = string.Empty;
             var account = await accountService.GetAccountAsync();
             if (account is null) return;
+            analytics.Track("todo_list_view");
             _accountGuid = account.Guid;
             var items = await repo.GetPendingAsync(_accountGuid);
             _allTodos = items;
