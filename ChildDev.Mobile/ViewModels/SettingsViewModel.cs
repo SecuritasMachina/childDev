@@ -5,7 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace LevelUp.ViewModels;
 
-public partial class SettingsViewModel(AccountService accountService, IHttpClientFactory httpFactory) : ObservableObject
+public partial class SettingsViewModel(AccountService accountService, IHttpClientFactory httpFactory, MobileAnalyticsService analytics) : ObservableObject
 {
     [ObservableProperty] private string serverUrl = string.Empty;
     [ObservableProperty] private string nickName = string.Empty;
@@ -28,6 +28,7 @@ public partial class SettingsViewModel(AccountService accountService, IHttpClien
         {
             var account = await accountService.GetAccountAsync();
             if (account is null) return;
+            analytics.Track("settings_view");
             NickName = account.NickName;
             AccountGuid = account.Guid;
             ServerUrl = account.ServerUrl ?? string.Empty;

@@ -356,6 +356,12 @@
                     📌 @goalsWithNextStep goal@(goalsWithNextStep == 1 ? "" : "s") with a next step ready
                 </MudText>
             }
+            @if (TotalProgressNotes >= 5 || CompletedGoals.Count >= 1)
+            {
+                <MudLink Href="/insights" Typo="Typo.caption" Color="Color.Primary" Class="mt-1">
+                    <MudIcon Icon="@Icons.Material.Filled.BarChart" Size="Size.Small" Style="vertical-align:middle;margin-right:2px;"/>View full insights →
+                </MudLink>
+            }
             </MudStack>
         </MudItem>
         <MudItem xs="12" sm="7">
