@@ -2,6 +2,30 @@
 
 ---
 
+## 2026-05-25 — Session: Mobile Analytics + Streak + UX Improvements
+
+**Mobile analytics implementation:**
+- Added `POST /api/mobile/events` endpoint accepting `MobileEventDto[]` with JWT auth, writing to shared `AnalyticsEvents` table
+- Added `MobileAnalyticsService` fire-and-forget HTTP service to mobile
+- Added analytics tracking to all mobile ViewModels: dashboard_view, goal_list_view, goal_view, goal_create, goal_save, goal_complete, goal_quick_note, journal_list_view, journal_create, journal_save, journal_quick_save, todo_list_view, todo_add, todo_complete, todo_create, todo_edit, settings_view
+- 483 tests pass
+
+**Mobile UX improvements:**
+- Dashboard: added daily streak badge (⚡/🔥/🌟 scales with streak length) computed from `GoalProgressRepository.GetCurrentStreakAsync`
+- GoalList: added swipe-left "📝 Note" action for quick progress note from any goal without navigating away; added swipe gesture hint header
+- GoalEntry: added "X more notes to [tier]!" countdown label; added total progress note count display
+- JournalEntry/TodoEntry: both have complete analytics coverage now
+
+**Web improvements:**
+- Home: added "🎉 X goal(s) completed this week!" celebration when goals completed in last 7 days
+- Home: added "View full insights →" link in stats card when user has enough data
+- About page: added analytics tracking (page_view event)
+- Analytics coverage now complete across all web pages
+
+**Impact:** 483 tests pass. APK deployed to device.
+
+---
+
 ## 2026-05-19 — Invocation 9 Iter 651 Fresh Brainstorm (Goal-Focused + Encouragement)
 
 | # | Description | Dim | Source | Impact | Effort | Risk | Positive | Negative | Done? |
