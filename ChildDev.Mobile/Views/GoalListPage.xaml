@@ -52,6 +52,11 @@
                         BackgroundColor="{Binding CategoryFilter, Converter={StaticResource CategoryChipBgConverter}, ConverterParameter=Other}"
                         TextColor="{Binding CategoryFilter, Converter={StaticResource CategoryChipFgConverter}, ConverterParameter=Other}"
                         BorderColor="#C5CAE9" BorderWidth="1" />
+                <Button Text="🔔 Attention" Command="{Binding SetCategoryFilterCommand}" CommandParameter="NeedsAttention"
+                        FontSize="12" Padding="10,4" CornerRadius="16"
+                        BackgroundColor="{Binding CategoryFilter, Converter={StaticResource CategoryChipBgConverter}, ConverterParameter=NeedsAttention}"
+                        TextColor="{Binding CategoryFilter, Converter={StaticResource CategoryChipFgConverter}, ConverterParameter=NeedsAttention}"
+                        BorderColor="#FFB74D" BorderWidth="1" />
             </HorizontalStackLayout>
         </ScrollView>
         <RefreshView Grid.Row="3" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">

@@ -51,13 +51,17 @@ public partial class GoalListViewModel(
     {
         var textQ = FilterText?.Trim() ?? string.Empty;
         var catQ = string.IsNullOrEmpty(CategoryFilter) || CategoryFilter == "All" ? null : CategoryFilter;
+        var needsAttention = catQ == "NeedsAttention";
+        var staleThresholdMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
 
         var filtered = _allGoals.Where(g =>
             (string.IsNullOrEmpty(textQ) ||
                 (g.GoalText != null && g.GoalText.Contains(textQ, StringComparison.OrdinalIgnoreCase)) ||
                 (g.MeasurableOutcome != null && g.MeasurableOutcome.Contains(textQ, StringComparison.OrdinalIgnoreCase)) ||
                 (g.LatestNextStepItems != null && g.LatestNextStepItems.Contains(textQ, StringComparison.OrdinalIgnoreCase))) &&
-            (catQ == null || g.Category == catQ)
+            (!needsAttention || (g.CompletionDate is null &&
+                (!g.LatestProgressAt.HasValue || g.LatestProgressAt.Value < staleThresholdMs))) &&
+            (needsAttention || catQ == null || g.Category == catQ)
         ).ToList();
 
         Goals = new ObservableCollection<Goal>(filtered);
@@ -68,6 +72,11 @@ public partial class GoalListViewModel(
             EmptyMessage = $"No matches for \"{textQ}\"";
             var n = filtered.Count;
             EntryCountDisplay = $"{n} {(n == 1 ? "goal" : "goals")} matching";
+        }
+        else if (needsAttention)
+        {
+            EmptyMessage = "All goals are up to date! 🎉";
+            EntryCountDisplay = filtered.Count == 0 ? string.Empty : $"{filtered.Count} goal{(filtered.Count == 1 ? "" : "s")} need attention";
         }
         else if (catQ != null)
         {
