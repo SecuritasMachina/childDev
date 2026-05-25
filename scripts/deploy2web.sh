@@ -96,6 +96,15 @@ scp -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=30 \
   "$SSH_HOST:$REMOTE_DIR/downloads/LevelUp.apk"
 log_info "APK uploaded → /opt/childdev/downloads/LevelUp.apk"
 
+# Upload downloads index page (excluded from main rsync)
+INDEX_LOCAL="$ROOT_DIR/ChildDev.Api/wwwroot/downloads/index.html"
+if [[ -f "$INDEX_LOCAL" ]]; then
+  scp -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=30 \
+    "$INDEX_LOCAL" \
+    "$SSH_HOST:$REMOTE_DIR/downloads/index.html"
+  log_info "Downloads index page uploaded → /opt/childdev/downloads/index.html"
+fi
+
 # ── rebuild / hot-deploy ─────────────────────────────────────────────────────
 
 if [[ "$FORCE_REBUILD" == "1" ]]; then
