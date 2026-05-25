@@ -14,18 +14,46 @@
                FontSize="13" Padding="16,8"
                IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}" />
         <SearchBar Grid.Row="1" Placeholder="Search goals..." Text="{Binding FilterText}" Margin="8,0,8,4" />
-        <!-- Category filter -->
-        <Picker Grid.Row="2" SelectedItem="{Binding CategoryFilter}" Title="Filter by category" Margin="8,0,8,4">
-            <Picker.Items>
-                <x:String>All</x:String>
-                <x:String>Academic</x:String>
-                <x:String>Health</x:String>
-                <x:String>Social</x:String>
-                <x:String>Creative</x:String>
-                <x:String>Hobby</x:String>
-                <x:String>Other</x:String>
-            </Picker.Items>
-        </Picker>
+        <!-- Category filter chips -->
+        <ScrollView Grid.Row="2" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" Margin="8,0,8,4">
+            <HorizontalStackLayout Spacing="6" Padding="2,4">
+                <Button Text="All" Command="{Binding SetCategoryFilterCommand}" CommandParameter="All"
+                        FontSize="12" Padding="10,4" CornerRadius="16"
+                        BackgroundColor="{Binding CategoryFilter, Converter={StaticResource CategoryChipBgConverter}, ConverterParameter=All}"
+                        TextColor="{Binding CategoryFilter, Converter={StaticResource CategoryChipFgConverter}, ConverterParameter=All}"
+                        BorderColor="#C5CAE9" BorderWidth="1" />
+                <Button Text="Academic" Command="{Binding SetCategoryFilterCommand}" CommandParameter="Academic"
+                        FontSize="12" Padding="10,4" CornerRadius="16"
+                        BackgroundColor="{Binding CategoryFilter, Converter={StaticResource CategoryChipBgConverter}, ConverterParameter=Academic}"
+                        TextColor="{Binding CategoryFilter, Converter={StaticResource CategoryChipFgConverter}, ConverterParameter=Academic}"
+                        BorderColor="#C5CAE9" BorderWidth="1" />
+                <Button Text="Health" Command="{Binding SetCategoryFilterCommand}" CommandParameter="Health"
+                        FontSize="12" Padding="10,4" CornerRadius="16"
+                        BackgroundColor="{Binding CategoryFilter, Converter={StaticResource CategoryChipBgConverter}, ConverterParameter=Health}"
+                        TextColor="{Binding CategoryFilter, Converter={StaticResource CategoryChipFgConverter}, ConverterParameter=Health}"
+                        BorderColor="#C5CAE9" BorderWidth="1" />
+                <Button Text="Social" Command="{Binding SetCategoryFilterCommand}" CommandParameter="Social"
+                        FontSize="12" Padding="10,4" CornerRadius="16"
+                        BackgroundColor="{Binding CategoryFilter, Converter={StaticResource CategoryChipBgConverter}, ConverterParameter=Social}"
+                        TextColor="{Binding CategoryFilter, Converter={StaticResource CategoryChipFgConverter}, ConverterParameter=Social}"
+                        BorderColor="#C5CAE9" BorderWidth="1" />
+                <Button Text="Creative" Command="{Binding SetCategoryFilterCommand}" CommandParameter="Creative"
+                        FontSize="12" Padding="10,4" CornerRadius="16"
+                        BackgroundColor="{Binding CategoryFilter, Converter={StaticResource CategoryChipBgConverter}, ConverterParameter=Creative}"
+                        TextColor="{Binding CategoryFilter, Converter={StaticResource CategoryChipFgConverter}, ConverterParameter=Creative}"
+                        BorderColor="#C5CAE9" BorderWidth="1" />
+                <Button Text="Hobby" Command="{Binding SetCategoryFilterCommand}" CommandParameter="Hobby"
+                        FontSize="12" Padding="10,4" CornerRadius="16"
+                        BackgroundColor="{Binding CategoryFilter, Converter={StaticResource CategoryChipBgConverter}, ConverterParameter=Hobby}"
+                        TextColor="{Binding CategoryFilter, Converter={StaticResource CategoryChipFgConverter}, ConverterParameter=Hobby}"
+                        BorderColor="#C5CAE9" BorderWidth="1" />
+                <Button Text="Other" Command="{Binding SetCategoryFilterCommand}" CommandParameter="Other"
+                        FontSize="12" Padding="10,4" CornerRadius="16"
+                        BackgroundColor="{Binding CategoryFilter, Converter={StaticResource CategoryChipBgConverter}, ConverterParameter=Other}"
+                        TextColor="{Binding CategoryFilter, Converter={StaticResource CategoryChipFgConverter}, ConverterParameter=Other}"
+                        BorderColor="#C5CAE9" BorderWidth="1" />
+            </HorizontalStackLayout>
+        </ScrollView>
         <RefreshView Grid.Row="3" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
         <CollectionView ItemsSource="{Binding Goals}">
         <CollectionView.EmptyView>

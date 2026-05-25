@@ -44,6 +44,9 @@ public partial class GoalListViewModel(
     partial void OnFilterTextChanged(string value) => ApplyFilters();
     partial void OnCategoryFilterChanged(string value) => ApplyFilters();
 
+    [RelayCommand]
+    private void SetCategoryFilter(string value) => CategoryFilter = value;
+
     private void ApplyFilters()
     {
         var textQ = FilterText?.Trim() ?? string.Empty;

@@ -23,6 +23,8 @@
             <converters:MeetingDateColorConverter x:Key="MeetingDateColorConverter" />
             <converters:ExpirationDateConverter x:Key="ExpirationDateConverter" />
             <converters:ExpirationColorConverter x:Key="ExpirationColorConverter" />
+            <converters:CategoryChipBgConverter x:Key="CategoryChipBgConverter" />
+            <converters:CategoryChipFgConverter x:Key="CategoryChipFgConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
