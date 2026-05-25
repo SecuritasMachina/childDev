@@ -1,4 +1,6 @@
 @page "/about"
+@inject WebAnalyticsService Analytics
+@inject IHttpContextAccessor HttpContextAccessor
 
 <PageTitle>About LevelUp – Goal Achievement for Kids</PageTitle>
 
@@ -372,3 +374,11 @@
     </MudLink>
 
 </MudContainer>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var accountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
+        await Analytics.TrackAsync("page_view", accountGuid, "about");
+    }
+}
