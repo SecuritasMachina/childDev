@@ -522,4 +522,149 @@ public class JournalRepositoryTests : IDisposable
 
         Assert.Equal(1, count);
     }
+
+    // ── HasEntryTodayAsync ──────────────────────────────────────────────────
+
+    private static long DayStartMs(int daysOffset = 0) =>
+        new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today.AddDays(daysOffset), DateTimeKind.Local))
+            .ToUnixTimeMilliseconds();
+
+    [Fact]
+    public async Task HasEntryTodayAsync_NoEntries_ReturnsFalse()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        Assert.False(await _repo.HasEntryTodayAsync(accountId));
+    }
+
+    [Fact]
+    public async Task HasEntryTodayAsync_EntryToday_ReturnsTrue()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var todayMs = DayStartMs() + 3600_000L; // 1 hour into today
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "today", EnteredDate = todayMs, UpdatedOn = todayMs });
+
+        Assert.True(await _repo.HasEntryTodayAsync(accountId));
+    }
+
+    [Fact]
+    public async Task HasEntryTodayAsync_EntryYesterdayOnly_ReturnsFalse()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var yesterdayMs = DayStartMs(-1) + 3600_000L;
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "yesterday", EnteredDate = yesterdayMs, UpdatedOn = yesterdayMs });
+
+        Assert.False(await _repo.HasEntryTodayAsync(accountId));
+    }
+
+    [Fact]
+    public async Task HasEntryTodayAsync_SoftDeletedEntryToday_ReturnsFalse()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var todayMs = DayStartMs() + 3600_000L;
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "deleted today", EnteredDate = todayMs, UpdatedOn = todayMs, DeletedAt = todayMs });
+
+        Assert.False(await _repo.HasEntryTodayAsync(accountId));
+    }
+
+    [Fact]
+    public async Task HasEntryTodayAsync_OtherAccountEntryToday_ReturnsFalse()
+    {
+        var account1 = System.Guid.NewGuid().ToString();
+        var account2 = System.Guid.NewGuid().ToString();
+        var todayMs = DayStartMs() + 3600_000L;
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account2, Notes = "other account", EnteredDate = todayMs, UpdatedOn = todayMs });
+
+        Assert.False(await _repo.HasEntryTodayAsync(account1));
+    }
+
+    // ── GetJournalStreakAsync ────────────────────────────────────────────────
+
+    [Fact]
+    public async Task GetJournalStreakAsync_NoEntries_ReturnsZero()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        Assert.Equal(0, await _repo.GetJournalStreakAsync(accountId));
+    }
+
+    [Fact]
+    public async Task GetJournalStreakAsync_EntryTodayOnly_ReturnsOne()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var todayMs = DayStartMs() + 3600_000L;
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "today", EnteredDate = todayMs, UpdatedOn = todayMs });
+
+        Assert.Equal(1, await _repo.GetJournalStreakAsync(accountId));
+    }
+
+    [Fact]
+    public async Task GetJournalStreakAsync_EntryYesterdayOnly_ReturnsOne()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var yesterdayMs = DayStartMs(-1) + 3600_000L;
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "yesterday", EnteredDate = yesterdayMs, UpdatedOn = yesterdayMs });
+
+        Assert.Equal(1, await _repo.GetJournalStreakAsync(accountId));
+    }
+
+    [Fact]
+    public async Task GetJournalStreakAsync_ThreeConsecutiveDaysEndingToday_ReturnsThree()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        for (int i = 0; i <= 2; i++)
+        {
+            var ms = DayStartMs(-i) + 3600_000L;
+            await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = $"day -{i}", EnteredDate = ms, UpdatedOn = ms });
+        }
+
+        Assert.Equal(3, await _repo.GetJournalStreakAsync(accountId));
+    }
+
+    [Fact]
+    public async Task GetJournalStreakAsync_GapBreaksStreak()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        // today and 3 days ago — 2-day gap in between
+        var todayMs = DayStartMs() + 3600_000L;
+        var threeDaysAgoMs = DayStartMs(-3) + 3600_000L;
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "today", EnteredDate = todayMs, UpdatedOn = todayMs });
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "three days ago", EnteredDate = threeDaysAgoMs, UpdatedOn = threeDaysAgoMs });
+
+        Assert.Equal(1, await _repo.GetJournalStreakAsync(accountId));
+    }
+
+    [Fact]
+    public async Task GetJournalStreakAsync_SoftDeletedEntriesNotCounted()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        // today soft-deleted, yesterday active → streak starts from yesterday only
+        var todayMs = DayStartMs() + 3600_000L;
+        var yesterdayMs = DayStartMs(-1) + 3600_000L;
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "deleted today", EnteredDate = todayMs, UpdatedOn = todayMs, DeletedAt = todayMs });
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "yesterday", EnteredDate = yesterdayMs, UpdatedOn = yesterdayMs });
+
+        Assert.Equal(1, await _repo.GetJournalStreakAsync(accountId));
+    }
+
+    [Fact]
+    public async Task GetJournalStreakAsync_OtherAccountEntriesNotCounted()
+    {
+        var account1 = System.Guid.NewGuid().ToString();
+        var account2 = System.Guid.NewGuid().ToString();
+        var todayMs = DayStartMs() + 3600_000L;
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account2, Notes = "other account today", EnteredDate = todayMs, UpdatedOn = todayMs });
+
+        Assert.Equal(0, await _repo.GetJournalStreakAsync(account1));
+    }
+
+    [Fact]
+    public async Task GetJournalStreakAsync_MultipleEntriesSameDay_CountsAsOne()
+    {
+        var accountId = System.Guid.NewGuid().ToString();
+        var todayMs = DayStartMs() + 3600_000L;
+        // Two entries today — should still count as streak of 1
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "today a", EnteredDate = todayMs, UpdatedOn = todayMs });
+        await _db.InsertOrReplaceAsync(new Journal { Guid = System.Guid.NewGuid().ToString(), AccountFk = accountId, Notes = "today b", EnteredDate = todayMs + 1000, UpdatedOn = todayMs + 1000 });
+
+        Assert.Equal(1, await _repo.GetJournalStreakAsync(accountId));
+    }
 }
