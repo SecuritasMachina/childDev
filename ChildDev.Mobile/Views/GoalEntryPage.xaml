@@ -106,8 +106,16 @@
                     </CollectionView.ItemTemplate>
                 </CollectionView>
                 <!-- Linked pending todos -->
-                <Label Text="📋  Related Todos" FontSize="13" FontAttributes="Bold"
-                       IsVisible="{Binding HasLinkedTodos}" Margin="0,8,0,2"/>
+                <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,2"
+                      IsVisible="{Binding IsExisting}">
+                    <Label Grid.Column="0" Text="📋  Related Todos" FontSize="13" FontAttributes="Bold"
+                           VerticalOptions="Center"/>
+                    <Button Grid.Column="1" Text="+ Add"
+                            Command="{Binding AddLinkedTodoCommand}"
+                            BackgroundColor="Transparent" TextColor="#5C35D9"
+                            FontSize="11" Padding="6,2" CornerRadius="8"
+                            BorderColor="#C5CAE9" BorderWidth="1" />
+                </Grid>
                 <CollectionView ItemsSource="{Binding LinkedTodos}"
                                 IsVisible="{Binding HasLinkedTodos}">
                     <CollectionView.ItemTemplate>

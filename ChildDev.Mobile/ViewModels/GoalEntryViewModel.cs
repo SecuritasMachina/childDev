@@ -186,6 +186,36 @@ public partial class GoalEntryViewModel(
     }
 
     [RelayCommand]
+    private async Task AddLinkedTodoAsync()
+    {
+        if (string.IsNullOrEmpty(Guid)) return;
+        var goalName = GoalText.Length > 60 ? GoalText[..60] + "…" : GoalText;
+        var title = await Shell.Current.DisplayPromptAsync(
+            "➕ Add Todo",
+            $"For goal: \"{goalName}\"",
+            accept: "Add", cancel: "Cancel",
+            placeholder: "What needs to be done?",
+            maxLength: 200,
+            keyboard: Keyboard.Text);
+        if (string.IsNullOrWhiteSpace(title)) return;
+        var account = await accountService.GetAccountAsync();
+        if (account is null) return;
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var todo = new Todo
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = account.Guid,
+            Title = title.Trim(),
+            Notes = $"Goal: {GoalText.Trim()}",
+            UpdatedOn = ts
+        };
+        await todoRepo.SaveAsync(todo);
+        analytics.Track("goal_add_todo", null);
+        LinkedTodos.Insert(0, todo);
+        HasLinkedTodos = true;
+    }
+
+    [RelayCommand]
     private async Task CompleteLinkedTodoAsync(Todo todo)
     {
         await todoRepo.CompleteAsync(todo.Guid);
