@@ -23,7 +23,11 @@
         <Border Grid.Row="2" BackgroundColor="#E8F5E9" Padding="12,8" StrokeShape="RoundRectangle 8" StrokeThickness="0"
                 Margin="8,2,8,4"
                 IsVisible="{Binding HasWeekCompletedMessage}">
-            <Label Text="{Binding WeekCompletedMessage}" FontSize="13" FontAttributes="Bold" TextColor="#2E7D32"/>
+            <VerticalStackLayout Spacing="2">
+                <Label Text="{Binding WeekCompletedMessage}" FontSize="13" FontAttributes="Bold" TextColor="#2E7D32"/>
+                <Label Text="{Binding WeekOverWeekMessage}" FontSize="11" TextColor="#388E3C"
+                       IsVisible="{Binding HasWeekOverWeekMessage}" />
+            </VerticalStackLayout>
         </Border>
 
         <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Padding="16,8">

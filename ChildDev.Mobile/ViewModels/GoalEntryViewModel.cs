@@ -195,6 +195,38 @@ public partial class GoalEntryViewModel(
     }
 
     [RelayCommand]
+    private async Task ShareProgressAsync()
+    {
+        if (string.IsNullOrEmpty(Guid)) return;
+        var allNotes = await progressRepo.GetForGoalAsync(Guid);
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"Goal: {GoalText}");
+        if (!string.IsNullOrWhiteSpace(MeasurableOutcome))
+            sb.AppendLine($"Success measure: {MeasurableOutcome}");
+        if (IsCompleted)
+            sb.AppendLine("Status: Completed ✓");
+        sb.AppendLine($"Progress notes: {allNotes.Count}");
+        sb.AppendLine();
+        var ordered = allNotes.OrderBy(p => p.UpdatedOn).ToList();
+        for (int i = 0; i < ordered.Count; i++)
+        {
+            var p = ordered[i];
+            var dt = DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime;
+            sb.AppendLine($"[{dt:MMM d, yyyy}] Note #{i + 1}");
+            if (!string.IsNullOrWhiteSpace(p.NextStepItems))
+                sb.AppendLine(p.NextStepItems);
+            sb.AppendLine();
+        }
+        var summaryText = sb.ToString().TrimEnd();
+        analytics.Track("goal_share_progress");
+        await Share.RequestAsync(new ShareTextRequest
+        {
+            Title = $"Progress: {(GoalText.Length > 60 ? GoalText[..60] + "…" : GoalText)}",
+            Text = summaryText
+        });
+    }
+
+    [RelayCommand]
     private async Task MarkCompleteAsync()
     {
         if (string.IsNullOrEmpty(Guid)) return;

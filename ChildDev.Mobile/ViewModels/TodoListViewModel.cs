@@ -58,6 +58,12 @@ public partial class TodoListViewModel(
     [ObservableProperty]
     private bool hasWeekCompletedMessage;
 
+    [ObservableProperty]
+    private string weekOverWeekMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool hasWeekOverWeekMessage;
+
     private List<Todo> _allTodos = [];
     private string _accountGuid = string.Empty;
 
@@ -234,9 +240,12 @@ public partial class TodoListViewModel(
 
     private void UpdateWeekCompletedMessage(IList<Todo> completed)
     {
+        var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var weekStartMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
+        var lastWeekStartMs = DateTimeOffset.UtcNow.AddDays(-14).ToUnixTimeMilliseconds();
         var weekCount = completed.Count(t => t.CompletedAt.HasValue && t.CompletedAt.Value >= weekStartMs);
-        if (weekCount == 0) { WeekCompletedMessage = string.Empty; HasWeekCompletedMessage = false; return; }
+        var lastWeekCount = completed.Count(t => t.CompletedAt.HasValue && t.CompletedAt.Value >= lastWeekStartMs && t.CompletedAt.Value < weekStartMs);
+        if (weekCount == 0) { WeekCompletedMessage = string.Empty; HasWeekCompletedMessage = false; WeekOverWeekMessage = string.Empty; HasWeekOverWeekMessage = false; return; }
         WeekCompletedMessage = weekCount switch
         {
             >= 10 => $"🔥 {weekCount} todos crushed this week — legendary!",
@@ -245,6 +254,19 @@ public partial class TodoListViewModel(
             _     => $"✅ {weekCount} todo{(weekCount == 1 ? "" : "s")} done this week!"
         };
         HasWeekCompletedMessage = true;
+        if (lastWeekCount > 0)
+        {
+            var diff = weekCount - lastWeekCount;
+            WeekOverWeekMessage = diff > 0 ? $"📈 +{diff} vs last week ({lastWeekCount})"
+                : diff < 0 ? $"📉 {Math.Abs(diff)} fewer than last week ({lastWeekCount})"
+                : $"📊 Same pace as last week!";
+            HasWeekOverWeekMessage = true;
+        }
+        else
+        {
+            WeekOverWeekMessage = string.Empty;
+            HasWeekOverWeekMessage = false;
+        }
     }
 
     private void UpdateOverdueCount(IEnumerable<Todo> items)
