@@ -243,6 +243,13 @@
                 var estHours = TotalProgressNotes * 5 / 60;
                 var estMins = TotalProgressNotes * 5 % 60;
                 <MudText Typo="Typo.caption" Color="Color.Primary">📝 @TotalProgressNotes total progress note@(TotalProgressNotes == 1 ? "" : "s")</MudText>
+                var oTierEmoji = TotalProgressNotes >= 500 ? "🌟" : TotalProgressNotes >= 200 ? "🏆" : TotalProgressNotes >= 100 ? "💎" : TotalProgressNotes >= 50 ? "⭐" : TotalProgressNotes >= 20 ? "🚀" : TotalProgressNotes >= 5 ? "🌱" : null;
+                var oTierLabel = TotalProgressNotes >= 500 ? "Legend" : TotalProgressNotes >= 200 ? "Master" : TotalProgressNotes >= 100 ? "Expert" : TotalProgressNotes >= 50 ? "Skilled" : TotalProgressNotes >= 20 ? "Apprentice" : TotalProgressNotes >= 5 ? "Beginner" : null;
+                var oTierColor = TotalProgressNotes >= 200 ? Color.Warning : TotalProgressNotes >= 50 ? Color.Success : Color.Primary;
+                if (oTierEmoji is not null)
+                {
+                    <MudChip T="string" Color="@oTierColor" Size="Size.Small" Style="font-size:0.72rem;height:22px;">@oTierEmoji @oTierLabel</MudChip>
+                }
                 if (estHours >= 1)
                 {
                     <MudText Typo="Typo.caption" Color="Color.Secondary">⏱️ ~@estHours hr@(estHours == 1 ? "" : "s") invested in your goals</MudText>
