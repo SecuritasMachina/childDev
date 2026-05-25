@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using LevelUp.Data;
 using LevelUp.Models;
 using LevelUp.Services;
@@ -33,6 +34,8 @@ public partial class GoalEntryViewModel(
     [ObservableProperty] private int nextStepItemsLength;
     [ObservableProperty] private string tierLabel = string.Empty;
     [ObservableProperty] private int progressNotesCount;
+    [ObservableProperty] private ObservableCollection<GoalProgress> progressHistory = [];
+    [ObservableProperty] private bool hasProgressHistory;
 
     public double ProgressBarValue => ProgressPercent / 100.0;
 
@@ -84,6 +87,9 @@ public partial class GoalEntryViewModel(
         NextStepItems = (progress.FirstOrDefault()?.NextStepItems ?? string.Empty).Trim();
         _loadedNextStepItems = NextStepItems;
         ProgressNotesCount = progress.Count;
+        var history = progress.Skip(1).Take(4).Where(p => !string.IsNullOrWhiteSpace(p.NextStepItems)).ToList();
+        ProgressHistory = new ObservableCollection<GoalProgress>(history);
+        HasProgressHistory = history.Count > 0;
         TierLabel = ProgressNotesCount switch
         {
             >= 200 => "🌟 Legend",

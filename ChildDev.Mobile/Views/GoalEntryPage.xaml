@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:LevelUp.Models"
              x:Class="LevelUp.Views.GoalEntryPage"
              Title="Goal">
 
@@ -57,6 +58,23 @@
                 <Editor Text="{Binding NextStepItems}" HeightRequest="80" AutoSize="TextChanges" />
                 <Label Text="{Binding NextStepItemsLength, StringFormat='{0} characters'}"
                        FontSize="11" TextColor="Gray" HorizontalOptions="End" />
+                <!-- Previous progress notes history -->
+                <Label Text="Previous Notes" FontSize="13" FontAttributes="Bold"
+                       IsVisible="{Binding HasProgressHistory}" Margin="0,8,0,2" />
+                <CollectionView ItemsSource="{Binding ProgressHistory}"
+                                IsVisible="{Binding HasProgressHistory}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:GoalProgress">
+                            <VerticalStackLayout Padding="0,6" Spacing="2">
+                                <Label Text="{Binding UpdatedOn, Converter={StaticResource EntryDateConverter}}"
+                                       FontSize="11" TextColor="Gray" />
+                                <Label Text="{Binding NextStepItems}" FontSize="12"
+                                       LineBreakMode="TailTruncation" MaxLines="3" />
+                                <BoxView HeightRequest="1" Color="LightGray" Opacity="0.4" Margin="0,4,0,0" />
+                            </VerticalStackLayout>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
                 <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
                     <Label Grid.Column="0" Text="Next Meeting Date" VerticalOptions="Center" />
                     <Switch Grid.Column="1" IsToggled="{Binding HasNextMeetingDate}" />
