@@ -32,6 +32,11 @@
                            HorizontalOptions="Center"
                            HorizontalTextAlignment="Center"
                            IsVisible="{Binding Greeting, Converter={StaticResource StringToBoolConverter}}"/>
+                    <!-- Overall tier badge -->
+                    <Label Text="{Binding OverallTierLabel}"
+                           FontSize="13" TextColor="#E0FFFFFF"
+                           HorizontalOptions="Center"
+                           IsVisible="{Binding OverallTierLabel, Converter={StaticResource StringToBoolConverter}}"/>
                     <!-- Sync status (subtle) -->
                     <Label Text="{Binding SyncStatus}"
                            FontSize="11" TextColor="#A6FFFFFF"

@@ -37,6 +37,8 @@ public partial class DashboardViewModel(
     [ObservableProperty] private int weekProgressNotes;
     [ObservableProperty] private int weekJournalEntries;
     [ObservableProperty] private bool hasWeeklyWins;
+    [ObservableProperty] private string overallTierLabel = string.Empty;
+    [ObservableProperty] private int totalProgressNotes;
 
     private string _accountGuid = string.Empty;
 
@@ -114,6 +116,17 @@ public partial class DashboardViewModel(
 
         // Find the active goal with no progress or oldest progress
         var progressInfo = await progressRepo.GetLatestProgressInfoAsync(account.Guid);
+        TotalProgressNotes = progressInfo.Values.Sum(p => p.Count);
+        OverallTierLabel = TotalProgressNotes switch
+        {
+            >= 500 => "🌟 Legend",
+            >= 200 => "🏆 Master",
+            >= 100 => "💎 Expert",
+            >= 50  => "⭐ Skilled",
+            >= 20  => "🚀 Apprentice",
+            >= 5   => "🌱 Beginner",
+            _      => string.Empty
+        };
         var staleGoal = activeGoals
             .OrderBy(g => progressInfo.ContainsKey(g.Guid) ? 1 : 0)
             .ThenBy(g => progressInfo.TryGetValue(g.Guid, out var p) ? p.UpdatedOn : 0)
