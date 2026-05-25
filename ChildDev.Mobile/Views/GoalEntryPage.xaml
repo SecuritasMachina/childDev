@@ -7,8 +7,13 @@
     <Grid RowDefinitions="*,Auto">
         <ScrollView Grid.Row="0">
             <VerticalStackLayout Padding="16" Spacing="12">
-                <Label Text="{Binding EnteredDateDisplay}" FontSize="12" TextColor="Gray"
-                       IsVisible="{Binding EnteredDateDisplay, Converter={StaticResource StringToBoolConverter}}" />
+                <Grid ColumnDefinitions="*,Auto"
+                      IsVisible="{Binding IsExisting}">
+                    <Label Grid.Column="0" Text="{Binding EnteredDateDisplay}" FontSize="12" TextColor="Gray"
+                           IsVisible="{Binding EnteredDateDisplay, Converter={StaticResource StringToBoolConverter}}" />
+                    <Label Grid.Column="1" Text="{Binding TierLabel}" FontSize="12" TextColor="#5C35D9"
+                           IsVisible="{Binding TierLabel, Converter={StaticResource StringToBoolConverter}}" />
+                </Grid>
                 <Label Text="Goal" />
                 <Editor Text="{Binding GoalText}" HeightRequest="100" AutoSize="TextChanges" />
                 <Label Text="{Binding GoalTextLength, StringFormat='{0} characters'}"
