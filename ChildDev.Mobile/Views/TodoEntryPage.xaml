@@ -21,6 +21,17 @@
                 <CheckBox IsChecked="{Binding HasDueDate}" />
                 <Label Text="Due Date" VerticalOptions="Center" />
             </HorizontalStackLayout>
+            <FlexLayout Wrap="Wrap" Direction="Row" JustifyContent="Start" AlignItems="Start">
+                <Button Text="Today" Command="{Binding SetDueTodayCommand}"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                <Button Text="Tomorrow" Command="{Binding SetDueTomorrowCommand}"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                <Button Text="This Week" Command="{Binding SetDueThisWeekCommand}"
+                        BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                        BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+            </FlexLayout>
             <DatePicker Date="{Binding DueDate}" IsVisible="{Binding HasDueDate}" />
             <Button Text="Mark as Done" Command="{Binding MarkDoneCommand}"
                     BackgroundColor="Green" TextColor="White"

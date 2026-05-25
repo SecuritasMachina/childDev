@@ -24,6 +24,20 @@ public partial class TodoEntryViewModel(
 
     private bool CanSave() => !string.IsNullOrWhiteSpace(Title);
 
+    [RelayCommand]
+    private void SetDueToday() { DueDate = DateTime.Today; HasDueDate = true; }
+
+    [RelayCommand]
+    private void SetDueTomorrow() { DueDate = DateTime.Today.AddDays(1); HasDueDate = true; }
+
+    [RelayCommand]
+    private void SetDueThisWeek()
+    {
+        var daysUntilFriday = ((int)DayOfWeek.Friday - (int)DateTime.Today.DayOfWeek + 7) % 7;
+        DueDate = DateTime.Today.AddDays(daysUntilFriday == 0 ? 7 : daysUntilFriday);
+        HasDueDate = true;
+    }
+
     partial void OnTitleChanged(string value)
     {
         TitleLength = value?.Length ?? 0;
