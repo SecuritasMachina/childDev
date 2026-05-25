@@ -5,7 +5,7 @@
              xmlns:models="clr-namespace:LevelUp.Models"
              x:Class="LevelUp.Views.TodoListPage"
              Title="Todos">
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto">
         <Label Grid.Row="0" Text="{Binding StatusMessage}" TextColor="Red"
                FontSize="13" Padding="16,8"
                IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}" />
@@ -19,14 +19,21 @@
                     BackgroundColor="Transparent" TextColor="#CC0000"
                     FontSize="11" Padding="8,0" Margin="0,0,8,0"/>
         </Grid>
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Padding="16,8">
+        <!-- Weekly completion celebration -->
+        <Border Grid.Row="2" BackgroundColor="#E8F5E9" Padding="12,8" StrokeShape="RoundRectangle 8" StrokeThickness="0"
+                Margin="8,2,8,4"
+                IsVisible="{Binding HasWeekCompletedMessage}">
+            <Label Text="{Binding WeekCompletedMessage}" FontSize="13" FontAttributes="Bold" TextColor="#2E7D32"/>
+        </Border>
+
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Padding="16,8">
             <Entry Grid.Column="0" Placeholder="Add a task..." Text="{Binding NewTodoTitle}"
                    ReturnCommand="{Binding AddCommand}" />
             <Button Grid.Column="1" Text="Add" Command="{Binding AddCommand}" Margin="8,0,0,0" />
         </Grid>
-        <SearchBar Grid.Row="3" Placeholder="Filter tasks..." Text="{Binding FilterText}" Margin="8,0,8,4" />
+        <SearchBar Grid.Row="4" Placeholder="Filter tasks..." Text="{Binding FilterText}" Margin="8,0,8,4" />
 
-        <ScrollView Grid.Row="4">
+        <ScrollView Grid.Row="5">
             <VerticalStackLayout>
                 <RefreshView Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
                     <CollectionView ItemsSource="{Binding Todos}">
@@ -127,6 +134,6 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <Label Grid.Row="5" IsVisible="False" />
+        <Label Grid.Row="6" IsVisible="False" />
     </Grid>
 </ContentPage>

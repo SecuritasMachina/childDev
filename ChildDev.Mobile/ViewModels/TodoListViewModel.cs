@@ -52,6 +52,12 @@ public partial class TodoListViewModel(
     [ObservableProperty]
     private string emptyMessage = "All done!";
 
+    [ObservableProperty]
+    private string weekCompletedMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool hasWeekCompletedMessage;
+
     private List<Todo> _allTodos = [];
     private string _accountGuid = string.Empty;
 
@@ -97,6 +103,7 @@ public partial class TodoListViewModel(
             HasCompletedTodos = CompletedTodoCount > 0;
             CompletedTodos = new ObservableCollection<Todo>(completed);
             UpdateOverdueCount(items);
+            UpdateWeekCompletedMessage(completed);
         }
         catch
         {
@@ -121,6 +128,7 @@ public partial class TodoListViewModel(
             HasCompletedTodos = CompletedTodoCount > 0;
             CompletedTodos = new ObservableCollection<Todo>(completed);
             UpdateOverdueCount(items);
+            UpdateWeekCompletedMessage(completed);
             StatusMessage = string.Empty;
         }
         catch
@@ -176,6 +184,7 @@ public partial class TodoListViewModel(
         CompletedTodoCount = CompletedTodos.Count;
         HasCompletedTodos = true;
         UpdateOverdueCount(_allTodos);
+        UpdateWeekCompletedMessage([.. CompletedTodos]);
     }
 
     [RelayCommand]
@@ -221,6 +230,21 @@ public partial class TodoListViewModel(
         _allTodos = items;
         Todos = new ObservableCollection<Todo>(items);
         UpdateOverdueCount(_allTodos);
+    }
+
+    private void UpdateWeekCompletedMessage(IList<Todo> completed)
+    {
+        var weekStartMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
+        var weekCount = completed.Count(t => t.CompletedAt.HasValue && t.CompletedAt.Value >= weekStartMs);
+        if (weekCount == 0) { WeekCompletedMessage = string.Empty; HasWeekCompletedMessage = false; return; }
+        WeekCompletedMessage = weekCount switch
+        {
+            >= 10 => $"🔥 {weekCount} todos crushed this week — legendary!",
+            >= 5  => $"🌟 {weekCount} todos done this week — great momentum!",
+            >= 3  => $"💪 {weekCount} todos completed this week — keep it up!",
+            _     => $"✅ {weekCount} todo{(weekCount == 1 ? "" : "s")} done this week!"
+        };
+        HasWeekCompletedMessage = true;
     }
 
     private void UpdateOverdueCount(IEnumerable<Todo> items)
