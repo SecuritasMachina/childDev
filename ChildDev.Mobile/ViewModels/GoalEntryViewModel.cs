@@ -153,6 +153,11 @@ public partial class GoalEntryViewModel(
     {
         if (string.IsNullOrEmpty(Guid)) return;
         await repo.CompleteAsync(Guid);
+        var goalName = GoalText.Length > 60 ? GoalText[..60] + "…" : GoalText;
+        await Shell.Current.DisplayAlert(
+            "🎉 Goal Complete!",
+            $"Amazing work! You've achieved \"{goalName}\" — take a moment to celebrate this win! 🌟",
+            "Celebrate! 🎊");
         await Shell.Current.GoToAsync("..");
     }
 
