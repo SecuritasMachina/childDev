@@ -217,9 +217,18 @@
             @if (CompletedGoals.Count > 0)
             {
                 var yearStartMs = new DateTimeOffset(new DateTime(DateTime.Today.Year, 1, 1), TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).ToUnixTimeMilliseconds();
+                var weekAgoForGoalsMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
                 var completedThisYear = CompletedGoals.Count(g => g.CompletionDate.HasValue && g.CompletionDate.Value >= yearStartMs);
-                <MudText Typo="Typo.caption" Color="Color.Success">✅ @CompletedGoals.Count completed</MudText>
-                if (completedThisYear > 0)
+                var completedThisWeekGoals = CompletedGoals.Count(g => g.CompletionDate.HasValue && g.CompletionDate.Value >= weekAgoForGoalsMs);
+                if (completedThisWeekGoals > 0)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Success">🎉 @completedThisWeekGoals goal@(completedThisWeekGoals == 1 ? "" : "s") completed this week!</MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Success">✅ @CompletedGoals.Count completed</MudText>
+                }
+                if (completedThisYear > 0 && completedThisWeekGoals == 0)
                 {
                     <MudText Typo="Typo.caption" Color="Color.Success">🏆 @completedThisYear completed this year!</MudText>
                 }
