@@ -47,6 +47,7 @@ public partial class DashboardViewModel(
     [ObservableProperty] private double weeklyChallengePctValue;
     [ObservableProperty] private bool weeklyChallengeDone;
     [ObservableProperty] private bool hasWeeklyChallenge;
+    [ObservableProperty] private string streakDisplay = string.Empty;
 
     private string _accountGuid = string.Empty;
 
@@ -153,6 +154,11 @@ public partial class DashboardViewModel(
             StaleGoalGuid = string.Empty;
             HasStaleGoal = false;
         }
+
+        var streak = await progressRepo.GetCurrentStreakAsync(account.Guid);
+        StreakDisplay = streak >= 2
+            ? $"{(streak >= 14 ? "🌟" : streak >= 7 ? "🔥" : "⚡")} {streak}-day streak!"
+            : string.Empty;
 
         // Weekly challenge — rotates every week
         if (activeGoals.Count > 0)

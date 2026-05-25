@@ -40,6 +40,22 @@ public class GoalProgressRepository(SQLiteAsyncConnection db)
             now, now, goalFk);
     }
 
+    public async Task<int> GetCurrentStreakAsync(string accountFk)
+    {
+        var cutoff = DateTimeOffset.UtcNow.AddDays(-60).ToUnixTimeMilliseconds();
+        var timestamps = await db.QueryAsync<GoalProgress>(
+            "SELECT UpdatedOn FROM GoalProgress WHERE AccountFk = ? AND DeletedAt IS NULL AND UpdatedOn >= ? ORDER BY UpdatedOn DESC",
+            accountFk, cutoff);
+        var activeDates = timestamps
+            .Select(p => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(p.UpdatedOn).LocalDateTime))
+            .ToHashSet();
+        var day = DateOnly.FromDateTime(DateTime.Today);
+        if (!activeDates.Contains(day)) day = day.AddDays(-1);
+        var streak = 0;
+        while (activeDates.Contains(day)) { streak++; day = day.AddDays(-1); }
+        return streak;
+    }
+
     public Task UpsertFromSyncAsync(GoalProgress progress) =>
         db.InsertOrReplaceAsync(progress);
 }

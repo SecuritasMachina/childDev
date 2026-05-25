@@ -37,6 +37,14 @@
                            FontSize="13" TextColor="#E0FFFFFF"
                            HorizontalOptions="Center"
                            IsVisible="{Binding OverallTierLabel, Converter={StaticResource StringToBoolConverter}}"/>
+                    <!-- Streak badge -->
+                    <Border BackgroundColor="#22FFFFFF" Padding="10,4" StrokeShape="RoundRectangle 20" StrokeThickness="0"
+                            HorizontalOptions="Center"
+                            IsVisible="{Binding StreakDisplay, Converter={StaticResource StringToBoolConverter}}">
+                        <Label Text="{Binding StreakDisplay}"
+                               FontSize="13" FontAttributes="Bold" TextColor="White"
+                               HorizontalOptions="Center"/>
+                    </Border>
                     <!-- Sync status (subtle) -->
                     <Label Text="{Binding SyncStatus}"
                            FontSize="11" TextColor="#A6FFFFFF"
