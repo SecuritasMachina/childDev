@@ -9,10 +9,16 @@
         <Label Grid.Row="0" Text="{Binding StatusMessage}" TextColor="Red"
                FontSize="13" Padding="16,8"
                IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}" />
-        <Label Grid.Row="1"
-               Text="{Binding OverdueTodoCount, StringFormat='{0} task(s) overdue'}"
-               BackgroundColor="#FFEEEE" TextColor="Red" FontSize="12" Padding="16,6"
-               IsVisible="{Binding HasOverdueTodos}" />
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" BackgroundColor="#FFEEEE"
+              IsVisible="{Binding HasOverdueTodos}">
+            <Label Grid.Column="0"
+                   Text="{Binding OverdueTodoCount, StringFormat='{0} task(s) overdue'}"
+                   TextColor="Red" FontSize="12" Padding="16,6" VerticalOptions="Center"/>
+            <Button Grid.Column="1" Text="Snooze all →tomorrow"
+                    Command="{Binding SnoozeOverdueCommand}"
+                    BackgroundColor="Transparent" TextColor="#CC0000"
+                    FontSize="11" Padding="8,0" Margin="0,0,8,0"/>
+        </Grid>
         <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Padding="16,8">
             <Entry Grid.Column="0" Placeholder="Add a task..." Text="{Binding NewTodoTitle}"
                    ReturnCommand="{Binding AddCommand}" />

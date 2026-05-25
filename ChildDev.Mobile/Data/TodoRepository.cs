@@ -71,6 +71,15 @@ public class TodoRepository(SQLiteAsyncConnection db)
           .Where(t => t.AccountFk == accountFk && t.UpdatedOn > since)
           .ToListAsync();
 
+    public async Task SnoozeOverdueToTomorrowAsync(string accountFk, long todayStartMs)
+    {
+        var tomorrowMs = todayStartMs + 86_400_000L;
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await db.ExecuteAsync(
+            "UPDATE Todo SET DueDate = ?, UpdatedOn = ? WHERE AccountFk = ? AND DeletedAt IS NULL AND CompletedAt IS NULL AND DueDate IS NOT NULL AND DueDate < ?",
+            tomorrowMs, ts, accountFk, todayStartMs);
+    }
+
     public Task UpsertFromSyncAsync(Todo todo) =>
         db.InsertOrReplaceAsync(todo);
 }

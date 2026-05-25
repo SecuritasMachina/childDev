@@ -210,6 +210,19 @@ public partial class TodoListViewModel(
         UpdateOverdueCount(_allTodos);
     }
 
+    [RelayCommand]
+    private async Task SnoozeOverdueAsync()
+    {
+        if (string.IsNullOrEmpty(_accountGuid)) return;
+        var todayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+        await repo.SnoozeOverdueToTomorrowAsync(_accountGuid, todayStartMs);
+        analytics.Track("todo_snooze_overdue");
+        var items = await repo.GetPendingAsync(_accountGuid);
+        _allTodos = items;
+        Todos = new ObservableCollection<Todo>(items);
+        UpdateOverdueCount(_allTodos);
+    }
+
     private void UpdateOverdueCount(IEnumerable<Todo> items)
     {
         var list = items as IList<Todo> ?? items.ToList();
