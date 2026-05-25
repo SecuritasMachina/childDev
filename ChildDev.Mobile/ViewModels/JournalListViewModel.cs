@@ -26,6 +26,9 @@ public partial class JournalListViewModel(
     private string filterText = string.Empty;
 
     [ObservableProperty]
+    private string dateFilter = "All";
+
+    [ObservableProperty]
     private string entryCountDisplay = string.Empty;
 
     [ObservableProperty]
@@ -65,26 +68,48 @@ public partial class JournalListViewModel(
     private List<Journal> _allJournals = [];
     private int _promptIdx;
 
-    partial void OnFilterTextChanged(string value)
+    partial void OnFilterTextChanged(string value) => ApplyFilters();
+    partial void OnDateFilterChanged(string value) => ApplyFilters();
+
+    [RelayCommand]
+    private void SetDateFilter(string filter) => DateFilter = filter;
+
+    private void ApplyFilters()
     {
-        if (string.IsNullOrWhiteSpace(value))
+        var text = FilterText?.Trim() ?? string.Empty;
+        var filtered = _allJournals.AsEnumerable();
+        if (DateFilter == "Week")
         {
-            Journals = new ObservableCollection<Journal>(_allJournals);
-            EmptyMessage = "No journal entries yet";
-            UpdateEntryCountDisplay();
+            var weekStartMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
+            filtered = filtered.Where(j => j.EnteredDate >= weekStartMs);
         }
+        else if (DateFilter == "Month")
+        {
+            var monthStartMs = DateTimeOffset.UtcNow.AddDays(-30).ToUnixTimeMilliseconds();
+            filtered = filtered.Where(j => j.EnteredDate >= monthStartMs);
+        }
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            filtered = filtered.Where(j =>
+                (j.Notes != null && j.Notes.Contains(text, StringComparison.OrdinalIgnoreCase)) ||
+                (j.Activity != null && j.Activity.Contains(text, StringComparison.OrdinalIgnoreCase)) ||
+                (j.Mood != null && j.Mood.Contains(text, StringComparison.OrdinalIgnoreCase)) ||
+                (j.Tags != null && j.Tags.Contains(text, StringComparison.OrdinalIgnoreCase)));
+        }
+        var result = filtered.ToList();
+        Journals = new ObservableCollection<Journal>(result);
+        if (!string.IsNullOrWhiteSpace(text))
+            EmptyMessage = $"No matches for \"{text}\"";
+        else if (DateFilter == "Week")
+            EmptyMessage = "No entries this week — time to write!";
+        else if (DateFilter == "Month")
+            EmptyMessage = "No entries this month";
         else
-        {
-            var filtered = _allJournals.Where(j =>
-                (j.Notes != null && j.Notes.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
-                (j.Activity != null && j.Activity.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
-                (j.Mood != null && j.Mood.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
-                (j.Tags != null && j.Tags.Contains(value, StringComparison.OrdinalIgnoreCase))).ToList();
-            Journals = new ObservableCollection<Journal>(filtered);
-            EmptyMessage = $"No matches for \"{value}\"";
-            var n = filtered.Count;
-            EntryCountDisplay = $"{n} {(n == 1 ? "entry" : "entries")} matching";
-        }
+            EmptyMessage = "No journal entries yet";
+        var n = result.Count;
+        EntryCountDisplay = DateFilter != "All" || !string.IsNullOrWhiteSpace(text)
+            ? $"{n} {(n == 1 ? "entry" : "entries")} shown"
+            : $"{_allJournals.Count} {(_allJournals.Count == 1 ? "entry" : "entries")}";
     }
 
     [RelayCommand]
@@ -98,7 +123,6 @@ public partial class JournalListViewModel(
             analytics.Track("journal_list_view");
             var items = await repo.GetAllActiveAsync(account.Guid);
             _allJournals = items;
-            Journals = new ObservableCollection<Journal>(items);
             UpdateEntryCountDisplay();
             var streak = await repo.GetJournalStreakAsync(account.Guid);
             StreakDisplay = streak >= 2
@@ -126,7 +150,6 @@ public partial class JournalListViewModel(
             await syncService.RunAsync(account);
             var items = await repo.GetAllActiveAsync(account.Guid);
             _allJournals = items;
-            Journals = new ObservableCollection<Journal>(items);
             UpdateEntryCountDisplay();
             var streak = await repo.GetJournalStreakAsync(account.Guid);
             StreakDisplay = streak >= 2
@@ -146,11 +169,7 @@ public partial class JournalListViewModel(
         }
     }
 
-    private void UpdateEntryCountDisplay()
-    {
-        var count = _allJournals.Count;
-        EntryCountDisplay = $"{count} {(count == 1 ? "entry" : "entries")}";
-    }
+    private void UpdateEntryCountDisplay() => ApplyFilters();
 
     private void UpdateStreakWarning(int streak, bool hasTodayEntry)
     {

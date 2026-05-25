@@ -9,7 +9,7 @@
         <ToolbarItem Text="+" Command="{Binding AddCommand}" />
     </ContentPage.ToolbarItems>
 
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*">
         <Label Grid.Row="0" Text="{Binding StatusMessage}" TextColor="Red"
                FontSize="13" Padding="16,8"
                IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}" />
@@ -46,8 +46,26 @@
                         BorderColor="#C5CAE9" BorderWidth="1" />
             </Grid>
         </Border>
-        <SearchBar Grid.Row="4" Placeholder="Search entries..." Text="{Binding FilterText}" Margin="8,0,8,4" />
-        <RefreshView Grid.Row="5" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
+        <!-- Date filter chips -->
+        <HorizontalStackLayout Grid.Row="4" Spacing="6" Padding="8,0,8,4">
+            <Button Text="All" Command="{Binding SetDateFilterCommand}" CommandParameter="All"
+                    BackgroundColor="{Binding DateFilter, Converter={StaticResource CategoryChipBgConverter}, ConverterParameter=All}"
+                    TextColor="{Binding DateFilter, Converter={StaticResource CategoryChipFgConverter}, ConverterParameter=All}"
+                    FontSize="12" Padding="12,4" CornerRadius="16"
+                    BorderColor="#C5CAE9" BorderWidth="1" />
+            <Button Text="This Week" Command="{Binding SetDateFilterCommand}" CommandParameter="Week"
+                    BackgroundColor="{Binding DateFilter, Converter={StaticResource CategoryChipBgConverter}, ConverterParameter=Week}"
+                    TextColor="{Binding DateFilter, Converter={StaticResource CategoryChipFgConverter}, ConverterParameter=Week}"
+                    FontSize="12" Padding="12,4" CornerRadius="16"
+                    BorderColor="#C5CAE9" BorderWidth="1" />
+            <Button Text="This Month" Command="{Binding SetDateFilterCommand}" CommandParameter="Month"
+                    BackgroundColor="{Binding DateFilter, Converter={StaticResource CategoryChipBgConverter}, ConverterParameter=Month}"
+                    TextColor="{Binding DateFilter, Converter={StaticResource CategoryChipFgConverter}, ConverterParameter=Month}"
+                    FontSize="12" Padding="12,4" CornerRadius="16"
+                    BorderColor="#C5CAE9" BorderWidth="1" />
+        </HorizontalStackLayout>
+        <SearchBar Grid.Row="5" Placeholder="Search entries..." Text="{Binding FilterText}" Margin="8,0,8,4" />
+        <RefreshView Grid.Row="6" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
         <CollectionView ItemsSource="{Binding Journals}">
         <CollectionView.EmptyView>
             <Label Text="{Binding EmptyMessage}" FontSize="18" TextColor="Gray"
