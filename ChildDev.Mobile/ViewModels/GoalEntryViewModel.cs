@@ -163,6 +163,13 @@ public partial class GoalEntryViewModel(
     }
 
     [RelayCommand]
+    private void SetNoteTemplate(string prefix)
+    {
+        if (!NextStepItems.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            NextStepItems = prefix;
+    }
+
+    [RelayCommand]
     private async Task MarkCompleteAsync()
     {
         if (string.IsNullOrEmpty(Guid)) return;

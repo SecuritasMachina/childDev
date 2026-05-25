@@ -63,6 +63,21 @@
                            FontSize="11" TextColor="#7E57C2" VerticalOptions="Center"
                            IsVisible="{Binding IsExisting}"/>
                 </Grid>
+                <!-- Note templates -->
+                <FlexLayout Wrap="Wrap" Direction="Row" JustifyContent="Start" AlignItems="Start" IsVisible="{Binding IsExisting}">
+                    <Button Text="🏆 Win" Command="{Binding SetNoteTemplateCommand}" CommandParameter="A win today: "
+                            BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                            BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                    <Button Text="⚡ Next step" Command="{Binding SetNoteTemplateCommand}" CommandParameter="Next step: "
+                            BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                            BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                    <Button Text="🚧 Obstacle" Command="{Binding SetNoteTemplateCommand}" CommandParameter="Obstacle: "
+                            BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                            BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                    <Button Text="🌱 Reflection" Command="{Binding SetNoteTemplateCommand}" CommandParameter="Reflection: "
+                            BackgroundColor="Transparent" TextColor="#5C35D9" FontSize="12" Padding="8,4" Margin="0,0,4,4"
+                            BorderColor="#C5CAE9" BorderWidth="1" CornerRadius="16" />
+                </FlexLayout>
                 <Editor Text="{Binding NextStepItems}" HeightRequest="80" AutoSize="TextChanges" />
                 <Label Text="{Binding NextStepItemsLength, StringFormat='{0} characters'}"
                        FontSize="11" TextColor="Gray" HorizontalOptions="End" />
