@@ -17,6 +17,11 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53"
       - "--certificatesresolvers.letsencrypt.acme.email=charlesd@havranek.com"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      # HTTP challenge — for downloads.securitasmachina.org (Cloudflare token not available on server)
+      - "--certificatesresolvers.letsencrypt-http.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt-http.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt-http.acme.email=charlesd@havranek.com"
+      - "--certificatesresolvers.letsencrypt-http.acme.storage=/letsencrypt/acme-http.json"
       - "--log.level=INFO"
       - "--accesslog=true"
       - "--accesslog.filepath=/dev/stdout"
@@ -60,7 +65,7 @@ services:
       - "traefik.http.routers.downloads.rule=Host(`downloads.securitasmachina.org`)"
       - "traefik.http.routers.downloads.entrypoints=websecure"
       - "traefik.http.routers.downloads.tls=true"
-      - "traefik.http.routers.downloads.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.downloads.tls.certresolver=letsencrypt-http"
       - "traefik.http.services.downloads.loadbalancer.server.port=80"
       - "traefik.docker.network=childdev_default"
 
