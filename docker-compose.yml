@@ -11,11 +11,20 @@ services:
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--entrypoints.websecure.address=[::]:443"
+      # DNS challenge (Cloudflare) — for levelup.securitasmachina.org
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53"
       - "--certificatesresolvers.letsencrypt.acme.email=charlesd@havranek.com"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      # HTTP challenge — for downloads.hwsrv-1313060.hostwindsdns.com (not Cloudflare DNS)
+      - "--certificatesresolvers.letsencrypt-http.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt-http.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt-http.acme.email=charlesd@havranek.com"
+      - "--certificatesresolvers.letsencrypt-http.acme.storage=/letsencrypt/acme-http.json"
+      - "--log.level=INFO"
+      - "--accesslog=true"
+      - "--accesslog.filepath=/dev/stdout"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - letsencrypt:/letsencrypt
@@ -43,6 +52,21 @@ services:
       - "traefik.http.routers.childdev.tls=true"
       - "traefik.http.routers.childdev.tls.certresolver=letsencrypt"
       - "traefik.http.services.childdev.loadbalancer.server.port=8080"
+      - "traefik.docker.network=childdev_default"
+
+  downloads:
+    image: nginx:alpine
+    volumes:
+      - /opt/childdev/downloads:/usr/share/nginx/html:ro
+      - /opt/childdev/nginx-downloads.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.downloads.rule=Host(`downloads.hwsrv-1313060.hostwindsdns.com`)"
+      - "traefik.http.routers.downloads.entrypoints=websecure"
+      - "traefik.http.routers.downloads.tls=true"
+      - "traefik.http.routers.downloads.tls.certresolver=letsencrypt-http"
+      - "traefik.http.services.downloads.loadbalancer.server.port=80"
       - "traefik.docker.network=childdev_default"
 
   mariadb:
