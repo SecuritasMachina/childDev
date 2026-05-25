@@ -13,7 +13,8 @@ public partial class DashboardViewModel(
     GoalProgressRepository progressRepo,
     TodoRepository todoRepo,
     AccountService accountService,
-    SyncService syncService) : ObservableObject
+    SyncService syncService,
+    MobileAnalyticsService analytics) : ObservableObject
 {
     [ObservableProperty] private string greeting = string.Empty;
     [ObservableProperty] private ObservableCollection<Journal> recentJournals = [];
@@ -57,6 +58,7 @@ public partial class DashboardViewModel(
             var account = await accountService.GetAccountAsync();
             if (account is null) return;
             _accountGuid = account.Guid;
+            analytics.Track("dashboard_view");
 
             LastSyncDisplay = account.LastSyncAt == 0
                 ? "Never synced"
@@ -228,6 +230,7 @@ public partial class DashboardViewModel(
         });
         QuickJournalText = string.Empty;
         QuickJournalSaved = true;
+        analytics.Track("journal_quick_save");
         await Task.Delay(1500);
         QuickJournalSaved = false;
         var journals = await journalRepo.GetRecentAsync(_accountGuid, 3);

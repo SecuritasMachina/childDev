@@ -10,7 +10,8 @@ namespace LevelUp.ViewModels;
 public partial class TodoListViewModel(
     TodoRepository repo,
     AccountService accountService,
-    SyncService syncService) : ObservableObject
+    SyncService syncService,
+    MobileAnalyticsService analytics) : ObservableObject
 {
     [ObservableProperty]
     private ObservableCollection<Todo> todos = [];
@@ -163,6 +164,7 @@ public partial class TodoListViewModel(
     private async Task CompleteAsync(Todo todo)
     {
         await repo.CompleteAsync(todo.Guid);
+        analytics.Track("todo_complete");
         _allTodos.Remove(todo);
         Todos.Remove(todo);
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();

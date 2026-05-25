@@ -122,6 +122,7 @@ app.MapJournalEndpoints();
 app.MapGoalEndpoints();
 app.MapGoalProgressEndpoints();
 app.MapTodoEndpoints();
+app.MapMobileAnalyticsEndpoints();
 
 using (var scope = app.Services.CreateScope())
 {

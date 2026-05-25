@@ -9,7 +9,8 @@ namespace LevelUp.ViewModels;
 [QueryProperty(nameof(Guid), "guid")]
 public partial class JournalEntryViewModel(
     JournalRepository repo,
-    AccountService accountService) : ObservableObject
+    AccountService accountService,
+    MobileAnalyticsService analytics) : ObservableObject
 {
     [ObservableProperty] private string guid = string.Empty;
     [ObservableProperty] private string notes = string.Empty;
@@ -85,6 +86,7 @@ public partial class JournalEntryViewModel(
         journal.Tags = string.IsNullOrWhiteSpace(Tags) ? null : Tags.Trim();
 
         await repo.SaveAsync(journal);
+        analytics.Track(string.IsNullOrEmpty(Guid) ? "journal_create" : "journal_save");
         await Shell.Current.GoToAsync("..");
     }
 

@@ -12,7 +12,8 @@ public partial class GoalListViewModel(
     GoalRepository repo,
     GoalProgressRepository progressRepo,
     AccountService accountService,
-    SyncService syncService) : ObservableObject
+    SyncService syncService,
+    MobileAnalyticsService analytics) : ObservableObject
 {
     [ObservableProperty]
     private ObservableCollection<Goal> goals = [];
@@ -81,6 +82,7 @@ public partial class GoalListViewModel(
             StatusMessage = string.Empty;
             var account = await accountService.GetAccountAsync();
             if (account is null) return;
+            analytics.Track("goal_list_view");
             _allGoals = await LoadGoalsWithStepsAsync(account.Guid);
             ApplyFilters();
         }

@@ -11,7 +11,8 @@ namespace LevelUp.ViewModels;
 public partial class GoalEntryViewModel(
     GoalRepository repo,
     GoalProgressRepository progressRepo,
-    AccountService accountService) : ObservableObject
+    AccountService accountService,
+    MobileAnalyticsService analytics) : ObservableObject
 {
     [ObservableProperty] private string guid = string.Empty;
     [ObservableProperty] private string goalText = string.Empty;
@@ -103,6 +104,7 @@ public partial class GoalEntryViewModel(
         EnteredDateDisplay = DateTimeOffset.FromUnixTimeMilliseconds(item.EnteredDate).LocalDateTime.ToString("ddd, MMM d yyyy");
         IsExisting = true;
         IsCompleted = item.CompletionDate.HasValue;
+        analytics.Track("goal_view", item.Category);
     }
 
     [RelayCommand(CanExecute = nameof(CanSave))]
@@ -129,6 +131,7 @@ public partial class GoalEntryViewModel(
             ? new DateTimeOffset(DateTime.SpecifyKind(ExpirationDate, DateTimeKind.Local)).ToUnixTimeMilliseconds()
             : null;
         await repo.SaveAsync(goal);
+        analytics.Track(string.IsNullOrEmpty(Guid) ? "goal_create" : "goal_save", goal.Category);
 
         var trimmedNextStep = NextStepItems.Trim();
         if (!string.IsNullOrWhiteSpace(trimmedNextStep) && trimmedNextStep != _loadedNextStepItems)
@@ -153,6 +156,7 @@ public partial class GoalEntryViewModel(
     {
         if (string.IsNullOrEmpty(Guid)) return;
         await repo.CompleteAsync(Guid);
+        analytics.Track("goal_complete");
         var goalName = GoalText.Length > 60 ? GoalText[..60] + "…" : GoalText;
         await Shell.Current.DisplayAlert(
             "🎉 Goal Complete!",
