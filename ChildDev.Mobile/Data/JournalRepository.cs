@@ -43,6 +43,30 @@ public class JournalRepository(SQLiteAsyncConnection db)
           .Where(j => j.AccountFk == accountFk && j.UpdatedOn > since)
           .ToListAsync();
 
+    public async Task<int> GetJournalStreakAsync(string accountFk)
+    {
+        var allDates = await db.QueryAsync<Journal>(
+            "SELECT EnteredDate FROM Journal WHERE AccountFk = ? AND DeletedAt IS NULL", accountFk);
+        var activeDates = allDates
+            .Select(j => DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(j.EnteredDate).LocalDateTime))
+            .ToHashSet();
+        var day = DateOnly.FromDateTime(DateTime.Today);
+        if (!activeDates.Contains(day)) day = day.AddDays(-1);
+        var streak = 0;
+        while (activeDates.Contains(day)) { streak++; day = day.AddDays(-1); }
+        return streak;
+    }
+
+    public async Task<bool> HasEntryTodayAsync(string accountFk)
+    {
+        var todayStart = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+        var tomorrowStart = todayStart + 86_400_000L;
+        var count = await db.Table<Journal>()
+            .Where(j => j.AccountFk == accountFk && j.DeletedAt == null && j.EnteredDate >= todayStart && j.EnteredDate < tomorrowStart)
+            .CountAsync();
+        return count > 0;
+    }
+
     public async Task UpsertFromSyncAsync(Journal journal)
     {
         var existing = await db.FindAsync<Journal>(journal.Guid);

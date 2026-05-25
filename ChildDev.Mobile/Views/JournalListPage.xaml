@@ -9,12 +9,35 @@
         <ToolbarItem Text="+" Command="{Binding AddCommand}" />
     </ContentPage.ToolbarItems>
 
-    <Grid RowDefinitions="Auto,Auto,*">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
         <Label Grid.Row="0" Text="{Binding StatusMessage}" TextColor="Red"
                FontSize="13" Padding="16,8"
                IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}" />
-        <SearchBar Grid.Row="1" Placeholder="Search entries..." Text="{Binding FilterText}" Margin="8,0,8,4" />
-        <RefreshView Grid.Row="2" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
+        <!-- Streak badge -->
+        <Border Grid.Row="1" BackgroundColor="#EDE7F6" Padding="12,8" StrokeShape="RoundRectangle 8" StrokeThickness="0"
+                Margin="8,8,8,2"
+                IsVisible="{Binding StreakDisplay, Converter={StaticResource StringToBoolConverter}}">
+            <Label Text="{Binding StreakDisplay}" FontSize="13" FontAttributes="Bold" TextColor="#5C35D9" />
+        </Border>
+        <!-- Today's writing prompt (only if no entry today) -->
+        <Border Grid.Row="2" BackgroundColor="#F3F0FF" Padding="12,10" StrokeShape="RoundRectangle 8" StrokeThickness="0"
+                Margin="8,2,8,4">
+            <Border.Triggers>
+                <DataTrigger TargetType="Border" Binding="{Binding HasTodayEntry}" Value="True">
+                    <Setter Property="IsVisible" Value="False" />
+                </DataTrigger>
+            </Border.Triggers>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Label Grid.Column="0" Text="{Binding TodayPrompt, StringFormat='💡 {0}'}"
+                       FontSize="12" TextColor="#5C35D9" VerticalOptions="Center" />
+                <Button Grid.Column="1" Text="Write" Command="{Binding AddCommand}"
+                        BackgroundColor="Transparent" TextColor="#5C35D9"
+                        FontSize="12" Padding="8,4" CornerRadius="8"
+                        BorderColor="#C5CAE9" BorderWidth="1" />
+            </Grid>
+        </Border>
+        <SearchBar Grid.Row="3" Placeholder="Search entries..." Text="{Binding FilterText}" Margin="8,0,8,4" />
+        <RefreshView Grid.Row="4" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
         <CollectionView ItemsSource="{Binding Journals}">
         <CollectionView.EmptyView>
             <Label Text="{Binding EmptyMessage}" FontSize="18" TextColor="Gray"

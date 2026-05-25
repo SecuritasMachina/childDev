@@ -31,6 +31,31 @@ public partial class JournalListViewModel(
     [ObservableProperty]
     private string emptyMessage = "No journal entries yet";
 
+    [ObservableProperty]
+    private string streakDisplay = string.Empty;
+
+    [ObservableProperty]
+    private string todayPrompt = string.Empty;
+
+    [ObservableProperty]
+    private bool hasTodayEntry;
+
+    private static readonly string[] Prompts =
+    [
+        "What's one thing you learned today?",
+        "What made you smile today?",
+        "What's something you want to get better at?",
+        "What was the best part of your day?",
+        "What's a challenge you faced and how did you handle it?",
+        "What are you grateful for today?",
+        "What's one thing you did today that you're proud of?",
+        "What's something you're looking forward to?",
+        "What would you do differently if you could redo today?",
+        "Who helped you today and how?",
+        "What goal did you make progress on today?",
+        "What's one word that describes your mood today?",
+    ];
+
     private List<Journal> _allJournals = [];
 
     partial void OnFilterTextChanged(string value)
@@ -68,6 +93,12 @@ public partial class JournalListViewModel(
             _allJournals = items;
             Journals = new ObservableCollection<Journal>(items);
             UpdateEntryCountDisplay();
+            var streak = await repo.GetJournalStreakAsync(account.Guid);
+            StreakDisplay = streak >= 2
+                ? $"{(streak >= 14 ? "🌟" : streak >= 7 ? "🔥" : "⭐")} {streak}-day journaling streak!"
+                : string.Empty;
+            HasTodayEntry = await repo.HasEntryTodayAsync(account.Guid);
+            TodayPrompt = Prompts[(int)(DateOnly.FromDateTime(DateTime.Today).DayNumber % Prompts.Length)];
         }
         catch
         {
@@ -87,6 +118,11 @@ public partial class JournalListViewModel(
             _allJournals = items;
             Journals = new ObservableCollection<Journal>(items);
             UpdateEntryCountDisplay();
+            var streak = await repo.GetJournalStreakAsync(account.Guid);
+            StreakDisplay = streak >= 2
+                ? $"{(streak >= 14 ? "🌟" : streak >= 7 ? "🔥" : "⭐")} {streak}-day journaling streak!"
+                : string.Empty;
+            HasTodayEntry = await repo.HasEntryTodayAsync(account.Guid);
             StatusMessage = string.Empty;
         }
         catch
