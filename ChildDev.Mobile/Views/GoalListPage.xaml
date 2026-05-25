@@ -32,6 +32,12 @@
             <Label Text="{Binding EmptyMessage}" FontSize="18" TextColor="Gray"
                    HorizontalOptions="Center" VerticalOptions="Center" Padding="32" />
         </CollectionView.EmptyView>
+        <CollectionView.Header>
+            <Label Text="← Swipe to pin or add a note  •  → Swipe to delete"
+                   FontSize="10" TextColor="Gray" HorizontalOptions="Center"
+                   Padding="0,6,0,2"
+                   IsVisible="{Binding HasGoals}"/>
+        </CollectionView.Header>
         <CollectionView.Footer>
             <Label Text="{Binding EntryCountDisplay}" FontSize="11" TextColor="Gray"
                    HorizontalOptions="Center" Padding="0,8,0,16"

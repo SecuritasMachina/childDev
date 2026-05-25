@@ -19,6 +19,9 @@ public partial class GoalListViewModel(
     private ObservableCollection<Goal> goals = [];
 
     [ObservableProperty]
+    private bool hasGoals;
+
+    [ObservableProperty]
     private string statusMessage = string.Empty;
 
     [ObservableProperty]
@@ -55,6 +58,7 @@ public partial class GoalListViewModel(
         ).ToList();
 
         Goals = new ObservableCollection<Goal>(filtered);
+        HasGoals = filtered.Count > 0;
 
         if (!string.IsNullOrEmpty(textQ))
         {
