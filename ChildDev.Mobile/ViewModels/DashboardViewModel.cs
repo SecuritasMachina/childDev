@@ -303,4 +303,7 @@ public partial class DashboardViewModel(
     [RelayCommand]
     private async Task GoToJournalAsync() =>
         await _nav.GoToAsync("//journal");
+
+    [RelayCommand]
+    private Task OpenRemindersAsync() => _nav.GoToAsync("reminders");
 }
