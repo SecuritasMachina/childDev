@@ -1,3 +1,6 @@
+#if ANDROID || IOS || MACCATALYST || WINDOWS
+using Plugin.LocalNotification;
+#endif
 using LevelUp.Data;
 using LevelUp.Services;
 
@@ -21,5 +24,18 @@ public partial class App : Application
                     : new AppShell();
             });
         });
+#if ANDROID || IOS || MACCATALYST || WINDOWS
+        LocalNotificationCenter.Current.NotificationActionTapped += OnNotificationTapped;
+#endif
     }
+
+#if ANDROID || IOS || MACCATALYST || WINDOWS
+    private void OnNotificationTapped(Plugin.LocalNotification.EventArgs.NotificationActionEventArgs e)
+    {
+        MainThread.BeginInvokeOnMainThread(async () =>
+        {
+            await Shell.Current.GoToAsync("reminders");
+        });
+    }
+#endif
 }

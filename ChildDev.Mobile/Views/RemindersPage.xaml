@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:LevelUp.ViewModels"
+             xmlns:models="clr-namespace:LevelUp.Models"
+             x:DataType="vm:RemindersViewModel"
+             x:Class="LevelUp.Views.RemindersPage"
+             Title="Reminders">
+
+    <Grid RowDefinitions="Auto,*" Padding="16">
+
+        <!-- Add general reminder -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+            <Entry Grid.Column="0"
+                   Placeholder="New reminder title..."
+                   Text="{Binding NewReminderTitle}"
+                   ReturnCommand="{Binding AddGeneralCommand}"
+                   VerticalOptions="Center"/>
+            <Button Grid.Column="1"
+                    Text="+ Add"
+                    Command="{Binding AddGeneralCommand}"
+                    Margin="8,0,0,0"/>
+        </Grid>
+
+        <!-- Reminder list -->
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding Reminders}"
+                        EmptyView="No pending reminders">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Reminder">
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItems>
+                                <SwipeItem Text="Snooze"
+                                           BackgroundColor="Orange"
+                                           Clicked="OnSnoozeClicked"/>
+                                <SwipeItem Text="Dismiss"
+                                           BackgroundColor="Red"
+                                           IsDestructive="True"
+                                           Clicked="OnDismissClicked"/>
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+                        <Grid Padding="0,8">
+                            <StackLayout>
+                                <Label Text="{Binding Title}" FontSize="16" FontAttributes="Bold"/>
+                                <Label Text="{Binding EntityLabel}" FontSize="13" TextColor="Gray"/>
+                                <Label Text="{Binding Topic}" FontSize="12" TextColor="Gray"/>
+                            </StackLayout>
+                        </Grid>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Loading indicator -->
+        <ActivityIndicator Grid.Row="1"
+                           IsRunning="{Binding IsLoading}"
+                           IsVisible="{Binding IsLoading}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"/>
+    </Grid>
+</ContentPage>

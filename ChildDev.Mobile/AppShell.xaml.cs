@@ -9,5 +9,6 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("goals/entry", typeof(Views.GoalEntryPage));
         Routing.RegisterRoute("todos/entry", typeof(Views.TodoEntryPage));
         Routing.RegisterRoute("settings", typeof(Views.SettingsPage));
+        Routing.RegisterRoute("reminders", typeof(Views.RemindersPage));
     }
 }
