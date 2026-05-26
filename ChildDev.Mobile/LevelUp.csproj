@@ -69,10 +69,7 @@
 		<Compile Remove="MainPage.xaml.cs" />
 		<Compile Remove="Converters\**\*.cs" />
 		<Compile Remove="ViewModels\SetupViewModel.cs" />
-		<Compile Remove="ViewModels\JournalEntryViewModel.cs" />
-		<Compile Remove="ViewModels\JournalListViewModel.cs" />
-		<Compile Remove="ViewModels\TodoListViewModel.cs" />
-		<Compile Remove="ViewModels\TodoEntryViewModel.cs" />
+
 		<Compile Remove="ViewModels\DashboardViewModel.cs" />
 	</ItemGroup>
 

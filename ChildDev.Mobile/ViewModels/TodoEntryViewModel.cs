@@ -7,7 +7,9 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace LevelUp.ViewModels;
 
+#if !NO_MAUI
 [QueryProperty(nameof(Guid), "guid")]
+#endif
 public partial class TodoEntryViewModel(
     TodoRepository repo,
     GoalRepository goalRepo,
