@@ -34,6 +34,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<ConnectivityService>();
         builder.Services.AddSingleton<SyncService>();
         builder.Services.AddSingleton<MobileAnalyticsService>();
+        builder.Services.AddSingleton<INavigationService, MauiNavigationService>();
         builder.Services.AddHttpClient("childdev");
 
         // ViewModels (transient -- new instance per navigation)
