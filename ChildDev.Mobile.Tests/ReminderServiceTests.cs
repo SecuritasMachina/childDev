@@ -48,6 +48,7 @@ public class ReminderServiceTests : ViewModelTestBase
         await ReminderSvc.ScheduleAsync(reminder);
 
         Assert.NotEqual(0, reminder.NotificationId);
+        Assert.Equal(reminder.NotificationId, NotificationService.Scheduled[0].Id);
     }
 
     [Fact]
@@ -89,6 +90,7 @@ public class ReminderServiceTests : ViewModelTestBase
         Assert.True(reminder.FireAt > originalFireAt);
         var pending = await ReminderSvc.GetPendingAsync(account.Guid);
         Assert.Single(pending);
+        Assert.True(pending[0].FireAt > originalFireAt);
     }
 
     [Fact]
