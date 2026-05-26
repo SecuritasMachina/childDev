@@ -17,6 +17,9 @@ public abstract class ViewModelTestBase : IDisposable
     protected readonly TodoRepository TodoRepo;
     protected readonly FakeNavigationService Nav;
     protected readonly MobileAnalyticsService Analytics;
+    protected readonly ReminderRepository ReminderRepo;
+    protected readonly FakeNotificationService NotificationService;
+    protected readonly ReminderService ReminderSvc;
 
     protected ViewModelTestBase()
     {
@@ -35,6 +38,10 @@ public abstract class ViewModelTestBase : IDisposable
         TodoRepo = new TodoRepository(Db);
         Nav = new FakeNavigationService();
         Analytics = new MobileAnalyticsService(AccountService, new FakeHttpClientFactory(new NoOpHttpHandler()));
+        Db.CreateTableAsync<LevelUp.Models.Reminder>().GetAwaiter().GetResult();
+        ReminderRepo = new ReminderRepository(Db);
+        NotificationService = new FakeNotificationService();
+        ReminderSvc = new ReminderService(ReminderRepo, NotificationService);
     }
 
     protected SyncService BuildOfflineSyncService() =>
@@ -99,4 +106,25 @@ public class NoOpHttpHandler : HttpMessageHandler
         {
             Content = JsonContent.Create(new { Records = Array.Empty<object>() })
         });
+}
+
+public class FakeNotificationService : INotificationService
+{
+    public record ScheduledNotification(int Id, string Title, string Body, DateTime FireAt, string Data);
+    public List<ScheduledNotification> Scheduled { get; } = [];
+    public List<int> Cancelled { get; } = [];
+
+    public Task<bool> RequestPermissionAsync() => Task.FromResult(true);
+
+    public Task ScheduleAsync(int id, string title, string body, DateTime fireAt, string returningData)
+    {
+        Scheduled.Add(new ScheduledNotification(id, title, body, fireAt, returningData));
+        return Task.CompletedTask;
+    }
+
+    public Task CancelAsync(int id)
+    {
+        Cancelled.Add(id);
+        return Task.CompletedTask;
+    }
 }
