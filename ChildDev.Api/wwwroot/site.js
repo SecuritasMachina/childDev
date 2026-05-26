@@ -45,3 +45,15 @@ window.childdev.setupSearchHotkey = function (dotNetRef) {
     };
     document.addEventListener('keydown', window._cdSearchHotkeyListener);
 };
+
+window.requestNotificationPermission = async function () {
+    if (!('Notification' in window)) return 'denied';
+    if (Notification.permission === 'granted') return 'granted';
+    return await Notification.requestPermission();
+};
+
+window.showBrowserNotification = function (title, body) {
+    if (Notification.permission === 'granted') {
+        new Notification(title, { body: body });
+    }
+};

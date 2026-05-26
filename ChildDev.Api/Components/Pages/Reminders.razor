@@ -1,0 +1,256 @@
+@page "/reminders"
+@inject WebReminderService ReminderSvc
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+@inject IHttpContextAccessor HttpContextAccessor
+@inject WebAnalyticsService Analytics
+@inject NavigationManager Nav
+@implements IAsyncDisposable
+
+<PageTitle>Reminders – LevelUp</PageTitle>
+
+@if (AccountGuid is null)
+{
+    Nav.NavigateTo("/login");
+    return;
+}
+
+<MudText Typo="Typo.h5" Class="mb-4">
+    <MudIcon Icon="@Icons.Material.Filled.NotificationsActive" Class="mr-2" />
+    Reminders
+</MudText>
+
+@* Add new reminder *@
+<MudPaper Elevation="1" Class="pa-4 mb-4" Style="border-radius:12px">
+    <MudText Typo="Typo.subtitle1" Class="mb-2">New Reminder</MudText>
+    <MudGrid>
+        <MudItem xs="12" sm="6">
+            <MudTextField @bind-Value="_newTitle" Label="Title"
+                          Placeholder="What do you want to be reminded about?"
+                          Variant="Variant.Outlined" MaxLength="200" />
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudSelect @bind-Value="_newTopic" Label="Topic" Variant="Variant.Outlined">
+                <MudSelectItem Value="@("General")">General</MudSelectItem>
+                <MudSelectItem Value="@("Goal")">Goal</MudSelectItem>
+                <MudSelectItem Value="@("Journal")">Journal</MudSelectItem>
+                <MudSelectItem Value="@("Todo")">Todo</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudSelect @bind-Value="_snoozePreset" Label="Remind me in" Variant="Variant.Outlined">
+                <MudSelectItem Value="@("1h")">1 hour</MudSelectItem>
+                <MudSelectItem Value="@("8h")">8 hours</MudSelectItem>
+                <MudSelectItem Value="@("1d")">1 day</MudSelectItem>
+                <MudSelectItem Value="@("3d")">3 days</MudSelectItem>
+                <MudSelectItem Value="@("custom")">Custom...</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        @if (_snoozePreset == "custom")
+        {
+            <MudItem xs="6" sm="3">
+                <MudNumericField @bind-Value="_customAmount" Label="Amount" Min="1" Max="999"
+                                 Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudSelect @bind-Value="_customUnit" Label="Unit" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@("hours")">Hours</MudSelectItem>
+                    <MudSelectItem Value="@("days")">Days</MudSelectItem>
+                    <MudSelectItem Value="@("weeks")">Weeks</MudSelectItem>
+                    <MudSelectItem Value="@("months")">Months</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+        }
+        <MudItem xs="12">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                       OnClick="AddReminderAsync"
+                       Disabled="@(string.IsNullOrWhiteSpace(_newTitle))">
+                Set Reminder
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@* Pending reminders list *@
+@if (_reminders.Count == 0)
+{
+    <MudText Color="Color.Secondary">No pending reminders.</MudText>
+}
+else
+{
+    <MudText Typo="Typo.subtitle1" Class="mb-2">Pending (@_reminders.Count)</MudText>
+    @foreach (var r in _reminders)
+    {
+        <MudPaper Elevation="1" Class="pa-3 mb-2" Style="border-radius:10px">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+                <MudStack Style="flex:1" Spacing="0">
+                    <MudText Typo="Typo.body1" Style="font-weight:500">@r.Title</MudText>
+                    @if (!string.IsNullOrEmpty(r.EntityLabel))
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@r.EntityLabel</MudText>
+                    }
+                    <MudStack Row="true" Spacing="1">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            @r.Topic · @r.FireAt.ToLocalTime().ToString("MMM d, h:mm tt")
+                        </MudText>
+                        @if (r.FireAt <= DateTime.UtcNow)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning">Due</MudChip>
+                        }
+                    </MudStack>
+                </MudStack>
+                <MudStack Row="true" Spacing="1">
+                    <MudButton Variant="Variant.Outlined" Size="Size.Small"
+                               OnClick="() => OpenSnoozeDialog(r)">Snooze</MudButton>
+                    <MudButton Variant="Variant.Outlined" Size="Size.Small"
+                               Color="Color.Error" OnClick="() => DismissAsync(r)">Dismiss</MudButton>
+                </MudStack>
+            </MudStack>
+        </MudPaper>
+    }
+}
+
+@* Snooze dialog *@
+<MudDialog @bind-Visible="_snoozeOpen">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Snooze Reminder</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudSelect @bind-Value="_snoozeDialogPreset" Label="Snooze for"
+                   Variant="Variant.Outlined" Class="mb-2">
+            <MudSelectItem Value="@("1h")">1 hour</MudSelectItem>
+            <MudSelectItem Value="@("8h")">8 hours</MudSelectItem>
+            <MudSelectItem Value="@("1d")">1 day</MudSelectItem>
+            <MudSelectItem Value="@("3d")">3 days</MudSelectItem>
+            <MudSelectItem Value="@("custom")">Custom...</MudSelectItem>
+        </MudSelect>
+        @if (_snoozeDialogPreset == "custom")
+        {
+            <MudStack Row="true" Spacing="2">
+                <MudNumericField @bind-Value="_snoozeCustomAmount" Label="Amount"
+                                 Min="1" Max="999" Variant="Variant.Outlined" />
+                <MudSelect @bind-Value="_snoozeCustomUnit" Label="Unit" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@("hours")">Hours</MudSelectItem>
+                    <MudSelectItem Value="@("days")">Days</MudSelectItem>
+                    <MudSelectItem Value="@("weeks")">Weeks</MudSelectItem>
+                    <MudSelectItem Value="@("months")">Months</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _snoozeOpen = false">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="ConfirmSnoozeAsync">Snooze</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private string? AccountGuid;
+    private List<Reminder> _reminders = [];
+    private string _newTitle = string.Empty;
+    private string _newTopic = "General";
+    private string _snoozePreset = "1h";
+    private int _customAmount = 1;
+    private string _customUnit = "hours";
+
+    private bool _snoozeOpen;
+    private Reminder? _snoozeTarget;
+    private string _snoozeDialogPreset = "1h";
+    private int _snoozeCustomAmount = 1;
+    private string _snoozeCustomUnit = "hours";
+
+    private System.Timers.Timer? _dueCheckTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
+        if (AccountGuid is null) return;
+        await LoadAsync();
+        await Analytics.TrackAsync("page_view", AccountGuid, "reminders");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || AccountGuid is null) return;
+        await JS.InvokeAsync<string>("requestNotificationPermission");
+        await FireDueNotificationsAsync();
+        _dueCheckTimer = new System.Timers.Timer(60_000);
+        _dueCheckTimer.Elapsed += async (_, _) => await InvokeAsync(FireDueNotificationsAsync);
+        _dueCheckTimer.Start();
+    }
+
+    private async Task LoadAsync()
+    {
+        if (AccountGuid is null) return;
+        _reminders = await ReminderSvc.GetPendingAsync(AccountGuid);
+    }
+
+    private async Task FireDueNotificationsAsync()
+    {
+        if (AccountGuid is null) return;
+        var due = await ReminderSvc.GetDueAsync(AccountGuid);
+        foreach (var r in due)
+            await JS.InvokeVoidAsync("showBrowserNotification", r.Title, r.EntityLabel ?? r.Topic);
+    }
+
+    private async Task AddReminderAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_newTitle) || AccountGuid is null) return;
+        var duration = ParsePreset(_snoozePreset, _customAmount, _customUnit);
+        await ReminderSvc.CreateAsync(AccountGuid, _newTitle.Trim(), _newTopic, null, null,
+            DateTime.UtcNow.Add(duration));
+        _newTitle = string.Empty;
+        Snackbar.Add("Reminder set!", Severity.Success);
+        await LoadAsync();
+        await Analytics.TrackAsync("reminder_created", AccountGuid, "reminders");
+    }
+
+    private void OpenSnoozeDialog(Reminder r)
+    {
+        _snoozeTarget = r;
+        _snoozeDialogPreset = "1h";
+        _snoozeCustomAmount = 1;
+        _snoozeCustomUnit = "hours";
+        _snoozeOpen = true;
+    }
+
+    private async Task ConfirmSnoozeAsync()
+    {
+        if (_snoozeTarget is null) return;
+        var duration = ParsePreset(_snoozeDialogPreset, _snoozeCustomAmount, _snoozeCustomUnit);
+        await ReminderSvc.SnoozeAsync(_snoozeTarget.Id, duration);
+        _snoozeOpen = false;
+        Snackbar.Add("Snoozed!", Severity.Info);
+        await LoadAsync();
+    }
+
+    private async Task DismissAsync(Reminder r)
+    {
+        await ReminderSvc.DismissAsync(r.Id);
+        _reminders.Remove(r);
+        Snackbar.Add("Reminder dismissed.", Severity.Normal);
+    }
+
+    private static TimeSpan ParsePreset(string preset, int amount, string unit) => preset switch
+    {
+        "1h" => TimeSpan.FromHours(1),
+        "8h" => TimeSpan.FromHours(8),
+        "1d" => TimeSpan.FromDays(1),
+        "3d" => TimeSpan.FromDays(3),
+        "custom" => unit switch
+        {
+            "hours" => TimeSpan.FromHours(amount),
+            "days" => TimeSpan.FromDays(amount),
+            "weeks" => TimeSpan.FromDays(amount * 7),
+            "months" => TimeSpan.FromDays(amount * 30),
+            _ => TimeSpan.FromHours(1)
+        },
+        _ => TimeSpan.FromHours(1)
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        _dueCheckTimer?.Stop();
+        _dueCheckTimer?.Dispose();
+    }
+}

@@ -77,6 +77,11 @@
                                    Variant="@(IsActive("/achievements") ? Variant.Outlined : Variant.Text)"
                                    aria-label="Achievements" />
                 </MudTooltip>
+                <MudTooltip Text="Reminders">
+                    <MudIconButton Color="Color.Inherit" Href="/reminders" Icon="@Icons.Material.Filled.NotificationsActive"
+                                   Variant="@(IsActive("/reminders") ? Variant.Outlined : Variant.Text)"
+                                   aria-label="Reminders" />
+                </MudTooltip>
             </MudHidden>
             <MudMenu Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit"
                      Label="@NickName" EndIcon="@Icons.Material.Filled.ExpandMore"
@@ -117,6 +122,8 @@
                             Icon="@Icons.Material.Filled.Insights" OnClick="CloseDrawer">Insights</MudNavLink>
                 <MudNavLink Href="/achievements"
                             Icon="@Icons.Material.Filled.MilitaryTech" OnClick="CloseDrawer">Achievements</MudNavLink>
+                <MudNavLink Href="/reminders"
+                            Icon="@Icons.Material.Filled.NotificationsActive" OnClick="CloseDrawer">Reminders</MudNavLink>
                 <MudDivider Class="my-2" />
                 <MudNavLink Icon="@Icons.Material.Filled.Search"
                             OnClick="@(() => { CloseDrawer(); OpenSearch(); })">Search</MudNavLink>
