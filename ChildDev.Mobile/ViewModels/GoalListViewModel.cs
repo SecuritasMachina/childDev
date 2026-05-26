@@ -13,8 +13,10 @@ public partial class GoalListViewModel(
     GoalProgressRepository progressRepo,
     AccountService accountService,
     SyncService syncService,
-    MobileAnalyticsService analytics) : ObservableObject
+    MobileAnalyticsService analytics,
+    INavigationService nav) : ObservableObject
 {
+    private readonly INavigationService _nav = nav;
     [ObservableProperty]
     private ObservableCollection<Goal> goals = [];
 
@@ -165,11 +167,11 @@ public partial class GoalListViewModel(
 
     [RelayCommand]
     private async Task AddAsync() =>
-        await Shell.Current.GoToAsync("goals/entry");
+        await _nav.GoToAsync("goals/entry");
 
     [RelayCommand]
     private async Task OpenAsync(Goal goal) =>
-        await Shell.Current.GoToAsync($"goals/entry?guid={goal.Guid}");
+        await _nav.GoToAsync($"goals/entry?guid={goal.Guid}");
 
     [RelayCommand]
     private async Task TogglePinAsync(Goal goal)
@@ -185,7 +187,7 @@ public partial class GoalListViewModel(
     [RelayCommand]
     private async Task DeleteAsync(Goal goal)
     {
-        var confirmed = await Shell.Current.DisplayAlert("Delete Goal?", "Remove this goal and all its progress notes?", "Delete", "Cancel");
+        var confirmed = await _nav.DisplayAlertAsync("Delete Goal?", "Remove this goal and all its progress notes?", "Delete", "Cancel");
         if (!confirmed) return;
         await repo.DeleteAsync(goal.Guid);
         await progressRepo.DeleteForGoalAsync(goal.Guid);
@@ -197,13 +199,12 @@ public partial class GoalListViewModel(
     [RelayCommand]
     private async Task QuickNoteAsync(Goal goal)
     {
-        var note = await Shell.Current.DisplayPromptAsync(
+        var note = await _nav.DisplayPromptAsync(
             "📝 Quick Note",
             $"Add a progress note for:\n\"{(goal.GoalText?.Length > 60 ? goal.GoalText[..60] + "…" : goal.GoalText)}\"",
-            accept: "Save", cancel: "Cancel",
-            placeholder: "What progress did you make?",
-            maxLength: 500,
-            keyboard: Keyboard.Text);
+            "Save", "Cancel",
+            "What progress did you make?",
+            500);
         if (string.IsNullOrWhiteSpace(note)) return;
         var account = await accountService.GetAccountAsync();
         if (account is null) return;
@@ -219,6 +220,6 @@ public partial class GoalListViewModel(
         analytics.Track("goal_quick_note", goal.Category);
         _allGoals = await LoadGoalsWithStepsAsync(account.Guid);
         Goals = new ObservableCollection<Goal>(_allGoals);
-        await Shell.Current.DisplayAlert("✅ Note Saved!", "Great work keeping your goal moving forward! 🌟", "OK");
+        await _nav.AlertAsync("✅ Note Saved!", "Great work keeping your goal moving forward! 🌟", "OK");
     }
 }

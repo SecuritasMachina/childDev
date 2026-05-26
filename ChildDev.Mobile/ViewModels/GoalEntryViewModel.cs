@@ -13,8 +13,10 @@ public partial class GoalEntryViewModel(
     GoalProgressRepository progressRepo,
     TodoRepository todoRepo,
     AccountService accountService,
-    MobileAnalyticsService analytics) : ObservableObject
+    MobileAnalyticsService analytics,
+    INavigationService nav) : ObservableObject
 {
+    private readonly INavigationService _nav = nav;
     [ObservableProperty] private string guid = string.Empty;
     [ObservableProperty] private string goalText = string.Empty;
     [ObservableProperty] private string measurableOutcome = string.Empty;
@@ -175,7 +177,7 @@ public partial class GoalEntryViewModel(
             await progressRepo.SaveAsync(progress);
         }
 
-        await Shell.Current.GoToAsync("..");
+        await _nav.GoToAsync("..");
     }
 
     [RelayCommand]
@@ -190,13 +192,12 @@ public partial class GoalEntryViewModel(
     {
         if (string.IsNullOrEmpty(Guid)) return;
         var goalName = GoalText.Length > 60 ? GoalText[..60] + "…" : GoalText;
-        var title = await Shell.Current.DisplayPromptAsync(
+        var title = await _nav.DisplayPromptAsync(
             "➕ Add Todo",
             $"For goal: \"{goalName}\"",
-            accept: "Add", cancel: "Cancel",
-            placeholder: "What needs to be done?",
-            maxLength: 200,
-            keyboard: Keyboard.Text);
+            "Add", "Cancel",
+            "What needs to be done?",
+            200);
         if (string.IsNullOrWhiteSpace(title)) return;
         var account = await accountService.GetAccountAsync();
         if (account is null) return;
@@ -263,11 +264,8 @@ public partial class GoalEntryViewModel(
         await repo.CompleteAsync(Guid);
         analytics.Track("goal_complete");
         var goalName = GoalText.Length > 60 ? GoalText[..60] + "…" : GoalText;
-        await Shell.Current.DisplayAlert(
-            "🎉 Goal Complete!",
-            $"Amazing work! You've achieved \"{goalName}\" — take a moment to celebrate this win! 🌟",
-            "Celebrate! 🎊");
-        await Shell.Current.GoToAsync("..");
+        await _nav.AlertAsync("🎉 Goal Complete!", $"Amazing work! You've achieved \"{goalName}\" — take a moment to celebrate this win! 🌟", "Celebrate! 🎊");
+        await _nav.GoToAsync("..");
     }
 
     [RelayCommand]
@@ -282,10 +280,10 @@ public partial class GoalEntryViewModel(
     private async Task DeleteAsync()
     {
         if (string.IsNullOrEmpty(Guid)) return;
-        var confirmed = await Shell.Current.DisplayAlert("Delete Goal?", "Remove this goal and all its progress notes?", "Delete", "Cancel");
+        var confirmed = await _nav.DisplayAlertAsync("Delete Goal?", "Remove this goal and all its progress notes?", "Delete", "Cancel");
         if (!confirmed) return;
         await repo.DeleteAsync(Guid);
         await progressRepo.DeleteForGoalAsync(Guid);
-        await Shell.Current.GoToAsync("..");
+        await _nav.GoToAsync("..");
     }
 }
