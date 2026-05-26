@@ -61,6 +61,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddMudServices();
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddScoped<WebAnalyticsService>();
+builder.Services.AddScoped<WebReminderService>();
 builder.Services.AddSingleton<WebAuthTokenService>();
 builder.Services.AddSingleton<EmailService>();
 builder.Services.AddHttpContextAccessor();

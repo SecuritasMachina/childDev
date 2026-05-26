@@ -11,6 +11,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<GoalProgress> GoalProgresses => Set<GoalProgress>();
     public DbSet<Todo> Todos => Set<Todo>();
     public DbSet<AnalyticsEvent> AnalyticsEvents => Set<AnalyticsEvent>();
+    public DbSet<Reminder> Reminders => Set<Reminder>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,5 +30,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .IsUnique();
         modelBuilder.Entity<AnalyticsEvent>()
             .HasIndex(e => new { e.AccountGuid, e.Timestamp });
+        modelBuilder.Entity<Reminder>()
+            .HasIndex(r => new { r.AccountGuid, r.IsDismissed });
     }
 }
