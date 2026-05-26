@@ -64,6 +64,7 @@ public static class MauiProgram
         builder.Services.AddTransient<TodoListPage>();
         builder.Services.AddTransient<TodoEntryPage>();
         builder.Services.AddTransient<SettingsPage>();
+        builder.Services.AddTransient<RemindersPage>();
 
         return builder.Build();
     }
