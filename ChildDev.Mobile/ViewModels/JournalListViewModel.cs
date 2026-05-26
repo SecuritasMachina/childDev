@@ -11,7 +11,8 @@ public partial class JournalListViewModel(
     JournalRepository repo,
     AccountService accountService,
     SyncService syncService,
-    MobileAnalyticsService analytics) : ObservableObject
+    MobileAnalyticsService analytics,
+    INavigationService nav) : ObservableObject
 {
     [ObservableProperty]
     private ObservableCollection<Journal> journals = [];
@@ -194,18 +195,20 @@ public partial class JournalListViewModel(
         TodayPrompt = Prompts[_promptIdx];
     }
 
+    private readonly INavigationService _nav = nav;
+
     [RelayCommand]
     private async Task AddAsync() =>
-        await Shell.Current.GoToAsync("journal/entry");
+        await _nav.GoToAsync("journal/entry");
 
     [RelayCommand]
     private async Task OpenAsync(Journal journal) =>
-        await Shell.Current.GoToAsync($"journal/entry?guid={journal.Guid}");
+        await _nav.GoToAsync($"journal/entry?guid={journal.Guid}");
 
     [RelayCommand]
     private async Task DeleteAsync(Journal journal)
     {
-        var confirmed = await Shell.Current.DisplayAlert("Delete Entry?", "Remove this journal entry?", "Delete", "Cancel");
+        var confirmed = await _nav.DisplayAlertAsync("Delete Entry?", "Remove this journal entry?", "Delete", "Cancel");
         if (!confirmed) return;
         await repo.DeleteAsync(journal.Guid);
         _allJournals.Remove(journal);

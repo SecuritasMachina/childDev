@@ -10,7 +10,8 @@ namespace LevelUp.ViewModels;
 public partial class JournalEntryViewModel(
     JournalRepository repo,
     AccountService accountService,
-    MobileAnalyticsService analytics) : ObservableObject
+    MobileAnalyticsService analytics,
+    INavigationService nav) : ObservableObject
 {
     [ObservableProperty] private string guid = string.Empty;
     [ObservableProperty] private string notes = string.Empty;
@@ -65,6 +66,8 @@ public partial class JournalEntryViewModel(
     partial void OnEmotionReasonChanged(string value) => EmotionReasonLength = value?.Length ?? 0;
     partial void OnTagsChanged(string value) => TagsLength = value?.Length ?? 0;
 
+    private readonly INavigationService _nav = nav;
+
     private bool CanSave() => !string.IsNullOrWhiteSpace(Notes) || !string.IsNullOrWhiteSpace(Activity);
 
     partial void OnGuidChanged(string value)
@@ -107,16 +110,16 @@ public partial class JournalEntryViewModel(
 
         await repo.SaveAsync(journal);
         analytics.Track(string.IsNullOrEmpty(Guid) ? "journal_create" : "journal_save");
-        await Shell.Current.GoToAsync("..");
+        await _nav.GoToAsync("..");
     }
 
     [RelayCommand]
     private async Task DeleteAsync()
     {
         if (string.IsNullOrEmpty(Guid)) return;
-        var confirmed = await Shell.Current.DisplayAlert("Delete Entry?", "Remove this journal entry?", "Delete", "Cancel");
+        var confirmed = await _nav.DisplayAlertAsync("Delete Entry?", "Remove this journal entry?", "Delete", "Cancel");
         if (!confirmed) return;
         await repo.DeleteAsync(Guid);
-        await Shell.Current.GoToAsync("..");
+        await _nav.GoToAsync("..");
     }
 }

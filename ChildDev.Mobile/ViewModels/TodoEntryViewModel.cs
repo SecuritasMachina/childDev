@@ -12,7 +12,8 @@ public partial class TodoEntryViewModel(
     TodoRepository repo,
     GoalRepository goalRepo,
     AccountService accountService,
-    MobileAnalyticsService analytics) : ObservableObject
+    MobileAnalyticsService analytics,
+    INavigationService nav) : ObservableObject
 {
     [ObservableProperty] private string guid = string.Empty;
     [ObservableProperty] private string title = string.Empty;
@@ -25,6 +26,8 @@ public partial class TodoEntryViewModel(
     [ObservableProperty] private bool isCompleted;
     [ObservableProperty] private ObservableCollection<Goal> availableGoals = [];
     [ObservableProperty] private Goal? linkedGoal;
+
+    private readonly INavigationService _nav = nav;
 
     private bool CanSave() => !string.IsNullOrWhiteSpace(Title);
 
@@ -132,7 +135,7 @@ public partial class TodoEntryViewModel(
 
         await repo.SaveAsync(todo);
         analytics.Track(string.IsNullOrEmpty(Guid) ? "todo_create" : "todo_edit");
-        await Shell.Current.GoToAsync("..");
+        await _nav.GoToAsync("..");
     }
 
     [RelayCommand]
@@ -141,7 +144,7 @@ public partial class TodoEntryViewModel(
         if (string.IsNullOrEmpty(Guid)) return;
         await repo.CompleteAsync(Guid);
         analytics.Track("todo_complete");
-        await Shell.Current.GoToAsync("..");
+        await _nav.GoToAsync("..");
     }
 
     [RelayCommand]
@@ -149,16 +152,16 @@ public partial class TodoEntryViewModel(
     {
         if (string.IsNullOrEmpty(Guid)) return;
         await repo.UncompleteAsync(Guid);
-        await Shell.Current.GoToAsync("..");
+        await _nav.GoToAsync("..");
     }
 
     [RelayCommand]
     private async Task DeleteAsync()
     {
         if (string.IsNullOrEmpty(Guid)) return;
-        var confirmed = await Shell.Current.DisplayAlert("Delete Todo?", "Remove this todo?", "Delete", "Cancel");
+        var confirmed = await _nav.DisplayAlertAsync("Delete Todo?", "Remove this todo?", "Delete", "Cancel");
         if (!confirmed) return;
         await repo.DeleteAsync(Guid);
-        await Shell.Current.GoToAsync("..");
+        await _nav.GoToAsync("..");
     }
 }

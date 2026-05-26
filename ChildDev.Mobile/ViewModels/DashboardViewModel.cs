@@ -14,7 +14,8 @@ public partial class DashboardViewModel(
     TodoRepository todoRepo,
     AccountService accountService,
     SyncService syncService,
-    MobileAnalyticsService analytics) : ObservableObject
+    MobileAnalyticsService analytics,
+    INavigationService nav) : ObservableObject
 {
     [ObservableProperty] private string greeting = string.Empty;
     [ObservableProperty] private ObservableCollection<Journal> recentJournals = [];
@@ -49,6 +50,7 @@ public partial class DashboardViewModel(
     [ObservableProperty] private bool hasWeeklyChallenge;
     [ObservableProperty] private string streakDisplay = string.Empty;
 
+    private readonly INavigationService _nav = nav;
     private string _accountGuid = string.Empty;
 
     [RelayCommand]
@@ -247,7 +249,7 @@ public partial class DashboardViewModel(
     private async Task GoToStaleGoalAsync()
     {
         if (!string.IsNullOrEmpty(StaleGoalGuid))
-            await Shell.Current.GoToAsync($"goals/entry?guid={StaleGoalGuid}");
+            await _nav.GoToAsync($"goals/entry?guid={StaleGoalGuid}");
     }
 
     [RelayCommand]
@@ -255,13 +257,12 @@ public partial class DashboardViewModel(
     {
         if (string.IsNullOrEmpty(StaleGoalGuid)) return;
         var goalName = StaleGoalText.Length > 60 ? StaleGoalText[..60] + "…" : StaleGoalText;
-        var note = await Shell.Current.DisplayPromptAsync(
+        var note = await _nav.DisplayPromptAsync(
             "📝 Quick Note",
             $"Progress note for:\n\"{goalName}\"",
-            accept: "Save", cancel: "Cancel",
-            placeholder: "What progress did you make?",
-            maxLength: 500,
-            keyboard: Keyboard.Text);
+            "Save", "Cancel",
+            "What progress did you make?",
+            500);
         if (string.IsNullOrWhiteSpace(note)) return;
         if (string.IsNullOrEmpty(_accountGuid)) return;
         var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -281,25 +282,25 @@ public partial class DashboardViewModel(
 
     [RelayCommand]
     private async Task AddJournalAsync() =>
-        await Shell.Current.GoToAsync("journal/entry");
+        await _nav.GoToAsync("journal/entry");
 
     [RelayCommand]
     private async Task OpenJournalAsync(Journal journal) =>
-        await Shell.Current.GoToAsync($"journal/entry?guid={journal.Guid}");
+        await _nav.GoToAsync($"journal/entry?guid={journal.Guid}");
 
     [RelayCommand]
     private async Task GoToSettingsAsync() =>
-        await Shell.Current.GoToAsync("settings");
+        await _nav.GoToAsync("settings");
 
     [RelayCommand]
     private async Task GoToGoalsAsync() =>
-        await Shell.Current.GoToAsync("//goals");
+        await _nav.GoToAsync("//goals");
 
     [RelayCommand]
     private async Task GoToTodosAsync() =>
-        await Shell.Current.GoToAsync("//todos");
+        await _nav.GoToAsync("//todos");
 
     [RelayCommand]
     private async Task GoToJournalAsync() =>
-        await Shell.Current.GoToAsync("//journal");
+        await _nav.GoToAsync("//journal");
 }

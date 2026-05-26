@@ -11,7 +11,8 @@ public partial class TodoListViewModel(
     TodoRepository repo,
     AccountService accountService,
     SyncService syncService,
-    MobileAnalyticsService analytics) : ObservableObject
+    MobileAnalyticsService analytics,
+    INavigationService nav) : ObservableObject
 {
     [ObservableProperty]
     private ObservableCollection<Todo> todos = [];
@@ -64,6 +65,7 @@ public partial class TodoListViewModel(
     [ObservableProperty]
     private bool hasWeekOverWeekMessage;
 
+    private readonly INavigationService _nav = nav;
     private List<Todo> _allTodos = [];
     private string _accountGuid = string.Empty;
 
@@ -213,7 +215,7 @@ public partial class TodoListViewModel(
     [RelayCommand]
     private async Task DeleteAsync(Todo todo)
     {
-        var confirmed = await Shell.Current.DisplayAlert("Delete Todo?", "Remove this todo?", "Delete", "Cancel");
+        var confirmed = await _nav.DisplayAlertAsync("Delete Todo?", "Remove this todo?", "Delete", "Cancel");
         if (!confirmed) return;
         await repo.DeleteAsync(todo.Guid);
         _allTodos.Remove(todo);
@@ -282,5 +284,5 @@ public partial class TodoListViewModel(
 
     [RelayCommand]
     private async Task OpenAsync(Todo todo) =>
-        await Shell.Current.GoToAsync($"todos/entry?guid={todo.Guid}");
+        await _nav.GoToAsync($"todos/entry?guid={todo.Guid}");
 }
