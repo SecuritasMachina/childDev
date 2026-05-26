@@ -2,6 +2,7 @@ using LevelUp.Data;
 using LevelUp.Services;
 using LevelUp.ViewModels;
 using LevelUp.Views;
+using Plugin.LocalNotification;
 using SQLite;
 
 namespace LevelUp;
@@ -13,6 +14,7 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
+            .UseLocalNotification()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

@@ -30,4 +30,11 @@ public class MauiNavigationService : INavigationService
 #else
         Task.FromResult<string?>(null);
 #endif
+
+    public Task<string?> DisplayActionSheetAsync(string title, string cancel, string? destruction, params string[] buttons) =>
+#if ANDROID || IOS || MACCATALYST || WINDOWS
+        Shell.Current.DisplayActionSheet(title, cancel, destruction, buttons)!;
+#else
+        Task.FromResult<string?>(null);
+#endif
 }

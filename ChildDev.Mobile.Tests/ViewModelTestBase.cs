@@ -58,6 +58,8 @@ public class FakeNavigationService : INavigationService
 
     public bool AlertConfirmResult { get; set; } = true;
     public string? PromptResult { get; set; } = "Test note";
+    public List<string> ActionSheetTitles { get; } = [];
+    public string? ActionSheetResult { get; set; }
 
     public Task GoToAsync(string route)
     {
@@ -81,6 +83,12 @@ public class FakeNavigationService : INavigationService
     {
         PromptTitles.Add(title);
         return Task.FromResult(PromptResult);
+    }
+
+    public Task<string?> DisplayActionSheetAsync(string title, string cancel, string? destruction, params string[] buttons)
+    {
+        ActionSheetTitles.Add(title);
+        return Task.FromResult(ActionSheetResult);
     }
 }
 
