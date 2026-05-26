@@ -1398,6 +1398,473 @@ git commit -m "feat: add OpenRemindersCommand to DashboardViewModel"
 
 ---
 
+---
+
+## Task 9: Web — Reminder entity, AppDbContext, WebReminderService
+
+**Files:**
+- Create: `ChildDev.Api/Models/Entities/Reminder.cs`
+- Modify: `ChildDev.Api/Data/AppDbContext.cs`
+- Create: `ChildDev.Api/Services/WebReminderService.cs`
+- Modify: `ChildDev.Api/Program.cs`
+
+The web app uses EF Core + MariaDB. `EnsureCreated()` manages schema (no migrations).
+
+- [ ] **Step 1: Create Reminder entity**
+
+Create `ChildDev.Api/Models/Entities/Reminder.cs`:
+
+```csharp
+using System.ComponentModel.DataAnnotations;
+
+namespace ChildDev.Api.Models.Entities;
+
+public class Reminder
+{
+    [Key]
+    public int Id { get; set; }
+    [Required, MaxLength(36)]
+    public string AccountGuid { get; set; } = string.Empty;
+    [MaxLength(20)]
+    public string Topic { get; set; } = "General"; // "Goal", "Journal", "Todo", "General"
+    [MaxLength(36)]
+    public string? EntityGuid { get; set; }
+    [Required, MaxLength(200)]
+    public string Title { get; set; } = string.Empty;
+    [MaxLength(200)]
+    public string? EntityLabel { get; set; }
+    public DateTime FireAt { get; set; }
+    public bool IsDismissed { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+```
+
+- [ ] **Step 2: Add DbSet to AppDbContext**
+
+In `ChildDev.Api/Data/AppDbContext.cs`, add after the existing `DbSet` properties:
+
+```csharp
+    public DbSet<Reminder> Reminders => Set<Reminder>();
+```
+
+Also add an index in `OnModelCreating`:
+
+```csharp
+        modelBuilder.Entity<Reminder>()
+            .HasIndex(r => new { r.AccountGuid, r.IsDismissed });
+```
+
+- [ ] **Step 3: Create WebReminderService**
+
+Create `ChildDev.Api/Services/WebReminderService.cs`:
+
+```csharp
+using ChildDev.Api.Data;
+using ChildDev.Api.Models.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace ChildDev.Api.Services;
+
+public class WebReminderService(IDbContextFactory<AppDbContext> dbFactory)
+{
+    public async Task<List<Reminder>> GetPendingAsync(string accountGuid)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync();
+        return await db.Reminders
+            .Where(r => r.AccountGuid == accountGuid && !r.IsDismissed)
+            .OrderBy(r => r.FireAt)
+            .ToListAsync();
+    }
+
+    public async Task<List<Reminder>> GetDueAsync(string accountGuid)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync();
+        var now = DateTime.UtcNow;
+        return await db.Reminders
+            .Where(r => r.AccountGuid == accountGuid && !r.IsDismissed && r.FireAt <= now)
+            .OrderBy(r => r.FireAt)
+            .ToListAsync();
+    }
+
+    public async Task<Reminder> CreateAsync(string accountGuid, string title, string topic,
+        string? entityGuid, string? entityLabel, DateTime fireAt)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync();
+        var reminder = new Reminder
+        {
+            AccountGuid = accountGuid,
+            Title = title,
+            Topic = topic,
+            EntityGuid = entityGuid,
+            EntityLabel = entityLabel,
+            FireAt = fireAt
+        };
+        db.Reminders.Add(reminder);
+        await db.SaveChangesAsync();
+        return reminder;
+    }
+
+    public async Task SnoozeAsync(int id, TimeSpan duration)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync();
+        var reminder = await db.Reminders.FindAsync(id);
+        if (reminder is null) return;
+        reminder.FireAt = DateTime.UtcNow.Add(duration);
+        await db.SaveChangesAsync();
+    }
+
+    public async Task DismissAsync(int id)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync();
+        var reminder = await db.Reminders.FindAsync(id);
+        if (reminder is null) return;
+        reminder.IsDismissed = true;
+        await db.SaveChangesAsync();
+    }
+}
+```
+
+- [ ] **Step 4: Register WebReminderService in Program.cs**
+
+In `ChildDev.Api/Program.cs`, find where `WebAnalyticsService` is registered (e.g., `builder.Services.AddScoped<WebAnalyticsService>();`) and add after it:
+
+```csharp
+builder.Services.AddScoped<WebReminderService>();
+```
+
+- [ ] **Step 5: Build to verify**
+
+```bash
+cd /mnt/8TB_HDD_DATA/shared/src/childDev
+dotnet build ChildDev.Api/ChildDev.Api.csproj --nologo -v minimal 2>&1 | tail -10
+```
+
+Expected: `Build succeeded.`
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add ChildDev.Api/Models/Entities/Reminder.cs ChildDev.Api/Data/AppDbContext.cs ChildDev.Api/Services/WebReminderService.cs ChildDev.Api/Program.cs
+git commit -m "feat: add web Reminder entity, AppDbContext DbSet, and WebReminderService"
+```
+
+---
+
+## Task 10: Web — Reminders.razor page with browser notifications and snooze
+
+**Files:**
+- Create: `ChildDev.Api/Components/Pages/Reminders.razor`
+- Modify: `ChildDev.Api/wwwroot/site.js`
+- Modify: `ChildDev.Api/Components/Layout/MainLayout.razor` (add nav link)
+
+This page lists pending reminders, fires browser notifications for due ones, and supports snooze via MudDialog.
+
+- [ ] **Step 1: Add browser notification JS to site.js**
+
+Read `ChildDev.Api/wwwroot/site.js` first, then append these functions at the end:
+
+```javascript
+window.requestNotificationPermission = async function () {
+    if (!('Notification' in window)) return 'denied';
+    if (Notification.permission === 'granted') return 'granted';
+    return await Notification.requestPermission();
+};
+
+window.showBrowserNotification = function (title, body) {
+    if (Notification.permission === 'granted') {
+        new Notification(title, { body: body, icon: '/icon.svg' });
+    }
+};
+```
+
+- [ ] **Step 2: Create Reminders.razor**
+
+Create `ChildDev.Api/Components/Pages/Reminders.razor`:
+
+```razor
+@page "/reminders"
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject NavigationManager Nav
+@inject IHttpContextAccessor HttpContextAccessor
+@inject ISnackbar Snackbar
+@inject WebAnalyticsService Analytics
+@inject WebReminderService ReminderSvc
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<PageTitle>Reminders – LevelUp</PageTitle>
+
+@if (AccountGuid is null)
+{
+    Nav.NavigateTo("/login");
+    return;
+}
+
+<MudText Typo="Typo.h5" Class="mb-4">
+    <MudIcon Icon="@Icons.Material.Filled.NotificationsActive" Class="mr-2" />
+    Reminders
+</MudText>
+
+@* Add new reminder *@
+<MudPaper Elevation="1" Class="pa-4 mb-4" Style="border-radius:12px">
+    <MudText Typo="Typo.subtitle1" Class="mb-2">New Reminder</MudText>
+    <MudGrid>
+        <MudItem xs="12" sm="6">
+            <MudTextField @bind-Value="_newTitle" Label="Title" Placeholder="What do you want to be reminded about?"
+                          Variant="Variant.Outlined" MaxLength="200" />
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudSelect @bind-Value="_newTopic" Label="Topic" Variant="Variant.Outlined">
+                <MudSelectItem Value="@("General")">General</MudSelectItem>
+                <MudSelectItem Value="@("Goal")">Goal</MudSelectItem>
+                <MudSelectItem Value="@("Journal")">Journal</MudSelectItem>
+                <MudSelectItem Value="@("Todo")">Todo</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudSelect @bind-Value="_snoozePreset" Label="Remind me in" Variant="Variant.Outlined">
+                <MudSelectItem Value="@("1h")">1 hour</MudSelectItem>
+                <MudSelectItem Value="@("8h")">8 hours</MudSelectItem>
+                <MudSelectItem Value="@("1d")">1 day</MudSelectItem>
+                <MudSelectItem Value="@("3d")">3 days</MudSelectItem>
+                <MudSelectItem Value="@("custom")">Custom...</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        @if (_snoozePreset == "custom")
+        {
+            <MudItem xs="6" sm="3">
+                <MudNumericField @bind-Value="_customAmount" Label="Amount" Min="1" Max="999" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudSelect @bind-Value="_customUnit" Label="Unit" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@("hours")">Hours</MudSelectItem>
+                    <MudSelectItem Value="@("days")">Days</MudSelectItem>
+                    <MudSelectItem Value="@("weeks")">Weeks</MudSelectItem>
+                    <MudSelectItem Value="@("months")">Months</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+        }
+        <MudItem xs="12">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                       OnClick="AddReminderAsync"
+                       Disabled="@(string.IsNullOrWhiteSpace(_newTitle))">
+                Set Reminder
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@* Pending reminders list *@
+@if (_reminders.Count == 0)
+{
+    <MudText Color="Color.Secondary">No pending reminders.</MudText>
+}
+else
+{
+    <MudText Typo="Typo.subtitle1" Class="mb-2">Pending (@_reminders.Count)</MudText>
+    @foreach (var r in _reminders)
+    {
+        <MudPaper Elevation="1" Class="pa-3 mb-2" Style="border-radius:10px">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+                <MudStack Style="flex:1" Spacing="0">
+                    <MudText Typo="Typo.body1" Style="font-weight:500">@r.Title</MudText>
+                    @if (!string.IsNullOrEmpty(r.EntityLabel))
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@r.EntityLabel</MudText>
+                    }
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        @r.Topic · @r.FireAt.ToLocalTime().ToString("MMM d, h:mm tt")
+                        @if (r.FireAt <= DateTime.UtcNow)
+                        {
+                            <MudChip Size="Size.Small" Color="Color.Warning" Class="ml-1">Due</MudChip>
+                        }
+                    </MudText>
+                </MudStack>
+                <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small">
+                    <MudButton OnClick="() => OpenSnoozeDialog(r)">Snooze</MudButton>
+                    <MudButton Color="Color.Error" OnClick="() => DismissAsync(r)">Dismiss</MudButton>
+                </MudButtonGroup>
+            </MudStack>
+        </MudPaper>
+    }
+}
+
+@* Snooze dialog *@
+<MudDialog @bind-Visible="_snoozeOpen">
+    <TitleContent>Snooze Reminder</TitleContent>
+    <DialogContent>
+        <MudSelect @bind-Value="_snoozeDialogPreset" Label="Snooze for" Variant="Variant.Outlined" Class="mb-2">
+            <MudSelectItem Value="@("1h")">1 hour</MudSelectItem>
+            <MudSelectItem Value="@("8h")">8 hours</MudSelectItem>
+            <MudSelectItem Value="@("1d")">1 day</MudSelectItem>
+            <MudSelectItem Value="@("3d")">3 days</MudSelectItem>
+            <MudSelectItem Value="@("custom")">Custom...</MudSelectItem>
+        </MudSelect>
+        @if (_snoozeDialogPreset == "custom")
+        {
+            <MudStack Row="true" Spacing="2">
+                <MudNumericField @bind-Value="_snoozeCustomAmount" Label="Amount" Min="1" Max="999" Variant="Variant.Outlined" />
+                <MudSelect @bind-Value="_snoozeCustomUnit" Label="Unit" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@("hours")">Hours</MudSelectItem>
+                    <MudSelectItem Value="@("days")">Days</MudSelectItem>
+                    <MudSelectItem Value="@("weeks")">Weeks</MudSelectItem>
+                    <MudSelectItem Value="@("months")">Months</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _snoozeOpen = false">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="ConfirmSnoozeAsync">Snooze</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private string? AccountGuid;
+    private List<Reminder> _reminders = [];
+
+    // New reminder form
+    private string _newTitle = string.Empty;
+    private string _newTopic = "General";
+    private string _snoozePreset = "1h";
+    private int _customAmount = 1;
+    private string _customUnit = "hours";
+
+    // Snooze dialog
+    private bool _snoozeOpen;
+    private Reminder? _snoozeTarget;
+    private string _snoozeDialogPreset = "1h";
+    private int _snoozeCustomAmount = 1;
+    private string _snoozeCustomUnit = "hours";
+
+    private System.Timers.Timer? _dueCheckTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccountGuid = HttpContextAccessor.HttpContext?.Session.GetString("AccountGuid");
+        if (AccountGuid is null) return;
+        await LoadAsync();
+        await Analytics.TrackAsync(AccountGuid, "page_view", "reminders");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        // Request browser notification permission
+        await JS.InvokeAsync<string>("requestNotificationPermission");
+        // Fire browser notifications for any due reminders
+        await FireDueNotificationsAsync();
+        // Check every 60 seconds for new due reminders
+        _dueCheckTimer = new System.Timers.Timer(60_000);
+        _dueCheckTimer.Elapsed += async (_, _) => await InvokeAsync(FireDueNotificationsAsync);
+        _dueCheckTimer.Start();
+    }
+
+    private async Task LoadAsync()
+    {
+        if (AccountGuid is null) return;
+        _reminders = await ReminderSvc.GetPendingAsync(AccountGuid);
+    }
+
+    private async Task FireDueNotificationsAsync()
+    {
+        if (AccountGuid is null) return;
+        var due = await ReminderSvc.GetDueAsync(AccountGuid);
+        foreach (var r in due)
+        {
+            await JS.InvokeVoidAsync("showBrowserNotification", r.Title, r.EntityLabel ?? r.Topic);
+        }
+    }
+
+    private async Task AddReminderAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_newTitle) || AccountGuid is null) return;
+        var duration = ParsePreset(_snoozePreset, _customAmount, _customUnit);
+        var fireAt = DateTime.UtcNow.Add(duration);
+        await ReminderSvc.CreateAsync(AccountGuid, _newTitle.Trim(), _newTopic, null, null, fireAt);
+        _newTitle = string.Empty;
+        Snackbar.Add("Reminder set!", Severity.Success);
+        await LoadAsync();
+        await Analytics.TrackAsync(AccountGuid, "reminder_created", "reminders");
+    }
+
+    private void OpenSnoozeDialog(Reminder r)
+    {
+        _snoozeTarget = r;
+        _snoozeDialogPreset = "1h";
+        _snoozeCustomAmount = 1;
+        _snoozeCustomUnit = "hours";
+        _snoozeOpen = true;
+    }
+
+    private async Task ConfirmSnoozeAsync()
+    {
+        if (_snoozeTarget is null) return;
+        var duration = ParsePreset(_snoozeDialogPreset, _snoozeCustomAmount, _snoozeCustomUnit);
+        await ReminderSvc.SnoozeAsync(_snoozeTarget.Id, duration);
+        _snoozeOpen = false;
+        Snackbar.Add("Snoozed!", Severity.Info);
+        await LoadAsync();
+    }
+
+    private async Task DismissAsync(Reminder r)
+    {
+        await ReminderSvc.DismissAsync(r.Id);
+        _reminders.Remove(r);
+        Snackbar.Add("Reminder dismissed.", Severity.Normal);
+    }
+
+    private static TimeSpan ParsePreset(string preset, int amount, string unit) => preset switch
+    {
+        "1h" => TimeSpan.FromHours(1),
+        "8h" => TimeSpan.FromHours(8),
+        "1d" => TimeSpan.FromDays(1),
+        "3d" => TimeSpan.FromDays(3),
+        "custom" => unit switch
+        {
+            "hours" => TimeSpan.FromHours(amount),
+            "days" => TimeSpan.FromDays(amount),
+            "weeks" => TimeSpan.FromDays(amount * 7),
+            "months" => TimeSpan.FromDays(amount * 30),
+            _ => TimeSpan.FromHours(1)
+        },
+        _ => TimeSpan.FromHours(1)
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        _dueCheckTimer?.Stop();
+        _dueCheckTimer?.Dispose();
+    }
+}
+```
+
+- [ ] **Step 3: Add Reminders nav link in MainLayout.razor**
+
+In `ChildDev.Api/Components/Layout/MainLayout.razor`, find the navigation drawer section where other nav items like Goals, Todos, Journal are listed, and add a Reminders item. Look for a pattern like `<MudNavLink Href="/todos" ...>` and add after the Todos entry:
+
+```razor
+<MudNavLink Href="/reminders" Icon="@Icons.Material.Filled.NotificationsActive" Match="NavLinkMatch.Prefix">Reminders</MudNavLink>
+```
+
+- [ ] **Step 4: Build the API project**
+
+```bash
+cd /mnt/8TB_HDD_DATA/shared/src/childDev
+dotnet build ChildDev.Api/ChildDev.Api.csproj --nologo -v minimal 2>&1 | tail -10
+```
+
+Expected: `Build succeeded.`
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add ChildDev.Api/Components/Pages/Reminders.razor ChildDev.Api/wwwroot/site.js ChildDev.Api/Components/Layout/MainLayout.razor
+git commit -m "feat: add web Reminders page with browser notifications and snooze"
+```
+
+---
+
 ## Self-Review
 
 **Spec coverage:**
