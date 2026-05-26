@@ -97,16 +97,18 @@ public class RemindersViewModelTests : ViewModelTestBase
             FireAt = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds()
         };
         await ReminderSvc.ScheduleAsync(reminder);
-        var originalFireAt = reminder.FireAt;
 
         Nav.ActionSheetResult = "1 hour";
         var vm = BuildVm();
         await vm.LoadCommand.ExecuteAsync(null);
+        var beforeSnooze = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         await vm.SnoozeCommand.ExecuteAsync(vm.Reminders[0]);
 
         var pending = await ReminderSvc.GetPendingAsync(account.Guid);
         Assert.Single(pending);
-        Assert.True(pending[0].FireAt > originalFireAt);
+        var expectedMin = beforeSnooze + (long)TimeSpan.FromHours(1).TotalMilliseconds - 500;
+        Assert.True(pending[0].FireAt >= expectedMin,
+            $"Expected FireAt >= {expectedMin} but got {pending[0].FireAt}");
     }
 
     [Fact]
