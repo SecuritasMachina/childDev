@@ -37,6 +37,9 @@ public static class MauiProgram
         builder.Services.AddSingleton<SyncService>();
         builder.Services.AddSingleton<MobileAnalyticsService>();
         builder.Services.AddSingleton<INavigationService, MauiNavigationService>();
+        builder.Services.AddSingleton<INotificationService, MauiNotificationService>();
+        builder.Services.AddSingleton<ReminderRepository>();
+        builder.Services.AddSingleton<ReminderService>();
         builder.Services.AddHttpClient("childdev");
 
         // ViewModels (transient -- new instance per navigation)
@@ -49,6 +52,7 @@ public static class MauiProgram
         builder.Services.AddTransient<TodoListViewModel>();
         builder.Services.AddTransient<TodoEntryViewModel>();
         builder.Services.AddTransient<SettingsViewModel>();
+        builder.Services.AddTransient<RemindersViewModel>();
 
         // Pages
         builder.Services.AddTransient<SetupPage>();
