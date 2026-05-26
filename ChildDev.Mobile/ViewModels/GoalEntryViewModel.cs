@@ -7,7 +7,9 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace LevelUp.ViewModels;
 
+#if !NO_MAUI
 [QueryProperty(nameof(Guid), "guid")]
+#endif
 public partial class GoalEntryViewModel(
     GoalRepository repo,
     GoalProgressRepository progressRepo,
@@ -250,11 +252,15 @@ public partial class GoalEntryViewModel(
         }
         var summaryText = sb.ToString().TrimEnd();
         analytics.Track("goal_share_progress");
+#if !NO_MAUI
         await Share.RequestAsync(new ShareTextRequest
         {
             Title = $"Progress: {(GoalText.Length > 60 ? GoalText[..60] + "…" : GoalText)}",
             Text = summaryText
         });
+#else
+        await Task.CompletedTask;
+#endif
     }
 
     [RelayCommand]

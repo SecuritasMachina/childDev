@@ -55,6 +55,10 @@
 		<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
 	</ItemGroup>
 
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
+		<DefineConstants>$(DefineConstants);NO_MAUI</DefineConstants>
+	</PropertyGroup>
+
 	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
 		<Compile Remove="**\*.xaml.cs" />
 		<MauiXaml Remove="**\*.xaml" />
@@ -67,7 +71,6 @@
 		<Compile Remove="ViewModels\SetupViewModel.cs" />
 		<Compile Remove="ViewModels\JournalEntryViewModel.cs" />
 		<Compile Remove="ViewModels\JournalListViewModel.cs" />
-		<Compile Remove="ViewModels\GoalEntryViewModel.cs" />
 		<Compile Remove="ViewModels\TodoListViewModel.cs" />
 		<Compile Remove="ViewModels\TodoEntryViewModel.cs" />
 		<Compile Remove="ViewModels\DashboardViewModel.cs" />
