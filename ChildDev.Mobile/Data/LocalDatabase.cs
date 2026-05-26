@@ -22,5 +22,6 @@ public class LocalDatabase
         await _db.CreateTableAsync<Goal>();
         await _db.CreateTableAsync<GoalProgress>();
         await _db.CreateTableAsync<Todo>();
+        await _db.CreateTableAsync<Reminder>();
     }
 }
