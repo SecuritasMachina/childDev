@@ -16,7 +16,7 @@ public class OfflineCapabilityTests : ViewModelTestBase
     public async Task FullOfflineCycle_CreateAndRetrieveGoal()
     {
         var account = await CreateTestAccountAsync();
-        var vm = new GoalEntryViewModel(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav);
+        var vm = new GoalEntryViewModel(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
         vm.GoalText = "Learn piano";
         vm.Category = "Creative";
         vm.NextStepItems = "First lesson this week";
@@ -35,7 +35,7 @@ public class OfflineCapabilityTests : ViewModelTestBase
     public async Task FullOfflineCycle_CreateAndRetrieveJournal()
     {
         var account = await CreateTestAccountAsync();
-        var vm = new JournalEntryViewModel(JournalRepo, AccountService, Analytics, Nav);
+        var vm = new JournalEntryViewModel(JournalRepo, AccountService, Analytics, Nav, ReminderSvc);
         vm.Notes = "Had a great practice session";
         vm.Mood = "Happy";
         vm.Activity = "Music";
@@ -138,11 +138,11 @@ public class OfflineCapabilityTests : ViewModelTestBase
     {
         var account = await CreateTestAccountAsync();
 
-        var goalVm = new GoalEntryViewModel(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav);
+        var goalVm = new GoalEntryViewModel(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
         goalVm.GoalText = "Play guitar";
         await goalVm.SaveCommand.ExecuteAsync(null);
 
-        var journalVm = new JournalEntryViewModel(JournalRepo, AccountService, Analytics, Nav);
+        var journalVm = new JournalEntryViewModel(JournalRepo, AccountService, Analytics, Nav, ReminderSvc);
         journalVm.Notes = "Practiced for 30 minutes";
         await journalVm.SaveCommand.ExecuteAsync(null);
 

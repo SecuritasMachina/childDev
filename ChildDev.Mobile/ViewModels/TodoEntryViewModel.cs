@@ -15,7 +15,8 @@ public partial class TodoEntryViewModel(
     GoalRepository goalRepo,
     AccountService accountService,
     MobileAnalyticsService analytics,
-    INavigationService nav) : ObservableObject
+    INavigationService nav,
+    ReminderService reminderService) : ObservableObject
 {
     [ObservableProperty] private string guid = string.Empty;
     [ObservableProperty] private string title = string.Empty;
@@ -30,6 +31,7 @@ public partial class TodoEntryViewModel(
     [ObservableProperty] private Goal? linkedGoal;
 
     private readonly INavigationService _nav = nav;
+    private readonly ReminderService _reminderService = reminderService;
 
     private bool CanSave() => !string.IsNullOrWhiteSpace(Title);
 
@@ -166,4 +168,32 @@ public partial class TodoEntryViewModel(
         await repo.DeleteAsync(Guid);
         await _nav.GoToAsync("..");
     }
+
+    [RelayCommand]
+    private async Task SetReminderAsync()
+    {
+        if (string.IsNullOrEmpty(Guid)) return;
+        var account = await accountService.GetAccountAsync();
+        if (account is null) return;
+
+        var duration = await SnoozeHelper.PickAsync(_nav);
+        if (duration is null) return;
+
+        var todoTitle = Title;
+        var reminder = new LevelUp.Models.Reminder
+        {
+            AccountFk = account.Guid,
+            Topic = "Todo",
+            EntityGuid = Guid,
+            Title = $"Todo: {(todoTitle?.Length > 40 ? todoTitle[..40] + "…" : todoTitle)}",
+            EntityLabel = todoTitle,
+            FireAt = DateTimeOffset.UtcNow.Add(duration.Value).ToUnixTimeMilliseconds()
+        };
+        await _reminderService.ScheduleAsync(reminder);
+        await _nav.AlertAsync("Reminder Set", $"You'll be reminded in {FormatDuration(duration.Value)}.", "OK");
+    }
+
+    private static string FormatDuration(TimeSpan d) => d.TotalDays >= 1
+        ? $"{(int)d.TotalDays} day{((int)d.TotalDays == 1 ? "" : "s")}"
+        : $"{(int)d.TotalHours} hour{((int)d.TotalHours == 1 ? "" : "s")}";
 }

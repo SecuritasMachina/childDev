@@ -10,7 +10,7 @@ public class JournalViewModelTests : ViewModelTestBase
         new(JournalRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
 
     private JournalEntryViewModel BuildEntryVm() =>
-        new(JournalRepo, AccountService, Analytics, Nav);
+        new(JournalRepo, AccountService, Analytics, Nav, ReminderSvc);
 
     [Fact]
     public async Task JournalList_Load_PopulatesJournals()

@@ -7,7 +7,7 @@ namespace LevelUp.Tests;
 public class GoalEntryViewModelTests : ViewModelTestBase
 {
     private GoalEntryViewModel BuildVm() =>
-        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav);
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
 
     [Fact]
     public void CanSave_EmptyGoalText_ReturnsFalse()

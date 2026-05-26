@@ -10,7 +10,7 @@ public class TodoViewModelTests : ViewModelTestBase
         new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
 
     private TodoEntryViewModel BuildEntryVm() =>
-        new(TodoRepo, GoalRepo, AccountService, Analytics, Nav);
+        new(TodoRepo, GoalRepo, AccountService, Analytics, Nav, ReminderSvc);
 
     [Fact]
     public async Task TodoList_Load_PopulatesPendingTodos()
