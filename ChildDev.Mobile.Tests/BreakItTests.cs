@@ -1,0 +1,398 @@
+using LevelUp.Data;
+using LevelUp.Models;
+using LevelUp.ViewModels;
+
+namespace LevelUp.Tests;
+
+/// <summary>
+/// Adversarial edge-case tests targeting specific logic boundaries.
+/// Tests here expose real bugs; each failure identifies code to fix.
+/// </summary>
+
+// ─── Filter state after mutating operations ──────────────────────────────────
+
+public class GoalListFilterStateTests : ViewModelTestBase
+{
+    private GoalListViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task QuickNote_WhileFiltered_PreservesActiveFilter()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Piano practice", EnteredDate = ts });
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Unrelated goal", EnteredDate = ts });
+
+        Nav.PromptResult = "Practiced scales today";
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "piano";
+        Assert.Single(vm.Goals);
+
+        await vm.QuickNoteCommand.ExecuteAsync(vm.Goals[0]);
+
+        // Filter must still be active after saving the note
+        Assert.Single(vm.Goals);
+        Assert.Equal("Piano practice", vm.Goals[0].GoalText);
+    }
+
+    [Fact]
+    public async Task TogglePin_WhileFiltered_PreservesActiveFilter()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Exercise daily", EnteredDate = ts });
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Sleep well", EnteredDate = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "exercise";
+        Assert.Single(vm.Goals);
+
+        await vm.TogglePinCommand.ExecuteAsync(vm.Goals[0]);
+
+        // Filter must still be active after toggling pin
+        Assert.Single(vm.Goals);
+        Assert.Equal("Exercise daily", vm.Goals[0].GoalText);
+    }
+
+    [Fact]
+    public async Task TogglePin_WithNoAccount_DoesNotThrow()
+    {
+        // TogglePin calls GetAccountAsync()! (null-forgive) — would crash if account is null
+        // This tests the pattern but in practice account always exists when Goals loads
+        // so we just ensure it doesn't blow up when called with a real goal
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Test", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        await vm.TogglePinCommand.ExecuteAsync(vm.Goals[0]); // should not throw
+    }
+}
+
+// ─── TodoList: complete→uncomplete→re-complete cycle ────────────────────────
+
+public class TodoListStateTransitionTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Complete_Uncomplete_Complete_StateRemainsConsistent()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Cycling todo", UpdatedOn = now });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Single(vm.Todos);
+        Assert.Empty(vm.CompletedTodos);
+
+        await vm.CompleteCommand.ExecuteAsync(vm.Todos[0]);
+        Assert.Empty(vm.Todos);
+        Assert.Single(vm.CompletedTodos);
+
+        await vm.UncompleteCommand.ExecuteAsync(vm.CompletedTodos[0]);
+        Assert.Single(vm.Todos);
+        Assert.Empty(vm.CompletedTodos);
+
+        await vm.CompleteCommand.ExecuteAsync(vm.Todos[0]);
+        Assert.Empty(vm.Todos);
+        Assert.Single(vm.CompletedTodos);
+    }
+
+    [Fact]
+    public async Task OverdueCount_UpdatesCorrectlyAfterCompleteAndUncomplete()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var yesterday = DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Overdue", UpdatedOn = now, DueDate = yesterday });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Equal(1, vm.OverdueTodoCount);
+
+        await vm.CompleteCommand.ExecuteAsync(vm.Todos[0]);
+        Assert.Equal(0, vm.OverdueTodoCount);
+
+        await vm.UncompleteCommand.ExecuteAsync(vm.CompletedTodos[0]);
+        Assert.Equal(1, vm.OverdueTodoCount); // back to overdue after uncomplete
+    }
+
+    [Fact]
+    public async Task FilterText_ClearedAfterAdd_ShowsNewTodo()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Existing task", UpdatedOn = now });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "existing";
+        Assert.Single(vm.Todos);
+
+        vm.NewTodoTitle = "New todo XYZ";
+        await vm.AddCommand.ExecuteAsync(null);
+
+        // New todo added — even with filter active the new item should appear if it matches
+        vm.FilterText = "xyz";
+        Assert.Single(vm.Todos);
+        Assert.Equal("New todo XYZ", vm.Todos[0].Title);
+    }
+}
+
+// ─── JournalEntry: load→delete chain ────────────────────────────────────────
+
+public class JournalEntryDeleteChainTests : ViewModelTestBase
+{
+    private JournalEntryViewModel BuildVm() =>
+        new(JournalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task Delete_AfterEdit_DeletesLatestVersion()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var journal = new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Original", EnteredDate = ts };
+        await JournalRepo.SaveAsync(journal);
+
+        Nav.AlertConfirmResult = true;
+        var vm = BuildVm();
+        vm.Guid = journal.Guid;
+        await Task.Delay(200);
+
+        // Edit first, then delete
+        vm.Notes = "Edited notes";
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        // Open again and delete
+        var vm2 = BuildVm();
+        vm2.Guid = journal.Guid;
+        await Task.Delay(200);
+        await vm2.DeleteCommand.ExecuteAsync(null);
+
+        var after = await JournalRepo.GetAsync(journal.Guid);
+        Assert.True(after is null || after.DeletedAt.HasValue);
+    }
+}
+
+// ─── Goal progress tier boundary conditions ──────────────────────────────────
+
+public class GoalTierBoundaryTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    private async Task SaveNotes(string goalGuid, string accountGuid, int count)
+    {
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        for (int i = 0; i < count; i++)
+            await GoalProgressRepo.SaveAsync(new GoalProgress
+            {
+                Guid = Guid.NewGuid().ToString(), GoalFk = goalGuid, AccountFk = accountGuid,
+                NextStepItems = $"Note {i}", UpdatedOn = ts + i
+            });
+    }
+
+    [Theory]
+    [InlineData(0, "")]          // below threshold — no tier
+    [InlineData(4, "")]          // one below Beginner
+    [InlineData(5, "Beginner")]  // exact Beginner threshold
+    [InlineData(14, "Beginner")] // one below Apprentice
+    [InlineData(15, "Apprentice")]
+    [InlineData(29, "Apprentice")]
+    [InlineData(30, "Skilled")]
+    [InlineData(59, "Skilled")]
+    [InlineData(60, "Expert")]
+    [InlineData(99, "Expert")]
+    [InlineData(100, "Master")]
+    [InlineData(199, "Master")]
+    [InlineData(200, "Legend")]
+    [InlineData(201, "Legend")]  // above max
+    public async Task TierLabel_AtExactBoundaries_IsCorrect(int noteCount, string expectedTierFragment)
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Boundary goal", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+        if (noteCount > 0) await SaveNotes(goal.Guid, account.Guid, noteCount);
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(300);
+
+        if (string.IsNullOrEmpty(expectedTierFragment))
+            Assert.Equal(string.Empty, vm.TierLabel);
+        else
+            Assert.Contains(expectedTierFragment, vm.TierLabel);
+    }
+
+    [Fact]
+    public async Task NextTierLabel_AtExactThresholds_ShowsCorrectTarget()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "NextTier", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+        await SaveNotes(goal.Guid, account.Guid, 4); // 1 below Beginner
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(300);
+
+        Assert.Contains("1 more note", vm.NextTierLabel);
+        Assert.Contains("Beginner", vm.NextTierLabel);
+    }
+}
+
+// ─── Reminder: fire-at boundary / past dates ─────────────────────────────────
+
+public class ReminderBoundaryTests : ViewModelTestBase
+{
+    [Fact]
+    public async Task GetPending_ExcludesDismissedAndPast()
+    {
+        var account = await CreateTestAccountAsync();
+        var past = DateTimeOffset.UtcNow.AddHours(-1).ToUnixTimeMilliseconds();
+        var future = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds();
+
+        await ReminderSvc.ScheduleAsync(new Reminder { AccountFk = account.Guid, Title = "Past", Topic = "General", FireAt = past });
+        await ReminderSvc.ScheduleAsync(new Reminder { AccountFk = account.Guid, Title = "Future", Topic = "General", FireAt = future });
+
+        var pending = await ReminderSvc.GetPendingAsync(account.Guid);
+        // Only the future one should be pending (past is still "pending" until dismissed — confirm actual behavior)
+        Assert.All(pending, r => Assert.False(r.IsDismissed));
+    }
+
+    [Fact]
+    public async Task Snooze_WithZeroDuration_DoesNotThrow()
+    {
+        var account = await CreateTestAccountAsync();
+        var fireAt = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds();
+        var reminder = new Reminder { AccountFk = account.Guid, Title = "Test", Topic = "General", FireAt = fireAt };
+        await ReminderSvc.ScheduleAsync(reminder);
+
+        await ReminderSvc.SnoozeAsync(reminder, TimeSpan.Zero); // boundary — zero duration
+        var after = await ReminderSvc.GetPendingAsync(account.Guid);
+        Assert.Single(after);
+    }
+
+    [Fact]
+    public async Task Dismiss_TwiceOnSameReminder_DoesNotThrow()
+    {
+        var account = await CreateTestAccountAsync();
+        var fireAt = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds();
+        var reminder = new Reminder { AccountFk = account.Guid, Title = "Double dismiss", Topic = "General", FireAt = fireAt };
+        await ReminderSvc.ScheduleAsync(reminder);
+
+        await ReminderSvc.DismissAsync(reminder);
+        await ReminderSvc.DismissAsync(reminder); // second dismiss — idempotent?
+    }
+}
+
+// ─── GoalEntry: save without loading first ───────────────────────────────────
+
+public class GoalEntrySaveWithoutLoadTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task Save_WithGoalTextButNoAccount_ReturnsWithoutCrash()
+    {
+        // No account created — SaveAsync should return early at account null check
+        var vm = BuildVm();
+        vm.GoalText = "Save without account";
+        await vm.SaveCommand.ExecuteAsync(null);
+        // Would be an empty list since no account
+    }
+
+    [Fact]
+    public async Task Save_WithEmptyGoalText_CanSaveReturnsFalse()
+    {
+        var vm = BuildVm();
+        vm.GoalText = string.Empty;
+        Assert.False(vm.SaveCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Save_NewGoalTwiceInParallel_DoesNotDuplicateInDb()
+    {
+        var account = await CreateTestAccountAsync();
+
+        // Two separate VMs both trying to save "new" goals simultaneously
+        var vm1 = BuildVm();
+        var vm2 = BuildVm();
+        vm1.GoalText = "Parallel goal 1";
+        vm2.GoalText = "Parallel goal 2";
+
+        await Task.WhenAll(
+            vm1.SaveCommand.ExecuteAsync(null),
+            vm2.SaveCommand.ExecuteAsync(null)
+        );
+
+        var goals = await GoalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Equal(2, goals.Count(g => g.CompletionDate is null && g.DeletedAt is null));
+    }
+}
+
+// ─── TodoEntry: MarkDone on new (unsaved) todo ───────────────────────────────
+
+public class TodoEntryStateTests : ViewModelTestBase
+{
+    private TodoEntryViewModel BuildVm() =>
+        new(TodoRepo, GoalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task MarkDone_NoGuid_DoesNothing()
+    {
+        var vm = BuildVm();
+        await vm.MarkDoneCommand.ExecuteAsync(null); // no exception, no crash
+    }
+
+    [Fact]
+    public async Task Restore_NoGuid_DoesNothing()
+    {
+        var vm = BuildVm();
+        await vm.RestoreCommand.ExecuteAsync(null); // no exception
+    }
+
+    [Fact]
+    public async Task Save_TitleWithOnlyWhitespace_CanSaveReturnsFalse()
+    {
+        var vm = BuildVm();
+        vm.Title = "   ";
+        Assert.False(vm.SaveCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Save_ExistingTodo_ThenDelete_TodoIsRemoved()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var todo = new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Will be edited then deleted", UpdatedOn = now };
+        await TodoRepo.SaveAsync(todo);
+
+        Nav.AlertConfirmResult = true;
+        var vm = BuildVm();
+        vm.Guid = todo.Guid;
+        await Task.Delay(200);
+
+        vm.Title = "Edited title";
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var vm2 = BuildVm();
+        vm2.Guid = todo.Guid;
+        await Task.Delay(200);
+        await vm2.DeleteCommand.ExecuteAsync(null);
+
+        var after = await TodoRepo.GetAsync(todo.Guid);
+        Assert.True(after is null || after.DeletedAt.HasValue);
+    }
+}

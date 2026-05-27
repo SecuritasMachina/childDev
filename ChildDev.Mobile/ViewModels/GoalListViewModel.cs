@@ -185,7 +185,7 @@ public partial class GoalListViewModel(
         goal.UpdatedOn = ts;
         await repo.SaveAsync(goal);
         _allGoals = await LoadGoalsWithStepsAsync((await accountService.GetAccountAsync())!.Guid);
-        Goals = new ObservableCollection<Goal>(_allGoals);
+        ApplyFilters();
     }
 
     [RelayCommand]
@@ -225,7 +225,7 @@ public partial class GoalListViewModel(
         });
         analytics.Track("goal_quick_note", goal.Category);
         _allGoals = await LoadGoalsWithStepsAsync(account.Guid);
-        Goals = new ObservableCollection<Goal>(_allGoals);
+        ApplyFilters();
         await _nav.AlertAsync("✅ Note Saved!", "Great work keeping your goal moving forward! 🌟", "OK");
     }
 }
