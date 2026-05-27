@@ -6702,3 +6702,125 @@ public class DashboardStaleGoalRecentProgressTests : ViewModelTestBase
         Assert.Equal("Old progress goal", vm.StaleGoalText);
     }
 }
+
+// ─── DashboardViewModel: StreakDisplay from GoalProgress entries ──────────────
+
+public class DashboardStreakDisplayTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_NoProgressNotes_StreakDisplayIsEmpty()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Empty(vm.StreakDisplay);
+    }
+
+    [Fact]
+    public async Task Load_ProgressOn2ConsecutiveDays_ShowsLightningStreakEmoji()
+    {
+        var account = await CreateTestAccountAsync();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Streak goal", EnteredDate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() };
+        await GoalRepo.SaveAsync(goal);
+
+        for (int d = 0; d <= 1; d++)
+        {
+            var ts = DateTimeOffset.UtcNow.AddDays(-d).ToUnixTimeMilliseconds();
+            await GoalProgressRepo.UpsertFromSyncAsync(new GoalProgress
+            {
+                Guid = Guid.NewGuid().ToString(),
+                AccountFk = account.Guid,
+                GoalFk = goal.Guid,
+                NextStepItems = $"Day {d}",
+                UpdatedOn = ts
+            });
+        }
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Contains("⚡", vm.StreakDisplay);
+        Assert.Contains("2-day", vm.StreakDisplay);
+    }
+
+    [Fact]
+    public async Task Load_ProgressOn7ConsecutiveDays_ShowsFireEmoji()
+    {
+        var account = await CreateTestAccountAsync();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Fire goal", EnteredDate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() };
+        await GoalRepo.SaveAsync(goal);
+
+        for (int d = 0; d <= 6; d++)
+        {
+            var ts = DateTimeOffset.UtcNow.AddDays(-d).ToUnixTimeMilliseconds();
+            await GoalProgressRepo.UpsertFromSyncAsync(new GoalProgress
+            {
+                Guid = Guid.NewGuid().ToString(),
+                AccountFk = account.Guid,
+                GoalFk = goal.Guid,
+                NextStepItems = $"Day {d}",
+                UpdatedOn = ts
+            });
+        }
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Contains("🔥", vm.StreakDisplay);
+        Assert.Contains("7-day", vm.StreakDisplay);
+    }
+}
+
+// ─── DashboardViewModel: OverallTierLabel missing branches ───────────────────
+
+public class DashboardTierLabelMissingTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_ZeroProgressNotes_OverallTierLabelIsEmpty()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Equal(string.Empty, vm.OverallTierLabel);
+    }
+
+    [Fact]
+    public async Task Load_With4ProgressNotes_OverallTierLabelIsEmpty()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Almost beginner", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+        for (int i = 0; i < 4; i++)
+            await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), GoalFk = goal.Guid, AccountFk = account.Guid, NextStepItems = $"Note {i}", UpdatedOn = ts + i });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Equal(string.Empty, vm.OverallTierLabel);
+    }
+
+    [Fact]
+    public async Task Load_WithSkilled50ProgressNotes_SetsSkilledLabel()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Skilled goal", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+        for (int i = 0; i < 50; i++)
+            await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), GoalFk = goal.Guid, AccountFk = account.Guid, NextStepItems = $"Note {i}", UpdatedOn = ts + i });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Contains("Skilled", vm.OverallTierLabel);
+    }
+}
