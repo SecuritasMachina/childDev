@@ -4132,3 +4132,114 @@ public class TodoListWeekOverWeekTests : ViewModelTestBase
         Assert.Contains("💪", vm.WeekCompletedMessage);
     }
 }
+
+// ─── GoalListViewModel: search by MeasurableOutcome and LatestNextStepItems ──
+
+public class GoalListSearchFieldTests : ViewModelTestBase
+{
+    private GoalListViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task FilterText_MatchesMeasurableOutcome_ShowsGoal()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalText = "Fitness goal", MeasurableOutcome = "Run 5k in 30 minutes",
+            EnteredDate = ts, UpdatedOn = ts
+        });
+        await GoalRepo.SaveAsync(new Goal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalText = "Reading goal", MeasurableOutcome = "10 books per year",
+            EnteredDate = ts, UpdatedOn = ts
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "5k";
+
+        Assert.Single(vm.Goals);
+        Assert.Equal("Fitness goal", vm.Goals[0].GoalText);
+    }
+
+    [Fact]
+    public async Task FilterText_MatchesLatestNextStepItems_ShowsGoal()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goalGuid = Guid.NewGuid().ToString();
+        await GoalRepo.SaveAsync(new Goal
+        {
+            Guid = goalGuid, AccountFk = account.Guid,
+            GoalText = "Music practice", EnteredDate = ts, UpdatedOn = ts
+        });
+        await GoalRepo.SaveAsync(new Goal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalText = "Sports training", EnteredDate = ts, UpdatedOn = ts
+        });
+        // Add a progress note — this becomes LatestNextStepItems
+        await GoalProgressRepo.SaveAsync(new GoalProgress
+        {
+            Guid = Guid.NewGuid().ToString(), GoalFk = goalGuid, AccountFk = account.Guid,
+            NextStepItems = "Practice scales daily", UpdatedOn = ts
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "scales";
+
+        Assert.Single(vm.Goals);
+        Assert.Equal("Music practice", vm.Goals[0].GoalText);
+    }
+
+    [Fact]
+    public async Task FilterText_MatchesGoalTextCaseInsensitive_ShowsGoal()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalText = "Learn Mandarin", EnteredDate = ts, UpdatedOn = ts
+        });
+        await GoalRepo.SaveAsync(new Goal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalText = "Improve Swimming", EnteredDate = ts, UpdatedOn = ts
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "MANDARIN";
+
+        Assert.Single(vm.Goals);
+        Assert.Equal("Learn Mandarin", vm.Goals[0].GoalText);
+    }
+
+    [Fact]
+    public async Task FilterText_WithCategoryFilter_BothFiltersApplied()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        // Academic goals with "math" in GoalText
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Math homework", Category = "Academic", EnteredDate = ts, UpdatedOn = ts });
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Math test", Category = "Academic", EnteredDate = ts, UpdatedOn = ts });
+        // Health goal also with "math" — should be excluded by category filter
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Math in my head exercise", Category = "Health", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.CategoryFilter = "Academic";
+        vm.FilterText = "math";
+
+        // All 3 match "math" but only 2 are Academic
+        Assert.Equal(2, vm.Goals.Count);
+        Assert.All(vm.Goals, g => Assert.Equal("Academic", g.Category));
+        Assert.Contains("matching", vm.EntryCountDisplay);
+    }
+}
