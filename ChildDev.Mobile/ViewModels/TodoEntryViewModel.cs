@@ -140,7 +140,8 @@ public partial class TodoEntryViewModel(
 
         var t = Title.Trim();
         todo.Title = t.Length > 500 ? t[..500] : t;
-        todo.Notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim();
+        var notesTrimmed = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim();
+        todo.Notes = notesTrimmed is { Length: > 2000 } ? notesTrimmed[..2000] : notesTrimmed;
         todo.DueDate = HasDueDate
             ? new DateTimeOffset(DateTime.SpecifyKind(DueDate, DateTimeKind.Local)).ToUnixTimeMilliseconds()
             : null;

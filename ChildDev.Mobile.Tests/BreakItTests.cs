@@ -4879,3 +4879,42 @@ public class GoalEntryTextFieldLengthTests : ViewModelTestBase
             $"Steps length {goals[0].Steps?.Length} exceeds 2000-char API limit");
     }
 }
+
+// ─── TodoEntryViewModel: Notes length cap (API 2000-char limit) ──────────────
+
+public class TodoEntryNotesLengthTests : ViewModelTestBase
+{
+    private TodoEntryViewModel BuildVm() =>
+        new(TodoRepo, GoalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task SaveAsync_NotesOver2000Chars_IsTruncatedTo2000()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.Title = "Task";
+        vm.Notes = new string('N', 2100);
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var account = await AccountService.GetAccountAsync();
+        var todos = await TodoRepo.GetPendingAsync(account!.Guid);
+        Assert.Single(todos);
+        Assert.True((todos[0].Notes?.Length ?? 0) <= 2000,
+            $"Notes length {todos[0].Notes?.Length} exceeds 2000-char API limit");
+    }
+
+    [Fact]
+    public async Task SaveAsync_NotesExactly2000Chars_IsNotTruncated()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.Title = "Task";
+        vm.Notes = new string('M', 2000);
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var account = await AccountService.GetAccountAsync();
+        var todos = await TodoRepo.GetPendingAsync(account!.Guid);
+        Assert.Single(todos);
+        Assert.Equal(2000, todos[0].Notes?.Length ?? 0);
+    }
+}
