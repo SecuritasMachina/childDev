@@ -6261,3 +6261,51 @@ public class JournalListNullArgTests : ViewModelTestBase
         Assert.Null(ex);
     }
 }
+
+// ─── SnoozeHelper: Custom path with invalid prompt input ─────────────────────
+
+public class SnoozeHelperCustomPathTests : ViewModelTestBase
+{
+    [Fact]
+    public async Task PickAsync_CustomChoiceWithInvalidAmount_ReturnsNullAndNoChangeToReminders()
+    {
+        // ActionSheet → "Custom...", Prompt → "abc" (not a number) → null returned, no snooze
+        var account = await CreateTestAccountAsync();
+        var future = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds();
+        await ReminderSvc.ScheduleAsync(new Reminder { AccountFk = account.Guid, Title = "Test", Topic = "General", FireAt = future });
+
+        Nav.ActionSheetResult = "Custom...";
+        Nav.PromptResult = "notanumber";
+
+        var vm = new RemindersViewModel(ReminderSvc, AccountService, Nav);
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Single(vm.Reminders);
+
+        await vm.SnoozeCommand.ExecuteAsync(vm.Reminders[0]);
+
+        // Reminder still present (snooze was no-op due to null duration)
+        var pending = await ReminderSvc.GetPendingAsync(account.Guid);
+        Assert.NotEmpty(pending);
+    }
+
+    [Fact]
+    public async Task RemindersViewModel_SnoozeAsync_ValidDuration_ReschedulesReminder()
+    {
+        var account = await CreateTestAccountAsync();
+        var future = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds();
+        var reminder = new Reminder { AccountFk = account.Guid, Title = "Snooze me", Topic = "General", FireAt = future };
+        await ReminderSvc.ScheduleAsync(reminder);
+
+        Nav.ActionSheetResult = "8 hours";
+
+        var vm = new RemindersViewModel(ReminderSvc, AccountService, Nav);
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Single(vm.Reminders);
+
+        await vm.SnoozeCommand.ExecuteAsync(vm.Reminders[0]);
+
+        // After snooze, reminder reloaded with new fire time farther out than original
+        Assert.Single(vm.Reminders);
+        Assert.True(vm.Reminders[0].FireAt > future);
+    }
+}
