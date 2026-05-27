@@ -1823,3 +1823,71 @@ public class JournalListStreak14Tests : ViewModelTestBase
         Assert.Empty(vm.StreakDisplay);
     }
 }
+
+public class GoalListDeleteStateTests : ViewModelTestBase
+{
+    private GoalListViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Delete_LastGoal_HasGoalsBecomesFalse()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Only goal", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.True(vm.HasGoals);
+        Assert.Single(vm.Goals);
+
+        Nav.AlertConfirmResult = true;
+        await vm.DeleteCommand.ExecuteAsync(vm.Goals[0]);
+
+        Assert.False(vm.HasGoals);
+    }
+
+    [Fact]
+    public async Task Delete_GoalWithTextFilterActive_EntryCountDisplayShowsFilteredCount()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Piano practice", EnteredDate = ts, UpdatedOn = ts });
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Piano recital", EnteredDate = ts, UpdatedOn = ts });
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Sleep well", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "Piano";
+        Assert.Equal(2, vm.Goals.Count);
+
+        Nav.AlertConfirmResult = true;
+        await vm.DeleteCommand.ExecuteAsync(vm.Goals[0]);
+
+        // After deleting one of the two filtered goals, should show "1 goal matching"
+        Assert.Contains("matching", vm.EntryCountDisplay);
+        Assert.StartsWith("1", vm.EntryCountDisplay.Trim());
+    }
+
+    [Fact]
+    public async Task Delete_GoalWithCategoryFilter_EntryCountDisplayShowsFilteredCount()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Math goal", Category = "Academic", EnteredDate = ts, UpdatedOn = ts });
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Another math", Category = "Academic", EnteredDate = ts, UpdatedOn = ts });
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Run daily", Category = "Health", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.CategoryFilter = "Academic";
+        Assert.Equal(2, vm.Goals.Count);
+
+        Nav.AlertConfirmResult = true;
+        await vm.DeleteCommand.ExecuteAsync(vm.Goals[0]);
+
+        // After deleting one of the two Academic goals, count display should reflect filtered view
+        Assert.Contains("1", vm.EntryCountDisplay);
+        Assert.DoesNotContain("2", vm.EntryCountDisplay);
+    }
+}

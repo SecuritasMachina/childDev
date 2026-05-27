@@ -197,8 +197,7 @@ public partial class GoalListViewModel(
         await repo.DeleteAsync(goal.Guid);
         await progressRepo.DeleteForGoalAsync(goal.Guid);
         _allGoals.Remove(goal);
-        Goals.Remove(goal);
-        UpdateEntryCountDisplay();
+        ApplyFilters();
     }
 
     [RelayCommand]
