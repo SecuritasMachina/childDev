@@ -532,6 +532,60 @@ public class SyncServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_ServerReturnsGoalWithSteps_StepsPersistedLocally()
+    {
+        // Regression: GoalSyncDto previously lacked Steps field, silently dropping it
+        await _accountService.CreateAccountAsync("user12b", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+        const string expectedSteps = "1. Find a teacher\n2. Practice 30 min daily";
+
+        var serverGoal = new GoalSyncDto(
+            System.Guid.NewGuid().ToString(), account.Guid, "Learn piano",
+            null, null, 1000, null, null, 1000, null,
+            Steps: expectedSteps);
+
+        var handler = new FakeGoalSyncHandler(serverGoal);
+        var service = BuildSyncService(handler);
+        await service.RunAsync(account);
+
+        var goals = await _goalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Single(goals);
+        Assert.Equal(expectedSteps, goals[0].Steps);
+    }
+
+    [Fact]
+    public async Task RunAsync_LocalGoalWithSteps_StepsIncludedInUploadRequest()
+    {
+        // Regression: GoalSyncDto previously lacked Steps field so local Steps were never uploaded
+        await _accountService.CreateAccountAsync("user12c", "1234");
+        var account = await _accountService.GetAccountAsync();
+        account!.ServerUrl = "http://fake-server";
+        account.ServerJwt = "fake-jwt";
+        const string expectedSteps = "Step A\nStep B\nStep C";
+
+        var goal = new Goal
+        {
+            Guid = System.Guid.NewGuid().ToString(),
+            AccountFk = account.Guid,
+            GoalText = "Master coding",
+            Steps = expectedSteps,
+            EnteredDate = 1000,
+            UpdatedOn = 1000
+        };
+        await _goalRepo.SaveAsync(goal);
+
+        GoalSyncDto? captured = null;
+        var handler = new CapturingGoalSyncHandler(dto => captured = dto);
+        var service = BuildSyncService(handler);
+        await service.RunAsync(account);
+
+        Assert.NotNull(captured);
+        Assert.Equal(expectedSteps, captured!.Steps);
+    }
+
+    [Fact]
     public async Task RunAsync_ServerReturnsTodo_UpsertsLocally()
     {
         await _accountService.CreateAccountAsync("user13", "1234");
@@ -2677,5 +2731,29 @@ public class EntitySync403Handler : HttpMessageHandler
                 Content = JsonContent.Create(new { status = "ok" })
             });
         return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Forbidden));
+    }
+}
+
+// Captures the first GoalSyncDto sent to the server and returns an empty delta
+public class CapturingGoalSyncHandler(Action<GoalSyncDto> capture) : HttpMessageHandler
+{
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        if (request.RequestUri!.PathAndQuery.Contains("sync/goal") &&
+            !request.RequestUri.PathAndQuery.Contains("goal-progress"))
+        {
+            var req = await request.Content!.ReadFromJsonAsync<SyncRequestDto<GoalSyncDto>>(cancellationToken: cancellationToken);
+            if (req?.Records is { Count: > 0 })
+                capture(req.Records[0]);
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new SyncResponseDto<GoalSyncDto>([]))
+            };
+        }
+        return new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new { Records = Array.Empty<object>() })
+        };
     }
 }
