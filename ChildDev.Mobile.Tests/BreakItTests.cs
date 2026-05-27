@@ -4981,6 +4981,42 @@ public class GoalListNeedsAttentionCountTests : ViewModelTestBase
     }
 }
 
+// ─── GoalListViewModel: NeedsAttention excludes completed goals ───────────────
+
+public class GoalListNeedsAttentionExcludesCompletedTests : ViewModelTestBase
+{
+    private GoalListViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task NeedsAttention_CompletedGoalWithNoProgress_ExcludesFromResults()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        // A completed goal with no progress — should NOT appear in NeedsAttention
+        var completedGoal = new Goal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalText = "Completed goal", EnteredDate = ts, UpdatedOn = ts, CompletionDate = ts
+        };
+        // An active goal with no progress — SHOULD appear
+        var activeGoal = new Goal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalText = "Active stale goal", EnteredDate = ts, UpdatedOn = ts
+        };
+        await GoalRepo.SaveAsync(completedGoal);
+        await GoalRepo.SaveAsync(activeGoal);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.CategoryFilter = "NeedsAttention";
+
+        Assert.Single(vm.Goals);
+        Assert.Equal("Active stale goal", vm.Goals[0].GoalText);
+    }
+}
+
 // ─── JournalListViewModel: base state (no journals) EmptyMessage ──────────────
 
 public class JournalListBaseStateTests : ViewModelTestBase
