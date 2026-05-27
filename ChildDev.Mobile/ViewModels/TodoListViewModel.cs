@@ -73,8 +73,11 @@ public partial class TodoListViewModel(
 
     partial void OnNewTodoTitleChanged(string value) => AddCommand.NotifyCanExecuteChanged();
 
-    partial void OnFilterTextChanged(string value)
+    partial void OnFilterTextChanged(string value) => ApplyFilter();
+
+    private void ApplyFilter()
     {
+        var value = FilterText;
         if (string.IsNullOrWhiteSpace(value))
         {
             Todos = new ObservableCollection<Todo>(_allTodos);
@@ -207,8 +210,7 @@ public partial class TodoListViewModel(
         if (CompletedTodoCount == 0) ShowCompletedTodos = false;
         var pending = await repo.GetPendingAsync(_accountGuid);
         _allTodos = pending;
-        Todos = new ObservableCollection<Todo>(pending);
-        UpdateOverdueCount(_allTodos);
+        ApplyFilter();
     }
 
     [RelayCommand]
@@ -239,8 +241,7 @@ public partial class TodoListViewModel(
         analytics.Track("todo_snooze_overdue");
         var items = await repo.GetPendingAsync(_accountGuid);
         _allTodos = items;
-        Todos = new ObservableCollection<Todo>(items);
-        UpdateOverdueCount(_allTodos);
+        ApplyFilter();
     }
 
     private void UpdateWeekCompletedMessage(IList<Todo> completed)

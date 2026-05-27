@@ -662,6 +662,62 @@ public class JournalEntryBranchTests : ViewModelTestBase
     }
 }
 
+// ─── TodoList: filter bypass after Uncomplete, SnoozeOverdue ─────────────────
+
+public class TodoListFilterBypassTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Uncomplete_WhileFiltered_PreservesActiveFilter()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Exercise todo", UpdatedOn = now });
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Unrelated task", UpdatedOn = now });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        // Complete the exercise todo
+        await vm.CompleteCommand.ExecuteAsync(vm.Todos.First(t => t.Title == "Exercise todo"));
+
+        // Set filter then uncomplete
+        vm.FilterText = "exercise";
+        Assert.Empty(vm.Todos); // completed, not in pending filtered view
+
+        await vm.UncompleteCommand.ExecuteAsync(vm.CompletedTodos[0]);
+
+        // Filter must still be active — only exercise todo should show
+        Assert.Equal("exercise", vm.FilterText);
+        Assert.Single(vm.Todos);
+        Assert.Equal("Exercise todo", vm.Todos[0].Title);
+    }
+
+    [Fact]
+    public async Task SnoozeOverdue_WhileFiltered_PreservesActiveFilter()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var yesterday = DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Overdue exercise", UpdatedOn = now, DueDate = yesterday });
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Future task", UpdatedOn = now });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "exercise";
+        Assert.Single(vm.Todos);
+
+        await vm.SnoozeOverdueCommand.ExecuteAsync(null);
+
+        // Filter must still be active after snooze
+        Assert.Equal("exercise", vm.FilterText);
+        Assert.Single(vm.Todos);
+        Assert.Equal("Overdue exercise", vm.Todos[0].Title);
+    }
+}
+
 // ─── GoalList: delete while filtered preserves filter ────────────────────────
 
 public class GoalListDeleteFilterTests : ViewModelTestBase
