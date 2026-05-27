@@ -6913,3 +6913,81 @@ public class JournalEntrySaveWithStaleGuidTests : ViewModelTestBase
         Assert.Equal("Orphaned note", saved!.Notes);
     }
 }
+
+// ─── GoalEntry: SaveAsync null paths for optional date fields ─────────────────
+
+public class GoalEntrySaveNullFieldTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task Save_HasExpirationDateFalse_PersistsNullExpirationDate()
+    {
+        var account = await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.GoalText = "No expiry";
+        vm.HasExpirationDate = false;
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var goals = await GoalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Single(goals);
+        Assert.Null(goals[0].ExpirationDate);
+    }
+
+    [Fact]
+    public async Task Save_HasNextMeetingDateFalse_PersistsNullNextMeetingDate()
+    {
+        var account = await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.GoalText = "No meeting";
+        vm.HasNextMeetingDate = false;
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var goals = await GoalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Single(goals);
+        Assert.Null(goals[0].NextMeetingDate);
+    }
+
+    [Fact]
+    public async Task Save_ProgressPercentZero_PersistsNullProgressPercent()
+    {
+        var account = await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.GoalText = "Zero progress";
+        vm.ProgressPercent = 0;
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var goals = await GoalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Single(goals);
+        Assert.Null(goals[0].ProgressPercent);
+    }
+
+    [Fact]
+    public async Task Save_ProgressPercentAboveZero_PersistsProgressPercent()
+    {
+        var account = await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.GoalText = "Some progress";
+        vm.ProgressPercent = 40;
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var goals = await GoalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Single(goals);
+        Assert.Equal(40, goals[0].ProgressPercent);
+    }
+
+    [Fact]
+    public async Task Save_IsPinnedTrue_PersistedCorrectly()
+    {
+        var account = await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.GoalText = "Pinned new goal";
+        vm.IsPinned = true;
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var goals = await GoalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Single(goals);
+        Assert.True(goals[0].IsPinned);
+    }
+}
