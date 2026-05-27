@@ -744,3 +744,257 @@ public class TodoEntryDueDateTests : ViewModelTestBase
         Assert.NotNull(todos[0].DueDate);
     }
 }
+
+// ─── GoalList NeedsAttention: boundary and combined filters ──────────────────
+
+public class NeedsAttentionBoundaryTests : ViewModelTestBase
+{
+    private GoalListViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task NeedsAttention_GoalUpdatedExactlyAt7DayThreshold_IsNotIncluded()
+    {
+        // Boundary: < staleThresholdMs (7 days) — goal updated exactly 7 days ago is NOT stale
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Boundary goal", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+        var staleThresholdMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
+        // Save progress at exactly the threshold (not stale — must be strictly less than)
+        await GoalProgressRepo.SaveAsync(new GoalProgress
+        {
+            Guid = Guid.NewGuid().ToString(), GoalFk = goal.Guid, AccountFk = account.Guid,
+            NextStepItems = "boundary note", UpdatedOn = staleThresholdMs
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.SetCategoryFilterCommand.Execute("NeedsAttention");
+
+        // Exactly at threshold is not stale (strict <), so should not appear
+        Assert.Empty(vm.Goals);
+    }
+
+    [Fact]
+    public async Task NeedsAttention_CompletedGoal_IsExcluded()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Completed goal", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+        // Complete the goal
+        await GoalRepo.CompleteAsync(goal.Guid);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.SetCategoryFilterCommand.Execute("NeedsAttention");
+
+        // Completed goals must never appear in NeedsAttention
+        Assert.Empty(vm.Goals);
+    }
+
+    [Fact]
+    public async Task NeedsAttention_AndTextFilter_BothApplied()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var staleGoal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Piano stale", EnteredDate = ts };
+        var freshGoal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Piano fresh", EnteredDate = ts };
+        await GoalRepo.SaveAsync(staleGoal);
+        await GoalRepo.SaveAsync(freshGoal);
+        // Give fresh goal recent progress
+        await GoalProgressRepo.SaveAsync(new GoalProgress
+        {
+            Guid = Guid.NewGuid().ToString(), GoalFk = freshGoal.Guid, AccountFk = account.Guid,
+            NextStepItems = "recent work", UpdatedOn = ts
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.SetCategoryFilterCommand.Execute("NeedsAttention");
+        vm.FilterText = "piano";
+
+        // Only the stale piano goal matches both filters
+        Assert.Single(vm.Goals);
+        Assert.Equal("Piano stale", vm.Goals[0].GoalText);
+    }
+}
+
+// ─── GoalEntry: reopen after complete, EnteredDate display ───────────────────
+
+public class GoalEntryReopenTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task MarkComplete_ThenReopen_IsCompletedResets()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Reopen me", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+        Assert.False(vm.IsCompleted);
+
+        await GoalRepo.CompleteAsync(goal.Guid);
+        await vm.ReopenCommand.ExecuteAsync(null);
+
+        Assert.False(vm.IsCompleted);
+    }
+
+    [Fact]
+    public async Task Load_EnteredDateDisplay_IsFormattedCorrectly()
+    {
+        var account = await CreateTestAccountAsync();
+        var specificDate = new DateTimeOffset(2025, 6, 15, 0, 0, 0, TimeSpan.Zero).ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Dated goal", EnteredDate = specificDate };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        Assert.False(string.IsNullOrEmpty(vm.EnteredDateDisplay));
+        Assert.Contains("Jun", vm.EnteredDateDisplay, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Save_WithExpirationDate_PersistsCorrectly()
+    {
+        var account = await CreateTestAccountAsync();
+
+        var vm = BuildVm();
+        vm.GoalText = "Expiring goal";
+        vm.HasExpirationDate = true;
+        vm.ExpirationDate = DateTime.Today.AddMonths(6);
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var goals = await GoalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Single(goals);
+        Assert.NotNull(goals[0].ExpirationDate);
+    }
+
+    [Fact]
+    public async Task Save_WithNextMeetingDate_PersistsCorrectly()
+    {
+        var account = await CreateTestAccountAsync();
+
+        var vm = BuildVm();
+        vm.GoalText = "Meeting goal";
+        vm.HasNextMeetingDate = true;
+        vm.NextMeetingDate = DateTime.Today.AddDays(14);
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var goals = await GoalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Single(goals);
+        Assert.NotNull(goals[0].NextMeetingDate);
+    }
+}
+
+// ─── TodoList: snooze overdue with none overdue is no-op ─────────────────────
+
+public class TodoListSnoozeTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task SnoozeOverdue_WhenNoneOverdue_DoesNotThrow()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Not overdue", UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Equal(0, vm.OverdueTodoCount);
+
+        await vm.SnoozeOverdueCommand.ExecuteAsync(null); // should no-op, not throw
+        Assert.Single(vm.Todos); // still there
+    }
+
+    [Fact]
+    public async Task SnoozeOverdue_WithOverdueTodos_SnoozesToTomorrow()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var yesterday = DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Overdue", UpdatedOn = now, DueDate = yesterday });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Equal(1, vm.OverdueTodoCount);
+
+        await vm.SnoozeOverdueCommand.ExecuteAsync(null);
+
+        // After snooze, overdue count should be 0
+        Assert.Equal(0, vm.OverdueTodoCount);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_NullTodo_DoesNotThrow()
+    {
+        var vm = BuildVm();
+        await vm.DeleteCommand.ExecuteAsync(null!);
+    }
+}
+
+// ─── SettingsViewModel: break-it edge cases ──────────────────────────────────
+
+public class SettingsViewModelBreakItTests : ViewModelTestBase
+{
+    private SettingsViewModel BuildVm() =>
+        new(AccountService, new FakeHttpClientFactory(new NoOpHttpHandler()), Analytics);
+
+    [Fact]
+    public async Task Load_WithAccount_PopulatesNickName()
+    {
+        await CreateTestAccountAsync("TestKid", "9999");
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Equal("TestKid", vm.NickName);
+    }
+
+    [Fact]
+    public async Task Load_NoAccount_DoesNotThrow()
+    {
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+    }
+
+    [Fact]
+    public async Task SaveServerUrl_EmptyUrl_ClearsAndSetsMessage()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.ServerUrl = string.Empty;
+        await vm.SaveServerUrlCommand.ExecuteAsync(null);
+        Assert.Contains("cleared", vm.StatusMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task TestConnection_EmptyUrl_SetsMessage()
+    {
+        var vm = BuildVm();
+        vm.ServerUrl = string.Empty;
+        await vm.TestConnectionCommand.ExecuteAsync(null);
+        Assert.Contains("Enter a server URL", vm.StatusMessage);
+    }
+
+    [Fact]
+    public async Task UnlinkFromServer_SetsIsLinkedFalseAndMessage()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        await vm.UnlinkFromServerCommand.ExecuteAsync(null);
+        Assert.False(vm.IsLinkedToServer);
+        Assert.Contains("Unlinked", vm.StatusMessage);
+    }
+}
