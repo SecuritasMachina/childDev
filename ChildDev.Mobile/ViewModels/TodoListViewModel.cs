@@ -82,6 +82,7 @@ public partial class TodoListViewModel(
         {
             Todos = new ObservableCollection<Todo>(_allTodos);
             EmptyMessage = "All done!";
+            UpdateOverdueCount(_allTodos);
         }
         else
         {
@@ -92,8 +93,11 @@ public partial class TodoListViewModel(
             EmptyMessage = $"No matches for \"{value}\"";
             var n = filtered.Count;
             EntryCountDisplay = $"{n} {(n == 1 ? "task" : "tasks")} matching";
+            // Update overdue stats without overwriting the filtered EntryCountDisplay
+            var todayStartMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+            OverdueTodoCount = _allTodos.Count(t => t.DueDate.HasValue && t.DueDate.Value < todayStartMs);
+            HasOverdueTodos = OverdueTodoCount > 0;
         }
-        UpdateOverdueCount(_allTodos);
     }
 
     [RelayCommand]
@@ -172,12 +176,8 @@ public partial class TodoListViewModel(
         await repo.SaveAsync(todo);
         analytics.Track("todo_add");
         _allTodos.Insert(0, todo);
-        if (string.IsNullOrWhiteSpace(FilterText) ||
-            (todo.Title?.Contains(FilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-            (todo.Notes?.Contains(FilterText, StringComparison.OrdinalIgnoreCase) ?? false))
-            Todos.Insert(0, todo);
         NewTodoTitle = string.Empty;
-        UpdateOverdueCount(_allTodos);
+        ApplyFilter();
     }
 
     [RelayCommand]
@@ -187,14 +187,13 @@ public partial class TodoListViewModel(
         await repo.CompleteAsync(todo.Guid);
         analytics.Track("todo_complete");
         _allTodos.Remove(todo);
-        Todos.Remove(todo);
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         todo.CompletedAt = now;
         todo.UpdatedOn = now;
         CompletedTodos.Insert(0, todo);
         CompletedTodoCount = CompletedTodos.Count;
         HasCompletedTodos = true;
-        UpdateOverdueCount(_allTodos);
+        ApplyFilter();
         UpdateWeekCompletedMessage([.. CompletedTodos]);
     }
 
@@ -223,12 +222,11 @@ public partial class TodoListViewModel(
         if (!confirmed) return;
         await repo.DeleteAsync(todo.Guid);
         _allTodos.Remove(todo);
-        Todos.Remove(todo);
         CompletedTodos.Remove(todo);
         CompletedTodoCount = CompletedTodos.Count;
         HasCompletedTodos = CompletedTodoCount > 0;
         if (CompletedTodoCount == 0) ShowCompletedTodos = false;
-        UpdateOverdueCount(_allTodos);
+        ApplyFilter();
     }
 
     [RelayCommand]

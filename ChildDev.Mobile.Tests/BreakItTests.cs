@@ -1607,6 +1607,57 @@ public class SettingsViewModelLinkTests : ViewModelTestBase
 
 // ─── TodoListViewModel: overdue count stays current while filter is active ───
 
+public class TodoListFilterDisplayConsistencyTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Complete_WithActiveFilter_EntryCountDisplayShowsMatchingCount()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Task alpha", UpdatedOn = now });
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Task beta", UpdatedOn = now });
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Unrelated", UpdatedOn = now });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "Task";
+        Assert.Equal(2, vm.Todos.Count);
+        Assert.Contains("2", vm.EntryCountDisplay);
+        Assert.Contains("matching", vm.EntryCountDisplay);
+
+        await vm.CompleteCommand.ExecuteAsync(vm.Todos[0]);
+
+        // After completing one of the two "Task" todos, display should show "1 task matching"
+        Assert.Contains("matching", vm.EntryCountDisplay);
+        Assert.StartsWith("1", vm.EntryCountDisplay.Trim());
+    }
+
+    [Fact]
+    public async Task Add_WithActiveFilter_EntryCountDisplayReflectsFilteredCount()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Task alpha", UpdatedOn = now });
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Unrelated", UpdatedOn = now });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "Task";
+        Assert.Equal(1, vm.Todos.Count);
+
+        // Add a todo that matches the filter
+        vm.NewTodoTitle = "Task gamma";
+        await vm.AddCommand.ExecuteAsync(null);
+
+        // Should now show "2 tasks matching"
+        Assert.Contains("matching", vm.EntryCountDisplay);
+        Assert.Contains("2", vm.EntryCountDisplay);
+    }
+}
+
 public class TodoListOverdueWithFilterTests : ViewModelTestBase
 {
     private TodoListViewModel BuildVm() =>
