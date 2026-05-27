@@ -626,4 +626,38 @@ public class SyncInputValidationTests(ApiFactory factory) : IClassFixture<ApiFac
         var response = await _client.PostAsync("/api/sync/journal", body);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Sync_Goal_CategoryTooLong_Returns422()
+    {
+        var jwt = await RegisterJwtAsync("goalcategorytoolong");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var longCategory = new string('C', 51);
+        var guid = Guid.NewGuid();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - 1000;
+        var body = new StringContent(
+            $"{{\"Records\":[{{\"Guid\":\"{guid}\",\"AccountFk\":\"a1\",\"GoalText\":\"valid\",\"Category\":\"{longCategory}\",\"EnteredDate\":{ts},\"UpdatedOn\":{ts},\"DeletedAt\":null}}],\"LastSyncAt\":0}}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync("/api/sync/goal", body);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sync_Goal_CategoryExactly50Chars_IsAccepted()
+    {
+        var jwt = await RegisterJwtAsync("goalcategoryexact50");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var exactCategory = new string('C', 50);
+        var guid = Guid.NewGuid();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - 1000;
+        var body = new StringContent(
+            $"{{\"Records\":[{{\"Guid\":\"{guid}\",\"AccountFk\":\"a1\",\"GoalText\":\"valid\",\"Category\":\"{exactCategory}\",\"EnteredDate\":{ts},\"UpdatedOn\":{ts},\"DeletedAt\":null}}],\"LastSyncAt\":0}}",
+            Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync("/api/sync/goal", body);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
 }

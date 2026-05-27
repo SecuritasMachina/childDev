@@ -4243,3 +4243,44 @@ public class GoalListSearchFieldTests : ViewModelTestBase
         Assert.Contains("matching", vm.EntryCountDisplay);
     }
 }
+
+// ─── GoalEntryViewModel: Category length cap (API MaxLength(50)) ──────────────
+
+public class GoalEntryCategoryLengthTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task SaveAsync_CategoryExceeds50Chars_IsTruncatedTo50()
+    {
+        var account = await CreateTestAccountAsync();
+        var longCategory = new string('X', 60); // 60 chars — exceeds API MaxLength(50)
+
+        var vm = BuildVm();
+        vm.GoalText = "Category overflow goal";
+        vm.Category = longCategory;
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var goals = await GoalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Single(goals);
+        Assert.True((goals[0].Category?.Length ?? 0) <= 50,
+            $"Category length {goals[0].Category?.Length} exceeds 50-char API limit");
+    }
+
+    [Fact]
+    public async Task SaveAsync_CategoryExactly50Chars_IsNotTruncated()
+    {
+        var account = await CreateTestAccountAsync();
+        var exactCategory = new string('Y', 50);
+
+        var vm = BuildVm();
+        vm.GoalText = "Exact category goal";
+        vm.Category = exactCategory;
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var goals = await GoalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Single(goals);
+        Assert.Equal(50, goals[0].Category?.Length);
+    }
+}

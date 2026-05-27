@@ -157,7 +157,8 @@ public partial class GoalEntryViewModel(
             : await repo.GetAsync(Guid) ?? new Goal { Guid = Guid, AccountFk = account.Guid, EnteredDate = ts };
 
         goal.GoalText = GoalText.Trim();
-        goal.Category = string.IsNullOrWhiteSpace(Category) ? null : Category;
+        var cat = string.IsNullOrWhiteSpace(Category) ? null : Category.Trim();
+        goal.Category = cat is { Length: > 50 } ? cat[..50] : cat;
         goal.ProgressPercent = ProgressPercent > 0 ? ProgressPercent : null;
         goal.IsPinned = IsPinned;
         goal.Steps = string.IsNullOrWhiteSpace(Steps) ? null : Steps.Trim();
