@@ -805,6 +805,23 @@ public class GoalSyncTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Sync_StepsTooLong_Returns422()
+    {
+        // Steps is a late-added field that lacked length validation — this test ensures it was added.
+        var (jwt, accountGuid) = await RegisterAsync("gsync_steps_len");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        var guid = Guid.NewGuid().ToString();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var tooLong = new string('x', 2001);
+
+        var upload = await _client.PostAsJsonAsync("/api/sync/goal",
+            new SyncRequest<GoalDto>([new GoalDto(guid, accountGuid, "Learn piano", null, null, ts, null, null, ts, null,
+                Steps: tooLong)], 0));
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, upload.StatusCode);
+    }
+
+    [Fact]
     public async Task Sync_Steps_ClearedByLWWUpdate()
     {
         // Verify that a later update can clear Steps (set to null) via LWW.
