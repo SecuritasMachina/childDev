@@ -170,12 +170,16 @@ public partial class GoalListViewModel(
         await _nav.GoToAsync("goals/entry");
 
     [RelayCommand]
-    private async Task OpenAsync(Goal goal) =>
+    private async Task OpenAsync(Goal goal)
+    {
+        if (goal is null) return;
         await _nav.GoToAsync($"goals/entry?guid={goal.Guid}");
+    }
 
     [RelayCommand]
     private async Task TogglePinAsync(Goal goal)
     {
+        if (goal is null) return;
         goal.IsPinned = !goal.IsPinned;
         var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         goal.UpdatedOn = ts;
@@ -187,6 +191,7 @@ public partial class GoalListViewModel(
     [RelayCommand]
     private async Task DeleteAsync(Goal goal)
     {
+        if (goal is null) return;
         var confirmed = await _nav.DisplayAlertAsync("Delete Goal?", "Remove this goal and all its progress notes?", "Delete", "Cancel");
         if (!confirmed) return;
         await repo.DeleteAsync(goal.Guid);
@@ -199,6 +204,7 @@ public partial class GoalListViewModel(
     [RelayCommand]
     private async Task QuickNoteAsync(Goal goal)
     {
+        if (goal is null) return;
         var note = await _nav.DisplayPromptAsync(
             "📝 Quick Note",
             $"Add a progress note for:\n\"{(goal.GoalText?.Length > 60 ? goal.GoalText[..60] + "…" : goal.GoalText)}\"",

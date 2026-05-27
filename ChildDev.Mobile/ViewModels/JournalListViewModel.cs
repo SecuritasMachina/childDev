@@ -202,12 +202,16 @@ public partial class JournalListViewModel(
         await _nav.GoToAsync("journal/entry");
 
     [RelayCommand]
-    private async Task OpenAsync(Journal journal) =>
+    private async Task OpenAsync(Journal journal)
+    {
+        if (journal is null) return;
         await _nav.GoToAsync($"journal/entry?guid={journal.Guid}");
+    }
 
     [RelayCommand]
     private async Task DeleteAsync(Journal journal)
     {
+        if (journal is null) return;
         var confirmed = await _nav.DisplayAlertAsync("Delete Entry?", "Remove this journal entry?", "Delete", "Cancel");
         if (!confirmed) return;
         await repo.DeleteAsync(journal.Guid);

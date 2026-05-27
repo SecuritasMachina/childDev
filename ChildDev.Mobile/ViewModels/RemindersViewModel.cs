@@ -34,6 +34,7 @@ public partial class RemindersViewModel(
     [RelayCommand]
     private async Task SnoozeAsync(Reminder reminder)
     {
+        if (reminder is null) return;
         var duration = await SnoozeHelper.PickAsync(nav);
         if (duration is null) return;
         await reminderService.SnoozeAsync(reminder, duration.Value);
@@ -43,6 +44,7 @@ public partial class RemindersViewModel(
     [RelayCommand]
     private async Task DismissAsync(Reminder reminder)
     {
+        if (reminder is null) return;
         await reminderService.DismissAsync(reminder);
         Reminders.Remove(reminder);
         HasReminders = Reminders.Count > 0;

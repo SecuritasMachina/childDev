@@ -181,6 +181,7 @@ public partial class TodoListViewModel(
     [RelayCommand]
     private async Task CompleteAsync(Todo todo)
     {
+        if (todo is null) return;
         await repo.CompleteAsync(todo.Guid);
         analytics.Track("todo_complete");
         _allTodos.Remove(todo);
@@ -198,6 +199,7 @@ public partial class TodoListViewModel(
     [RelayCommand]
     private async Task UncompleteAsync(Todo todo)
     {
+        if (todo is null) return;
         await repo.UncompleteAsync(todo.Guid);
         CompletedTodos.Remove(todo);
         CompletedTodoCount = CompletedTodos.Count;
@@ -215,6 +217,7 @@ public partial class TodoListViewModel(
     [RelayCommand]
     private async Task DeleteAsync(Todo todo)
     {
+        if (todo is null) return;
         var confirmed = await _nav.DisplayAlertAsync("Delete Todo?", "Remove this todo?", "Delete", "Cancel");
         if (!confirmed) return;
         await repo.DeleteAsync(todo.Guid);
@@ -283,6 +286,9 @@ public partial class TodoListViewModel(
     }
 
     [RelayCommand]
-    private async Task OpenAsync(Todo todo) =>
+    private async Task OpenAsync(Todo todo)
+    {
+        if (todo is null) return;
         await _nav.GoToAsync($"todos/entry?guid={todo.Guid}");
+    }
 }

@@ -223,6 +223,7 @@ public partial class GoalEntryViewModel(
     [RelayCommand]
     private async Task CompleteLinkedTodoAsync(Todo todo)
     {
+        if (todo is null) return;
         await todoRepo.CompleteAsync(todo.Guid);
         analytics.Track("goal_todo_complete_inline", null);
         LinkedTodos.Remove(todo);
