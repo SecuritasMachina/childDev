@@ -1303,6 +1303,36 @@ public class TodoEntryLinkedGoalNotesTests : ViewModelTestBase
         Assert.True(vm.Notes!.Length <= 2000,
             $"Combined Notes length {vm.Notes!.Length} exceeds 2000-char limit");
     }
+
+    [Fact]
+    public async Task LoadAsync_TodoWithTruncatedGoalPrefix_StillDetectsLinkedGoal()
+    {
+        // When Notes was saved with a truncated goal prefix (1994 chars), LoadAsync must
+        // still detect the linked goal by matching the truncated prefix against goal text.
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var maxGoalText = new string('F', 2000);
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = maxGoalText, EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        // Simulate what OnLinkedGoalChanged stores: Notes = "Goal: " + first 1994 chars
+        var truncatedPrefix = $"Goal: {maxGoalText[..1994]}";
+        var todo = new Todo
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Title = "Task with long goal",
+            Notes = truncatedPrefix,
+            UpdatedOn = ts
+        };
+        await TodoRepo.SaveAsync(todo);
+
+        var vm = BuildVm();
+        vm.Guid = todo.Guid;
+        await Task.Delay(200);
+
+        Assert.NotNull(vm.LinkedGoal);
+        Assert.Equal(goal.Guid, vm.LinkedGoal!.Guid);
+    }
 }
 
 // ─── Dashboard: navigation commands and stale-goal / next-meeting paths ──────

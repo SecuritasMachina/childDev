@@ -119,8 +119,11 @@ public partial class TodoEntryViewModel(
         {
             var goalLine = Notes.Contains('\n') ? Notes[..Notes.IndexOf('\n')] : Notes;
             var goalText = goalLine["Goal: ".Length..].Trim();
-            LinkedGoal = AvailableGoals.FirstOrDefault(g =>
-                string.Equals(g.GoalText?.Trim(), goalText, StringComparison.OrdinalIgnoreCase));
+            LinkedGoal = AvailableGoals.FirstOrDefault(g => {
+                var gt = g.GoalText?.Trim() ?? string.Empty;
+                if (gt.Length > 1994) gt = gt[..1994];
+                return string.Equals(gt, goalText, StringComparison.OrdinalIgnoreCase);
+            });
         }
     }
 
