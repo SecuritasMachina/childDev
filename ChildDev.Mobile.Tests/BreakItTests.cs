@@ -6091,3 +6091,93 @@ public class ListViewModelNullArgTests : ViewModelTestBase
         Assert.Null(ex);
     }
 }
+
+// ─── TodoListViewModel: zero completed this week hides WeekCompletedMessage ───
+
+public class TodoListZeroWeekCompletedTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_NoCompletedTodosThisWeek_HidesWeekCompletedMessage()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.False(vm.HasWeekCompletedMessage);
+        Assert.Equal(string.Empty, vm.WeekCompletedMessage);
+        Assert.False(vm.HasWeekOverWeekMessage);
+    }
+
+    [Fact]
+    public async Task Load_TwoCompletedTodos_ShowsPluralMessage()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        for (var i = 0; i < 2; i++)
+        {
+            var guid = Guid.NewGuid().ToString();
+            await TodoRepo.SaveAsync(new Todo { Guid = guid, AccountFk = account.Guid, Title = $"Task {i}", UpdatedOn = ts });
+            await TodoRepo.CompleteAsync(guid);
+        }
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasWeekCompletedMessage);
+        Assert.Contains("2 todos", vm.WeekCompletedMessage);
+        Assert.Contains("done this week", vm.WeekCompletedMessage);
+    }
+}
+
+// ─── DashboardViewModel: NextGoalMeeting with far-future date ─────────────────
+
+public class DashboardNextGoalMeetingFarDateTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService,
+            BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_GoalWithMeetingIn5Days_ShowsFormattedDate()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var meeting = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today.AddDays(5), DateTimeKind.Local)).ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Far meeting goal",
+            EnteredDate = ts, NextMeetingDate = meeting
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasNextGoalMeeting);
+        // Should show MMM d format (not "today" or "tomorrow")
+        Assert.DoesNotContain("today", vm.NextGoalMeeting, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("tomorrow", vm.NextGoalMeeting, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Next goal meeting:", vm.NextGoalMeeting);
+    }
+
+    [Fact]
+    public async Task Load_GoalWithPastMeetingDate_DoesNotShowMeeting()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var pastMeeting = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today.AddDays(-1), DateTimeKind.Local)).ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Past meeting goal",
+            EnteredDate = ts, NextMeetingDate = pastMeeting
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.False(vm.HasNextGoalMeeting);
+        Assert.Equal(string.Empty, vm.NextGoalMeeting);
+    }
+}
