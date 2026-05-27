@@ -1962,6 +1962,252 @@ public class DashboardQuickJournalWeeklyWinsTests : ViewModelTestBase
     }
 }
 
+// ─── GoalListViewModel: TogglePinAsync must not crash when account is null ────
+
+public class GoalListTogglePinTests : ViewModelTestBase
+{
+    private GoalListViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task TogglePin_PinsGoal_GoalRemainsInList()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Master chess", EnteredDate = ts, IsPinned = false });
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Learn coding", EnteredDate = ts, IsPinned = false });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Equal(2, vm.Goals.Count);
+
+        var target = vm.Goals[0];
+        await vm.TogglePinCommand.ExecuteAsync(target);
+
+        // After pin toggle, list still has both goals
+        Assert.Equal(2, vm.Goals.Count);
+        Assert.True(vm.HasGoals);
+    }
+
+    [Fact]
+    public async Task TogglePin_UnpinsAlreadyPinnedGoal_GoalRemainsInList()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Pinned goal", EnteredDate = ts, IsPinned = true });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Single(vm.Goals);
+
+        await vm.TogglePinCommand.ExecuteAsync(vm.Goals[0]);
+
+        Assert.Single(vm.Goals);
+        Assert.True(vm.HasGoals);
+    }
+}
+
+// ─── GoalEntryViewModel: null GoalText must not contaminate LinkedTodos ────────
+
+public class GoalEntryLinkedTodosNullGoalTextTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task LoadEntry_GoalWithNullGoalText_LinkedTodosIsEmpty()
+    {
+        // A synced completed goal can arrive with null GoalText (API allows it when CompletionDate is set).
+        // Before the fix, the prefix "Goal: " (with empty suffix) matched ALL goal-linked todos.
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var nullGoalGuid = Guid.NewGuid().ToString();
+
+        // Sync in a completed goal with null GoalText
+        await GoalRepo.UpsertFromSyncAsync(new Goal
+        {
+            Guid = nullGoalGuid,
+            AccountFk = account.Guid,
+            GoalText = null,
+            CompletionDate = ts,
+            EnteredDate = ts,
+            UpdatedOn = ts
+        });
+
+        // A todo linked to a DIFFERENT goal (notes starts "Goal: ...")
+        await TodoRepo.SaveAsync(new Todo
+        {
+            Guid = Guid.NewGuid().ToString(),
+            AccountFk = account.Guid,
+            Title = "Practice scales",
+            Notes = "Goal: Learn piano",
+            UpdatedOn = ts
+        });
+
+        var vm = BuildVm();
+        vm.Guid = nullGoalGuid;
+        await Task.Delay(50); // allow FireAndForget LoadAsync to complete
+
+        // LinkedTodos must not include the piano todo — its prefix "Goal: Learn piano"
+        // starts with "Goal: " which would incorrectly match if GoalText guard is missing
+        Assert.Empty(vm.LinkedTodos);
+        Assert.False(vm.HasLinkedTodos);
+    }
+
+    [Fact]
+    public async Task LoadEntry_GoalWithGoalText_LinkedTodosMatchCorrectly()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goalGuid = Guid.NewGuid().ToString();
+
+        await GoalRepo.SaveAsync(new Goal
+        {
+            Guid = goalGuid,
+            AccountFk = account.Guid,
+            GoalText = "Learn piano",
+            EnteredDate = ts,
+            UpdatedOn = ts
+        });
+
+        // A todo correctly linked to this goal
+        await TodoRepo.SaveAsync(new Todo
+        {
+            Guid = Guid.NewGuid().ToString(),
+            AccountFk = account.Guid,
+            Title = "Practice scales",
+            Notes = "Goal: Learn piano",
+            UpdatedOn = ts
+        });
+
+        // A todo linked to a different goal — must NOT be included
+        await TodoRepo.SaveAsync(new Todo
+        {
+            Guid = Guid.NewGuid().ToString(),
+            AccountFk = account.Guid,
+            Title = "Buy groceries",
+            Notes = "Goal: Learn cooking",
+            UpdatedOn = ts
+        });
+
+        var vm = BuildVm();
+        vm.Guid = goalGuid;
+        await Task.Delay(50);
+
+        Assert.Single(vm.LinkedTodos);
+        Assert.Equal("Practice scales", vm.LinkedTodos[0].Title);
+    }
+}
+
+// ─── JournalListViewModel: delete with active filter updates counts ────────────
+
+public class JournalListDeleteWithFilterTests : ViewModelTestBase
+{
+    private JournalListViewModel BuildVm() =>
+        new(JournalRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Delete_WithActiveTextFilter_EntryCountDisplayDecreases()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Happy day entry", EnteredDate = ts });
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Another happy entry", EnteredDate = ts });
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Unrelated content", EnteredDate = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "happy";
+
+        Assert.Equal(2, vm.Journals.Count);
+        Assert.Contains("2", vm.EntryCountDisplay);
+
+        Nav.AlertConfirmResult = true;
+        await vm.DeleteCommand.ExecuteAsync(vm.Journals[0]);
+
+        Assert.Equal(1, vm.Journals.Count);
+        Assert.Contains("1", vm.EntryCountDisplay);
+    }
+
+    [Fact]
+    public async Task Delete_AllMatchingFiltered_EmptyMessageReflectsFilter()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Unique entry", EnteredDate = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "Unique";
+        Assert.Single(vm.Journals);
+
+        Nav.AlertConfirmResult = true;
+        await vm.DeleteCommand.ExecuteAsync(vm.Journals[0]);
+
+        Assert.Empty(vm.Journals);
+        Assert.Contains("Unique", vm.EmptyMessage);
+    }
+}
+
+// ─── TodoListViewModel: UncompleteAsync refreshes pending list correctly ───────
+
+public class TodoListUncompleteTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Uncomplete_TodoReappearsInPendingList()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var todoGuid = Guid.NewGuid().ToString();
+        await TodoRepo.SaveAsync(new Todo { Guid = todoGuid, AccountFk = account.Guid, Title = "Do laundry", UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Single(vm.Todos);
+
+        await vm.CompleteCommand.ExecuteAsync(vm.Todos[0]);
+        Assert.Empty(vm.Todos);
+        Assert.Equal(1, vm.CompletedTodoCount);
+
+        await vm.UncompleteCommand.ExecuteAsync(vm.CompletedTodos[0]);
+
+        Assert.Single(vm.Todos);
+        Assert.Equal(0, vm.CompletedTodoCount);
+        Assert.False(vm.HasCompletedTodos);
+        Assert.False(vm.ShowCompletedTodos);
+    }
+
+    [Fact]
+    public async Task Uncomplete_OverdueTodo_OverdueCountStaysConsistent()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var yesterday = DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeMilliseconds();
+
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Overdue task", DueDate = yesterday, UpdatedOn = ts });
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Normal task", UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Equal(1, vm.OverdueTodoCount);
+        Assert.True(vm.HasOverdueTodos);
+
+        // Complete the overdue task
+        var overdueTodo = vm.Todos.First(t => t.Title == "Overdue task");
+        await vm.CompleteCommand.ExecuteAsync(overdueTodo);
+        Assert.Equal(0, vm.OverdueTodoCount);
+        Assert.False(vm.HasOverdueTodos);
+
+        // Uncomplete it — overdue count should reflect the restored task
+        await vm.UncompleteCommand.ExecuteAsync(vm.CompletedTodos[0]);
+        Assert.Equal(1, vm.OverdueTodoCount);
+        Assert.True(vm.HasOverdueTodos);
+    }
+}
+
 public class GoalListDeleteStateTests : ViewModelTestBase
 {
     private GoalListViewModel BuildVm() =>

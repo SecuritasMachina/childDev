@@ -126,17 +126,20 @@ public partial class GoalEntryViewModel(
         IsCompleted = item.CompletionDate.HasValue;
         analytics.Track("goal_view", item.Category);
 
-        var account = await accountService.GetAccountAsync();
-        if (account is not null)
+        if (!string.IsNullOrWhiteSpace(item.GoalText))
         {
-            var pending = await todoRepo.GetPendingAsync(account.Guid);
-            var goalPrefix = $"Goal: {item.GoalText?.Trim()}";
-            var linked = pending
-                .Where(t => t.Notes != null &&
-                    t.Notes.StartsWith(goalPrefix, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-            LinkedTodos = new ObservableCollection<Todo>(linked);
-            HasLinkedTodos = linked.Count > 0;
+            var account = await accountService.GetAccountAsync();
+            if (account is not null)
+            {
+                var pending = await todoRepo.GetPendingAsync(account.Guid);
+                var goalPrefix = $"Goal: {item.GoalText.Trim()}";
+                var linked = pending
+                    .Where(t => t.Notes != null &&
+                        t.Notes.StartsWith(goalPrefix, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+                LinkedTodos = new ObservableCollection<Todo>(linked);
+                HasLinkedTodos = linked.Count > 0;
+            }
         }
     }
 

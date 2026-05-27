@@ -184,7 +184,9 @@ public partial class GoalListViewModel(
         var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         goal.UpdatedOn = ts;
         await repo.SaveAsync(goal);
-        _allGoals = await LoadGoalsWithStepsAsync((await accountService.GetAccountAsync())!.Guid);
+        var pinAccount = await accountService.GetAccountAsync();
+        if (pinAccount is null) return;
+        _allGoals = await LoadGoalsWithStepsAsync(pinAccount.Guid);
         ApplyFilters();
     }
 
