@@ -3047,3 +3047,157 @@ public class JournalListDeleteWithDateFilterTests : ViewModelTestBase
         Assert.NotEmpty(vm.TodayPrompt);
     }
 }
+
+// ─── TodoEntryViewModel: LoadGoalsAsync path (new todo, Guid → empty) ────────
+
+public class TodoEntryLoadGoalsAsyncTests : ViewModelTestBase
+{
+    private TodoEntryViewModel BuildVm() =>
+        new(TodoRepo, GoalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task LoadGoalsAsync_ExcludesCompletedGoals()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var activeGoal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Active", EnteredDate = ts, UpdatedOn = ts };
+        var completedGoal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Done", EnteredDate = ts, UpdatedOn = ts, CompletionDate = ts };
+        await GoalRepo.SaveAsync(activeGoal);
+        await GoalRepo.SaveAsync(completedGoal);
+
+        var vm = BuildVm();
+        // Trigger LoadGoalsAsync by setting Guid to non-empty then to empty
+        vm.Guid = "some-guid";
+        vm.Guid = string.Empty;
+        await Task.Delay(200);
+
+        Assert.Single(vm.AvailableGoals);
+        Assert.Equal("Active", vm.AvailableGoals[0].GoalText);
+    }
+
+    [Fact]
+    public async Task LoadGoalsAsync_NoAccount_AvailableGoalsStaysEmpty()
+    {
+        // No account seeded — GetAccountAsync returns null
+        var vm = BuildVm();
+        vm.Guid = "x";
+        vm.Guid = string.Empty;
+        await Task.Delay(200);
+
+        Assert.Empty(vm.AvailableGoals);
+    }
+
+    [Fact]
+    public async Task LoadGoalsAsync_PopulatesAllActiveGoals()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        for (int i = 0; i < 3; i++)
+            await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = $"Goal {i}", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        vm.Guid = "x";
+        vm.Guid = string.Empty;
+        await Task.Delay(200);
+
+        Assert.Equal(3, vm.AvailableGoals.Count);
+    }
+}
+
+// ─── GoalListViewModel: SetCategoryFilter adversarial cases ──────────────────
+
+public class GoalListCategoryFilterBreakItTests : ViewModelTestBase
+{
+    private GoalListViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task SetCategoryFilter_NeedsAttention_ShowsOnlyStaleGoals()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var oldProgress = DateTimeOffset.UtcNow.AddDays(-10).ToUnixTimeMilliseconds();
+
+        var staleGoal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Stale", EnteredDate = ts, UpdatedOn = ts };
+        var freshGoal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Active", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(staleGoal);
+        await GoalRepo.SaveAsync(freshGoal);
+
+        // Add fresh progress to freshGoal only
+        await GoalProgressRepo.SaveAsync(new GoalProgress
+        {
+            Guid = Guid.NewGuid().ToString(),
+            GoalFk = freshGoal.Guid,
+            AccountFk = account.Guid,
+            NextStepItems = "Working",
+            UpdatedOn = ts
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Equal(2, vm.Goals.Count);
+
+        vm.SetCategoryFilterCommand.Execute("NeedsAttention");
+
+        // Only the stale goal (no recent progress) should show
+        Assert.Single(vm.Goals);
+        Assert.Equal("Stale", vm.Goals[0].GoalText);
+    }
+
+    [Fact]
+    public async Task SetCategoryFilter_SpecificCategory_ShowsOnlyThatCategory()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Health goal", Category = "Health", EnteredDate = ts, UpdatedOn = ts });
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Education goal", Category = "Education", EnteredDate = ts, UpdatedOn = ts });
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "No category", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Equal(3, vm.Goals.Count);
+
+        vm.SetCategoryFilterCommand.Execute("Health");
+
+        Assert.Single(vm.Goals);
+        Assert.Equal("Health goal", vm.Goals[0].GoalText);
+    }
+
+    [Fact]
+    public async Task SetCategoryFilter_BackToAll_ShowsAllGoals()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Goal A", Category = "Health", EnteredDate = ts, UpdatedOn = ts });
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Goal B", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.SetCategoryFilterCommand.Execute("Health");
+        Assert.Single(vm.Goals);
+
+        vm.SetCategoryFilterCommand.Execute("All");
+        Assert.Equal(2, vm.Goals.Count);
+    }
+
+    [Fact]
+    public async Task SetCategoryFilter_NeedsAttention_CompletedGoalsExcluded()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        // Completed goal with no recent progress — should NOT appear in NeedsAttention
+        var completedGoal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Done goal", EnteredDate = ts, UpdatedOn = ts, CompletionDate = ts };
+        var activeStale = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Stale active", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(completedGoal);
+        await GoalRepo.SaveAsync(activeStale);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        vm.SetCategoryFilterCommand.Execute("NeedsAttention");
+
+        // Only active stale should show; completed goal excluded
+        Assert.Single(vm.Goals);
+        Assert.Equal("Stale active", vm.Goals[0].GoalText);
+    }
+}
