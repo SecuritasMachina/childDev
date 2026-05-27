@@ -944,6 +944,175 @@ public class TodoListSnoozeTests : ViewModelTestBase
     }
 }
 
+// ─── Dashboard: navigation commands and stale-goal / next-meeting paths ──────
+
+public class DashboardNavigationTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task GoToGoals_Navigates()
+    {
+        var vm = BuildVm();
+        await vm.GoToGoalsCommand.ExecuteAsync(null);
+        Assert.Contains("//goals", Nav.NavigatedRoutes);
+    }
+
+    [Fact]
+    public async Task GoToTodos_Navigates()
+    {
+        var vm = BuildVm();
+        await vm.GoToTodosCommand.ExecuteAsync(null);
+        Assert.Contains("//todos", Nav.NavigatedRoutes);
+    }
+
+    [Fact]
+    public async Task GoToJournal_Navigates()
+    {
+        var vm = BuildVm();
+        await vm.GoToJournalCommand.ExecuteAsync(null);
+        Assert.Contains("//journal", Nav.NavigatedRoutes);
+    }
+
+    [Fact]
+    public async Task GoToSettings_Navigates()
+    {
+        var vm = BuildVm();
+        await vm.GoToSettingsCommand.ExecuteAsync(null);
+        Assert.Contains("settings", Nav.NavigatedRoutes);
+    }
+
+    [Fact]
+    public async Task AddJournal_Navigates()
+    {
+        var vm = BuildVm();
+        await vm.AddJournalCommand.ExecuteAsync(null);
+        Assert.Contains("journal/entry", Nav.NavigatedRoutes);
+    }
+
+    [Fact]
+    public async Task OpenReminders_Navigates()
+    {
+        var vm = BuildVm();
+        await vm.OpenRemindersCommand.ExecuteAsync(null);
+        Assert.Contains("reminders", Nav.NavigatedRoutes);
+    }
+
+    [Fact]
+    public async Task Load_GoalWithNextMeetingToday_ShowsMeetingDisplay()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var todayMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+        var goal = new Goal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Meeting goal",
+            EnteredDate = ts, NextMeetingDate = todayMs
+        };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasNextGoalMeeting);
+        Assert.Contains("today", vm.NextGoalMeeting, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Load_GoalWithNextMeetingTomorrow_ShowsTomorrowLabel()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var tomorrowMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today.AddDays(1), DateTimeKind.Local)).ToUnixTimeMilliseconds();
+        var goal = new Goal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Tomorrow meeting",
+            EnteredDate = ts, NextMeetingDate = tomorrowMs
+        };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasNextGoalMeeting);
+        Assert.Contains("tomorrow", vm.NextGoalMeeting, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Load_StaleGoal_HasStaleGoalTrue()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Neglected goal", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+        // No progress notes → goal is immediately stale (no LatestProgressAt)
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasStaleGoal);
+        Assert.Equal("Neglected goal", vm.StaleGoalText);
+    }
+
+    [Fact]
+    public async Task QuickNoteForFocusGoal_WithStaleGoalSet_SavesNote()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Focus goal", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        Nav.PromptResult = "Made progress today!";
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.True(vm.HasStaleGoal);
+
+        await vm.QuickNoteForFocusGoalCommand.ExecuteAsync(null);
+
+        // Stale goal cleared after quick note saved
+        Assert.False(vm.HasStaleGoal);
+        var progress = await GoalProgressRepo.GetForGoalAsync(goal.Guid);
+        Assert.Single(progress);
+        Assert.Equal("Made progress today!", progress[0].NextStepItems);
+    }
+
+    [Fact]
+    public async Task GoToStaleGoal_WithStaleGoalGuid_Navigates()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Stale nav goal", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.True(vm.HasStaleGoal);
+
+        await vm.GoToStaleGoalCommand.ExecuteAsync(null);
+        Assert.Contains(Nav.NavigatedRoutes, r => r.Contains("goals/entry"));
+    }
+
+    [Fact]
+    public async Task Load_WithOverdueTodo_SetsOverdueCount()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var yesterday = DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Title = "Overdue task", UpdatedOn = ts, DueDate = yesterday
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Equal(1, vm.OverdueTodoCount);
+        Assert.True(vm.HasOverdueTodos);
+    }
+}
+
 // ─── SettingsViewModel: break-it edge cases ──────────────────────────────────
 
 public class SettingsViewModelBreakItTests : ViewModelTestBase
