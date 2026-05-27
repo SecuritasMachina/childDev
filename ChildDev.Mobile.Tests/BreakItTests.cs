@@ -6991,3 +6991,104 @@ public class GoalEntrySaveNullFieldTests : ViewModelTestBase
         Assert.True(goals[0].IsPinned);
     }
 }
+
+// ─── TodoEntryViewModel: DeleteAsync paths ───────────────────────────────────
+
+public class TodoEntryDeleteTests : ViewModelTestBase
+{
+    private TodoEntryViewModel BuildVm() =>
+        new(TodoRepo, GoalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task DeleteAsync_EmptyGuid_ReturnsEarlyWithoutThrowing()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        // Guid is empty — should return early
+        var ex = await Record.ExceptionAsync(() => vm.DeleteCommand.ExecuteAsync(null));
+        Assert.Null(ex);
+        Assert.Empty(Nav.AlertTitles); // no confirm dialog shown
+    }
+
+    [Fact]
+    public async Task DeleteAsync_UserConfirms_DeletesTodoAndNavigatesBack()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var todo = new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Delete me", UpdatedOn = ts };
+        await TodoRepo.SaveAsync(todo);
+
+        Nav.AlertConfirmResult = true;
+        var vm = BuildVm();
+        vm.Guid = todo.Guid;
+        await Task.Delay(100);
+
+        await vm.DeleteCommand.ExecuteAsync(null);
+
+        var deleted = await TodoRepo.GetAsync(todo.Guid);
+        Assert.True(deleted is null || deleted.DeletedAt.HasValue);
+        Assert.Contains("..", Nav.NavigatedRoutes);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_UserCancels_TodoNotDeleted()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var todo = new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Keep me", UpdatedOn = ts };
+        await TodoRepo.SaveAsync(todo);
+
+        Nav.AlertConfirmResult = false;
+        var vm = BuildVm();
+        vm.Guid = todo.Guid;
+        await Task.Delay(100);
+
+        await vm.DeleteCommand.ExecuteAsync(null);
+
+        var still = await TodoRepo.GetAsync(todo.Guid);
+        Assert.NotNull(still);
+        Assert.Null(still!.DeletedAt);
+        Assert.DoesNotContain("..", Nav.NavigatedRoutes);
+    }
+}
+
+// ─── JournalEntry: DeleteAsync cancel path ───────────────────────────────────
+
+public class JournalEntryDeleteCancelTests : ViewModelTestBase
+{
+    private JournalEntryViewModel BuildVm() =>
+        new(JournalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task DeleteAsync_UserCancels_JournalNotDeleted()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var journal = new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Keep this note", EnteredDate = ts, UpdatedOn = ts };
+        await JournalRepo.SaveAsync(journal);
+
+        Nav.AlertConfirmResult = false;
+        var vm = BuildVm();
+        vm.Guid = journal.Guid;
+        await Task.Delay(100);
+
+        await vm.DeleteCommand.ExecuteAsync(null);
+
+        var still = await JournalRepo.GetAsync(journal.Guid);
+        Assert.NotNull(still);
+        Assert.Null(still!.DeletedAt);
+        Assert.DoesNotContain("..", Nav.NavigatedRoutes);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_EmptyGuid_ReturnsWithoutShowingAlert()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        // Guid is empty — early return before showing dialog
+
+        var ex = await Record.ExceptionAsync(() => vm.DeleteCommand.ExecuteAsync(null));
+        Assert.Null(ex);
+        Assert.Empty(Nav.AlertTitles);
+    }
+}
