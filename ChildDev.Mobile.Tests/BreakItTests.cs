@@ -6470,3 +6470,127 @@ public class DashboardWeeklyStateTests : ViewModelTestBase
         Assert.True(vm.WeekProgressNotes > 0);
     }
 }
+
+// ─── JournalEntry: ToggleTag case-insensitive removal ────────────────────────
+
+public class JournalEntryTagCaseTests : ViewModelTestBase
+{
+    private JournalEntryViewModel BuildVm() =>
+        new(JournalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public void ToggleTag_CaseInsensitiveRemoval_MatchesExistingTag()
+    {
+        var vm = BuildVm();
+        vm.ToggleTagCommand.Execute("happy");
+        Assert.Contains("happy", vm.Tags);
+
+        // Toggle with different case — should still remove the existing "happy" tag
+        vm.ToggleTagCommand.Execute("Happy");
+        Assert.DoesNotContain("happy", vm.Tags);
+        Assert.DoesNotContain("Happy", vm.Tags);
+    }
+
+    [Fact]
+    public void ToggleTag_EmptyTags_AddsTagWithoutLeadingComma()
+    {
+        var vm = BuildVm();
+        Assert.Equal(string.Empty, vm.Tags);
+        vm.ToggleTagCommand.Execute("grateful");
+        Assert.Equal("grateful", vm.Tags);
+    }
+}
+
+// ─── Dashboard: QuickAddJournal guard when _accountGuid not yet set ──────────
+
+public class DashboardQuickAddJournalGuardTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task QuickAddJournal_BeforeLoadAsync_DoesNotSaveOrThrow()
+    {
+        await CreateTestAccountAsync();
+        // Do NOT call LoadAsync — _accountGuid remains empty
+        var vm = BuildVm();
+        vm.QuickJournalText = "Some thought";
+
+        var ex = await Record.ExceptionAsync(() => vm.QuickAddJournalCommand.ExecuteAsync(null));
+        Assert.Null(ex);
+
+        // No journal should have been saved (guard: _accountGuid is empty)
+        var account = await AccountService.GetAccountAsync();
+        var journals = await JournalRepo.GetAllActiveAsync(account!.Guid);
+        Assert.Empty(journals);
+    }
+}
+
+// ─── GoalEntry: AddLinkedTodo cancel (user dismisses prompt) ─────────────────
+
+public class GoalEntryAddLinkedTodoCancelTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task AddLinkedTodo_UserCancelsPrompt_DoesNotSaveTodo()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "My goal", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        Nav.PromptResult = null; // simulate user pressing Cancel
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        await vm.AddLinkedTodoCommand.ExecuteAsync(null);
+
+        var todos = await TodoRepo.GetPendingAsync(account.Guid);
+        Assert.Empty(todos);
+        Assert.Empty(vm.LinkedTodos);
+    }
+
+    [Fact]
+    public async Task AddLinkedTodo_UserEntersWhitespaceTitle_DoesNotSaveTodo()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "My goal", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        Nav.PromptResult = "   "; // whitespace only
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        await vm.AddLinkedTodoCommand.ExecuteAsync(null);
+
+        var todos = await TodoRepo.GetPendingAsync(account.Guid);
+        Assert.Empty(todos);
+    }
+}
+
+// ─── TodoList: AddAsync fallback when _accountGuid empty and account is null ──
+
+public class TodoListAddBeforeLoadTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task AddAsync_BeforeLoadAsync_WithNoAccount_DoesNotSaveOrThrow()
+    {
+        // No account created — GetAccountAsync returns null
+        var vm = BuildVm();
+        vm.NewTodoTitle = "Try to add";
+
+        var ex = await Record.ExceptionAsync(() => vm.AddCommand.ExecuteAsync(null));
+        Assert.Null(ex);
+        Assert.Empty(vm.Todos);
+    }
+}
