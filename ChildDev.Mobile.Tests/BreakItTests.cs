@@ -1604,6 +1604,61 @@ public class SettingsViewModelLinkTests : ViewModelTestBase
     }
 }
 
+// ─── AccountService: Reminder migration on GUID change ───────────────────────
+
+public class AccountServiceLinkMigrationTests : ViewModelTestBase
+{
+    [Fact]
+    public async Task LinkToServer_WithDifferentGuid_MigratesReminders()
+    {
+        var account = await CreateTestAccountAsync();
+        var oldGuid = account.Guid;
+        var newGuid = Guid.NewGuid().ToString();
+
+        // Create a reminder under the old account GUID
+        var reminder = new Reminder
+        {
+            Guid = Guid.NewGuid().ToString(),
+            AccountFk = oldGuid,
+            Title = "Study reminder",
+            Topic = "Goal",
+            FireAt = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds()
+        };
+        await ReminderRepo.SaveAsync(reminder);
+
+        // Link to server with a different GUID
+        await AccountService.LinkToServerAsync("jwt-token", "https://server.local", newGuid);
+
+        // After linking, reminders should be retrievable under the new GUID
+        var pending = await ReminderRepo.GetPendingAsync(newGuid);
+        Assert.Single(pending);
+        Assert.Equal("Study reminder", pending[0].Title);
+    }
+
+    [Fact]
+    public async Task LinkToServer_SameGuid_RemainersUnchanged()
+    {
+        var account = await CreateTestAccountAsync();
+        var sameGuid = account.Guid;
+
+        var reminder = new Reminder
+        {
+            Guid = Guid.NewGuid().ToString(),
+            AccountFk = sameGuid,
+            Title = "Keep reminder",
+            Topic = "General",
+            FireAt = DateTimeOffset.UtcNow.AddHours(2).ToUnixTimeMilliseconds()
+        };
+        await ReminderRepo.SaveAsync(reminder);
+
+        // Link to server with the SAME GUID (no migration needed)
+        await AccountService.LinkToServerAsync("jwt-token", "https://server.local", sameGuid);
+
+        var pending = await ReminderRepo.GetPendingAsync(sameGuid);
+        Assert.Single(pending);
+    }
+}
+
 // ─── SettingsViewModel: LoadAsync branch coverage ────────────────────────────
 
 public class SettingsViewModelLoadBranchTests : ViewModelTestBase

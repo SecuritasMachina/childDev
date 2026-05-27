@@ -55,6 +55,7 @@ public class AccountService(SQLiteAsyncConnection db)
             await db.ExecuteAsync("UPDATE Goal SET AccountFk = ? WHERE AccountFk = ?", serverAccountGuid, oldGuid);
             await db.ExecuteAsync("UPDATE GoalProgress SET AccountFk = ? WHERE AccountFk = ?", serverAccountGuid, oldGuid);
             await db.ExecuteAsync("UPDATE Todo SET AccountFk = ? WHERE AccountFk = ?", serverAccountGuid, oldGuid);
+            await db.ExecuteAsync("UPDATE Reminder SET AccountFk = ? WHERE AccountFk = ?", serverAccountGuid, oldGuid);
             await db.ExecuteAsync(
                 "UPDATE Account SET Guid = ?, ServerJwt = ?, ServerUrl = ? WHERE Guid = ?",
                 serverAccountGuid, jwt, serverUrl, oldGuid);

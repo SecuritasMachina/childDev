@@ -240,6 +240,7 @@ public class AccountServiceLinkTests : IDisposable
         _db.CreateTableAsync<Goal>().GetAwaiter().GetResult();
         _db.CreateTableAsync<GoalProgress>().GetAwaiter().GetResult();
         _db.CreateTableAsync<Todo>().GetAwaiter().GetResult();
+        _db.CreateTableAsync<LevelUp.Models.Reminder>().GetAwaiter().GetResult();
         _service = new AccountService(_db);
     }
 
