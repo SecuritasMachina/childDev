@@ -5859,3 +5859,122 @@ public class EntrySetReminderTests : ViewModelTestBase
         Assert.Equal(todo.Guid, pending[0].EntityGuid);
     }
 }
+
+// ─── GoalEntryViewModel: _loadedNextStepItems deduplication ──────────────────
+
+public class GoalEntryNextStepDedupTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task SaveAsync_UnchangedNextStepItems_DoesNotCreateDuplicateProgressNote()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Play guitar", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        // Create one existing progress note
+        await GoalProgressRepo.SaveAsync(new GoalProgress
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid,
+            NextStepItems = "Practice chords", UpdatedOn = ts
+        });
+
+        // Load the goal (sets _loadedNextStepItems to "Practice chords")
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        // Save without changing NextStepItems — should NOT create a new progress note
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var notes = await GoalProgressRepo.GetForGoalAsync(goal.Guid);
+        Assert.Single(notes); // still only the original note
+    }
+
+    [Fact]
+    public async Task SaveAsync_ChangedNextStepItems_CreatesNewProgressNote()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Learn coding", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        await GoalProgressRepo.SaveAsync(new GoalProgress
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid,
+            NextStepItems = "Watch tutorial", UpdatedOn = ts
+        });
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        // Change NextStepItems to something new
+        vm.NextStepItems = "Build a small project";
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var notes = await GoalProgressRepo.GetForGoalAsync(goal.Guid);
+        Assert.Equal(2, notes.Count); // original + new note
+    }
+
+    [Fact]
+    public async Task SaveAsync_EmptyNextStepItems_DoesNotCreateProgressNote()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Read more books", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        // NextStepItems is empty — no progress note should be saved
+        vm.NextStepItems = string.Empty;
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var notes = await GoalProgressRepo.GetForGoalAsync(goal.Guid);
+        Assert.Empty(notes);
+    }
+}
+
+// ─── JournalListViewModel: singular EntryCountDisplay ────────────────────────
+
+public class JournalListSingularCountTests : ViewModelTestBase
+{
+    private JournalListViewModel BuildVm() =>
+        new(JournalRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_OneJournal_EntryCountDisplayUsesSingular()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Only entry", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Equal(1, vm.Journals.Count);
+        Assert.Contains("1 entry", vm.EntryCountDisplay);
+        Assert.DoesNotContain("entries", vm.EntryCountDisplay);
+    }
+
+    [Fact]
+    public async Task Load_TwoJournals_EntryCountDisplayUsesPlural()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Entry 1", EnteredDate = ts, UpdatedOn = ts });
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Entry 2", EnteredDate = ts + 1, UpdatedOn = ts + 1 });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Equal(2, vm.Journals.Count);
+        Assert.Contains("2 entries", vm.EntryCountDisplay);
+    }
+}
