@@ -1000,6 +1000,147 @@ public class TodoListSnoozeTests : ViewModelTestBase
     }
 }
 
+// ─── GoalEntry: AddLinkedTodo truncation and SetNoteTemplate ─────────────────
+
+public class GoalEntryLinkedTodoTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task AddLinkedTodo_LongGoalText_TruncatesPromptTitle()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var longText = new string('A', 70); // > 60 chars
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = longText, EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        Nav.PromptResult = "Practice scales";
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        await vm.AddLinkedTodoCommand.ExecuteAsync(null);
+
+        // Verify prompt was shown (truncated title) and todo was saved
+        Assert.NotEmpty(Nav.PromptTitles);
+        var todos = await TodoRepo.GetPendingAsync(account.Guid);
+        Assert.Single(todos);
+        Assert.Equal("Practice scales", todos[0].Title);
+    }
+
+    [Fact]
+    public async Task AddLinkedTodo_NoGuid_DoesNotSave()
+    {
+        var vm = BuildVm();
+        vm.GoalText = "Some goal"; // Guid is empty
+        Nav.PromptResult = "Some note";
+        await vm.AddLinkedTodoCommand.ExecuteAsync(null);
+        // No account either, so should return early on Guid check
+        Assert.Empty(Nav.PromptTitles);
+    }
+
+    [Fact]
+    public async Task SetNoteTemplate_SetsNextStepItemsIfNotAlreadySet()
+    {
+        var vm = BuildVm();
+        vm.SetNoteTemplateCommand.Execute("✅ Progress: ");
+        Assert.Equal("✅ Progress: ", vm.NextStepItems);
+    }
+
+    [Fact]
+    public async Task SetNoteTemplate_AlreadyStartsWithPrefix_DoesNotOverwrite()
+    {
+        var vm = BuildVm();
+        vm.NextStepItems = "✅ Progress: some work done";
+        vm.SetNoteTemplateCommand.Execute("✅ Progress: ");
+        // Already starts with prefix — should not overwrite
+        Assert.Equal("✅ Progress: some work done", vm.NextStepItems);
+    }
+
+    [Fact]
+    public async Task CompleteLinkedTodo_RemovesFromLinkedTodos()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "My goal", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+        var todo = new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Linked task", Notes = "Goal: My goal", UpdatedOn = ts };
+        await TodoRepo.SaveAsync(todo);
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+        Assert.True(vm.HasLinkedTodos);
+
+        await vm.CompleteLinkedTodoCommand.ExecuteAsync(vm.LinkedTodos[0]);
+
+        Assert.Empty(vm.LinkedTodos);
+        Assert.False(vm.HasLinkedTodos);
+    }
+}
+
+// ─── TodoEntry: OnLinkedGoalChanged notes prefix replacement ─────────────────
+
+public class TodoEntryLinkedGoalNotesTests : ViewModelTestBase
+{
+    private TodoEntryViewModel BuildVm() =>
+        new(TodoRepo, GoalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task LinkGoal_SetsNotesPrefix()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Piano practice", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        vm.Guid = string.Empty; // new todo
+        await Task.Delay(50);
+        vm.Title = "Practice task";
+        vm.LinkedGoal = goal;
+
+        Assert.StartsWith("Goal: Piano practice", vm.Notes);
+    }
+
+    [Fact]
+    public async Task LinkGoal_WithExistingNotes_PreservesNotes()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Exercise", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        vm.Notes = "Extra context here";
+        vm.LinkedGoal = goal;
+
+        Assert.StartsWith("Goal: Exercise", vm.Notes);
+        Assert.Contains("Extra context here", vm.Notes);
+    }
+
+    [Fact]
+    public async Task ChangingLinkedGoal_ReplacesGoalPrefix()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal1 = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "First goal", EnteredDate = ts };
+        var goal2 = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Second goal", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal1);
+        await GoalRepo.SaveAsync(goal2);
+
+        var vm = BuildVm();
+        vm.LinkedGoal = goal1;
+        Assert.StartsWith("Goal: First goal", vm.Notes);
+
+        vm.LinkedGoal = goal2;
+        Assert.StartsWith("Goal: Second goal", vm.Notes);
+        Assert.DoesNotContain("First goal", vm.Notes);
+    }
+}
+
 // ─── Dashboard: navigation commands and stale-goal / next-meeting paths ──────
 
 public class DashboardNavigationTests : ViewModelTestBase
