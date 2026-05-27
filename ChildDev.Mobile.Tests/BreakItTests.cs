@@ -5725,3 +5725,137 @@ public class JournalListDeleteWithWeekFilterTests : ViewModelTestBase
         Assert.Contains("1", vm.EntryCountDisplay);
     }
 }
+
+// ─── Entry ViewModels: SetReminderAsync guard branches ────────────────────────
+
+public class EntrySetReminderTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildGoalVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    private JournalEntryViewModel BuildJournalVm() =>
+        new(JournalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    private TodoEntryViewModel BuildTodoVm() =>
+        new(TodoRepo, GoalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task GoalEntry_SetReminder_EmptyGuid_ReturnsEarlyAndNoReminderScheduled()
+    {
+        var account = await CreateTestAccountAsync();
+        Nav.ActionSheetResult = "1 hour";
+
+        var vm = BuildGoalVm();
+        // Guid is empty (new, unsaved goal) — reminder guard should fire
+        await vm.SetReminderCommand.ExecuteAsync(null);
+
+        var pending = await ReminderSvc.GetPendingAsync(account.Guid);
+        Assert.Empty(pending);
+    }
+
+    [Fact]
+    public async Task GoalEntry_SetReminder_UserCancels_NoReminderScheduled()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Learn violin", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        Nav.ActionSheetResult = null; // user cancels duration picker
+        var vm = BuildGoalVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(150);
+
+        await vm.SetReminderCommand.ExecuteAsync(null);
+
+        var pending = await ReminderSvc.GetPendingAsync(account.Guid);
+        Assert.Empty(pending);
+    }
+
+    [Fact]
+    public async Task GoalEntry_SetReminder_ValidGuidAndDuration_SchedulesReminder()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Learn piano", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        Nav.ActionSheetResult = "1 hour";
+        var vm = BuildGoalVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(150);
+
+        await vm.SetReminderCommand.ExecuteAsync(null);
+
+        var pending = await ReminderSvc.GetPendingAsync(account.Guid);
+        Assert.Single(pending);
+        Assert.Equal("Goal", pending[0].Topic);
+        Assert.Equal(goal.Guid, pending[0].EntityGuid);
+    }
+
+    [Fact]
+    public async Task JournalEntry_SetReminder_UserCancels_NoReminderScheduled()
+    {
+        var account = await CreateTestAccountAsync();
+        Nav.ActionSheetResult = null; // user cancels
+
+        var vm = BuildJournalVm();
+        await vm.SetReminderCommand.ExecuteAsync(null);
+
+        var pending = await ReminderSvc.GetPendingAsync(account.Guid);
+        Assert.Empty(pending);
+    }
+
+    [Fact]
+    public async Task JournalEntry_SetReminder_WithNotes_SchedulesReminderWithLabel()
+    {
+        var account = await CreateTestAccountAsync();
+        Nav.ActionSheetResult = "8 hours";
+
+        var vm = BuildJournalVm();
+        vm.Notes = "Today was a big day at school";
+
+        await vm.SetReminderCommand.ExecuteAsync(null);
+
+        var pending = await ReminderSvc.GetPendingAsync(account.Guid);
+        Assert.Single(pending);
+        Assert.Equal("Journal", pending[0].Topic);
+        Assert.Contains("Today was", pending[0].Title);
+    }
+
+    [Fact]
+    public async Task TodoEntry_SetReminder_EmptyGuid_ReturnsEarlyAndNoReminderScheduled()
+    {
+        var account = await CreateTestAccountAsync();
+        Nav.ActionSheetResult = "1 hour";
+
+        var vm = BuildTodoVm();
+        // Guid is empty — guard should fire
+        await vm.SetReminderCommand.ExecuteAsync(null);
+
+        var pending = await ReminderSvc.GetPendingAsync(account.Guid);
+        Assert.Empty(pending);
+    }
+
+    [Fact]
+    public async Task TodoEntry_SetReminder_ValidGuidAndDuration_SchedulesReminder()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var todo = new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Read chapter 5", UpdatedOn = ts };
+        await TodoRepo.SaveAsync(todo);
+
+        Nav.ActionSheetResult = "1 day";
+        var vm = BuildTodoVm();
+        vm.Guid = todo.Guid;
+        vm.Title = todo.Title;
+        await Task.Delay(150);
+
+        await vm.SetReminderCommand.ExecuteAsync(null);
+
+        var pending = await ReminderSvc.GetPendingAsync(account.Guid);
+        Assert.Single(pending);
+        Assert.Equal("Todo", pending[0].Topic);
+        Assert.Equal(todo.Guid, pending[0].EntityGuid);
+    }
+}
