@@ -7092,3 +7092,44 @@ public class JournalEntryDeleteCancelTests : ViewModelTestBase
         Assert.Empty(Nav.AlertTitles);
     }
 }
+
+// ─── GoalEntry: DeleteAsync cancel and empty-guid paths ──────────────────────
+
+public class GoalEntryDeleteGuardTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task DeleteAsync_EmptyGuid_ReturnsEarlyWithoutDialog()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        // Guid is empty — should return early
+
+        var ex = await Record.ExceptionAsync(() => vm.DeleteCommand.ExecuteAsync(null));
+        Assert.Null(ex);
+        Assert.Empty(Nav.AlertTitles);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_UserCancels_GoalNotDeleted()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Keep this goal", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        Nav.AlertConfirmResult = false;
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        await vm.DeleteCommand.ExecuteAsync(null);
+
+        var still = await GoalRepo.GetAsync(goal.Guid);
+        Assert.NotNull(still);
+        Assert.Null(still!.DeletedAt);
+        Assert.DoesNotContain("..", Nav.NavigatedRoutes);
+    }
+}
