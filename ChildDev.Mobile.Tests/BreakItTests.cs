@@ -4628,3 +4628,78 @@ public class DashboardHasNoItemsTests : ViewModelTestBase
         Assert.True(vm.HasWeeklyChallenge);
     }
 }
+
+// ─── JournalListViewModel: HasTodayEntry ─────────────────────────────────────
+
+public class JournalListHasTodayEntryTests : ViewModelTestBase
+{
+    private JournalListViewModel BuildVm() =>
+        new(JournalRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_WithTodayEntry_SetsHasTodayEntryTrue()
+    {
+        var account = await CreateTestAccountAsync();
+        var todayMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Notes = "Today's entry", EnteredDate = todayMs, UpdatedOn = todayMs
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasTodayEntry);
+    }
+
+    [Fact]
+    public async Task Load_WithNoTodayEntry_SetsHasTodayEntryFalse()
+    {
+        var account = await CreateTestAccountAsync();
+        var yesterdayMs = DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Notes = "Yesterday's entry", EnteredDate = yesterdayMs, UpdatedOn = yesterdayMs
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.False(vm.HasTodayEntry);
+    }
+}
+
+// ─── JournalEntryViewModel: SetMood and SetActivity commands ─────────────────
+
+public class JournalEntrySetMoodActivityTests : ViewModelTestBase
+{
+    private JournalEntryViewModel BuildVm() =>
+        new(JournalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public void SetMood_UpdatesMoodProperty()
+    {
+        var vm = BuildVm();
+        vm.SetMoodCommand.Execute("Happy");
+        Assert.Equal("Happy", vm.Mood);
+    }
+
+    [Fact]
+    public void SetActivity_UpdatesActivityProperty()
+    {
+        var vm = BuildVm();
+        vm.SetActivityCommand.Execute("Soccer");
+        Assert.Equal("Soccer", vm.Activity);
+    }
+
+    [Fact]
+    public void SetMood_OverwritesPreviousMood()
+    {
+        var vm = BuildVm();
+        vm.SetMoodCommand.Execute("Sad");
+        vm.SetMoodCommand.Execute("Happy");
+        Assert.Equal("Happy", vm.Mood);
+    }
+}
