@@ -6181,3 +6181,83 @@ public class DashboardNextGoalMeetingFarDateTests : ViewModelTestBase
         Assert.Equal(string.Empty, vm.NextGoalMeeting);
     }
 }
+
+// ─── SettingsViewModel: SaveServerUrl non-empty and trailing-slash strip ───────
+
+public class SettingsViewModelSaveUrlTests : ViewModelTestBase
+{
+    private SettingsViewModel BuildVm() =>
+        new(AccountService, new FakeHttpClientFactory(new NoOpHttpHandler()), Analytics);
+
+    [Fact]
+    public async Task SaveServerUrl_NonEmptyUrl_SetsSavedMessage()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.ServerUrl = "https://example.com";
+        await vm.SaveServerUrlCommand.ExecuteAsync(null);
+        Assert.Contains("saved", vm.StatusMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task SaveServerUrl_TrailingSlash_IsStripped()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.ServerUrl = "https://example.com/";
+        await vm.SaveServerUrlCommand.ExecuteAsync(null);
+        // Reload to verify stored value
+        var vm2 = BuildVm();
+        await vm2.LoadCommand.ExecuteAsync(null);
+        Assert.DoesNotContain("/", vm2.ServerUrl.TrimStart("https://".ToCharArray()));
+        Assert.Equal("https://example.com", vm2.ServerUrl);
+    }
+}
+
+// ─── GoalListViewModel: null arg guards for QuickNote and Open ────────────────
+
+public class GoalListNullArgTests : ViewModelTestBase
+{
+    private GoalListViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task QuickNoteCommand_NullGoal_DoesNotThrow()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        var ex = await Record.ExceptionAsync(() => vm.QuickNoteCommand.ExecuteAsync(null!));
+        Assert.Null(ex);
+    }
+}
+
+// ─── JournalListViewModel: null arg guards ────────────────────────────────────
+
+public class JournalListNullArgTests : ViewModelTestBase
+{
+    private JournalListViewModel BuildVm() =>
+        new(JournalRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task OpenCommand_NullJournal_DoesNotThrow()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        var ex = await Record.ExceptionAsync(() => vm.OpenCommand.ExecuteAsync(null!));
+        Assert.Null(ex);
+    }
+
+    [Fact]
+    public async Task DeleteCommand_NullJournal_DoesNotThrow()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        var ex = await Record.ExceptionAsync(() => vm.DeleteCommand.ExecuteAsync(null!));
+        Assert.Null(ex);
+    }
+}
