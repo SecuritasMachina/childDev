@@ -990,10 +990,12 @@ else
         var title = NewTitle.Trim();
         if (string.IsNullOrWhiteSpace(title)) return;
 
-        var goalNotes = !string.IsNullOrWhiteSpace(_newGoalLink) ? $"Goal: {_newGoalLink}" : null;
+        var goalLinkText = _newGoalLink.Length > 1994 ? _newGoalLink[..1994] : _newGoalLink;
+        var goalNotes = !string.IsNullOrWhiteSpace(goalLinkText) ? $"Goal: {goalLinkText}" : null;
         var combinedNotes = goalNotes is not null && !string.IsNullOrWhiteSpace(NewNotes)
             ? $"{goalNotes}\n{NewNotes.Trim()}"
             : goalNotes ?? (string.IsNullOrWhiteSpace(NewNotes) ? null : NewNotes.Trim());
+        if (combinedNotes?.Length > 2000) combinedNotes = combinedNotes[..2000];
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         Db.Todos.Add(new Todo
@@ -1237,11 +1239,13 @@ else
         var title = EditTitle.Trim();
         if (string.IsNullOrWhiteSpace(title) || EditingGuid is null) return;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var goalNotes = !string.IsNullOrWhiteSpace(_editGoalLink) ? $"Goal: {_editGoalLink}" : null;
+        var editGoalLinkText = _editGoalLink.Length > 1994 ? _editGoalLink[..1994] : _editGoalLink;
+        var goalNotes = !string.IsNullOrWhiteSpace(editGoalLinkText) ? $"Goal: {editGoalLinkText}" : null;
         var remainingNotes = string.IsNullOrWhiteSpace(EditNotes) ? null : EditNotes.Trim();
         var notes = goalNotes is not null && remainingNotes is not null
             ? $"{goalNotes}\n{remainingNotes}"
             : goalNotes ?? remainingNotes;
+        if (notes?.Length > 2000) notes = notes[..2000];
         long? dueDate = EditDueDate.HasValue
             ? new DateTimeOffset(DateTime.SpecifyKind(EditDueDate.Value, DateTimeKind.Local)).ToUnixTimeMilliseconds()
             : null;

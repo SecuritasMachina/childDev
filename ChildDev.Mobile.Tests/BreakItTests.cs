@@ -2516,3 +2516,240 @@ public class DashboardWeeklyChallengeTests : ViewModelTestBase
         Assert.True(vm.WeeklyChallengePctValue <= 1.0);
     }
 }
+
+// ─── RemindersViewModel: load, dismiss, snooze, canExecute ───────────────────
+
+public class RemindersViewModelLoadTests : ViewModelTestBase
+{
+    private RemindersViewModel BuildVm() => new(ReminderSvc, AccountService, Nav);
+
+    [Fact]
+    public async Task Load_WithPendingReminders_PopulatesListAndSetsHasReminders()
+    {
+        var account = await CreateTestAccountAsync();
+        var future = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds();
+        await ReminderSvc.ScheduleAsync(new Reminder
+        {
+            AccountFk = account.Guid, Title = "Check in", Topic = "General", FireAt = future
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Single(vm.Reminders);
+        Assert.True(vm.HasReminders);
+    }
+
+    [Fact]
+    public async Task Load_WithNoReminders_HasRemindersFalse()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Empty(vm.Reminders);
+        Assert.False(vm.HasReminders);
+    }
+
+    [Fact]
+    public async Task Load_SetsIsLoadingFalseAfterCompletion()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.False(vm.IsLoading);
+    }
+}
+
+public class RemindersViewModelDismissTests : ViewModelTestBase
+{
+    private RemindersViewModel BuildVm() => new(ReminderSvc, AccountService, Nav);
+
+    [Fact]
+    public async Task Dismiss_RemovesReminderFromList()
+    {
+        var account = await CreateTestAccountAsync();
+        var future = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds();
+        await ReminderSvc.ScheduleAsync(new Reminder
+        {
+            AccountFk = account.Guid, Title = "R1", Topic = "General", FireAt = future
+        });
+        await ReminderSvc.ScheduleAsync(new Reminder
+        {
+            AccountFk = account.Guid, Title = "R2", Topic = "General", FireAt = future + 1
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Equal(2, vm.Reminders.Count);
+
+        await vm.DismissCommand.ExecuteAsync(vm.Reminders[0]);
+
+        Assert.Single(vm.Reminders);
+    }
+
+    [Fact]
+    public async Task Dismiss_LastReminder_SetsHasRemindersFalse()
+    {
+        var account = await CreateTestAccountAsync();
+        var future = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds();
+        await ReminderSvc.ScheduleAsync(new Reminder
+        {
+            AccountFk = account.Guid, Title = "Last one", Topic = "General", FireAt = future
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.True(vm.HasReminders);
+
+        await vm.DismissCommand.ExecuteAsync(vm.Reminders[0]);
+
+        Assert.False(vm.HasReminders);
+    }
+
+    [Fact]
+    public async Task Dismiss_PersistsToDB_ReminderGoneAfterReload()
+    {
+        var account = await CreateTestAccountAsync();
+        var future = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds();
+        await ReminderSvc.ScheduleAsync(new Reminder
+        {
+            AccountFk = account.Guid, Title = "Persistent dismiss", Topic = "General", FireAt = future
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        await vm.DismissCommand.ExecuteAsync(vm.Reminders[0]);
+
+        // Reload from DB — dismissed reminder should not reappear
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Empty(vm.Reminders);
+        Assert.False(vm.HasReminders);
+    }
+}
+
+public class RemindersViewModelCanAddTests : ViewModelTestBase
+{
+    private RemindersViewModel BuildVm() => new(ReminderSvc, AccountService, Nav);
+
+    [Fact]
+    public void CanAddGeneral_WithEmptyTitle_ReturnsFalse()
+    {
+        var vm = BuildVm();
+        vm.NewReminderTitle = string.Empty;
+
+        Assert.False(vm.AddGeneralCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void CanAddGeneral_WithWhitespaceTitle_ReturnsFalse()
+    {
+        var vm = BuildVm();
+        vm.NewReminderTitle = "   ";
+
+        Assert.False(vm.AddGeneralCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void CanAddGeneral_WithValidTitle_ReturnsTrue()
+    {
+        var vm = BuildVm();
+        vm.NewReminderTitle = "Remind me to practice";
+
+        Assert.True(vm.AddGeneralCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task AddGeneral_ClearsNewReminderTitleAfterAdd()
+    {
+        var account = await CreateTestAccountAsync();
+        Nav.ActionSheetResult = "1 hour";
+
+        var vm = BuildVm();
+        vm.NewReminderTitle = "Study session";
+        await vm.AddGeneralCommand.ExecuteAsync(null);
+
+        Assert.Equal(string.Empty, vm.NewReminderTitle);
+    }
+
+    [Fact]
+    public async Task AddGeneral_WhenUserCancelsSnooze_TitleNotCleared()
+    {
+        await CreateTestAccountAsync();
+        Nav.ActionSheetResult = null; // user cancels duration picker
+
+        var vm = BuildVm();
+        vm.NewReminderTitle = "Don't clear me";
+        await vm.AddGeneralCommand.ExecuteAsync(null);
+
+        // Title should remain — add was not completed
+        Assert.Equal("Don't clear me", vm.NewReminderTitle);
+    }
+}
+
+// ─── GoalEntry: linked todo Notes length cap (long GoalText edge case) ────────
+
+public class GoalEntryLinkedTodoNotesLengthTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task AddLinkedTodo_MaxLengthGoalText_NotesDoesNotExceed2000Chars()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        // 2000-char goal text is the API maximum — "Goal: " + 2000 = 2006, which exceeds Notes limit
+        var maxGoalText = new string('B', 2000);
+        var goal = new Goal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalText = maxGoalText, EnteredDate = ts, UpdatedOn = ts
+        };
+        await GoalRepo.SaveAsync(goal);
+
+        Nav.PromptResult = "Practice";
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        await vm.AddLinkedTodoCommand.ExecuteAsync(null);
+
+        var todos = await TodoRepo.GetPendingAsync(account.Guid);
+        Assert.Single(todos);
+        var notesLength = todos[0].Notes?.Length ?? 0;
+        Assert.True(notesLength <= 2000,
+            $"Notes length {notesLength} exceeds 2000-char limit (would be rejected by API sync)");
+    }
+
+    [Fact]
+    public async Task AddLinkedTodo_MaxLengthGoalText_LinkedTodosStillMatchAfterReload()
+    {
+        // Matching must use the same truncation logic on both write and read sides
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var maxGoalText = new string('C', 2000);
+        var goal = new Goal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalText = maxGoalText, EnteredDate = ts, UpdatedOn = ts
+        };
+        await GoalRepo.SaveAsync(goal);
+
+        Nav.PromptResult = "Linked task";
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+        await vm.AddLinkedTodoCommand.ExecuteAsync(null);
+
+        // Reload from DB — goal entry must still find its linked todo
+        var vm2 = BuildVm();
+        vm2.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        Assert.True(vm2.HasLinkedTodos, "Linked todo not found after reload — Notes truncation broke prefix matching");
+        Assert.Single(vm2.LinkedTodos);
+    }
+}

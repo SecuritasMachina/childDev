@@ -2611,7 +2611,7 @@ else
     {
         var goalName = Goal?.GoalText ?? string.Empty;
         _newTodoTitle = string.Empty;
-        _newTodoNotes = goalName.Length > 0 ? $"Goal: {goalName}" : null;
+        _newTodoNotes = goalName.Length > 0 ? $"Goal: {(goalName.Length > 1994 ? goalName[..1994] : goalName)}" : null;
         _newTodoDueDate = null;
         _showAddTodoDialog = true;
     }
@@ -2629,7 +2629,7 @@ else
         var firstLine = nextStep.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? nextStep;
         _newTodoTitle = firstLine.Length > 60 ? firstLine[..60] : firstLine;
         var goalName = Goal?.GoalText ?? string.Empty;
-        _newTodoNotes = goalName.Length > 0 ? $"Goal: {goalName}" : null;
+        _newTodoNotes = goalName.Length > 0 ? $"Goal: {(goalName.Length > 1994 ? goalName[..1994] : goalName)}" : null;
         _newTodoDueDate = null;
         _showAddTodoDialog = true;
         await Analytics.TrackAsync("todo_from_next_step_open", AccountGuid, "goal_detail", GoalGuid);
@@ -2681,9 +2681,10 @@ else
         if (string.IsNullOrWhiteSpace(title)) return;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var goalName = Goal?.GoalText ?? string.Empty;
-        var goalPrefix = goalName.Length > 0 ? $"Goal: {goalName}" : null;
+        var goalPrefix = goalName.Length > 0 ? $"Goal: {(goalName.Length > 1994 ? goalName[..1994] : goalName)}" : null;
         var extraNotes = string.IsNullOrWhiteSpace(_newTodoNotes) ? null : _newTodoNotes.Trim();
         var combinedNotes = goalPrefix is not null && extraNotes is not null ? $"{goalPrefix}\n{extraNotes}" : goalPrefix ?? extraNotes;
+        if (combinedNotes?.Length > 2000) combinedNotes = combinedNotes[..2000];
         Db.Todos.Add(new ChildDev.Api.Models.Entities.Todo
         {
             Guid = System.Guid.NewGuid().ToString(),

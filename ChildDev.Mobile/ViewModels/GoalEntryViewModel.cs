@@ -132,7 +132,9 @@ public partial class GoalEntryViewModel(
             if (account is not null)
             {
                 var pending = await todoRepo.GetPendingAsync(account.Guid);
-                var goalPrefix = $"Goal: {item.GoalText.Trim()}";
+                var trimmedGoalText = item.GoalText.Trim();
+                if (trimmedGoalText.Length > 1994) trimmedGoalText = trimmedGoalText[..1994];
+                var goalPrefix = $"Goal: {trimmedGoalText}";
                 var linked = pending
                     .Where(t => t.Notes != null &&
                         t.Notes.StartsWith(goalPrefix, StringComparison.OrdinalIgnoreCase))
@@ -214,7 +216,7 @@ public partial class GoalEntryViewModel(
             Guid = System.Guid.NewGuid().ToString(),
             AccountFk = account.Guid,
             Title = title.Trim(),
-            Notes = $"Goal: {GoalText.Trim()}",
+            Notes = $"Goal: {(GoalText.Trim() is { Length: > 1994 } gt ? gt[..1994] : GoalText.Trim())}",
             UpdatedOn = ts
         };
         await todoRepo.SaveAsync(todo);

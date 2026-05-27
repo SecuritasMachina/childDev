@@ -3034,7 +3034,7 @@ else
         {
             var linkedGoal = AllActiveGoals.FirstOrDefault(g => g.Guid == QuickTodoGoalGuid);
             if (linkedGoal?.GoalText is { Length: > 0 } gt)
-                notes = $"Goal: {gt}";
+                notes = $"Goal: {(gt.Length > 1994 ? gt[..1994] : gt)}";
         }
         Db.Todos.Add(new Todo
         {
@@ -3083,7 +3083,7 @@ else
             : null;
         string? notes = null;
         if (_goalTodoGoalText is { Length: > 0 } gt)
-            notes = $"Goal: {gt}";
+            notes = $"Goal: {(gt.Length > 1994 ? gt[..1994] : gt)}";
         Db.Todos.Add(new Todo
         {
             Guid = System.Guid.NewGuid().ToString(),
