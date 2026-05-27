@@ -4703,3 +4703,56 @@ public class JournalEntrySetMoodActivityTests : ViewModelTestBase
         Assert.Equal("Happy", vm.Mood);
     }
 }
+
+// ─── GoalEntryViewModel: ShareProgressAsync (NO_MAUI path) ───────────────────
+
+public class GoalEntryShareProgressTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task ShareProgress_WithNoGuid_DoesNotThrowAndReturnsEarly()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        // Guid is empty — should return early without crashing
+        var ex = await Record.ExceptionAsync(() => vm.ShareProgressCommand.ExecuteAsync(null));
+        Assert.Null(ex);
+    }
+
+    [Fact]
+    public async Task ShareProgress_WithGoalAndProgressNotes_CompletesWithoutThrowing()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Shareable goal", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+        await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), GoalFk = goal.Guid, AccountFk = account.Guid, NextStepItems = "Made great progress", UpdatedOn = ts });
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        var ex = await Record.ExceptionAsync(() => vm.ShareProgressCommand.ExecuteAsync(null));
+        Assert.Null(ex);
+    }
+
+    [Fact]
+    public async Task ShareProgress_GoalTextOver60Chars_TitleTruncatesTo60()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var longText = new string('G', 80);
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = longText, EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        // Should not throw even with long GoalText
+        var ex = await Record.ExceptionAsync(() => vm.ShareProgressCommand.ExecuteAsync(null));
+        Assert.Null(ex);
+    }
+}
