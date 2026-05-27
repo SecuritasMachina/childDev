@@ -4569,3 +4569,62 @@ public class DashboardBeginnerTierTests : ViewModelTestBase
         Assert.Contains("Beginner", vm.OverallTierLabel);
     }
 }
+
+// ─── DashboardViewModel: HasNoPendingTodos and HasNoActiveGoals ───────────────
+
+public class DashboardHasNoItemsTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_WithNoPendingTodos_SetsHasNoPendingTodosTrue()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasNoPendingTodos);
+        Assert.Equal(0, vm.PendingTodoCount);
+    }
+
+    [Fact]
+    public async Task Load_WithNoPendingTodos_AfterCompletingAll_SetsHasNoPendingTodosTrue()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var todo = new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Task", UpdatedOn = now };
+        await TodoRepo.SaveAsync(todo);
+        await TodoRepo.CompleteAsync(todo.Guid);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasNoPendingTodos);
+    }
+
+    [Fact]
+    public async Task Load_WithNoActiveGoals_SetsHasNoActiveGoalsTrueAndNoWeeklyChallenge()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasNoActiveGoals);
+        Assert.False(vm.HasWeeklyChallenge);
+    }
+
+    [Fact]
+    public async Task Load_WithActiveGoal_ClearsHasNoActiveGoalsAndSetsWeeklyChallenge()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Active goal", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.False(vm.HasNoActiveGoals);
+        Assert.True(vm.HasWeeklyChallenge);
+    }
+}
