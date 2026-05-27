@@ -1854,7 +1854,7 @@ else
         <MudTextField @bind-Value="QuickTodoText"
                       Label="What needs to be done?"
                       Variant="Variant.Outlined" Margin="Margin.Dense"
-                      Style="flex:1;min-width:160px;" Immediate="true"
+                      Style="flex:1;min-width:160px;" Immediate="true" MaxLength="500"
                       @onkeydown="@(async (e) => { if (e.Key == "Enter") await SaveQuickTodo(); })" />
         <MudDatePicker @bind-Date="QuickTodoDueDate" Label="Due (opt.)"
                        Variant="Variant.Outlined" Margin="Margin.Dense"
@@ -1982,7 +1982,7 @@ else
     }
     <MudTextField @bind-Value="QuickJournalText"
                   Label="What happened today? What did you observe?"
-                  Variant="Variant.Outlined" Lines="2" Class="mb-3" />
+                  Variant="Variant.Outlined" Lines="2" Class="mb-3" MaxLength="10000" />
     @if (AllActiveGoals.Count > 0)
     {
         <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Tag a goal (optional):</MudText>
@@ -2087,7 +2087,7 @@ else
         }
         <MudTextField @bind-Value="QuickNoteText" Label="What happened? What's the next step?"
                       Variant="Variant.Outlined" Lines="5" AutoFocus="true" Immediate="true"
-                      HelperText="@qnWcHelper" />
+                      HelperText="@qnWcHelper" MaxLength="2000" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => ShowQuickNoteDialog = false">Cancel</MudButton>
@@ -2112,7 +2112,7 @@ else
     </TitleContent>
     <DialogContent>
         <MudTextField @bind-Value="_goalTodoTitle" Label="What needs to be done?" Variant="Variant.Outlined"
-                      Class="mb-3" AutoFocus="true" Immediate="true"
+                      Class="mb-3" AutoFocus="true" Immediate="true" MaxLength="500"
                       @onkeydown="@(async (e) => { if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(_goalTodoTitle)) await SaveGoalTodo(); })" />
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
             <MudDatePicker @bind-Date="_goalTodoDueDate" Label="Due date (optional)" Variant="Variant.Outlined" Style="flex:1;" />
@@ -2199,12 +2199,12 @@ else
             </MudStack>
         </MudCollapse>
         <MudTextField @bind-Value="NewGoalText" Label="What's the goal?" Variant="Variant.Outlined"
-                      Lines="2" Class="mb-4" AutoFocus="true" Immediate="true" />
+                      Lines="2" Class="mb-4" AutoFocus="true" Immediate="true" MaxLength="2000" />
         <MudTextField @bind-Value="NewMeasurableOutcome" Label="How will you measure success? (optional)"
-                      Variant="Variant.Outlined" Immediate="true" HelperText="e.g. Read 10 books, Tie shoes independently" Class="mb-4" />
+                      Variant="Variant.Outlined" Immediate="true" HelperText="e.g. Read 10 books, Tie shoes independently" Class="mb-4" MaxLength="2000" />
         <MudTextField @bind-Value="NewGoalSteps" Label="Steps to achieve this goal (optional)"
                       Variant="Variant.Outlined" Lines="4" Immediate="true" Class="mb-4"
-                      HelperText="Enter each step on a new line — break your goal into small, achievable actions" />
+                      HelperText="Enter each step on a new line — break your goal into small, achievable actions" MaxLength="2000" />
         <MudDatePicker @bind-Date="NewGoalExpirationDate" Label="Target completion date (optional)"
                        Variant="Variant.Outlined" HelperText="When do you want to achieve this by?" Class="mb-4" />
         <MudDatePicker @bind-Date="NewGoalNextMeetingDate" Label="Next check-in / meeting date (optional)"

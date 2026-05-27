@@ -640,7 +640,7 @@ else
             </MudStack>
         }
         <MudTextField @bind-Value="NewTitle" Label="What needs to be done?" Variant="Variant.Outlined"
-                      Class="mb-4" AutoFocus="true" Immediate="true"
+                      Class="mb-4" AutoFocus="true" Immediate="true" MaxLength="500"
                       @onkeydown="@(async (e) => { if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(NewTitle)) await AddTodo(); })" />
         @if (_activeGoals.Count > 0)
         {
@@ -658,7 +658,7 @@ else
             </MudStack>
         }
         <MudTextField @bind-Value="NewNotes" Label="Notes (optional)" Variant="Variant.Outlined"
-                      Lines="2" Class="mb-4" />
+                      Lines="2" Class="mb-4" MaxLength="2000" />
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
             <MudDatePicker @bind-Date="NewDueDate" Label="Due date (optional)" Variant="Variant.Outlined" Style="flex:1;" />
             <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined"
@@ -685,7 +685,7 @@ else
     </TitleContent>
     <DialogContent>
         <MudTextField @bind-Value="EditTitle" Label="Task" Variant="Variant.Outlined"
-                      Class="mb-4" AutoFocus="true" Immediate="true"
+                      Class="mb-4" AutoFocus="true" Immediate="true" MaxLength="500"
                       @onkeydown="@(async (e) => { if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(EditTitle)) await SaveTodoEdit(); })" />
         @if (_activeGoals.Count > 0)
         {
@@ -703,7 +703,7 @@ else
             </MudStack>
         }
         <MudTextField @bind-Value="EditNotes" Label="Notes (optional)" Variant="Variant.Outlined"
-                      Lines="2" Class="mb-4" />
+                      Lines="2" Class="mb-4" MaxLength="2000" />
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
             <MudDatePicker @bind-Date="EditDueDate" Label="Due date (optional)" Variant="Variant.Outlined" Style="flex:1;" />
             <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined"

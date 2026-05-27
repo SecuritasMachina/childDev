@@ -102,7 +102,7 @@
         }
         <MudTextField @ref="_noteTextField" @bind-Value="NewNextSteps"
                       Placeholder="What happened? What's your next step?"
-                      Variant="Variant.Outlined" Lines="3" Immediate="true"
+                      Variant="Variant.Outlined" Lines="3" Immediate="true" MaxLength="2000"
                       HelperText="@(inlineWc > 0 ? $"{inlineWc} word{(inlineWc == 1 ? "" : "s")}" : null)" />
         <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-2" Spacing="1" Wrap="Wrap.Wrap">
             @foreach (var (label, template) in _progressTemplates)
@@ -2115,9 +2115,9 @@ else
             @(Goal?.GoalText is { Length: > 40 } gt40 ? gt40[..40] + "…" : Goal?.GoalText ?? "")
         </MudChip>
         <MudTextField @bind-Value="_newTodoTitle" Label="What needs to be done?" Variant="Variant.Outlined"
-                      Class="mb-4" AutoFocus="true" Immediate="true" />
+                      Class="mb-4" AutoFocus="true" Immediate="true" MaxLength="500" />
         <MudTextField @bind-Value="_newTodoNotes" Label="Additional notes (optional)" Variant="Variant.Outlined"
-                      Lines="2" Class="mb-4" />
+                      Lines="2" Class="mb-4" MaxLength="2000" />
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
             <MudDatePicker @bind-Date="_newTodoDueDate" Label="Due date (optional)" Variant="Variant.Outlined" Style="flex:1;" />
             <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined"
@@ -2271,7 +2271,7 @@ else
             var epWcHelper = epWc == 0 ? "Describe what you worked on and what's next." : $"{epWc} word{(epWc == 1 ? "" : "s")}";
         }
         <MudTextField @bind-Value="EditProgressNextSteps" Label="Progress / next steps" Variant="Variant.Outlined"
-                      Lines="5" Class="mb-4" AutoFocus="true" Immediate="true" HelperText="@epWcHelper" />
+                      Lines="5" Class="mb-4" AutoFocus="true" Immediate="true" HelperText="@epWcHelper" MaxLength="2000" />
         <MudDatePicker @bind-Date="EditProgressMeetingDate" Label="Next meeting date (optional)" Variant="Variant.Outlined" />
     </DialogContent>
     <DialogActions>
@@ -2290,7 +2290,7 @@ else
     </TitleContent>
     <DialogContent>
         <MudTextField @bind-Value="EditGoalText" Label="Goal" Variant="Variant.Outlined"
-                      Lines="2" Class="mb-4" AutoFocus="true" Immediate="true" />
+                      Lines="2" Class="mb-4" AutoFocus="true" Immediate="true" MaxLength="2000" />
         <MudSelect @bind-Value="EditCategory" Label="Category (optional)" Variant="Variant.Outlined" Class="mb-4" Clearable="true">
             @foreach (var c in new[] { "Academic","Health","Social","Creative","Hobby","Other" })
             {
@@ -2306,10 +2306,10 @@ else
             <MudText Typo="Typo.body2">📌 Pin this goal to top</MudText>
         </MudStack>
         <MudTextField @bind-Value="EditMeasurableOutcome" Label="How will you measure success? (optional)"
-                      Variant="Variant.Outlined" Immediate="true" Class="mb-4" />
+                      Variant="Variant.Outlined" Immediate="true" Class="mb-4" MaxLength="2000" />
         <MudTextField @bind-Value="EditSteps" Label="Steps to achieve this goal (optional)"
                       Variant="Variant.Outlined" Lines="4" Immediate="true" Class="mb-4"
-                      HelperText="Enter each step on a new line" />
+                      HelperText="Enter each step on a new line" MaxLength="2000" />
         <MudDatePicker @bind-Date="EditNextMeetingDate" Label="Next meeting date (optional)"
                        Variant="Variant.Outlined" Class="mb-4" />
         <MudDatePicker @bind-Date="EditExpirationDate" Label="Target completion date (optional)"
@@ -2333,7 +2333,7 @@ else
         <MudTextField @bind-Value="_quickJournalNotes"
                       Label="What happened? What did you learn or feel?"
                       Variant="Variant.Outlined" Lines="4" FullWidth="true" Immediate="true"
-                      AutoFocus="true" Class="mb-3" />
+                      AutoFocus="true" Class="mb-3" MaxLength="10000" />
         <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">How did you feel? (tap to select)</MudText>
         <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-2">
             @foreach (var (emoji, mood) in new[] { ("😊","happy"), ("🤩","excited"), ("🙏","grateful"), ("💪","proud"), ("😌","calm"), ("🎯","focused"), ("😢","sad"), ("😴","tired"), ("😟","anxious"), ("😠","angry") })
