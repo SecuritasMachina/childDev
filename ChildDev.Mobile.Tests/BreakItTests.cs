@@ -7772,6 +7772,113 @@ public class SettingsViewModelSaveUrlNonEmptyTests : ViewModelTestBase
     }
 }
 
+// ─── DashboardViewModel: Greeting property ───────────────────────────────────
+
+public class DashboardGreetingTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_WithAccount_GreetingContainsNickName()
+    {
+        await CreateTestAccountAsync("Zara");
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Contains("Zara", vm.Greeting);
+    }
+
+    [Fact]
+    public async Task Load_WithAccount_GreetingContainsTimeOfDay()
+    {
+        await CreateTestAccountAsync("Kid");
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        var validGreetings = new[] { "Good morning", "Good afternoon", "Good evening" };
+        Assert.Contains(validGreetings, g => vm.Greeting.Contains(g));
+    }
+}
+
+// ─── TodoListViewModel: SnoozeOverdue before LoadAsync returns early ──────────
+
+public class TodoListSnoozeOverdueBeforeLoadTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task SnoozeOverdue_BeforeLoad_DoesNotThrow()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        // _accountGuid is empty before LoadAsync
+        var ex = await Record.ExceptionAsync(() => vm.SnoozeOverdueCommand.ExecuteAsync(null));
+        Assert.Null(ex);
+    }
+}
+
+// ─── JournalRepository: HasEntryTodayAsync directly ──────────────────────────
+
+public class JournalRepositoryHasTodayTests : ViewModelTestBase
+{
+    [Fact]
+    public async Task HasEntryToday_WithTodayEntry_ReturnsTrue()
+    {
+        var account = await CreateTestAccountAsync();
+        var todayMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Today note", EnteredDate = todayMs, UpdatedOn = todayMs });
+
+        var result = await JournalRepo.HasEntryTodayAsync(account.Guid);
+        Assert.True(result);
+    }
+
+    [Fact]
+    public async Task HasEntryToday_WithOnlyYesterdayEntry_ReturnsFalse()
+    {
+        var account = await CreateTestAccountAsync();
+        var yesterdayMs = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today.AddDays(-1), DateTimeKind.Local)).ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Yesterday", EnteredDate = yesterdayMs, UpdatedOn = yesterdayMs });
+
+        var result = await JournalRepo.HasEntryTodayAsync(account.Guid);
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task HasEntryToday_NoEntries_ReturnsFalse()
+    {
+        var account = await CreateTestAccountAsync();
+        var result = await JournalRepo.HasEntryTodayAsync(account.Guid);
+        Assert.False(result);
+    }
+}
+
+// ─── JournalRepository: GetJournalStreakAsync directly ───────────────────────
+
+public class JournalRepositoryStreakTests : ViewModelTestBase
+{
+    [Fact]
+    public async Task GetJournalStreak_NoEntries_ReturnsZero()
+    {
+        var account = await CreateTestAccountAsync();
+        var streak = await JournalRepo.GetJournalStreakAsync(account.Guid);
+        Assert.Equal(0, streak);
+    }
+
+    [Fact]
+    public async Task GetJournalStreak_TodayAndYesterday_Returns2()
+    {
+        var account = await CreateTestAccountAsync();
+        var today = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local));
+        var yesterday = today.AddDays(-1);
+
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "T", EnteredDate = today.ToUnixTimeMilliseconds(), UpdatedOn = today.ToUnixTimeMilliseconds() });
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Y", EnteredDate = yesterday.ToUnixTimeMilliseconds(), UpdatedOn = yesterday.ToUnixTimeMilliseconds() });
+
+        var streak = await JournalRepo.GetJournalStreakAsync(account.Guid);
+        Assert.Equal(2, streak);
+    }
+}
+
 // ─── ReminderService: GetForEntityAsync ──────────────────────────────────────
 
 public class ReminderServiceGetForEntityTests : ViewModelTestBase
