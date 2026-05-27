@@ -133,12 +133,11 @@ public partial class TodoListViewModel(
             await syncService.RunAsync(account);
             var items = await repo.GetPendingAsync(_accountGuid);
             _allTodos = items;
-            Todos = new ObservableCollection<Todo>(items);
+            ApplyFilter();
             var completed = await repo.GetCompletedAsync(_accountGuid);
             CompletedTodoCount = completed.Count;
             HasCompletedTodos = CompletedTodoCount > 0;
             CompletedTodos = new ObservableCollection<Todo>(completed);
-            UpdateOverdueCount(items);
             UpdateWeekCompletedMessage(completed);
             StatusMessage = string.Empty;
         }
