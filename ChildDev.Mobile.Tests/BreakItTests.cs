@@ -4284,3 +4284,44 @@ public class GoalEntryCategoryLengthTests : ViewModelTestBase
         Assert.Equal(50, goals[0].Category?.Length);
     }
 }
+
+// ─── JournalEntryViewModel: EmotionReason length cap (API MaxLength(1000)) ────
+
+public class JournalEntryEmotionReasonLengthTests : ViewModelTestBase
+{
+    private JournalEntryViewModel BuildVm() =>
+        new(JournalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task SaveAsync_EmotionReasonExceeds1000Chars_IsTruncatedTo1000()
+    {
+        var account = await CreateTestAccountAsync();
+        var longReason = new string('E', 1100);
+
+        var vm = BuildVm();
+        vm.Notes = "Feeling reflective";
+        vm.EmotionReason = longReason;
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var journals = await JournalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Single(journals);
+        Assert.True((journals[0].EmotionReason?.Length ?? 0) <= 1000,
+            $"EmotionReason length {journals[0].EmotionReason?.Length} exceeds 1000-char API limit");
+    }
+
+    [Fact]
+    public async Task SaveAsync_EmotionReasonExactly1000Chars_IsNotTruncated()
+    {
+        var account = await CreateTestAccountAsync();
+        var exactReason = new string('F', 1000);
+
+        var vm = BuildVm();
+        vm.Notes = "Exact reason test";
+        vm.EmotionReason = exactReason;
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var journals = await JournalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Single(journals);
+        Assert.Equal(1000, journals[0].EmotionReason?.Length);
+    }
+}

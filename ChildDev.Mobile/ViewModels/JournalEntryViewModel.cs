@@ -111,7 +111,8 @@ public partial class JournalEntryViewModel(
         journal.Activity = act is { Length: > 255 } ? act[..255] : act;
         var mood = string.IsNullOrWhiteSpace(Mood) ? null : Mood.Trim();
         journal.Mood = mood is { Length: > 50 } ? mood[..50] : mood;
-        journal.EmotionReason = string.IsNullOrWhiteSpace(EmotionReason) ? null : EmotionReason.Trim();
+        var emotionReason = string.IsNullOrWhiteSpace(EmotionReason) ? null : EmotionReason.Trim();
+        journal.EmotionReason = emotionReason is { Length: > 1000 } ? emotionReason[..1000] : emotionReason;
         var tags = string.IsNullOrWhiteSpace(Tags) ? null : Tags.Trim();
         journal.Tags = tags is { Length: > 500 } ? tags[..500] : tags;
 
