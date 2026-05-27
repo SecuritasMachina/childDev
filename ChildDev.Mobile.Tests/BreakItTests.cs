@@ -2275,3 +2275,244 @@ public class GoalListDeleteStateTests : ViewModelTestBase
         Assert.DoesNotContain("2", vm.EntryCountDisplay);
     }
 }
+
+// ─── DashboardViewModel: stale goal detection logic ──────────────────────────
+
+public class DashboardStaleGoalTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_GoalWithNoProgress_MarkedAsStale()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal
+        {
+            Guid = Guid.NewGuid().ToString(),
+            AccountFk = account.Guid,
+            GoalText = "Master chess",
+            EnteredDate = ts,
+            UpdatedOn = ts
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasStaleGoal);
+        Assert.Equal("Master chess", vm.StaleGoalText);
+    }
+
+    [Fact]
+    public async Task Load_GoalWithRecentProgress_NotMarkedAsStale()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goalGuid = Guid.NewGuid().ToString();
+        await GoalRepo.SaveAsync(new Goal
+        {
+            Guid = goalGuid,
+            AccountFk = account.Guid,
+            GoalText = "Learn piano",
+            EnteredDate = ts,
+            UpdatedOn = ts
+        });
+        // Add a progress note from 3 days ago (within the 7-day threshold)
+        var recentMs = DateTimeOffset.UtcNow.AddDays(-3).ToUnixTimeMilliseconds();
+        await GoalProgressRepo.UpsertFromSyncAsync(new GoalProgress
+        {
+            Guid = Guid.NewGuid().ToString(),
+            AccountFk = account.Guid,
+            GoalFk = goalGuid,
+            NextStepItems = "Practiced scales",
+            UpdatedOn = recentMs
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.False(vm.HasStaleGoal);
+    }
+
+    [Fact]
+    public async Task Load_GoalWithProgressOlderThan7Days_MarkedAsStale()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goalGuid = Guid.NewGuid().ToString();
+        await GoalRepo.SaveAsync(new Goal
+        {
+            Guid = goalGuid,
+            AccountFk = account.Guid,
+            GoalText = "Run a marathon",
+            EnteredDate = ts,
+            UpdatedOn = ts
+        });
+        // Add a progress note from 10 days ago (outside the 7-day threshold)
+        var staleMs = DateTimeOffset.UtcNow.AddDays(-10).ToUnixTimeMilliseconds();
+        await GoalProgressRepo.UpsertFromSyncAsync(new GoalProgress
+        {
+            Guid = Guid.NewGuid().ToString(),
+            AccountFk = account.Guid,
+            GoalFk = goalGuid,
+            NextStepItems = "Ran 5k",
+            UpdatedOn = staleMs
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasStaleGoal);
+        Assert.Equal("Run a marathon", vm.StaleGoalText);
+    }
+}
+
+// ─── TodoEntryViewModel: LinkedGoal → Notes synchronization (goal switch) ─────
+
+public class TodoEntryLinkedGoalSwitchTests : ViewModelTestBase
+{
+    private TodoEntryViewModel BuildVm() =>
+        new(TodoRepo, GoalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task SetLinkedGoal_NoExistingNotes_NotesSetToGoalPrefix()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Learn piano", EnteredDate = ts });
+        // Create a todo so we can trigger LoadAsync (which also loads AvailableGoals)
+        var todoGuid = Guid.NewGuid().ToString();
+        await TodoRepo.SaveAsync(new Todo { Guid = todoGuid, AccountFk = account.Guid, Title = "Practice", UpdatedOn = ts });
+
+        var vm = BuildVm();
+        vm.Guid = todoGuid; // triggers LoadAsync → sets AvailableGoals
+        await Task.Delay(50);
+
+        Assert.NotEmpty(vm.AvailableGoals);
+        vm.Notes = string.Empty; // clear any loaded notes
+        vm.LinkedGoal = vm.AvailableGoals.First(g => g.GoalText == "Learn piano");
+
+        Assert.StartsWith("Goal: Learn piano", vm.Notes);
+    }
+
+    [Fact]
+    public async Task SetLinkedGoal_WithExistingUserNotes_PreservesNotesAfterGoalLine()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Learn piano", EnteredDate = ts });
+        var todoGuid = Guid.NewGuid().ToString();
+        await TodoRepo.SaveAsync(new Todo { Guid = todoGuid, AccountFk = account.Guid, Title = "Practice", Notes = "Buy practice book first", UpdatedOn = ts });
+
+        var vm = BuildVm();
+        vm.Guid = todoGuid;
+        await Task.Delay(50);
+
+        // Notes currently "Buy practice book first" (no "Goal: " prefix)
+        vm.LinkedGoal = vm.AvailableGoals.First(g => g.GoalText == "Learn piano");
+
+        // Goal prefix should be prepended; existing notes preserved
+        Assert.StartsWith("Goal: Learn piano", vm.Notes);
+        Assert.Contains("Buy practice book first", vm.Notes);
+    }
+
+    [Fact]
+    public async Task SetLinkedGoal_WhenPreviousGoalNoteExists_ReplacesGoalLine()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Learn piano", EnteredDate = ts });
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Learn guitar", EnteredDate = ts });
+        var todoGuid = Guid.NewGuid().ToString();
+        await TodoRepo.SaveAsync(new Todo { Guid = todoGuid, AccountFk = account.Guid, Title = "Practice", UpdatedOn = ts });
+
+        var vm = BuildVm();
+        vm.Guid = todoGuid;
+        await Task.Delay(50);
+
+        vm.Notes = string.Empty;
+        vm.LinkedGoal = vm.AvailableGoals.First(g => g.GoalText == "Learn piano");
+        Assert.StartsWith("Goal: Learn piano", vm.Notes);
+
+        // Switch to a different goal — the "Goal:" line should update
+        vm.LinkedGoal = vm.AvailableGoals.First(g => g.GoalText == "Learn guitar");
+        Assert.StartsWith("Goal: Learn guitar", vm.Notes);
+        Assert.DoesNotContain("Learn piano", vm.Notes);
+    }
+}
+
+// ─── DashboardViewModel: weekly challenge progress tracking ──────────────────
+
+public class DashboardWeeklyChallengeTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_WithActiveGoal_ShowsWeeklyChallenge()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal
+        {
+            Guid = Guid.NewGuid().ToString(),
+            AccountFk = account.Guid,
+            GoalText = "Improve focus",
+            EnteredDate = ts,
+            UpdatedOn = ts
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasWeeklyChallenge);
+        Assert.NotEmpty(vm.WeeklyChallengeTitle);
+        Assert.NotEmpty(vm.WeeklyChallengeDesc);
+    }
+
+    [Fact]
+    public async Task Load_WithNoActiveGoals_HidesWeeklyChallenge()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.False(vm.HasWeeklyChallenge);
+    }
+
+    [Fact]
+    public async Task Load_WeeklyChallengeProgressValue_ClampedToOne()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goalGuid = Guid.NewGuid().ToString();
+        await GoalRepo.SaveAsync(new Goal
+        {
+            Guid = goalGuid,
+            AccountFk = account.Guid,
+            GoalText = "Write a journal",
+            EnteredDate = ts,
+            UpdatedOn = ts
+        });
+
+        // Add 20 progress notes this week — far exceeds any target
+        for (int i = 0; i < 20; i++)
+        {
+            await GoalProgressRepo.UpsertFromSyncAsync(new GoalProgress
+            {
+                Guid = Guid.NewGuid().ToString(),
+                AccountFk = account.Guid,
+                GoalFk = goalGuid,
+                NextStepItems = $"Note {i}",
+                UpdatedOn = ts + i
+            });
+        }
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasWeeklyChallenge);
+        Assert.True(vm.WeeklyChallengePctValue <= 1.0);
+    }
+}
