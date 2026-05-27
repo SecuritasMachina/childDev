@@ -3201,3 +3201,137 @@ public class GoalListCategoryFilterBreakItTests : ViewModelTestBase
         Assert.Equal("Stale active", vm.Goals[0].GoalText);
     }
 }
+
+// ─── GoalEntryViewModel: LoadAsync uncovered branches ────────────────────────
+
+public class GoalEntryLoadAsyncBranchTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task LoadAsync_GoalWithNextMeetingDate_SetsHasNextMeetingDateTrue()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var meeting = DateTimeOffset.UtcNow.AddDays(7).ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Prepare for meeting", EnteredDate = ts, UpdatedOn = ts, NextMeetingDate = meeting };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        Assert.True(vm.HasNextMeetingDate);
+        Assert.Equal(DateTimeOffset.FromUnixTimeMilliseconds(meeting).LocalDateTime, vm.NextMeetingDate);
+    }
+
+    [Fact]
+    public async Task LoadAsync_GoalWithExpirationDate_SetsHasExpirationDateTrue()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var expiry = DateTimeOffset.UtcNow.AddDays(30).ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Seasonal goal", EnteredDate = ts, UpdatedOn = ts, ExpirationDate = expiry };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        Assert.True(vm.HasExpirationDate);
+        Assert.Equal(DateTimeOffset.FromUnixTimeMilliseconds(expiry).LocalDateTime, vm.ExpirationDate);
+    }
+
+    [Fact]
+    public async Task LoadAsync_GoalWithNullGoalText_NoLinkedTodosAndNoThrow()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = null, EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        Assert.False(vm.HasLinkedTodos);
+        Assert.Empty(vm.LinkedTodos);
+    }
+
+    [Fact]
+    public async Task LoadAsync_GoalWithIsPinnedTrue_SetsPinnedState()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Pinned", EnteredDate = ts, UpdatedOn = ts, IsPinned = true };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        Assert.True(vm.IsPinned);
+    }
+
+    [Fact]
+    public async Task SaveAsync_UnchangedNextStepItems_DoesNotCreateNewProgressNote()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "No progress dupe", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+        await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = "Existing steps", UpdatedOn = ts });
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+        Assert.Equal("Existing steps", vm.NextStepItems);
+
+        // Save without changing NextStepItems — should NOT add a new progress note
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var progressNotes = await GoalProgressRepo.GetForGoalAsync(goal.Guid);
+        Assert.Single(progressNotes);
+    }
+
+    [Fact]
+    public async Task SaveAsync_WhitespaceOnlyNextStepItems_DoesNotCreateProgressNote()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "No whitespace progress", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        vm.NextStepItems = "   "; // whitespace only
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var progressNotes = await GoalProgressRepo.GetForGoalAsync(goal.Guid);
+        Assert.Empty(progressNotes);
+    }
+
+    [Fact]
+    public async Task LoadAsync_GoalWithProgressHistory_PopulatesProgressHistory()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "With history", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        for (int i = 0; i < 5; i++)
+            await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = $"Step {i}", UpdatedOn = ts + i });
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        Assert.Equal(5, vm.ProgressNotesCount);
+        Assert.True(vm.HasProgressHistory);
+        // history is progress.Skip(1).Take(4) with non-empty items → 4 entries
+        Assert.Equal(4, vm.ProgressHistory.Count);
+    }
+}
