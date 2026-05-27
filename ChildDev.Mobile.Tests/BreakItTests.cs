@@ -1604,6 +1604,42 @@ public class SettingsViewModelLinkTests : ViewModelTestBase
     }
 }
 
+// ─── GoalProgressRepository: NextStepItems must come from latest row ─────────
+
+public class GoalProgressLatestStepsTests : ViewModelTestBase
+{
+    [Fact]
+    public async Task GetLatestProgressInfo_ReturnsNextStepsFromMostRecentRow()
+    {
+        var account = await CreateTestAccountAsync();
+        var goalGuid = Guid.NewGuid().ToString();
+        var baseTs = DateTimeOffset.UtcNow.AddHours(-3).ToUnixTimeMilliseconds();
+
+        // Use UpsertFromSyncAsync to preserve explicit timestamps (SaveAsync overwrites UpdatedOn)
+        await GoalProgressRepo.UpsertFromSyncAsync(new GoalProgress
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goalGuid,
+            NextStepItems = "Old note from hour -3", UpdatedOn = baseTs
+        });
+        await GoalProgressRepo.UpsertFromSyncAsync(new GoalProgress
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goalGuid,
+            NextStepItems = "Middle note from hour -2", UpdatedOn = baseTs + 3_600_000
+        });
+        await GoalProgressRepo.UpsertFromSyncAsync(new GoalProgress
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goalGuid,
+            NextStepItems = "Newest note from hour -1", UpdatedOn = baseTs + 7_200_000
+        });
+
+        var info = await GoalProgressRepo.GetLatestProgressInfoAsync(account.Guid);
+
+        Assert.True(info.ContainsKey(goalGuid));
+        Assert.Equal(3, info[goalGuid].Count);
+        Assert.Equal("Newest note from hour -1", info[goalGuid].Steps);
+    }
+}
+
 // ─── AccountService: Reminder migration on GUID change ───────────────────────
 
 public class AccountServiceLinkMigrationTests : ViewModelTestBase

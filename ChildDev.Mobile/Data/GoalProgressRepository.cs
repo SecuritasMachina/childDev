@@ -28,7 +28,10 @@ public class GoalProgressRepository(SQLiteAsyncConnection db)
     public async Task<Dictionary<string, (string? Steps, long UpdatedOn, int Count)>> GetLatestProgressInfoAsync(string accountFk)
     {
         var rows = await db.QueryAsync<ProgressSummary>(
-            "SELECT GoalFk, NextStepItems, MAX(UpdatedOn) AS UpdatedOn, COUNT(*) AS ProgressCount FROM GoalProgress " +
+            "SELECT GoalFk, " +
+            "  (SELECT NextStepItems FROM GoalProgress s WHERE s.GoalFk = p.GoalFk AND s.AccountFk = p.AccountFk AND s.DeletedAt IS NULL ORDER BY s.UpdatedOn DESC LIMIT 1) AS NextStepItems, " +
+            "  MAX(UpdatedOn) AS UpdatedOn, COUNT(*) AS ProgressCount " +
+            "FROM GoalProgress p " +
             "WHERE AccountFk = ? AND DeletedAt IS NULL " +
             "GROUP BY GoalFk",
             accountFk);
