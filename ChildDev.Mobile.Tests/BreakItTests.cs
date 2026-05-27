@@ -1604,6 +1604,50 @@ public class SettingsViewModelLinkTests : ViewModelTestBase
     }
 }
 
+// ─── TodoListViewModel: overdue count stays current while filter is active ───
+
+public class TodoListOverdueWithFilterTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Refresh_WithActiveFilter_UpdatesOverdueCount()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var yesterday = DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeMilliseconds();
+
+        // Add a visible todo (matches filter "active")
+        await TodoRepo.SaveAsync(new Todo
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Title = "active task", UpdatedOn = now
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "active";
+
+        // Initially no overdue todos
+        Assert.Equal(0, vm.OverdueTodoCount);
+
+        // Add an overdue todo (also matches the filter)
+        await TodoRepo.SaveAsync(new Todo
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Title = "active overdue task", DueDate = yesterday, UpdatedOn = now + 1
+        });
+
+        // Refresh while filter is active
+        await vm.RefreshCommand.ExecuteAsync(null);
+
+        // OverdueTodoCount should reflect the new overdue todo
+        Assert.Equal(1, vm.OverdueTodoCount);
+        Assert.True(vm.HasOverdueTodos);
+    }
+}
+
 // ─── GoalProgressRepository: NextStepItems must come from latest row ─────────
 
 public class GoalProgressLatestStepsTests : ViewModelTestBase

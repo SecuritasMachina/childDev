@@ -82,7 +82,6 @@ public partial class TodoListViewModel(
         {
             Todos = new ObservableCollection<Todo>(_allTodos);
             EmptyMessage = "All done!";
-            UpdateOverdueCount(_allTodos);
         }
         else
         {
@@ -94,6 +93,7 @@ public partial class TodoListViewModel(
             var n = filtered.Count;
             EntryCountDisplay = $"{n} {(n == 1 ? "task" : "tasks")} matching";
         }
+        UpdateOverdueCount(_allTodos);
     }
 
     [RelayCommand]
