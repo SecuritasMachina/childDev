@@ -5978,3 +5978,116 @@ public class JournalListSingularCountTests : ViewModelTestBase
         Assert.Contains("2 entries", vm.EntryCountDisplay);
     }
 }
+
+// ─── GoalEntryViewModel: HasProgressHistory with 1 note ──────────────────────
+
+public class GoalEntryProgressHistoryTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task LoadAsync_WithOneProgressNote_HasProgressHistoryIsFalse()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "One-note goal", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+        await GoalProgressRepo.SaveAsync(new GoalProgress
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid,
+            NextStepItems = "First step", UpdatedOn = ts
+        });
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        Assert.Equal(1, vm.ProgressNotesCount);
+        Assert.False(vm.HasProgressHistory); // Skip(1) produces empty list
+        Assert.Empty(vm.ProgressHistory);
+    }
+
+    [Fact]
+    public async Task LoadAsync_ProgressNotesWithBlankSteps_ExcludedFromHistory()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Blank steps goal", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        // First note (current, shown as NextStepItems) — has content
+        await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = "Active steps", UpdatedOn = ts + 3 });
+        // Subsequent notes with blank NextStepItems — should be filtered out of history
+        await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = "   ", UpdatedOn = ts + 2 });
+        await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = "", UpdatedOn = ts + 1 });
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        Assert.Equal(3, vm.ProgressNotesCount);
+        Assert.False(vm.HasProgressHistory); // blank steps filtered out of history
+    }
+}
+
+// ─── TodoListViewModel and GoalListViewModel: null-arg command guards ─────────
+
+public class ListViewModelNullArgTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildTodoVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    private GoalListViewModel BuildGoalVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task TodoList_CompleteCommand_NullTodo_DoesNotThrow()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildTodoVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        var ex = await Record.ExceptionAsync(() => vm.CompleteCommand.ExecuteAsync(null!));
+        Assert.Null(ex);
+    }
+
+    [Fact]
+    public async Task TodoList_UncompleteCommand_NullTodo_DoesNotThrow()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildTodoVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        var ex = await Record.ExceptionAsync(() => vm.UncompleteCommand.ExecuteAsync(null!));
+        Assert.Null(ex);
+    }
+
+    [Fact]
+    public async Task TodoList_OpenCommand_NullTodo_DoesNotThrow()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildTodoVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        var ex = await Record.ExceptionAsync(() => vm.OpenCommand.ExecuteAsync(null!));
+        Assert.Null(ex);
+    }
+
+    [Fact]
+    public async Task GoalList_OpenCommand_NullGoal_DoesNotThrow()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildGoalVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        var ex = await Record.ExceptionAsync(() => vm.OpenCommand.ExecuteAsync(null!));
+        Assert.Null(ex);
+    }
+
+    [Fact]
+    public async Task GoalList_TogglePinCommand_NullGoal_DoesNotThrow()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildGoalVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        var ex = await Record.ExceptionAsync(() => vm.TogglePinCommand.ExecuteAsync(null!));
+        Assert.Null(ex);
+    }
+}
