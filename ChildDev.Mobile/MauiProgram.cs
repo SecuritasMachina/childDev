@@ -37,7 +37,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<SyncService>();
         builder.Services.AddSingleton<MobileAnalyticsService>();
         builder.Services.AddSingleton<INavigationService, MauiNavigationService>();
-        builder.Services.AddSingleton<INotificationService, MauiNotificationService>();
+        builder.Services.AddSingleton<LevelUp.Services.INotificationService, MauiNotificationService>();
         builder.Services.AddSingleton<ReminderRepository>();
         builder.Services.AddSingleton<ReminderService>();
         builder.Services.AddHttpClient("childdev");

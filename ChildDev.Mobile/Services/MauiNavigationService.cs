@@ -26,7 +26,7 @@ public class MauiNavigationService : INavigationService
     public Task<string?> DisplayPromptAsync(string title, string message, string accept, string cancel, string placeholder, int maxLength) =>
 #if ANDROID || IOS || MACCATALYST || WINDOWS
         Shell.Current.DisplayPromptAsync(title, message, accept: accept, cancel: cancel,
-            placeholder: placeholder, maxLength: maxLength, keyboard: Microsoft.Maui.Controls.Keyboard.Text);
+            placeholder: placeholder, maxLength: maxLength, keyboard: Keyboard.Text);
 #else
         Task.FromResult<string?>(null);
 #endif
