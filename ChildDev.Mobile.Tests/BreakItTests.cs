@@ -7391,3 +7391,383 @@ public class SnoozeHelperCustomUnitTests : ViewModelTestBase
         Assert.Equal(future, pending[0].FireAt); // unchanged
     }
 }
+
+// ─── SettingsViewModel: TestConnectionAsync non-empty URL paths ──────────────
+
+public class SettingsViewModelTestConnectionTests : ViewModelTestBase
+{
+    private class StatusResponseHandler(HttpStatusCode status) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct) =>
+            Task.FromResult(new HttpResponseMessage(status));
+    }
+
+    private class ThrowingHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct) =>
+            throw new HttpRequestException("network down");
+    }
+
+    [Fact]
+    public async Task TestConnection_ServerReturns200_SetsConnectedMessage()
+    {
+        var vm = new SettingsViewModel(AccountService, new FakeHttpClientFactory(new StatusResponseHandler(HttpStatusCode.OK)), Analytics);
+        vm.ServerUrl = "https://server.local";
+        await vm.TestConnectionCommand.ExecuteAsync(null);
+        Assert.Equal("Connected!", vm.StatusMessage);
+    }
+
+    [Fact]
+    public async Task TestConnection_ServerReturns500_SetsServerErrorMessage()
+    {
+        var vm = new SettingsViewModel(AccountService, new FakeHttpClientFactory(new StatusResponseHandler(HttpStatusCode.InternalServerError)), Analytics);
+        vm.ServerUrl = "https://server.local";
+        await vm.TestConnectionCommand.ExecuteAsync(null);
+        Assert.Contains("500", vm.StatusMessage);
+    }
+
+    [Fact]
+    public async Task TestConnection_NetworkException_SetsCannotReachMessage()
+    {
+        var vm = new SettingsViewModel(AccountService, new FakeHttpClientFactory(new ThrowingHandler()), Analytics);
+        vm.ServerUrl = "https://server.local";
+        await vm.TestConnectionCommand.ExecuteAsync(null);
+        Assert.Contains("Cannot reach", vm.StatusMessage);
+    }
+}
+
+// ─── TodoListViewModel: RefreshAsync paths ───────────────────────────────────
+
+public class TodoListRefreshTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Refresh_NoAccount_SetsIsRefreshingFalse()
+    {
+        var vm = BuildVm();
+        await vm.RefreshCommand.ExecuteAsync(null);
+        Assert.False(vm.IsRefreshing);
+    }
+
+    [Fact]
+    public async Task Refresh_WithAccount_ReloadsItems()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Task one", UpdatedOn = now });
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Task two", UpdatedOn = now });
+
+        var vm = BuildVm();
+        await vm.RefreshCommand.ExecuteAsync(null);
+
+        Assert.Equal(2, vm.Todos.Count);
+        Assert.Empty(vm.StatusMessage);
+        Assert.False(vm.IsRefreshing);
+    }
+}
+
+// ─── TodoListViewModel: UncompleteAsync clears showCompleted when empty ───────
+
+public class TodoListUncompleteShowCompletedTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Uncomplete_LastCompletedItem_HidesCompletedSection()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var todo = new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Task A", CompletedAt = now, UpdatedOn = now };
+        await TodoRepo.SaveAsync(todo);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.ShowCompletedTodos = true;
+        Assert.Single(vm.CompletedTodos);
+
+        await vm.UncompleteCommand.ExecuteAsync(vm.CompletedTodos[0]);
+
+        Assert.False(vm.HasCompletedTodos);
+        Assert.False(vm.ShowCompletedTodos);
+        Assert.Equal(0, vm.CompletedTodoCount);
+    }
+}
+
+// ─── TodoListViewModel: ToggleCompleted flips ShowCompletedTodos ─────────────
+
+public class TodoListToggleCompletedTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task ToggleCompleted_InitiallyFalse_BecomesTrue()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.False(vm.ShowCompletedTodos);
+        vm.ToggleCompletedCommand.Execute(null);
+        Assert.True(vm.ShowCompletedTodos);
+    }
+
+    [Fact]
+    public async Task ToggleCompleted_TwiceReturnsToFalse()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.ToggleCompletedCommand.Execute(null);
+        vm.ToggleCompletedCommand.Execute(null);
+        Assert.False(vm.ShowCompletedTodos);
+    }
+}
+
+// ─── TodoListViewModel: DeleteAsync (list-level) ─────────────────────────────
+
+public class TodoListDeleteTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task DeleteAsync_UserCancels_TodoRemainsInList()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Keep me", UpdatedOn = now });
+
+        Nav.AlertConfirmResult = false;
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Single(vm.Todos);
+
+        await vm.DeleteCommand.ExecuteAsync(vm.Todos[0]);
+
+        Assert.Single(vm.Todos);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_UserConfirms_TodoRemovedFromList()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Delete me", UpdatedOn = now });
+
+        Nav.AlertConfirmResult = true;
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Single(vm.Todos);
+
+        await vm.DeleteCommand.ExecuteAsync(vm.Todos[0]);
+
+        Assert.Empty(vm.Todos);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_CompletedTodo_RemovedFromCompletedList()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var todo = new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Done thing", CompletedAt = now, UpdatedOn = now };
+        await TodoRepo.SaveAsync(todo);
+
+        Nav.AlertConfirmResult = true;
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Single(vm.CompletedTodos);
+
+        await vm.DeleteCommand.ExecuteAsync(vm.CompletedTodos[0]);
+
+        Assert.Empty(vm.CompletedTodos);
+        Assert.False(vm.HasCompletedTodos);
+        Assert.False(vm.ShowCompletedTodos);
+    }
+}
+
+// ─── TodoListViewModel: WeekOverWeekMessage positive diff path ───────────────
+
+public class TodoListWeekOverWeekPositiveTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_MoreThisWeekThanLastWeek_ShowsPositiveDiff()
+    {
+        var account = await CreateTestAccountAsync();
+        var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var weekStartMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
+        var lastWeekMs = DateTimeOffset.UtcNow.AddDays(-10).ToUnixTimeMilliseconds();
+
+        // 2 completed this week
+        for (int i = 0; i < 2; i++)
+            await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = $"This week {i}", CompletedAt = nowMs, UpdatedOn = nowMs });
+        // 1 completed last week
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Last week", CompletedAt = lastWeekMs, UpdatedOn = lastWeekMs });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasWeekOverWeekMessage);
+        Assert.Contains("+1", vm.WeekOverWeekMessage); // 2 this week vs 1 last week
+    }
+
+    [Fact]
+    public async Task Load_NoLastWeekData_NoWeekOverWeekMessage()
+    {
+        var account = await CreateTestAccountAsync();
+        var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // 1 completed this week, nothing last week
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "This week", CompletedAt = nowMs, UpdatedOn = nowMs });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.False(vm.HasWeekOverWeekMessage);
+    }
+}
+
+// ─── DashboardViewModel: QuickNoteForFocusGoal guard and success paths ────────
+
+public class DashboardQuickNoteForFocusGoalTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task QuickNoteForFocusGoal_EmptyStaleGoalGuid_DoesNothing()
+    {
+        await CreateTestAccountAsync();
+        Nav.PromptResult = "Some note";
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        // No goals → StaleGoalGuid is empty
+        Assert.Empty(vm.StaleGoalGuid);
+
+        await vm.QuickNoteForFocusGoalCommand.ExecuteAsync(null);
+
+        var progress = await GoalProgressRepo.GetModifiedSinceAsync((await AccountService.GetAccountAsync())!.Guid, 0);
+        Assert.Empty(progress.Where(p => p.DeletedAt == null));
+    }
+
+    [Fact]
+    public async Task QuickNoteForFocusGoal_CancelledPrompt_DoesNotSave()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Stale goal", EnteredDate = ts, UpdatedOn = ts });
+
+        Nav.PromptResult = null;
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        await vm.QuickNoteForFocusGoalCommand.ExecuteAsync(null);
+
+        var progress = await GoalProgressRepo.GetModifiedSinceAsync(account.Guid, 0);
+        Assert.Empty(progress.Where(p => p.DeletedAt == null));
+    }
+
+    [Fact]
+    public async Task QuickNoteForFocusGoal_WithNote_SavesAndClearsStaleGoal()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Exercise daily", EnteredDate = ts, UpdatedOn = ts });
+
+        Nav.PromptResult = "Did 20 pushups";
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.True(vm.HasStaleGoal);
+
+        await vm.QuickNoteForFocusGoalCommand.ExecuteAsync(null);
+
+        Assert.Empty(vm.StaleGoalText);
+        Assert.Empty(vm.StaleGoalGuid);
+        Assert.False(vm.HasStaleGoal);
+        var progress = await GoalProgressRepo.GetModifiedSinceAsync(account.Guid, 0);
+        Assert.Single(progress.Where(p => p.DeletedAt == null));
+    }
+}
+
+// ─── DashboardViewModel: GoToStaleGoal navigates to goal entry ───────────────
+
+public class DashboardGoToStaleGoalTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task GoToStaleGoal_WithGuid_NavigatesToGoalEntry()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Learn piano", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.True(vm.HasStaleGoal);
+
+        await vm.GoToStaleGoalCommand.ExecuteAsync(null);
+
+        Assert.Contains($"goals/entry?guid={goal.Guid}", Nav.NavigatedRoutes);
+    }
+
+    [Fact]
+    public async Task GoToStaleGoal_EmptyGuid_DoesNotNavigate()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        // No goals → StaleGoalGuid empty
+
+        await vm.GoToStaleGoalCommand.ExecuteAsync(null);
+
+        Assert.Empty(Nav.NavigatedRoutes.Where(r => r.Contains("goals/entry")));
+    }
+}
+
+// ─── RemindersViewModel: AddGeneralAsync snooze cancel path ──────────────────
+
+public class RemindersAddGeneralSnoozeCancelTests : ViewModelTestBase
+{
+    [Fact]
+    public async Task AddGeneralAsync_SnoozeCancelled_NoReminderScheduled()
+    {
+        await CreateTestAccountAsync();
+        Nav.ActionSheetResult = null; // cancel snooze picker
+        Nav.AlertConfirmResult = true;
+
+        var vm = new RemindersViewModel(ReminderSvc, AccountService, Nav);
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.NewReminderTitle = "My reminder";
+
+        await vm.AddGeneralCommand.ExecuteAsync(null);
+
+        var pending = await ReminderSvc.GetPendingAsync((await AccountService.GetAccountAsync())!.Guid);
+        Assert.Empty(pending);
+        // Title should not be cleared when cancelled
+        Assert.Equal("My reminder", vm.NewReminderTitle);
+    }
+}
+
+// ─── SettingsViewModel: SaveServerUrl with non-empty URL ─────────────────────
+
+public class SettingsViewModelSaveUrlNonEmptyTests : ViewModelTestBase
+{
+    [Fact]
+    public async Task SaveServerUrl_NonEmptyUrl_SetsUrlSavedMessage()
+    {
+        await CreateTestAccountAsync();
+        var vm = new SettingsViewModel(AccountService, new FakeHttpClientFactory(new NoOpHttpHandler()), Analytics);
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.ServerUrl = "https://my.server.org";
+        await vm.SaveServerUrlCommand.ExecuteAsync(null);
+        Assert.Contains("saved", vm.StatusMessage, StringComparison.OrdinalIgnoreCase);
+    }
+}
