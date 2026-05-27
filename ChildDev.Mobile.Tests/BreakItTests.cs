@@ -4919,6 +4919,155 @@ public class TodoEntryNotesLengthTests : ViewModelTestBase
     }
 }
 
+// ─── GoalEntryViewModel: ProgressPercent field save behavior ─────────────────
+
+public class GoalEntryProgressPercentTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task SaveAsync_ProgressPercent50_SavesNonNullValue()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.GoalText = "Exercise daily";
+        vm.ProgressPercent = 50;
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var account = await AccountService.GetAccountAsync();
+        var goals = await GoalRepo.GetAllActiveAsync(account!.Guid);
+        Assert.Single(goals);
+        Assert.Equal(50, goals[0].ProgressPercent);
+    }
+
+    [Fact]
+    public async Task SaveAsync_ProgressPercent0_SavesAsNull()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.GoalText = "Learn to code";
+        vm.ProgressPercent = 0;
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var account = await AccountService.GetAccountAsync();
+        var goals = await GoalRepo.GetAllActiveAsync(account!.Guid);
+        Assert.Single(goals);
+        Assert.Null(goals[0].ProgressPercent);
+    }
+
+    [Fact]
+    public async Task SaveAsync_ProgressPercent100_SavesNonNullValue()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.GoalText = "Finish project";
+        vm.ProgressPercent = 100;
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var account = await AccountService.GetAccountAsync();
+        var goals = await GoalRepo.GetAllActiveAsync(account!.Guid);
+        Assert.Single(goals);
+        Assert.Equal(100, goals[0].ProgressPercent);
+    }
+}
+
+// ─── GoalListViewModel: QuickNote saves progress note to DB ──────────────────
+
+public class GoalListQuickNoteSavesTests : ViewModelTestBase
+{
+    private GoalListViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task QuickNote_WithNote_SavesProgressNoteToDatabase()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Become a runner", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        Nav.PromptResult = "Ran 2 miles today!";
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        await vm.QuickNoteCommand.ExecuteAsync(vm.Goals[0]);
+
+        var progress = await GoalProgressRepo.GetForGoalAsync(goal.Guid);
+        Assert.Single(progress.Where(p => p.DeletedAt == null));
+        Assert.Equal("Ran 2 miles today!", progress.First(p => p.DeletedAt == null).NextStepItems);
+    }
+
+    [Fact]
+    public async Task QuickNote_CancelledPrompt_DoesNotSaveProgress()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Meditate daily", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        Nav.PromptResult = null;
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        await vm.QuickNoteCommand.ExecuteAsync(vm.Goals[0]);
+
+        var progress = await GoalProgressRepo.GetForGoalAsync(goal.Guid);
+        Assert.Empty(progress.Where(p => p.DeletedAt == null));
+    }
+}
+
+// ─── JournalEntryViewModel: edit mode saves correct content ──────────────────
+
+public class JournalEntryEditModeSaveTests : ViewModelTestBase
+{
+    private JournalEntryViewModel BuildVm() =>
+        new(JournalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task SaveAsync_ExistingJournal_UpdatesContentInDatabase()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var journal = new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Original notes", Activity = "Swimming", EnteredDate = ts, UpdatedOn = ts };
+        await JournalRepo.SaveAsync(journal);
+
+        var vm = BuildVm();
+        vm.Guid = journal.Guid;
+        await Task.Delay(200);
+
+        Assert.Equal("Original notes", vm.Notes);
+        Assert.Equal("Swimming", vm.Activity);
+
+        vm.Notes = "Updated notes";
+        vm.Activity = "Running";
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var updated = await JournalRepo.GetAsync(journal.Guid);
+        Assert.Equal("Updated notes", updated!.Notes);
+        Assert.Equal("Running", updated.Activity);
+    }
+
+    [Fact]
+    public async Task SaveAsync_ExistingJournal_DoesNotCreateDuplicate()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var journal = new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Unique note", EnteredDate = ts, UpdatedOn = ts };
+        await JournalRepo.SaveAsync(journal);
+
+        var vm = BuildVm();
+        vm.Guid = journal.Guid;
+        await Task.Delay(200);
+
+        vm.Notes = "Changed note";
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var all = await JournalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Single(all);
+    }
+}
+
 // ─── GoalListViewModel: delete cascades to progress notes ────────────────────
 
 public class GoalListDeleteCascadesProgressTests : ViewModelTestBase
