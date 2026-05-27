@@ -2307,6 +2307,107 @@ public class GoalListOrderingTests : ViewModelTestBase
     }
 }
 
+// ─── GoalListViewModel: RefreshAsync success path ────────────────────────────
+
+public class GoalListRefreshTests : ViewModelTestBase
+{
+    private GoalListViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Refresh_WithAccount_LoadsGoals()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Goal 1", EnteredDate = ts, UpdatedOn = ts });
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Goal 2", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.RefreshCommand.ExecuteAsync(null);
+
+        Assert.Equal(2, vm.Goals.Count);
+        Assert.False(vm.IsRefreshing);
+        Assert.True(vm.HasGoals);
+    }
+
+    [Fact]
+    public async Task Refresh_WithAccount_SetsIsRefreshingFalseAfterLoad()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.RefreshCommand.ExecuteAsync(null);
+        Assert.False(vm.IsRefreshing);
+    }
+}
+
+// ─── JournalListViewModel: RefreshAsync paths ────────────────────────────────
+
+public class JournalListRefreshTests : ViewModelTestBase
+{
+    private JournalListViewModel BuildVm() =>
+        new(JournalRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Refresh_WithAccount_LoadsJournals()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Entry 1", EnteredDate = ts, UpdatedOn = ts });
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Entry 2", EnteredDate = ts + 1, UpdatedOn = ts + 1 });
+
+        var vm = BuildVm();
+        await vm.RefreshCommand.ExecuteAsync(null);
+
+        Assert.Equal(2, vm.Journals.Count);
+        Assert.False(vm.IsRefreshing);
+    }
+
+    [Fact]
+    public async Task Refresh_NoAccount_IsRefreshingFalse()
+    {
+        // No account → early return with IsRefreshing = false
+        var vm = BuildVm();
+        await vm.RefreshCommand.ExecuteAsync(null);
+        Assert.False(vm.IsRefreshing);
+        Assert.Empty(vm.Journals);
+    }
+
+    [Fact]
+    public async Task Refresh_WithStreakData_SetsStreakDisplay()
+    {
+        var account = await CreateTestAccountAsync();
+        for (int d = 0; d <= 6; d++)
+        {
+            var ts = DateTimeOffset.UtcNow.AddDays(-d).ToUnixTimeMilliseconds();
+            await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = $"Day {d}", EnteredDate = ts, UpdatedOn = ts });
+        }
+
+        var vm = BuildVm();
+        await vm.RefreshCommand.ExecuteAsync(null);
+
+        Assert.Contains("🔥", vm.StreakDisplay);
+        Assert.False(vm.IsRefreshing);
+    }
+
+    [Fact]
+    public async Task Refresh_AfterNewJournalAddedDirectly_ShowsUpdatedCount()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "First entry", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Single(vm.Journals);
+
+        // Add another entry directly to repo (simulates sync)
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Second entry", EnteredDate = ts + 1, UpdatedOn = ts + 1 });
+
+        await vm.RefreshCommand.ExecuteAsync(null);
+        Assert.Equal(2, vm.Journals.Count);
+    }
+}
+
 public class GoalStepsSyncTests : ViewModelTestBase
 {
     [Fact]
