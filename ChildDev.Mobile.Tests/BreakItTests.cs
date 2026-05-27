@@ -4919,6 +4919,97 @@ public class TodoEntryNotesLengthTests : ViewModelTestBase
     }
 }
 
+// ─── GoalListViewModel: NeedsAttention entry count display ───────────────────
+
+public class GoalListNeedsAttentionCountTests : ViewModelTestBase
+{
+    private GoalListViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task NeedsAttention_TwoStaleGoals_EntryCountShowsPlural()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        // Two stale goals with no recent progress
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Stale A", EnteredDate = ts, UpdatedOn = ts });
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Stale B", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.CategoryFilter = "NeedsAttention";
+
+        Assert.Equal(2, vm.Goals.Count);
+        Assert.Contains("2", vm.EntryCountDisplay);
+        Assert.Contains("goals", vm.EntryCountDisplay);
+        Assert.Contains("attention", vm.EntryCountDisplay);
+    }
+
+    [Fact]
+    public async Task NeedsAttention_OneStaleGoal_EntryCountShowsSingular()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "One stale", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.CategoryFilter = "NeedsAttention";
+
+        Assert.Single(vm.Goals);
+        Assert.Contains("1", vm.EntryCountDisplay);
+        Assert.Contains("goal", vm.EntryCountDisplay);
+        Assert.Contains("attention", vm.EntryCountDisplay);
+    }
+
+    [Fact]
+    public async Task NeedsAttention_NoStaleGoals_EntryCountDisplayIsEmpty()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        // Fresh goal with recent progress (not stale)
+        var goalGuid = Guid.NewGuid().ToString();
+        await GoalRepo.SaveAsync(new Goal { Guid = goalGuid, AccountFk = account.Guid, GoalText = "Fresh goal", EnteredDate = ts, UpdatedOn = ts });
+        await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goalGuid, NextStepItems = "Done", UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.CategoryFilter = "NeedsAttention";
+
+        Assert.Empty(vm.Goals);
+        Assert.Equal(string.Empty, vm.EntryCountDisplay);
+    }
+}
+
+// ─── JournalListViewModel: base state (no journals) EmptyMessage ──────────────
+
+public class JournalListBaseStateTests : ViewModelTestBase
+{
+    private JournalListViewModel BuildVm() =>
+        new(JournalRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_NoJournals_EmptyMessageIsDefaultNoEntries()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Empty(vm.Journals);
+        Assert.Contains("No journal entries", vm.EmptyMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Load_NoJournals_HasTodayEntryIsFalse()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.False(vm.HasTodayEntry);
+    }
+}
+
 // ─── GoalEntryViewModel: ProgressPercent field save behavior ─────────────────
 
 public class GoalEntryProgressPercentTests : ViewModelTestBase
