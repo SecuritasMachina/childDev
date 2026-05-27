@@ -285,8 +285,11 @@ public partial class DashboardViewModel(
         await _nav.GoToAsync("journal/entry");
 
     [RelayCommand]
-    private async Task OpenJournalAsync(Journal journal) =>
+    private async Task OpenJournalAsync(Journal journal)
+    {
+        if (journal is null) return;
         await _nav.GoToAsync($"journal/entry?guid={journal.Guid}");
+    }
 
     [RelayCommand]
     private async Task GoToSettingsAsync() =>

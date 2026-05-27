@@ -86,7 +86,6 @@
 		<Compile Remove="Converters\**\*.cs" />
 		<Compile Remove="ViewModels\SetupViewModel.cs" />
 
-		<Compile Remove="ViewModels\DashboardViewModel.cs" />
 	</ItemGroup>
 
 </Project>

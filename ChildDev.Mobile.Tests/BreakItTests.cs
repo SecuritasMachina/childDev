@@ -396,3 +396,351 @@ public class TodoEntryStateTests : ViewModelTestBase
         Assert.True(after is null || after.DeletedAt.HasValue);
     }
 }
+
+// ─── Dashboard: null-entity commands and edge cases ──────────────────────────
+
+public class DashboardEdgeCaseTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_NoAccount_DoesNotThrow()
+    {
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null); // no account — returns early
+    }
+
+    [Fact]
+    public async Task OpenJournal_NullJournal_DoesNotThrow()
+    {
+        var vm = BuildVm();
+        await vm.OpenJournalCommand.ExecuteAsync(null!); // null guard must protect
+    }
+
+    [Fact]
+    public async Task QuickAddJournal_EmptyText_DoesNotSave()
+    {
+        var account = await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.QuickJournalText = "   ";
+        await vm.QuickAddJournalCommand.ExecuteAsync(null);
+        var journals = await JournalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Empty(journals);
+    }
+
+    [Fact]
+    public async Task QuickAddJournal_SavesAndAppearsInRecentJournals()
+    {
+        var account = await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.QuickJournalText = "Quick thought";
+        await vm.QuickAddJournalCommand.ExecuteAsync(null);
+        Assert.NotEmpty(vm.RecentJournals);
+        Assert.Equal(string.Empty, vm.QuickJournalText);
+    }
+
+    [Fact]
+    public async Task Load_WithGoalsAndTodos_PopulatesCounters()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "G1", EnteredDate = ts });
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "T1", UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Equal(1, vm.ActiveGoalCount);
+        Assert.Equal(1, vm.PendingTodoCount);
+    }
+
+    [Fact]
+    public async Task GoToStaleGoal_WhenNoStaleGoal_DoesNotNavigate()
+    {
+        var vm = BuildVm();
+        await vm.GoToStaleGoalCommand.ExecuteAsync(null);
+        Assert.Empty(Nav.NavigatedRoutes);
+    }
+
+    [Fact]
+    public async Task QuickNoteForFocusGoal_WhenNoStaleGoal_DoesNotThrow()
+    {
+        var vm = BuildVm();
+        // StaleGoalGuid is empty — should return early
+        await vm.QuickNoteForFocusGoalCommand.ExecuteAsync(null);
+    }
+}
+
+// ─── JournalList: date filter cycles and delete-while-filtered ───────────────
+
+public class JournalListFilterTests : ViewModelTestBase
+{
+    private JournalListViewModel BuildVm() =>
+        new(JournalRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task DateFilter_Week_FiltersOldEntries()
+    {
+        var account = await CreateTestAccountAsync();
+        var oldMs = DateTimeOffset.UtcNow.AddDays(-10).ToUnixTimeMilliseconds();
+        var newMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Old", EnteredDate = oldMs, UpdatedOn = oldMs });
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "New", EnteredDate = newMs, UpdatedOn = newMs });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Equal(2, vm.Journals.Count);
+
+        vm.DateFilter = "Week";
+        Assert.Single(vm.Journals);
+        Assert.Equal("New", vm.Journals[0].Notes);
+    }
+
+    [Fact]
+    public async Task DateFilter_Cycle_AllToWeekToMonthToAll()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Entry", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        vm.SetDateFilterCommand.Execute("Week");
+        Assert.Equal("Week", vm.DateFilter);
+        Assert.Single(vm.Journals);
+
+        vm.SetDateFilterCommand.Execute("Month");
+        Assert.Equal("Month", vm.DateFilter);
+        Assert.Single(vm.Journals);
+
+        vm.SetDateFilterCommand.Execute("All");
+        Assert.Equal("All", vm.DateFilter);
+        Assert.Single(vm.Journals);
+    }
+
+    [Fact]
+    public async Task Delete_WhileDateFiltered_FilterPreserved()
+    {
+        var account = await CreateTestAccountAsync();
+        var oldMs = DateTimeOffset.UtcNow.AddDays(-10).ToUnixTimeMilliseconds();
+        var newMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var oldJournal = new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Old", EnteredDate = oldMs, UpdatedOn = oldMs };
+        var newJournal = new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "New", EnteredDate = newMs, UpdatedOn = newMs };
+        await JournalRepo.SaveAsync(oldJournal);
+        await JournalRepo.SaveAsync(newJournal);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.DateFilter = "Week";
+        Assert.Single(vm.Journals);
+
+        Nav.AlertConfirmResult = true;
+        await vm.DeleteCommand.ExecuteAsync(vm.Journals[0]);
+
+        // Filter still "Week", no entries remaining this week
+        Assert.Equal("Week", vm.DateFilter);
+        Assert.Empty(vm.Journals);
+    }
+
+    [Fact]
+    public async Task ShufflePrompt_CyclesWithoutThrow()
+    {
+        var account = await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        var initial = vm.TodayPrompt;
+
+        // Cycle through many times — should not throw and eventually return to start
+        for (int i = 0; i < 24; i++)
+            vm.ShufflePromptCommand.Execute(null);
+
+        Assert.False(string.IsNullOrEmpty(vm.TodayPrompt));
+    }
+
+    [Fact]
+    public async Task FilterText_WithDateFilter_BothApplied()
+    {
+        var account = await CreateTestAccountAsync();
+        var oldMs = DateTimeOffset.UtcNow.AddDays(-10).ToUnixTimeMilliseconds();
+        var newMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Piano practice", EnteredDate = newMs, UpdatedOn = newMs });
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Piano old", EnteredDate = oldMs, UpdatedOn = oldMs });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.DateFilter = "Week";
+        vm.FilterText = "piano";
+
+        Assert.Single(vm.Journals);
+        Assert.Contains("Piano practice", vm.Journals[0].Notes!);
+    }
+}
+
+// ─── JournalEntry: CanSave branches and ToggleTag ────────────────────────────
+
+public class JournalEntryBranchTests : ViewModelTestBase
+{
+    private JournalEntryViewModel BuildVm() =>
+        new(JournalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public void CanSave_ActivityOnly_NoNotes_ReturnsTrue()
+    {
+        var vm = BuildVm();
+        vm.Notes = string.Empty;
+        vm.Activity = "Soccer practice";
+        Assert.True(vm.SaveCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void CanSave_BothEmpty_ReturnsFalse()
+    {
+        var vm = BuildVm();
+        vm.Notes = string.Empty;
+        vm.Activity = string.Empty;
+        Assert.False(vm.SaveCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void CanSave_WhitespaceOnly_ReturnsFalse()
+    {
+        var vm = BuildVm();
+        vm.Notes = "   ";
+        vm.Activity = "   ";
+        Assert.False(vm.SaveCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void ToggleTag_Add_Remove_Add_IsIdempotent()
+    {
+        var vm = BuildVm();
+        vm.ToggleTagCommand.Execute("happy");
+        Assert.Contains("happy", vm.Tags);
+
+        vm.ToggleTagCommand.Execute("happy");
+        Assert.DoesNotContain("happy", vm.Tags);
+
+        vm.ToggleTagCommand.Execute("happy");
+        Assert.Contains("happy", vm.Tags);
+    }
+
+    [Fact]
+    public void ToggleTag_MultipleTagsFormattedCorrectly()
+    {
+        var vm = BuildVm();
+        vm.ToggleTagCommand.Execute("happy");
+        vm.ToggleTagCommand.Execute("proud");
+        vm.ToggleTagCommand.Execute("excited");
+
+        Assert.Contains("happy", vm.Tags);
+        Assert.Contains("proud", vm.Tags);
+        Assert.Contains("excited", vm.Tags);
+
+        // Remove middle tag
+        vm.ToggleTagCommand.Execute("proud");
+        Assert.Contains("happy", vm.Tags);
+        Assert.DoesNotContain("proud", vm.Tags);
+        Assert.Contains("excited", vm.Tags);
+    }
+
+    [Fact]
+    public async Task Save_ActivityOnly_PersistsCorrectly()
+    {
+        var account = await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.Activity = "Swimming";
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var journals = await JournalRepo.GetAllActiveAsync(account.Guid);
+        Assert.Single(journals);
+        Assert.Equal("Swimming", journals[0].Activity);
+        Assert.Null(journals[0].Notes);
+    }
+}
+
+// ─── GoalList: delete while filtered preserves filter ────────────────────────
+
+public class GoalListDeleteFilterTests : ViewModelTestBase
+{
+    private GoalListViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Delete_WhileTextFiltered_FilterPreservedAfterDelete()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var g1 = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Piano practice", EnteredDate = ts };
+        var g2 = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Exercise daily", EnteredDate = ts };
+        var g3 = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Piano recital prep", EnteredDate = ts };
+        await GoalRepo.SaveAsync(g1);
+        await GoalRepo.SaveAsync(g2);
+        await GoalRepo.SaveAsync(g3);
+
+        Nav.AlertConfirmResult = true;
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "piano";
+        Assert.Equal(2, vm.Goals.Count);
+
+        await vm.DeleteCommand.ExecuteAsync(vm.Goals[0]);
+
+        // Filter still active — only 1 piano goal remains
+        Assert.Single(vm.Goals);
+        Assert.Contains("piano", vm.Goals[0].GoalText!, StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+// ─── TodoEntry: quick-set due date commands ───────────────────────────────────
+
+public class TodoEntryDueDateTests : ViewModelTestBase
+{
+    private TodoEntryViewModel BuildVm() =>
+        new(TodoRepo, GoalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public void SetDueToday_SetsHasDueDateAndDateToToday()
+    {
+        var vm = BuildVm();
+        vm.SetDueTodayCommand.Execute(null);
+        Assert.True(vm.HasDueDate);
+        Assert.Equal(DateTime.Today, vm.DueDate.Date);
+    }
+
+    [Fact]
+    public void SetDueTomorrow_SetsDateToTomorrow()
+    {
+        var vm = BuildVm();
+        vm.SetDueTomorrowCommand.Execute(null);
+        Assert.True(vm.HasDueDate);
+        Assert.Equal(DateTime.Today.AddDays(1), vm.DueDate.Date);
+    }
+
+    [Fact]
+    public void SetDueThisWeek_SetsDateToFridayOrNextFriday()
+    {
+        var vm = BuildVm();
+        vm.SetDueThisWeekCommand.Execute(null);
+        Assert.True(vm.HasDueDate);
+        Assert.Equal(DayOfWeek.Friday, vm.DueDate.DayOfWeek);
+        Assert.True(vm.DueDate.Date >= DateTime.Today);
+    }
+
+    [Fact]
+    public async Task Save_WithDueDate_PersistedCorrectly()
+    {
+        var account = await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.Title = "Due task";
+        vm.SetDueTomorrowCommand.Execute(null);
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var todos = await TodoRepo.GetPendingAsync(account.Guid);
+        Assert.Single(todos);
+        Assert.NotNull(todos[0].DueDate);
+    }
+}
