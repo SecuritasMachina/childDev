@@ -4918,3 +4918,205 @@ public class TodoEntryNotesLengthTests : ViewModelTestBase
         Assert.Equal(2000, todos[0].Notes?.Length ?? 0);
     }
 }
+
+// ─── JournalListViewModel: Week filter empty message ─────────────────────────
+
+public class JournalListWeekFilterEmptyMessageTests : ViewModelTestBase
+{
+    private JournalListViewModel BuildVm() =>
+        new(JournalRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task WeekFilter_NoEntriesThisWeek_SetsWeekEmptyMessage()
+    {
+        var account = await CreateTestAccountAsync();
+        // Entry older than 7 days — outside week filter window
+        var oldMs = DateTimeOffset.UtcNow.AddDays(-10).ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Notes = "Old entry", EnteredDate = oldMs, UpdatedOn = oldMs
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.DateFilter = "Week";
+
+        Assert.Empty(vm.Journals);
+        Assert.Contains("this week", vm.EmptyMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task WeekFilter_EntryFromToday_IsIncluded()
+    {
+        var account = await CreateTestAccountAsync();
+        var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var oldMs = DateTimeOffset.UtcNow.AddDays(-10).ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Notes = "Today's entry", EnteredDate = nowMs, UpdatedOn = nowMs
+        });
+        await JournalRepo.SaveAsync(new Journal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Notes = "Old entry", EnteredDate = oldMs, UpdatedOn = oldMs
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.DateFilter = "Week";
+
+        Assert.Single(vm.Journals);
+        Assert.Equal("Today's entry", vm.Journals[0].Notes);
+    }
+
+    [Fact]
+    public async Task WeekFilter_ThenClearFilter_ShowsAllEntries()
+    {
+        var account = await CreateTestAccountAsync();
+        var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var oldMs = DateTimeOffset.UtcNow.AddDays(-10).ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Notes = "Recent", EnteredDate = nowMs, UpdatedOn = nowMs
+        });
+        await JournalRepo.SaveAsync(new Journal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Notes = "Old", EnteredDate = oldMs, UpdatedOn = oldMs
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.DateFilter = "Week";
+        Assert.Single(vm.Journals);
+
+        vm.DateFilter = "All";
+        Assert.Equal(2, vm.Journals.Count);
+    }
+}
+
+// ─── GoalListViewModel: search filter empty message ──────────────────────────
+
+public class GoalListSearchEmptyMessageTests : ViewModelTestBase
+{
+    private GoalListViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task FilterText_NoMatches_SetsNoMatchesEmptyMessage()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalText = "Learn piano", EnteredDate = ts, UpdatedOn = ts
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "zzznomatch";
+
+        Assert.Empty(vm.Goals);
+        Assert.Contains("zzznomatch", vm.EmptyMessage);
+        Assert.Contains("No matches", vm.EmptyMessage);
+    }
+
+    [Fact]
+    public async Task FilterText_ClearedAfterNoMatch_RestoresAllGoals()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalText = "Learn guitar", EnteredDate = ts, UpdatedOn = ts
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "zzznomatch";
+        Assert.Empty(vm.Goals);
+
+        vm.FilterText = string.Empty;
+        Assert.Single(vm.Goals);
+        Assert.Equal("No goals yet", vm.EmptyMessage);
+    }
+
+    [Fact]
+    public async Task FilterText_NoGoalsAtAll_SetsNoMatchesEmptyMessage()
+    {
+        await CreateTestAccountAsync();
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "anything";
+
+        Assert.Empty(vm.Goals);
+        Assert.Contains("No matches", vm.EmptyMessage);
+    }
+}
+
+// ─── TodoListViewModel: "All done!" EmptyMessage ─────────────────────────────
+
+public class TodoListAllDoneEmptyMessageTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task LoadAsync_NoPendingTodos_DefaultEmptyMessageIsAllDone()
+    {
+        await CreateTestAccountAsync();
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Empty(vm.Todos);
+        Assert.Equal("All done!", vm.EmptyMessage);
+    }
+
+    [Fact]
+    public async Task FilterText_SetThenCleared_EmptyMessageResetsToAllDone()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Title = "Buy milk", UpdatedOn = ts
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        vm.FilterText = "zzznomatch";
+        Assert.Contains("No matches", vm.EmptyMessage);
+
+        vm.FilterText = string.Empty;
+        Assert.Equal("All done!", vm.EmptyMessage);
+        Assert.Single(vm.Todos);
+    }
+
+    [Fact]
+    public async Task FilterText_NoMatches_SetsNoMatchesEmptyMessage()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            Title = "Take vitamins", UpdatedOn = ts
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        vm.FilterText = "zzznomatch";
+        Assert.Empty(vm.Todos);
+        Assert.Contains("zzznomatch", vm.EmptyMessage);
+    }
+}
