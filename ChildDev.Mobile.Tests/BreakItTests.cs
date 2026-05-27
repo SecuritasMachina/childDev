@@ -3804,3 +3804,246 @@ public class GoalEntryLoadAsyncBranchTests : ViewModelTestBase
         Assert.Equal(4, vm.ProgressHistory.Count);
     }
 }
+
+// ─── JournalListViewModel: Activity/Mood/Tags text search ────────────────────
+
+public class JournalListFieldSearchTests : ViewModelTestBase
+{
+    private JournalListViewModel BuildVm() =>
+        new(JournalRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task FilterText_MatchesActivity_ShowsJournal()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Notes only", Activity = "Swimming practice", EnteredDate = ts, UpdatedOn = ts });
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Unrelated entry", Activity = "Walking", EnteredDate = ts + 1, UpdatedOn = ts + 1 });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "Swimming";
+
+        Assert.Single(vm.Journals);
+        Assert.Equal("Notes only", vm.Journals[0].Notes);
+    }
+
+    [Fact]
+    public async Task FilterText_MatchesMood_ShowsJournal()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Day 1", Mood = "Excited", EnteredDate = ts, UpdatedOn = ts });
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Day 2", Mood = "Calm", EnteredDate = ts + 1, UpdatedOn = ts + 1 });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "excited";
+
+        Assert.Single(vm.Journals);
+        Assert.Equal("Day 1", vm.Journals[0].Notes);
+    }
+
+    [Fact]
+    public async Task FilterText_MatchesTags_ShowsJournal()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Tagged entry", Tags = "school, homework", EnteredDate = ts, UpdatedOn = ts });
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Untagged entry", Tags = "sports", EnteredDate = ts + 1, UpdatedOn = ts + 1 });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "homework";
+
+        Assert.Single(vm.Journals);
+        Assert.Equal("Tagged entry", vm.Journals[0].Notes);
+    }
+
+    [Fact]
+    public async Task FilterText_NoMatch_EmptyMessageReflectsSearchTerm()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Hello world", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "xyznotfound";
+
+        Assert.Empty(vm.Journals);
+        Assert.Contains("xyznotfound", vm.EmptyMessage);
+    }
+}
+
+// ─── JournalListViewModel: Month date filter excludes old entries ─────────────
+
+public class JournalListMonthFilterTests : ViewModelTestBase
+{
+    private JournalListViewModel BuildVm() =>
+        new(JournalRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task MonthFilter_ExcludesEntriesOlderThan30Days()
+    {
+        var account = await CreateTestAccountAsync();
+        var recentMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var oldMs = DateTimeOffset.UtcNow.AddDays(-35).ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Recent", EnteredDate = recentMs, UpdatedOn = recentMs });
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Old entry", EnteredDate = oldMs, UpdatedOn = oldMs });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Equal(2, vm.Journals.Count);
+
+        vm.SetDateFilterCommand.Execute("Month");
+
+        Assert.Single(vm.Journals);
+        Assert.Equal("Recent", vm.Journals[0].Notes);
+    }
+
+    [Fact]
+    public async Task MonthFilter_NoEntriesThisMonth_SetsMonthEmptyMessage()
+    {
+        var account = await CreateTestAccountAsync();
+        var oldMs = DateTimeOffset.UtcNow.AddDays(-40).ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Old only", EnteredDate = oldMs, UpdatedOn = oldMs });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.SetDateFilterCommand.Execute("Month");
+
+        Assert.Empty(vm.Journals);
+        Assert.Contains("month", vm.EmptyMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task MonthFilter_EntryCountDisplay_ShowsShownLabel()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Entry A", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.SetDateFilterCommand.Execute("Month");
+
+        Assert.Contains("shown", vm.EntryCountDisplay, StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+// ─── DashboardViewModel: QuickNoteForFocusGoal cancel and tier labels ────────
+
+public class DashboardQuickNoteAndTierTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task QuickNoteForFocusGoal_PromptCancelled_DoesNotSaveProgressAndGoalRemainsStale()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Stale focus goal", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.True(vm.HasStaleGoal);
+
+        Nav.PromptResult = null; // user cancels
+        await vm.QuickNoteForFocusGoalCommand.ExecuteAsync(null);
+
+        // No progress should be saved
+        Assert.True(vm.HasStaleGoal);
+        var progress = await GoalProgressRepo.GetLatestProgressInfoAsync(account.Guid);
+        Assert.Empty(progress);
+    }
+
+    [Fact]
+    public async Task QuickNoteForFocusGoal_WhitespacePrompt_DoesNotSaveProgress()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Focus goal whitespace", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.True(vm.HasStaleGoal);
+
+        Nav.PromptResult = "   ";
+        await vm.QuickNoteForFocusGoalCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasStaleGoal);
+        var progress = await GoalProgressRepo.GetLatestProgressInfoAsync(account.Guid);
+        Assert.Empty(progress);
+    }
+
+    [Fact]
+    public async Task Load_With20ProgressNotes_SetsApprenticeLabel()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Apprentice goal", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+        for (int i = 0; i < 20; i++)
+            await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), GoalFk = goal.Guid, AccountFk = account.Guid, NextStepItems = $"Note {i}", UpdatedOn = ts + i });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Contains("Apprentice", vm.OverallTierLabel);
+    }
+
+    [Fact]
+    public async Task Load_With100ProgressNotes_SetsExpertLabel()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Expert goal", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+        for (int i = 0; i < 100; i++)
+            await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), GoalFk = goal.Guid, AccountFk = account.Guid, NextStepItems = $"Note {i}", UpdatedOn = ts + i });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Contains("Expert", vm.OverallTierLabel);
+    }
+
+    [Fact]
+    public async Task Load_WithFewProgressNotes_EmptyTierLabel()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "New goal", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+        // Only 3 notes — below the ≥5 Beginner threshold
+        for (int i = 0; i < 3; i++)
+            await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), GoalFk = goal.Guid, AccountFk = account.Guid, NextStepItems = $"Note {i}", UpdatedOn = ts + i });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Empty(vm.OverallTierLabel);
+    }
+
+    [Fact]
+    public async Task Load_With14DayStreak_ShowsStarEmoji()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Streak goal", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+        // Use UpsertFromSyncAsync to preserve historical timestamps (SaveAsync overrides UpdatedOn to now)
+        for (int d = 0; d < 14; d++)
+        {
+            var dayMs = DateTimeOffset.UtcNow.AddDays(-d).ToUnixTimeMilliseconds();
+            await GoalProgressRepo.UpsertFromSyncAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), GoalFk = goal.Guid, AccountFk = account.Guid, NextStepItems = "Note", UpdatedOn = dayMs });
+        }
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Contains("🌟", vm.StreakDisplay);
+    }
+}
