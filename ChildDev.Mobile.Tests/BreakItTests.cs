@@ -2044,6 +2044,79 @@ public class JournalListStreak14Tests : ViewModelTestBase
     }
 }
 
+// ─── RemindersViewModel: uncovered branch paths ──────────────────────────────
+
+public class RemindersViewModelBranchTests : ViewModelTestBase
+{
+    private RemindersViewModel BuildVm() => new(ReminderSvc, AccountService, Nav);
+
+    [Fact]
+    public async Task Load_WithNoAccount_RemainsSilentAndEmpty()
+    {
+        // No CreateTestAccountAsync → GetAccountAsync returns null → early return
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Empty(vm.Reminders);
+        Assert.False(vm.HasReminders);
+        Assert.False(vm.IsLoading);
+    }
+
+    [Fact]
+    public async Task SnoozeAsync_NullReminder_DoesNotThrow()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        await vm.SnoozeCommand.ExecuteAsync(null!);
+        // No exception — null guard in SnoozeAsync
+    }
+
+    [Fact]
+    public async Task SnoozeAsync_UserCancelsPickerDuration_ListUnchanged()
+    {
+        var account = await CreateTestAccountAsync();
+        var future = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds();
+        await ReminderSvc.ScheduleAsync(new Reminder { AccountFk = account.Guid, Title = "Snooze me", Topic = "General", FireAt = future });
+
+        Nav.ActionSheetResult = null; // simulate cancel
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Single(vm.Reminders);
+
+        await vm.SnoozeCommand.ExecuteAsync(vm.Reminders[0]);
+
+        // Duration was null (cancel) → list unchanged
+        Assert.Single(vm.Reminders);
+    }
+
+    [Fact]
+    public async Task AddGeneralAsync_UserCancelsPickerDuration_TitlePreserved()
+    {
+        await CreateTestAccountAsync();
+        Nav.ActionSheetResult = null; // cancel the snooze picker
+
+        var vm = BuildVm();
+        vm.NewReminderTitle = "Remind me later";
+        await vm.AddGeneralCommand.ExecuteAsync(null);
+
+        Assert.Equal("Remind me later", vm.NewReminderTitle); // not cleared
+        Assert.Empty(vm.Reminders);
+    }
+
+    [Fact]
+    public async Task DismissAsync_NullReminder_DoesNotThrow()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        await vm.DismissCommand.ExecuteAsync(null!);
+        // No exception — null guard in DismissAsync
+    }
+}
+
 public class GoalStepsSyncTests : ViewModelTestBase
 {
     [Fact]
