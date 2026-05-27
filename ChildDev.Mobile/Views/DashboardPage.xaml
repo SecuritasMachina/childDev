@@ -302,6 +302,15 @@
                     </VerticalStackLayout>
                 </Border>
 
+                <!-- Reminders shortcut -->
+                <Button Text="🔔 View Reminders"
+                        Command="{Binding OpenRemindersCommand}"
+                        BackgroundColor="Transparent"
+                        TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Primary}}"
+                        FontSize="13"
+                        HorizontalOptions="Start"
+                        Margin="0,4,0,0" />
+
             </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>

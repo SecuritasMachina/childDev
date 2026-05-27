@@ -161,6 +161,9 @@
                 <Button Text="Delete Goal" Command="{Binding DeleteCommand}"
                         BackgroundColor="Red" TextColor="White"
                         IsVisible="{Binding IsExisting}" Margin="0,4,0,0" />
+                <Button Text="🔔 Set Reminder" Command="{Binding SetReminderCommand}"
+                        BackgroundColor="#444" TextColor="White"
+                        IsVisible="{Binding IsExisting}" Margin="0,4,0,0" />
             </VerticalStackLayout>
         </ScrollView>
 
