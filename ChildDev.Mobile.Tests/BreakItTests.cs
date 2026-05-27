@@ -7133,3 +7133,89 @@ public class GoalEntryDeleteGuardTests : ViewModelTestBase
         Assert.DoesNotContain("..", Nav.NavigatedRoutes);
     }
 }
+
+// ─── DashboardViewModel: OverdueTodoCount and HasOverdueTodos ─────────────────
+
+public class DashboardOverdueTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_WithOverdueTodo_SetsHasOverdueTodosTrue()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var yesterday = DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Overdue task", DueDate = yesterday, UpdatedOn = now });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasOverdueTodos);
+        Assert.True(vm.OverdueTodoCount > 0);
+    }
+
+    [Fact]
+    public async Task Load_WithNoOverdueTodo_HasOverdueTodosIsFalse()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var tomorrow = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Future task", DueDate = tomorrow, UpdatedOn = now });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.False(vm.HasOverdueTodos);
+        Assert.Equal(0, vm.OverdueTodoCount);
+    }
+}
+
+// ─── JournalListViewModel: combined text + Month filter ─────────────────────
+
+public class JournalListCombinedFilterTests : ViewModelTestBase
+{
+    private JournalListViewModel BuildVm() =>
+        new(JournalRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Filter_TextAndMonthTogether_ShowsOnlyMatchingEntriesWithinMonth()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var oldMs = DateTimeOffset.UtcNow.AddDays(-45).ToUnixTimeMilliseconds(); // > 30 days ago
+
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Recent piano practice", EnteredDate = now, UpdatedOn = now });
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Old piano practice", EnteredDate = oldMs, UpdatedOn = oldMs });
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Recent swimming", EnteredDate = now, UpdatedOn = now });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        vm.SetDateFilterCommand.Execute("Month");
+        vm.FilterText = "piano";
+
+        // Should only show the recent piano entry (not the old one, not the swimming one)
+        Assert.Single(vm.Journals);
+        Assert.Contains("piano", vm.Journals[0].Notes, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Filter_TextOnly_ShowsMatchAcrossNotesAndActivity()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Went to soccer", Activity = "Running", EnteredDate = now, UpdatedOn = now });
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Rest day", Activity = "Soccer training", EnteredDate = now, UpdatedOn = now });
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Unrelated", Activity = "Swimming", EnteredDate = now, UpdatedOn = now });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "soccer";
+
+        Assert.Equal(2, vm.Journals.Count);
+        Assert.Contains("shown", vm.EntryCountDisplay, StringComparison.OrdinalIgnoreCase);
+    }
+}
