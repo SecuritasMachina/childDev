@@ -38,16 +38,20 @@ public partial class TodoEntryViewModel(
     partial void OnLinkedGoalChanged(Goal? value)
     {
         if (value is null) return;
-        var goalPrefix = $"Goal: {value.GoalText}";
+        var gt = value.GoalText ?? string.Empty;
+        if (gt.Length > 1994) gt = gt[..1994];
+        var goalPrefix = $"Goal: {gt}";
         var existingNotes = Notes ?? string.Empty;
         if (existingNotes.StartsWith("Goal: ", StringComparison.OrdinalIgnoreCase))
         {
             var afterGoalLine = existingNotes.Contains('\n') ? existingNotes[(existingNotes.IndexOf('\n') + 1)..] : string.Empty;
-            Notes = string.IsNullOrWhiteSpace(afterGoalLine) ? goalPrefix : $"{goalPrefix}\n{afterGoalLine}";
+            var combined = string.IsNullOrWhiteSpace(afterGoalLine) ? goalPrefix : $"{goalPrefix}\n{afterGoalLine}";
+            Notes = combined.Length > 2000 ? combined[..2000] : combined;
         }
         else
         {
-            Notes = string.IsNullOrWhiteSpace(existingNotes) ? goalPrefix : $"{goalPrefix}\n{existingNotes}";
+            var combined = string.IsNullOrWhiteSpace(existingNotes) ? goalPrefix : $"{goalPrefix}\n{existingNotes}";
+            Notes = combined.Length > 2000 ? combined[..2000] : combined;
         }
     }
 

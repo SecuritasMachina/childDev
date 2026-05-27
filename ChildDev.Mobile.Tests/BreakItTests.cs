@@ -1270,6 +1270,39 @@ public class TodoEntryLinkedGoalNotesTests : ViewModelTestBase
         Assert.StartsWith("Goal: Second goal", vm.Notes);
         Assert.DoesNotContain("First goal", vm.Notes);
     }
+
+    [Fact]
+    public async Task LinkGoal_MaxLengthGoalText_NotesDoesNotExceed2000Chars()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var maxGoalText = new string('D', 2000);
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = maxGoalText, EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        vm.LinkedGoal = goal;
+
+        Assert.True(vm.Notes!.Length <= 2000,
+            $"Notes length {vm.Notes!.Length} exceeds 2000-char limit (would fail API sync)");
+    }
+
+    [Fact]
+    public async Task LinkGoal_MaxLengthGoalText_WithExistingNotes_TotalDoesNotExceed2000Chars()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var maxGoalText = new string('E', 1994);
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = maxGoalText, EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        vm.Notes = "Extra context about this task that the user typed";
+        vm.LinkedGoal = goal;
+
+        Assert.True(vm.Notes!.Length <= 2000,
+            $"Combined Notes length {vm.Notes!.Length} exceeds 2000-char limit");
+    }
 }
 
 // ─── Dashboard: navigation commands and stale-goal / next-meeting paths ──────
