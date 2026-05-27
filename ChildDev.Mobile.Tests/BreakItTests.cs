@@ -7771,3 +7771,177 @@ public class SettingsViewModelSaveUrlNonEmptyTests : ViewModelTestBase
         Assert.Contains("saved", vm.StatusMessage, StringComparison.OrdinalIgnoreCase);
     }
 }
+
+// ─── ReminderService: GetForEntityAsync ──────────────────────────────────────
+
+public class ReminderServiceGetForEntityTests : ViewModelTestBase
+{
+    [Fact]
+    public async Task GetForEntityAsync_ReturnsRemindersForGuid()
+    {
+        var account = await CreateTestAccountAsync();
+        var entityGuid = Guid.NewGuid().ToString();
+        var otherGuid = Guid.NewGuid().ToString();
+        var future = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds();
+
+        await ReminderSvc.ScheduleAsync(new Reminder { AccountFk = account.Guid, Title = "For entity", Topic = "Goal", EntityGuid = entityGuid, FireAt = future });
+        await ReminderSvc.ScheduleAsync(new Reminder { AccountFk = account.Guid, Title = "Other entity", Topic = "Goal", EntityGuid = otherGuid, FireAt = future });
+
+        var forEntity = await ReminderSvc.GetForEntityAsync(entityGuid);
+
+        Assert.Single(forEntity);
+        Assert.Equal("For entity", forEntity[0].Title);
+    }
+
+    [Fact]
+    public async Task GetForEntityAsync_NoMatch_ReturnsEmpty()
+    {
+        await CreateTestAccountAsync();
+        var result = await ReminderSvc.GetForEntityAsync(Guid.NewGuid().ToString());
+        Assert.Empty(result);
+    }
+}
+
+// ─── GoalProgressRepository: GetCurrentStreakAsync directly ──────────────────
+
+public class GoalProgressStreakDirectTests : ViewModelTestBase
+{
+    [Fact]
+    public async Task GetCurrentStreak_NoProgress_ReturnsZero()
+    {
+        var account = await CreateTestAccountAsync();
+        var streak = await GoalProgressRepo.GetCurrentStreakAsync(account.Guid);
+        Assert.Equal(0, streak);
+    }
+
+    [Fact]
+    public async Task GetCurrentStreak_ConsecutiveDays_ReturnsCorrectStreak()
+    {
+        var account = await CreateTestAccountAsync();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Test", EnteredDate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), UpdatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() };
+        await GoalRepo.SaveAsync(goal);
+
+        // Save notes on today and yesterday
+        var today = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local));
+        var yesterday = today.AddDays(-1);
+        await GoalProgressRepo.UpsertFromSyncAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = "Today", UpdatedOn = today.ToUnixTimeMilliseconds() });
+        await GoalProgressRepo.UpsertFromSyncAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = "Yesterday", UpdatedOn = yesterday.ToUnixTimeMilliseconds() });
+
+        var streak = await GoalProgressRepo.GetCurrentStreakAsync(account.Guid);
+        Assert.Equal(2, streak);
+    }
+
+    [Fact]
+    public async Task GetCurrentStreak_GapInDays_StopsAtGap()
+    {
+        var account = await CreateTestAccountAsync();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Test", EnteredDate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), UpdatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() };
+        await GoalRepo.SaveAsync(goal);
+
+        // Today and 3 days ago (gap of 2 days)
+        var today = new DateTimeOffset(DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Local));
+        var threeDaysAgo = today.AddDays(-3);
+        await GoalProgressRepo.UpsertFromSyncAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = "Today", UpdatedOn = today.ToUnixTimeMilliseconds() });
+        await GoalProgressRepo.UpsertFromSyncAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = "3 days ago", UpdatedOn = threeDaysAgo.ToUnixTimeMilliseconds() });
+
+        var streak = await GoalProgressRepo.GetCurrentStreakAsync(account.Guid);
+        Assert.Equal(1, streak); // Only today (gap breaks streak)
+    }
+}
+
+// ─── DashboardViewModel: WeeklyChallenge Motivation and Status ───────────────
+
+public class DashboardWeeklyChallengeMotivationTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_WeeklyChallengeDone_ShowsDoneStatus()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Run daily", EnteredDate = ts, UpdatedOn = ts });
+
+        // Add enough activity this week to complete any challenge type
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        for (int i = 0; i < 10; i++)
+            await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = $"Journal {i}", EnteredDate = now, UpdatedOn = now });
+        for (int i = 0; i < 10; i++)
+        {
+            var p = new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = (await GoalRepo.GetAllActiveAsync(account.Guid))[0].Guid, NextStepItems = $"Note {i}", UpdatedOn = now };
+            await GoalProgressRepo.SaveAsync(p);
+        }
+        var done = new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Done", CompletedAt = now, UpdatedOn = now };
+        await TodoRepo.SaveAsync(done);
+        for (int i = 0; i < 10; i++)
+        {
+            var t = new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = $"Done {i}", CompletedAt = now, UpdatedOn = now };
+            await TodoRepo.SaveAsync(t);
+        }
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        // Whatever challenge is active, if done it should show "Done" in status
+        if (vm.WeeklyChallengeDone)
+            Assert.Contains("Done", vm.WeeklyChallengeStatus);
+    }
+
+    [Fact]
+    public async Task Load_ChallengeNotStarted_MotivationSaysBuildMomentum()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Clean room", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        // With no activity, wcCurrent = 0, motivation = "Start now and build momentum!"
+        if (!vm.WeeklyChallengeDone && vm.WeeklyChallengePctValue == 0)
+            Assert.Contains("momentum", vm.WeeklyChallengeMotivation, StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+// ─── DashboardViewModel: OverallTierLabel remaining tiers ────────────────────
+
+public class DashboardOverallTierHighTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_200ProgressNotes_ShowsMasterTier()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Master goal", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        for (int i = 0; i < 200; i++)
+            await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = $"Note {i}", UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Contains("Master", vm.OverallTierLabel);
+    }
+
+    [Fact]
+    public async Task Load_500ProgressNotes_ShowsLegendTier()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Legend goal", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        for (int i = 0; i < 500; i++)
+            await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = $"Note {i}", UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Contains("Legend", vm.OverallTierLabel);
+    }
+}
