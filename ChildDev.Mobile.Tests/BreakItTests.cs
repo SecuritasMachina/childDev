@@ -7956,6 +7956,88 @@ public class GoalProgressStreakDirectTests : ViewModelTestBase
     }
 }
 
+// ─── GoalListViewModel: DeleteAsync cancel path ──────────────────────────────
+
+public class GoalListDeleteCancelTests : ViewModelTestBase
+{
+    private GoalListViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task DeleteAsync_UserCancels_GoalRemainsInList()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Keep this goal", EnteredDate = ts, UpdatedOn = ts });
+
+        Nav.AlertConfirmResult = false;
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Single(vm.Goals);
+
+        await vm.DeleteCommand.ExecuteAsync(vm.Goals[0]);
+
+        Assert.Single(vm.Goals);
+    }
+}
+
+// ─── DashboardViewModel: LoadAsync no account returns early ──────────────────
+
+public class DashboardNoAccountTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task LoadAsync_NoAccount_DoesNotThrowAndGreetingIsEmpty()
+    {
+        var vm = BuildVm();
+        var ex = await Record.ExceptionAsync(() => vm.LoadCommand.ExecuteAsync(null));
+        Assert.Null(ex);
+        Assert.Empty(vm.Greeting);
+    }
+}
+
+// ─── TodoListViewModel and JournalListViewModel: OpenAsync navigates ──────────
+
+public class ListViewModelOpenAsyncTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildTodoVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    private JournalListViewModel BuildJournalVm() =>
+        new(JournalRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task TodoList_Open_NonNull_NavigatesToEntry()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var todo = new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Navigate me", UpdatedOn = now };
+        await TodoRepo.SaveAsync(todo);
+
+        var vm = BuildTodoVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        await vm.OpenCommand.ExecuteAsync(vm.Todos[0]);
+
+        Assert.Contains($"todos/entry?guid={todo.Guid}", Nav.NavigatedRoutes);
+    }
+
+    [Fact]
+    public async Task JournalList_Open_NonNull_NavigatesToEntry()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Navigate me", EnteredDate = now, UpdatedOn = now });
+
+        var vm = BuildJournalVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        await vm.OpenCommand.ExecuteAsync(vm.Journals[0]);
+
+        Assert.Contains(Nav.NavigatedRoutes, r => r.Contains("journal/entry?guid="));
+    }
+}
+
 // ─── DashboardViewModel: WeeklyChallenge Motivation and Status ───────────────
 
 public class DashboardWeeklyChallengeMotivationTests : ViewModelTestBase
