@@ -6824,3 +6824,92 @@ public class DashboardTierLabelMissingTests : ViewModelTestBase
         Assert.Contains("Skilled", vm.OverallTierLabel);
     }
 }
+
+// ─── TodoEntry: SaveAsync with Guid not found in DB (fallback to new record) ──
+
+public class TodoEntrySaveWithStaleGuidTests : ViewModelTestBase
+{
+    private TodoEntryViewModel BuildVm() =>
+        new(TodoRepo, GoalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task Save_WithNonExistentGuid_FallsBackToNewRecordWithSameGuid()
+    {
+        var account = await CreateTestAccountAsync();
+        var fakeGuid = Guid.NewGuid().ToString();
+
+        var vm = BuildVm();
+        vm.Guid = fakeGuid; // guid not in DB
+        await Task.Delay(100); // let LoadAsync run (returns early for null item)
+        vm.Title = "Orphaned task";
+
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        // Should have saved with the same Guid as fallback
+        var saved = await TodoRepo.GetAsync(fakeGuid);
+        Assert.NotNull(saved);
+        Assert.Equal("Orphaned task", saved!.Title);
+    }
+
+    [Fact]
+    public async Task Save_NewTodoWithHasDueDateFalse_DueDateStoredAsNull()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.Title = "No due date";
+        vm.HasDueDate = false;
+
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var account = await AccountService.GetAccountAsync();
+        var todos = await TodoRepo.GetPendingAsync(account!.Guid);
+        Assert.Single(todos);
+        Assert.Null(todos[0].DueDate);
+    }
+
+    [Fact]
+    public async Task Save_NewTodoWithHasDueDateTrue_DueDatePersistedCorrectly()
+    {
+        await CreateTestAccountAsync();
+        var targetDate = DateTime.Today.AddDays(3);
+        var vm = BuildVm();
+        vm.Title = "Has due date";
+        vm.HasDueDate = true;
+        vm.DueDate = targetDate;
+
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var account = await AccountService.GetAccountAsync();
+        var todos = await TodoRepo.GetPendingAsync(account!.Guid);
+        Assert.Single(todos);
+        Assert.NotNull(todos[0].DueDate);
+        var savedDate = DateTimeOffset.FromUnixTimeMilliseconds(todos[0].DueDate!.Value).LocalDateTime.Date;
+        Assert.Equal(targetDate.Date, savedDate);
+    }
+}
+
+// ─── JournalEntry: SaveAsync with Guid not found in DB ───────────────────────
+
+public class JournalEntrySaveWithStaleGuidTests : ViewModelTestBase
+{
+    private JournalEntryViewModel BuildVm() =>
+        new(JournalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task Save_WithNonExistentGuid_FallsBackToNewRecordWithSameGuid()
+    {
+        var account = await CreateTestAccountAsync();
+        var fakeGuid = Guid.NewGuid().ToString();
+
+        var vm = BuildVm();
+        vm.Guid = fakeGuid;
+        await Task.Delay(100);
+        vm.Notes = "Orphaned note";
+
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var saved = await JournalRepo.GetAsync(fakeGuid);
+        Assert.NotNull(saved);
+        Assert.Equal("Orphaned note", saved!.Notes);
+    }
+}
