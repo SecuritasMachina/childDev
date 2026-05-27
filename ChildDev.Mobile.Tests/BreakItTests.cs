@@ -7296,3 +7296,98 @@ public class JournalEntryEnteredDateTests : ViewModelTestBase
         Assert.Equal(pastDate.Date, savedDate);
     }
 }
+
+// ─── SnoozeHelper: Custom path with valid unit choices ───────────────────────
+
+public class SnoozeHelperCustomUnitTests : ViewModelTestBase
+{
+    [Fact]
+    public async Task PickAsync_3DaysChoice_ReturnsCorrectTimeSpan()
+    {
+        await CreateTestAccountAsync();
+        var future = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds();
+        await ReminderSvc.ScheduleAsync(new Reminder { AccountFk = (await AccountService.GetAccountAsync())!.Guid, Title = "Test", Topic = "General", FireAt = future });
+
+        Nav.ActionSheetResult = "3 days";
+
+        var vm = new RemindersViewModel(ReminderSvc, AccountService, Nav);
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Single(vm.Reminders);
+
+        var beforeSnooze = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await vm.SnoozeCommand.ExecuteAsync(vm.Reminders[0]);
+
+        Assert.Single(vm.Reminders);
+        var expectedMinFireAt = beforeSnooze + (long)TimeSpan.FromDays(3).TotalMilliseconds - 5000;
+        Assert.True(vm.Reminders[0].FireAt >= expectedMinFireAt);
+    }
+
+    [Fact]
+    public async Task PickAsync_CustomWithDaysUnit_ReturnsCorrectDuration()
+    {
+        await CreateTestAccountAsync();
+        var future = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds();
+        await ReminderSvc.ScheduleAsync(new Reminder { AccountFk = (await AccountService.GetAccountAsync())!.Guid, Title = "Test", Topic = "General", FireAt = future });
+
+        // First ActionSheet: "Custom...", Second ActionSheet: "Days", Prompt: "2"
+        Nav.ActionSheetResultQueue.Enqueue("Custom...");
+        Nav.ActionSheetResultQueue.Enqueue("Days");
+        Nav.PromptResult = "2";
+
+        var vm = new RemindersViewModel(ReminderSvc, AccountService, Nav);
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        var beforeSnooze = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await vm.SnoozeCommand.ExecuteAsync(vm.Reminders[0]);
+
+        // Should be rescheduled ~2 days out
+        var expectedMin = beforeSnooze + (long)TimeSpan.FromDays(2).TotalMilliseconds - 5000;
+        Assert.True(vm.Reminders[0].FireAt >= expectedMin);
+    }
+
+    [Fact]
+    public async Task PickAsync_CustomWithWeeksUnit_ReturnsCorrectDuration()
+    {
+        await CreateTestAccountAsync();
+        var future = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds();
+        await ReminderSvc.ScheduleAsync(new Reminder { AccountFk = (await AccountService.GetAccountAsync())!.Guid, Title = "Test", Topic = "General", FireAt = future });
+
+        // Custom → "1" week
+        Nav.ActionSheetResultQueue.Enqueue("Custom...");
+        Nav.ActionSheetResultQueue.Enqueue("Weeks");
+        Nav.PromptResult = "1";
+
+        var vm = new RemindersViewModel(ReminderSvc, AccountService, Nav);
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        var beforeSnooze = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await vm.SnoozeCommand.ExecuteAsync(vm.Reminders[0]);
+
+        var expectedMin = beforeSnooze + (long)TimeSpan.FromDays(7).TotalMilliseconds - 5000;
+        Assert.True(vm.Reminders[0].FireAt >= expectedMin);
+    }
+
+    [Fact]
+    public async Task PickAsync_CustomUnitCancelled_ReturnsNullAndNoReschedule()
+    {
+        await CreateTestAccountAsync();
+        var future = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds();
+        var account = await AccountService.GetAccountAsync();
+        await ReminderSvc.ScheduleAsync(new Reminder { AccountFk = account!.Guid, Title = "Test", Topic = "General", FireAt = future });
+
+        // Custom → "3" → unit cancelled (null)
+        Nav.ActionSheetResultQueue.Enqueue("Custom...");
+        Nav.ActionSheetResultQueue.Enqueue(null); // cancel unit picker
+        Nav.PromptResult = "3";
+
+        var vm = new RemindersViewModel(ReminderSvc, AccountService, Nav);
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        await vm.SnoozeCommand.ExecuteAsync(vm.Reminders[0]);
+
+        // No rescheduling — duration was null
+        var pending = await ReminderSvc.GetPendingAsync(account.Guid);
+        Assert.Single(pending);
+        Assert.Equal(future, pending[0].FireAt); // unchanged
+    }
+}
