@@ -7219,3 +7219,80 @@ public class JournalListCombinedFilterTests : ViewModelTestBase
         Assert.Contains("shown", vm.EntryCountDisplay, StringComparison.OrdinalIgnoreCase);
     }
 }
+
+// ─── SettingsViewModel: LastSyncDisplay = "Never" when LastSyncAt == 0 ────────
+
+public class SettingsViewModelNeverSyncTests : ViewModelTestBase
+{
+    private SettingsViewModel BuildVm() =>
+        new(AccountService, new FakeHttpClientFactory(new NoOpHttpHandler()), Analytics);
+
+    [Fact]
+    public async Task Load_WithLastSyncAtZero_ShowsNever()
+    {
+        await CreateTestAccountAsync();
+        // New account has LastSyncAt = 0 by default
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Equal("Never", vm.LastSyncDisplay);
+    }
+
+    [Fact]
+    public async Task Load_NoAccount_DoesNotPopulateFields()
+    {
+        // No account → early return
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Empty(vm.NickName);
+        Assert.Empty(vm.AccountGuid);
+    }
+}
+
+// ─── DashboardViewModel: LastSyncDisplay with LastSyncAt == 0 ────────────────
+
+public class DashboardLastSyncDisplayTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_AccountWithLastSyncAtZero_ShowsNeverSynced()
+    {
+        await CreateTestAccountAsync();
+        // New account has LastSyncAt = 0
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Equal("Never synced", vm.LastSyncDisplay);
+    }
+}
+
+// ─── JournalEntry: SaveAsync with non-today EnteredDate ──────────────────────
+
+public class JournalEntryEnteredDateTests : ViewModelTestBase
+{
+    private JournalEntryViewModel BuildVm() =>
+        new(JournalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task Save_WithSpecificPastDate_PersistsEnteredDateCorrectly()
+    {
+        await CreateTestAccountAsync();
+        var pastDate = DateTime.Today.AddDays(-7);
+
+        var vm = BuildVm();
+        vm.Notes = "Seven days ago";
+        vm.EnteredDate = pastDate;
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var account = await AccountService.GetAccountAsync();
+        var journals = await JournalRepo.GetAllActiveAsync(account!.Guid);
+        Assert.Single(journals);
+        var savedDate = DateTimeOffset.FromUnixTimeMilliseconds(journals[0].EnteredDate).LocalDateTime.Date;
+        Assert.Equal(pastDate.Date, savedDate);
+    }
+}
