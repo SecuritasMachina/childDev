@@ -239,6 +239,10 @@ public partial class DashboardViewModel(
         QuickJournalText = string.Empty;
         QuickJournalSaved = true;
         analytics.Track("journal_quick_save");
+        var weekStartMs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
+        WeekJournalEntries = await journalRepo.GetCountSinceAsync(_accountGuid, weekStartMs);
+        JournalThisWeek = WeekJournalEntries;
+        HasWeeklyWins = WeekTodosCompleted > 0 || WeekProgressNotes > 0 || WeekJournalEntries > 0;
         await Task.Delay(1500);
         QuickJournalSaved = false;
         var journals = await journalRepo.GetRecentAsync(_accountGuid, 3);

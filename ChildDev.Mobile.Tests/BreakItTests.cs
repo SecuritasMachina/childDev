@@ -1824,6 +1824,42 @@ public class JournalListStreak14Tests : ViewModelTestBase
     }
 }
 
+public class DashboardQuickJournalWeeklyWinsTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task QuickAddJournal_FirstJournalThisWeek_SetsHasWeeklyWinsTrue()
+    {
+        var account = await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.False(vm.HasWeeklyWins); // no wins yet
+
+        vm.QuickJournalText = "First quick journal entry";
+        await vm.QuickAddJournalCommand.ExecuteAsync(null);
+
+        // After quick-add, weekly wins should reflect the new journal entry
+        Assert.True(vm.HasWeeklyWins);
+        Assert.True(vm.WeekJournalEntries > 0);
+    }
+
+    [Fact]
+    public async Task QuickAddJournal_UpdatesWeekJournalEntriesCount()
+    {
+        var account = await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Equal(0, vm.WeekJournalEntries);
+
+        vm.QuickJournalText = "Journal entry 1";
+        await vm.QuickAddJournalCommand.ExecuteAsync(null);
+
+        Assert.Equal(1, vm.WeekJournalEntries);
+    }
+}
+
 public class GoalListDeleteStateTests : ViewModelTestBase
 {
     private GoalListViewModel BuildVm() =>
