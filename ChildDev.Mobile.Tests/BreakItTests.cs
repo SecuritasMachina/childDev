@@ -6594,3 +6594,111 @@ public class TodoListAddBeforeLoadTests : ViewModelTestBase
         Assert.Empty(vm.Todos);
     }
 }
+
+// ─── GoalEntryViewModel: ProgressBarValue derived property ───────────────────
+
+public class GoalEntryProgressBarValueTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public void ProgressBarValue_At0Percent_ReturnsZero()
+    {
+        var vm = BuildVm();
+        vm.ProgressPercent = 0;
+        Assert.Equal(0.0, vm.ProgressBarValue);
+    }
+
+    [Fact]
+    public void ProgressBarValue_At50Percent_ReturnsHalf()
+    {
+        var vm = BuildVm();
+        vm.ProgressPercent = 50;
+        Assert.Equal(0.5, vm.ProgressBarValue, 5);
+    }
+
+    [Fact]
+    public void ProgressBarValue_At100Percent_ReturnsOne()
+    {
+        var vm = BuildVm();
+        vm.ProgressPercent = 100;
+        Assert.Equal(1.0, vm.ProgressBarValue, 5);
+    }
+
+    [Fact]
+    public async Task Load_GoalWithProgressPercent_ProgressBarValueMatchesPercent()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Progress goal", EnteredDate = ts, ProgressPercent = 75 };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        Assert.Equal(75, vm.ProgressPercent);
+        Assert.Equal(0.75, vm.ProgressBarValue, 5);
+    }
+}
+
+// ─── Dashboard: HasStaleGoal false when goal has recent progress (<7 days) ───
+
+public class DashboardStaleGoalRecentProgressTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_GoalWithProgressNoteYesterday_HasStaleGoalIsFalse()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Fresh goal", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        // Add a progress note dated yesterday (within 7-day window)
+        var yesterday = DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeMilliseconds();
+        await GoalProgressRepo.UpsertFromSyncAsync(new GoalProgress
+        {
+            Guid = Guid.NewGuid().ToString(),
+            AccountFk = account.Guid,
+            GoalFk = goal.Guid,
+            NextStepItems = "Recent progress",
+            UpdatedOn = yesterday
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.False(vm.HasStaleGoal);
+        Assert.Empty(vm.StaleGoalText);
+    }
+
+    [Fact]
+    public async Task Load_GoalWithProgressNoteOlderThan7Days_HasStaleGoalIsTrue()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Old progress goal", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        // Add a progress note dated 8 days ago (outside 7-day window)
+        var eightDaysAgo = DateTimeOffset.UtcNow.AddDays(-8).ToUnixTimeMilliseconds();
+        await GoalProgressRepo.UpsertFromSyncAsync(new GoalProgress
+        {
+            Guid = Guid.NewGuid().ToString(),
+            AccountFk = account.Guid,
+            GoalFk = goal.Guid,
+            NextStepItems = "Old progress",
+            UpdatedOn = eightDaysAgo
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasStaleGoal);
+        Assert.Equal("Old progress goal", vm.StaleGoalText);
+    }
+}
