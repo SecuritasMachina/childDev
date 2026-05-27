@@ -5599,3 +5599,129 @@ public class TodoListAllDoneEmptyMessageTests : ViewModelTestBase
         Assert.Contains("zzznomatch", vm.EmptyMessage);
     }
 }
+
+// ─── TodoListViewModel: WeekCompletedMessage 5 and 1 todo, WeekOverWeek increase ──
+
+public class TodoListWeekMessageBranchTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task WeekCompletedMessage_5Todos_ShowsGreatMomentumMessage()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        for (var i = 0; i < 5; i++)
+        {
+            var guid = Guid.NewGuid().ToString();
+            await TodoRepo.SaveAsync(new Todo { Guid = guid, AccountFk = account.Guid, Title = $"Task {i}", UpdatedOn = ts });
+            await TodoRepo.CompleteAsync(guid);
+        }
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasWeekCompletedMessage);
+        Assert.Contains("🌟", vm.WeekCompletedMessage);
+        Assert.Contains("great momentum", vm.WeekCompletedMessage);
+    }
+
+    [Fact]
+    public async Task WeekCompletedMessage_1Todo_UsesSingular()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var guid = Guid.NewGuid().ToString();
+        await TodoRepo.SaveAsync(new Todo { Guid = guid, AccountFk = account.Guid, Title = "Single task", UpdatedOn = ts });
+        await TodoRepo.CompleteAsync(guid);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasWeekCompletedMessage);
+        Assert.Contains("1 todo", vm.WeekCompletedMessage);
+        Assert.DoesNotContain("todos", vm.WeekCompletedMessage);
+    }
+
+    [Fact]
+    public async Task WeekOverWeek_MoreThisWeek_ShowsIncreaseMessage()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var twoWeeksAgo = DateTimeOffset.UtcNow.AddDays(-10).ToUnixTimeMilliseconds();
+
+        // 1 todo completed last week (8-14 days ago)
+        var oldGuid = Guid.NewGuid().ToString();
+        await TodoRepo.UpsertFromSyncAsync(new Todo
+        {
+            Guid = oldGuid, AccountFk = account.Guid, Title = "Old task",
+            CompletedAt = twoWeeksAgo, UpdatedOn = twoWeeksAgo
+        });
+
+        // 3 todos completed this week
+        for (var i = 0; i < 3; i++)
+        {
+            var guid = Guid.NewGuid().ToString();
+            await TodoRepo.SaveAsync(new Todo { Guid = guid, AccountFk = account.Guid, Title = $"New task {i}", UpdatedOn = ts });
+            await TodoRepo.CompleteAsync(guid);
+        }
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasWeekOverWeekMessage);
+        Assert.Contains("📈", vm.WeekOverWeekMessage);
+    }
+}
+
+// ─── JournalListViewModel: DeleteAsync with active Week filter ─────────────────
+
+public class JournalListDeleteWithWeekFilterTests : ViewModelTestBase
+{
+    private JournalListViewModel BuildVm() =>
+        new(JournalRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Delete_LastJournalInWeekFilter_EmptyMessageUpdatesToWeekMessage()
+    {
+        var account = await CreateTestAccountAsync();
+        var recent = DateTimeOffset.UtcNow.AddDays(-2).ToUnixTimeMilliseconds();
+        var old = DateTimeOffset.UtcNow.AddDays(-15).ToUnixTimeMilliseconds();
+
+        var recentGuid = Guid.NewGuid().ToString();
+        await JournalRepo.SaveAsync(new Journal { Guid = recentGuid, AccountFk = account.Guid, Notes = "Recent entry", EnteredDate = recent, UpdatedOn = recent });
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Old entry", EnteredDate = old, UpdatedOn = old });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.SetDateFilterCommand.Execute("Week");
+
+        Assert.Single(vm.Journals);
+
+        Nav.AlertConfirmResult = true;
+        await vm.DeleteCommand.ExecuteAsync(vm.Journals[0]);
+
+        Assert.Empty(vm.Journals);
+        Assert.Contains("No entries this week", vm.EmptyMessage);
+    }
+
+    [Fact]
+    public async Task Delete_JournalWithNoFilter_EntryCountDecreases()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Entry 1", EnteredDate = ts, UpdatedOn = ts });
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Entry 2", EnteredDate = ts + 1, UpdatedOn = ts + 1 });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Equal(2, vm.Journals.Count);
+
+        Nav.AlertConfirmResult = true;
+        await vm.DeleteCommand.ExecuteAsync(vm.Journals[0]);
+
+        Assert.Single(vm.Journals);
+        Assert.Contains("1", vm.EntryCountDisplay);
+    }
+}
