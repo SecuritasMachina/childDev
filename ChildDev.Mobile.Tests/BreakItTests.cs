@@ -4981,6 +4981,34 @@ public class GoalListNeedsAttentionCountTests : ViewModelTestBase
     }
 }
 
+// ─── TodoEntryViewModel: RestoreAsync with valid Guid ────────────────────────
+
+public class TodoEntryRestoreTests : ViewModelTestBase
+{
+    private TodoEntryViewModel BuildVm() =>
+        new(TodoRepo, GoalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task RestoreAsync_WithValidGuid_RestorestsTodoPending()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var todo = new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Completed task", UpdatedOn = now, CompletedAt = now };
+        await TodoRepo.SaveAsync(todo);
+
+        var vm = BuildVm();
+        vm.Guid = todo.Guid;
+        await Task.Delay(200);
+        Assert.True(vm.IsCompleted);
+
+        await vm.RestoreCommand.ExecuteAsync(null);
+
+        var pending = await TodoRepo.GetPendingAsync(account.Guid);
+        Assert.Single(pending);
+        Assert.Equal(todo.Guid, pending[0].Guid);
+    }
+}
+
 // ─── GoalListViewModel: NeedsAttention excludes completed goals ───────────────
 
 public class GoalListNeedsAttentionExcludesCompletedTests : ViewModelTestBase
