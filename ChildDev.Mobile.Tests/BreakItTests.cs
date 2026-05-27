@@ -4810,3 +4810,72 @@ public class GoalEntryMarkCompleteTests : ViewModelTestBase
         Assert.Null(ex);
     }
 }
+
+// ─── GoalEntryViewModel: GoalText/MeasurableOutcome/Steps length cap (2000) ──
+
+public class GoalEntryTextFieldLengthTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task SaveAsync_GoalTextOver2000Chars_IsTruncatedTo2000()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.GoalText = new string('G', 2100);
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var account = await AccountService.GetAccountAsync();
+        var goals = await GoalRepo.GetAllActiveAsync(account!.Guid);
+        Assert.Single(goals);
+        Assert.True((goals[0].GoalText?.Length ?? 0) <= 2000,
+            $"GoalText length {goals[0].GoalText?.Length} exceeds 2000-char API limit");
+    }
+
+    [Fact]
+    public async Task SaveAsync_GoalTextExactly2000Chars_IsNotTruncated()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.GoalText = new string('H', 2000);
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var account = await AccountService.GetAccountAsync();
+        var goals = await GoalRepo.GetAllActiveAsync(account!.Guid);
+        Assert.Single(goals);
+        Assert.Equal(2000, goals[0].GoalText?.Length ?? 0);
+    }
+
+    [Fact]
+    public async Task SaveAsync_MeasurableOutcomeOver2000Chars_IsTruncatedTo2000()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.GoalText = "Goal";
+        vm.MeasurableOutcome = new string('M', 2100);
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var account = await AccountService.GetAccountAsync();
+        var goals = await GoalRepo.GetAllActiveAsync(account!.Guid);
+        Assert.Single(goals);
+        Assert.True((goals[0].MeasurableOutcome?.Length ?? 0) <= 2000,
+            $"MeasurableOutcome length {goals[0].MeasurableOutcome?.Length} exceeds 2000-char API limit");
+    }
+
+    [Fact]
+    public async Task SaveAsync_StepsOver2000Chars_IsTruncatedTo2000()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.GoalText = "Goal";
+        vm.Steps = new string('S', 2100);
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var account = await AccountService.GetAccountAsync();
+        var goals = await GoalRepo.GetAllActiveAsync(account!.Guid);
+        Assert.Single(goals);
+        Assert.True((goals[0].Steps?.Length ?? 0) <= 2000,
+            $"Steps length {goals[0].Steps?.Length} exceeds 2000-char API limit");
+    }
+}

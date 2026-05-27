@@ -156,13 +156,16 @@ public partial class GoalEntryViewModel(
             ? new Goal { Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid, EnteredDate = ts }
             : await repo.GetAsync(Guid) ?? new Goal { Guid = Guid, AccountFk = account.Guid, EnteredDate = ts };
 
-        goal.GoalText = GoalText.Trim();
+        var goalTextTrimmed = GoalText.Trim();
+        goal.GoalText = goalTextTrimmed.Length > 2000 ? goalTextTrimmed[..2000] : goalTextTrimmed;
         var cat = string.IsNullOrWhiteSpace(Category) ? null : Category.Trim();
         goal.Category = cat is { Length: > 50 } ? cat[..50] : cat;
         goal.ProgressPercent = ProgressPercent > 0 ? ProgressPercent : null;
         goal.IsPinned = IsPinned;
-        goal.Steps = string.IsNullOrWhiteSpace(Steps) ? null : Steps.Trim();
-        goal.MeasurableOutcome = string.IsNullOrWhiteSpace(MeasurableOutcome) ? null : MeasurableOutcome.Trim();
+        var steps = string.IsNullOrWhiteSpace(Steps) ? null : Steps.Trim();
+        goal.Steps = steps is { Length: > 2000 } ? steps[..2000] : steps;
+        var measurableOutcome = string.IsNullOrWhiteSpace(MeasurableOutcome) ? null : MeasurableOutcome.Trim();
+        goal.MeasurableOutcome = measurableOutcome is { Length: > 2000 } ? measurableOutcome[..2000] : measurableOutcome;
         goal.NextMeetingDate = HasNextMeetingDate
             ? new DateTimeOffset(DateTime.SpecifyKind(NextMeetingDate, DateTimeKind.Local)).ToUnixTimeMilliseconds()
             : null;
