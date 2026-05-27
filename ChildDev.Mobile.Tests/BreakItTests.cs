@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Http.Json;
 using LevelUp.Data;
 using LevelUp.Models;
 using LevelUp.ViewModels;
@@ -1490,5 +1492,199 @@ public class SettingsViewModelBreakItTests : ViewModelTestBase
         await vm.UnlinkFromServerCommand.ExecuteAsync(null);
         Assert.False(vm.IsLinkedToServer);
         Assert.Contains("Unlinked", vm.StatusMessage);
+    }
+}
+
+// ─── SettingsViewModel: LinkToServer guard branches ──────────────────────────
+
+public class SettingsViewModelLinkTests : ViewModelTestBase
+{
+    private class FixedResponseHandler(HttpStatusCode status, object? body = null) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+        {
+            var response = new HttpResponseMessage(status);
+            if (body is not null)
+                response.Content = JsonContent.Create(body);
+            return Task.FromResult(response);
+        }
+    }
+
+    private class ThrowingHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct) =>
+            throw new HttpRequestException("simulated network failure");
+    }
+
+    private SettingsViewModel BuildVm(HttpMessageHandler? handler = null) =>
+        new(AccountService, new FakeHttpClientFactory(handler ?? new FixedResponseHandler(HttpStatusCode.OK)), Analytics);
+
+    [Fact]
+    public async Task LinkToServer_EmptyUrl_SetsMessageAndReturnsEarly()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.ServerUrl = string.Empty;
+        vm.ServerNickName = "user";
+        vm.ServerPin = "1234";
+        await vm.LinkToServerCommand.ExecuteAsync(null);
+        Assert.Contains("Save a server URL", vm.StatusMessage);
+    }
+
+    [Fact]
+    public async Task LinkToServer_EmptyNickName_SetsMessageAndReturnsEarly()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.ServerUrl = "https://server.local";
+        vm.ServerNickName = string.Empty;
+        vm.ServerPin = "1234";
+        await vm.LinkToServerCommand.ExecuteAsync(null);
+        Assert.Contains("nickname", vm.StatusMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task LinkToServer_EmptyPin_SetsMessageAndReturnsEarly()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.ServerUrl = "https://server.local";
+        vm.ServerNickName = "user";
+        vm.ServerPin = string.Empty;
+        await vm.LinkToServerCommand.ExecuteAsync(null);
+        Assert.Contains("password", vm.StatusMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task LinkToServer_Unauthorized_SetsIncorrectCredentialsMessage()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm(new FixedResponseHandler(HttpStatusCode.Unauthorized));
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.ServerUrl = "https://server.local";
+        vm.ServerNickName = "user";
+        vm.ServerPin = "wrongpin";
+        await vm.LinkToServerCommand.ExecuteAsync(null);
+        Assert.Contains("Incorrect", vm.StatusMessage);
+        Assert.False(vm.IsLinking);
+    }
+
+    [Fact]
+    public async Task LinkToServer_NetworkException_SetsCouldNotConnectMessage()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm(new ThrowingHandler());
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.ServerUrl = "https://server.local";
+        vm.ServerNickName = "user";
+        vm.ServerPin = "1234";
+        await vm.LinkToServerCommand.ExecuteAsync(null);
+        Assert.Contains("Could not connect", vm.StatusMessage);
+        Assert.False(vm.IsLinking);
+    }
+
+    [Fact]
+    public async Task LinkToServer_Success_SetsLinkedAndClearsFields()
+    {
+        var account = await CreateTestAccountAsync();
+        var authJson = new { jwt = "fake-jwt-token", accountGuid = account.Guid };
+        var vm = BuildVm(new FixedResponseHandler(HttpStatusCode.OK, authJson));
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.ServerUrl = "https://server.local";
+        vm.ServerNickName = "user";
+        vm.ServerPin = "1234";
+        await vm.LinkToServerCommand.ExecuteAsync(null);
+        Assert.True(vm.IsLinkedToServer);
+        Assert.Empty(vm.ServerNickName);
+        Assert.Empty(vm.ServerPin);
+        Assert.False(vm.IsLinking);
+    }
+}
+
+// ─── SettingsViewModel: LoadAsync branch coverage ────────────────────────────
+
+public class SettingsViewModelLoadBranchTests : ViewModelTestBase
+{
+    private SettingsViewModel BuildVm() =>
+        new(AccountService, new FakeHttpClientFactory(new NoOpHttpHandler()), Analytics);
+
+    [Fact]
+    public async Task Load_WithNonZeroLastSyncAt_ShowsFormattedDate()
+    {
+        await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.AddMinutes(-30).ToUnixTimeMilliseconds();
+        await AccountService.UpdateLastSyncAsync(ts);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.NotEqual("Never", vm.LastSyncDisplay);
+        Assert.NotEmpty(vm.LastSyncDisplay);
+    }
+
+    [Fact]
+    public async Task Load_WithServerJwtSet_IsLinkedToServerTrue()
+    {
+        var account = await CreateTestAccountAsync();
+        await AccountService.SaveServerCredentialsAsync("test-jwt", "https://server.local");
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.IsLinkedToServer);
+        Assert.Equal("https://server.local", vm.ServerUrl);
+    }
+}
+
+// ─── JournalListViewModel: streak >= 14 shows star emoji ─────────────────────
+
+public class JournalListStreak14Tests : ViewModelTestBase
+{
+    private JournalListViewModel BuildVm() =>
+        new(JournalRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_Streak14Days_ShowsStarEmojiInStreakDisplay()
+    {
+        var account = await CreateTestAccountAsync();
+        for (int d = 1; d <= 14; d++)
+        {
+            var ts = DateTimeOffset.UtcNow.AddDays(-d).ToUnixTimeMilliseconds();
+            await JournalRepo.SaveAsync(new Journal
+            {
+                Guid = Guid.NewGuid().ToString(),
+                AccountFk = account.Guid,
+                Notes = $"Day {d}",
+                EnteredDate = ts
+            });
+        }
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Contains("🌟", vm.StreakDisplay);
+        Assert.Contains("14-day", vm.StreakDisplay);
+    }
+
+    [Fact]
+    public async Task Load_Streak1Day_StreakDisplayIsEmpty()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeMilliseconds();
+        await JournalRepo.SaveAsync(new Journal
+        {
+            Guid = Guid.NewGuid().ToString(),
+            AccountFk = account.Guid,
+            Notes = "Just one",
+            EnteredDate = ts
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Empty(vm.StreakDisplay);
     }
 }
