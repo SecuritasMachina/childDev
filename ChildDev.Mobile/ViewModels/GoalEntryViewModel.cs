@@ -173,6 +173,7 @@ public partial class GoalEntryViewModel(
         analytics.Track(string.IsNullOrEmpty(Guid) ? "goal_create" : "goal_save", goal.Category);
 
         var trimmedNextStep = NextStepItems.Trim();
+        if (trimmedNextStep.Length > 2000) trimmedNextStep = trimmedNextStep[..2000];
         if (!string.IsNullOrWhiteSpace(trimmedNextStep) && trimmedNextStep != _loadedNextStepItems)
         {
             var progress = new GoalProgress

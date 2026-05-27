@@ -4325,3 +4325,130 @@ public class JournalEntryEmotionReasonLengthTests : ViewModelTestBase
         Assert.Equal(1000, journals[0].EmotionReason?.Length);
     }
 }
+
+// ─── GoalEntryViewModel: NextStepItems length cap (API MaxLength 2000) ─────────
+
+public class GoalEntryNextStepItemsLengthTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task SaveAsync_NextStepItemsOver2000Chars_ProgressNoteDoesNotExceed2000()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalText = "Big steps goal", EnteredDate = ts, UpdatedOn = ts
+        };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        vm.NextStepItems = new string('N', 2100); // exceeds API limit
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var notes = await GoalProgressRepo.GetForGoalAsync(goal.Guid);
+        Assert.Single(notes);
+        Assert.True((notes[0].NextStepItems?.Length ?? 0) <= 2000,
+            $"NextStepItems length {notes[0].NextStepItems?.Length} exceeds 2000-char API limit");
+    }
+
+    [Fact]
+    public async Task SaveAsync_NextStepItemsExactly2000Chars_IsNotTruncated()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal
+        {
+            Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+            GoalText = "Exact steps goal", EnteredDate = ts, UpdatedOn = ts
+        };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        vm.NextStepItems = new string('M', 2000);
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var notes = await GoalProgressRepo.GetForGoalAsync(goal.Guid);
+        Assert.Single(notes);
+        Assert.Equal(2000, notes[0].NextStepItems?.Length ?? 0);
+    }
+}
+
+// ─── RemindersViewModel: AddGeneral sets HasReminders ────────────────────────
+
+public class RemindersViewModelHasRemindersTests : ViewModelTestBase
+{
+    private RemindersViewModel BuildVm() => new(ReminderSvc, AccountService, Nav);
+
+    [Fact]
+    public async Task AddGeneral_SetsHasRemindersTrue_AfterSuccessfulAdd()
+    {
+        await CreateTestAccountAsync();
+        Nav.ActionSheetResult = "1 hour";
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.False(vm.HasReminders); // starts empty
+
+        vm.NewReminderTitle = "Remember this";
+        await vm.AddGeneralCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasReminders, "HasReminders should be true after adding a reminder");
+        Assert.NotEmpty(vm.Reminders);
+    }
+}
+
+// ─── GoalListViewModel: EmptyMessage branches ────────────────────────────────
+
+public class GoalListEmptyMessageTests : ViewModelTestBase
+{
+    private GoalListViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task SetCategoryFilter_NoMatchingGoals_EmptyMessageShowsCategoryName()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Science project", Category = "Academic", EnteredDate = ts, UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.SetCategoryFilterCommand.Execute("Health"); // no Health goals exist
+
+        Assert.Empty(vm.Goals);
+        Assert.Equal("No Health goals", vm.EmptyMessage);
+    }
+
+    [Fact]
+    public async Task SetCategoryFilter_NeedsAttention_AllUpToDate_ShowsUpToDateEmptyMessage()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var recentProgress = DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeMilliseconds();
+
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Active goal", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+        await GoalProgressRepo.SaveAsync(new GoalProgress
+        {
+            Guid = Guid.NewGuid().ToString(), GoalFk = goal.Guid, AccountFk = account.Guid,
+            NextStepItems = "Just worked on this", UpdatedOn = recentProgress
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.SetCategoryFilterCommand.Execute("NeedsAttention");
+
+        Assert.Empty(vm.Goals);
+        Assert.Equal("All goals are up to date! 🎉", vm.EmptyMessage);
+    }
+}
