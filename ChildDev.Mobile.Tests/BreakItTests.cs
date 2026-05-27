@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using LevelUp.Data;
 using LevelUp.Models;
+using LevelUp.Services;
 using LevelUp.ViewModels;
 
 namespace LevelUp.Tests;
@@ -1821,6 +1822,56 @@ public class JournalListStreak14Tests : ViewModelTestBase
         await vm.LoadCommand.ExecuteAsync(null);
 
         Assert.Empty(vm.StreakDisplay);
+    }
+}
+
+public class GoalStepsSyncTests : ViewModelTestBase
+{
+    [Fact]
+    public async Task GoalSyncDto_IncludesStepsField_RoundTrip()
+    {
+        // Verifies that Steps is preserved through the DTO round-trip that SyncService performs.
+        // Before the fix, GoalSyncDto had no Steps parameter so the field was silently dropped.
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goalGuid = Guid.NewGuid().ToString();
+        const string expectedSteps = "1. Find a teacher\n2. Practice 30 min daily";
+
+        // Simulate what happens on the mobile after receiving a goal from the server (with Steps set)
+        var goalFromServer = new Goal
+        {
+            Guid = goalGuid,
+            AccountFk = account.Guid,
+            GoalText = "Learn piano",
+            Steps = expectedSteps,
+            EnteredDate = ts,
+            UpdatedOn = ts
+        };
+        await GoalRepo.UpsertFromSyncAsync(goalFromServer);
+
+        // Simulate what SyncService does to build the outgoing DTO
+        var saved = await GoalRepo.GetAsync(goalGuid);
+        var dto = new GoalSyncDto(
+            saved!.Guid, saved.AccountFk, saved.GoalText, saved.NextMeetingDate,
+            saved.ExpirationDate, saved.EnteredDate, saved.MeasurableOutcome,
+            saved.CompletionDate, saved.UpdatedOn, saved.DeletedAt,
+            saved.ProgressPercent, saved.Category, saved.IsPinned, saved.Steps);
+
+        // DTO must carry Steps
+        Assert.Equal(expectedSteps, dto.Steps);
+
+        // Simulate what SyncService does when applying a received DTO back to the local DB
+        var reconstructed = new Goal
+        {
+            Guid = dto.Guid, AccountFk = dto.AccountFk, GoalText = dto.GoalText,
+            Steps = dto.Steps,
+            EnteredDate = dto.EnteredDate, UpdatedOn = dto.UpdatedOn + 1
+        };
+        await GoalRepo.UpsertFromSyncAsync(reconstructed);
+
+        var final = await GoalRepo.GetAsync(goalGuid);
+        Assert.NotNull(final);
+        Assert.Equal(expectedSteps, final!.Steps);
     }
 }
 

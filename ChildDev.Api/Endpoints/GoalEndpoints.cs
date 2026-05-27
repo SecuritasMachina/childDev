@@ -109,7 +109,8 @@ public static class GoalEndpoints
         NextMeetingDate = dto.NextMeetingDate, ExpirationDate = dto.ExpirationDate,
         EnteredDate = dto.EnteredDate, MeasurableOutcome = dto.MeasurableOutcome,
         CompletionDate = dto.CompletionDate, UpdatedOn = dto.UpdatedOn, DeletedAt = dto.DeletedAt,
-        ProgressPercent = dto.ProgressPercent, Category = dto.Category, IsPinned = dto.IsPinned
+        ProgressPercent = dto.ProgressPercent, Category = dto.Category, IsPinned = dto.IsPinned,
+        Steps = dto.Steps
     };
     private static void ApplyDto(Goal e, GoalDto dto)
     {
@@ -117,9 +118,10 @@ public static class GoalEndpoints
         e.ExpirationDate = dto.ExpirationDate; e.MeasurableOutcome = dto.MeasurableOutcome;
         e.CompletionDate = dto.CompletionDate; e.UpdatedOn = dto.UpdatedOn; e.DeletedAt = dto.DeletedAt;
         e.ProgressPercent = dto.ProgressPercent; e.Category = dto.Category; e.IsPinned = dto.IsPinned;
+        e.Steps = dto.Steps;
     }
     private static GoalDto EntityToDto(Goal g) => new(
         g.Guid, g.AccountFk, g.GoalText, g.NextMeetingDate, g.ExpirationDate,
         g.EnteredDate, g.MeasurableOutcome, g.CompletionDate, g.UpdatedOn, g.DeletedAt,
-        g.ProgressPercent, g.Category, g.IsPinned);
+        g.ProgressPercent, g.Category, g.IsPinned, g.Steps);
 }

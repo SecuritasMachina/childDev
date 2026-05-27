@@ -67,14 +67,15 @@ public class SyncService(
                 () => goalRepo.GetModifiedSinceAsync(account.Guid, since),
                 g => new GoalSyncDto(g.Guid, g.AccountFk, g.GoalText, g.NextMeetingDate,
                     g.ExpirationDate, g.EnteredDate, g.MeasurableOutcome, g.CompletionDate, g.UpdatedOn, g.DeletedAt,
-                    g.ProgressPercent, g.Category, g.IsPinned),
+                    g.ProgressPercent, g.Category, g.IsPinned, g.Steps),
                 dto => goalRepo.UpsertFromSyncAsync(new Goal
                 {
                     Guid = dto.Guid, AccountFk = dto.AccountFk, GoalText = dto.GoalText,
                     NextMeetingDate = dto.NextMeetingDate, ExpirationDate = dto.ExpirationDate,
                     EnteredDate = dto.EnteredDate, MeasurableOutcome = dto.MeasurableOutcome,
                     CompletionDate = dto.CompletionDate, UpdatedOn = dto.UpdatedOn, DeletedAt = dto.DeletedAt,
-                    ProgressPercent = dto.ProgressPercent, Category = dto.Category, IsPinned = dto.IsPinned
+                    ProgressPercent = dto.ProgressPercent, Category = dto.Category, IsPinned = dto.IsPinned,
+                    Steps = dto.Steps
                 }));
 
             await SyncEntityAsync<GoalProgress, GoalProgressSyncDto>(
@@ -157,7 +158,7 @@ public record JournalSyncDto(string Guid, string AccountFk, string? Notes, strin
 public record GoalSyncDto(string Guid, string AccountFk, string? GoalText,
     long? NextMeetingDate, long? ExpirationDate, long EnteredDate, string? MeasurableOutcome,
     long? CompletionDate, long UpdatedOn, long? DeletedAt,
-    int? ProgressPercent = null, string? Category = null, bool IsPinned = false);
+    int? ProgressPercent = null, string? Category = null, bool IsPinned = false, string? Steps = null);
 
 public record GoalProgressSyncDto(string Guid, string AccountFk, string GoalFk,
     string? NextStepItems, long? NextMeetingDate, long UpdatedOn, long? DeletedAt);

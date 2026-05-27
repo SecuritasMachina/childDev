@@ -11,7 +11,7 @@ public record GoalDto(
     string Guid, string AccountFk, string? GoalText, long? NextMeetingDate,
     long? ExpirationDate, long EnteredDate, string? MeasurableOutcome,
     long? CompletionDate, long UpdatedOn, long? DeletedAt,
-    int? ProgressPercent = null, string? Category = null, bool IsPinned = false);
+    int? ProgressPercent = null, string? Category = null, bool IsPinned = false, string? Steps = null);
 
 public record GoalProgressDto(
     string Guid, string AccountFk, string GoalFk, string? NextStepItems,
