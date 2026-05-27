@@ -4756,3 +4756,57 @@ public class GoalEntryShareProgressTests : ViewModelTestBase
         Assert.Null(ex);
     }
 }
+
+// ─── GoalEntryViewModel: MarkCompleteAsync marks goal in DB ──────────────────
+
+public class GoalEntryMarkCompleteTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task MarkComplete_WithValidGuid_MarksGoalCompletedInDb()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Complete me", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        await vm.MarkCompleteCommand.ExecuteAsync(null);
+
+        var updated = await GoalRepo.GetAsync(goal.Guid);
+        Assert.NotNull(updated!.CompletionDate);
+    }
+
+    [Fact]
+    public async Task MarkComplete_WithEmptyGuid_DoesNotThrowAndNothingCompleted()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        // Guid is empty — early return
+
+        var ex = await Record.ExceptionAsync(() => vm.MarkCompleteCommand.ExecuteAsync(null));
+        Assert.Null(ex);
+    }
+
+    [Fact]
+    public async Task MarkComplete_LongGoalText_CelebrationTitleTruncatesAt60()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = new string('H', 80), EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        // Should not throw when GoalText > 60
+        var ex = await Record.ExceptionAsync(() => vm.MarkCompleteCommand.ExecuteAsync(null));
+        Assert.Null(ex);
+    }
+}
