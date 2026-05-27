@@ -4919,6 +4919,90 @@ public class TodoEntryNotesLengthTests : ViewModelTestBase
     }
 }
 
+// ─── GoalListViewModel: delete cascades to progress notes ────────────────────
+
+public class GoalListDeleteCascadesProgressTests : ViewModelTestBase
+{
+    private GoalListViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task DeleteAsync_GoalWithProgressNotes_DeletesProgressToo()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Learn chess", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+        await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = "Study openings", UpdatedOn = ts });
+        await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = "Practice endgames", UpdatedOn = ts });
+
+        Nav.AlertConfirmResult = true;
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Single(vm.Goals);
+
+        await vm.DeleteCommand.ExecuteAsync(vm.Goals[0]);
+
+        Assert.Empty(vm.Goals);
+        // Verify progress notes are also gone
+        var progress = await GoalProgressRepo.GetForGoalAsync(goal.Guid);
+        Assert.Empty(progress.Where(p => p.DeletedAt == null));
+    }
+
+    [Fact]
+    public async Task DeleteAsync_GoalDeclined_GoalRemainsWithProgressIntact()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Keep this goal", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+        await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = "Keep this note", UpdatedOn = ts });
+
+        Nav.AlertConfirmResult = false;
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        await vm.DeleteCommand.ExecuteAsync(vm.Goals[0]);
+
+        Assert.Single(vm.Goals);
+        var progress = await GoalProgressRepo.GetForGoalAsync(goal.Guid);
+        Assert.Single(progress.Where(p => p.DeletedAt == null));
+    }
+}
+
+// ─── GoalEntryViewModel: delete cascades to progress notes ───────────────────
+
+public class GoalEntryDeleteCascadesProgressTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task DeleteAsync_GoalWithProgressNotes_DeletesProgressToo()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Learn painting", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+        await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = "Sketching basics", UpdatedOn = ts });
+
+        Nav.AlertConfirmResult = true;
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        await vm.DeleteCommand.ExecuteAsync(null);
+
+        // Goal should be gone
+        var retrieved = await GoalRepo.GetAsync(goal.Guid);
+        Assert.True(retrieved == null || retrieved.DeletedAt != null);
+
+        // Progress should also be gone
+        var progress = await GoalProgressRepo.GetForGoalAsync(goal.Guid);
+        Assert.Empty(progress.Where(p => p.DeletedAt == null));
+    }
+}
+
 // ─── TodoListViewModel: deleting last completed todo auto-hides completed panel ─
 
 public class TodoListDeleteLastCompletedHidesCompletedTests : ViewModelTestBase
