@@ -6309,3 +6309,164 @@ public class SnoozeHelperCustomPathTests : ViewModelTestBase
         Assert.True(vm.Reminders[0].FireAt > future);
     }
 }
+
+// ─── GoalList: singular/plural EntryCountDisplay without completed goals ──────
+
+public class GoalListSingularCountTests : ViewModelTestBase
+{
+    private GoalListViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task EntryCountDisplay_OneActiveGoal_UsesSingular()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Single goal", EnteredDate = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Contains("1 goal", vm.EntryCountDisplay, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("goals", vm.EntryCountDisplay, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task EntryCountDisplay_TwoActiveGoals_UsesPlural()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Goal A", EnteredDate = ts });
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Goal B", EnteredDate = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Contains("2 goals", vm.EntryCountDisplay, StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+// ─── RemindersViewModel: DismissAsync and AddGeneralAsync happy paths ─────────
+
+public class RemindersViewModelHappyPathTests : ViewModelTestBase
+{
+    private RemindersViewModel BuildVm() => new(ReminderSvc, AccountService, Nav);
+
+    [Fact]
+    public async Task DismissAsync_ValidReminder_RemovesFromCollectionAndUpdatesHasReminders()
+    {
+        var account = await CreateTestAccountAsync();
+        var future = DateTimeOffset.UtcNow.AddHours(2).ToUnixTimeMilliseconds();
+        await ReminderSvc.ScheduleAsync(new Reminder { AccountFk = account.Guid, Title = "Dismiss me", Topic = "General", FireAt = future });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Single(vm.Reminders);
+        Assert.True(vm.HasReminders);
+
+        await vm.DismissCommand.ExecuteAsync(vm.Reminders[0]);
+
+        Assert.Empty(vm.Reminders);
+        Assert.False(vm.HasReminders);
+    }
+
+    [Fact]
+    public async Task AddGeneralAsync_ValidTitleAndDuration_ClearsTitleAndAddsReminder()
+    {
+        await CreateTestAccountAsync();
+        Nav.ActionSheetResult = "1 hour";
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Empty(vm.Reminders);
+
+        vm.NewReminderTitle = "Don't forget this";
+        await vm.AddGeneralCommand.ExecuteAsync(null);
+
+        Assert.Empty(vm.NewReminderTitle);
+        Assert.Single(vm.Reminders);
+        Assert.True(vm.HasReminders);
+        Assert.Equal("Don't forget this", vm.Reminders[0].Title);
+    }
+
+    [Fact]
+    public async Task AddGeneralAsync_EmptyTitle_DoesNotAddReminder()
+    {
+        await CreateTestAccountAsync();
+        Nav.ActionSheetResult = "1 hour";
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.NewReminderTitle = string.Empty;
+
+        // CanAddGeneral returns false when title empty — command should not execute
+        Assert.False(vm.AddGeneralCommand.CanExecute(null));
+        Assert.Empty(vm.Reminders);
+    }
+}
+
+// ─── Dashboard: HasWeeklyChallenge false and HasWeeklyWins false paths ────────
+
+public class DashboardWeeklyStateTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_NoActiveGoals_HasWeeklyChallengeIsFalse()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.False(vm.HasWeeklyChallenge);
+    }
+
+    [Fact]
+    public async Task Load_NoActivityThisWeek_HasWeeklyWinsIsFalse()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.False(vm.HasWeeklyWins);
+    }
+
+    [Fact]
+    public async Task Load_WithActiveGoal_HasWeeklyChallengeIsTrue()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Challenge goal", EnteredDate = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasWeeklyChallenge);
+        Assert.NotEmpty(vm.WeeklyChallengeTitle);
+        Assert.NotEmpty(vm.WeeklyChallengeDesc);
+    }
+
+    [Fact]
+    public async Task Load_WithProgressNotesThisWeek_HasWeeklyWinsIsTrue()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Active goal", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+        await GoalProgressRepo.SaveAsync(new GoalProgress
+        {
+            Guid = Guid.NewGuid().ToString(),
+            AccountFk = account.Guid,
+            GoalFk = goal.Guid,
+            NextStepItems = "Did something",
+            UpdatedOn = ts
+        });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasWeeklyWins);
+        Assert.True(vm.WeekProgressNotes > 0);
+    }
+}
