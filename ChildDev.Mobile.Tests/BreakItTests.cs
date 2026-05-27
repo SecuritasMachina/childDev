@@ -4452,3 +4452,120 @@ public class GoalListEmptyMessageTests : ViewModelTestBase
         Assert.Equal("All goals are up to date! 🎉", vm.EmptyMessage);
     }
 }
+
+// ─── TodoListViewModel: Notes field filter, ToggleCompleted, delete completed ─
+
+public class TodoListNotesAndCompletedTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task FilterText_MatchesNotes_ShowsTodo()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Plain title", Notes = "goal-linked: reading habit", UpdatedOn = now });
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Other task", Notes = "unrelated notes", UpdatedOn = now });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "reading habit";
+
+        Assert.Single(vm.Todos);
+        Assert.Equal("Plain title", vm.Todos[0].Title);
+    }
+
+    [Fact]
+    public async Task FilterText_NoMatch_EmptyMessageShowsSearchTerm()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Homework", UpdatedOn = now });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.FilterText = "xyznotfound";
+
+        Assert.Empty(vm.Todos);
+        Assert.Contains("xyznotfound", vm.EmptyMessage);
+    }
+
+    [Fact]
+    public async Task ToggleCompleted_FlipsShowCompletedTodos()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.False(vm.ShowCompletedTodos);
+        vm.ToggleCompletedCommand.Execute(null);
+        Assert.True(vm.ShowCompletedTodos);
+        vm.ToggleCompletedCommand.Execute(null);
+        Assert.False(vm.ShowCompletedTodos);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_CompletedTodo_RemovesFromCompletedAndUpdatesHasCompleted()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Done task", UpdatedOn = now, CompletedAt = now });
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Also done", UpdatedOn = now, CompletedAt = now });
+
+        Nav.AlertConfirmResult = true;
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.Equal(2, vm.CompletedTodoCount);
+        Assert.True(vm.HasCompletedTodos);
+
+        await vm.DeleteCommand.ExecuteAsync(vm.CompletedTodos[0]);
+
+        Assert.Equal(1, vm.CompletedTodoCount);
+        Assert.True(vm.HasCompletedTodos); // still one left
+
+        await vm.DeleteCommand.ExecuteAsync(vm.CompletedTodos[0]);
+
+        Assert.Equal(0, vm.CompletedTodoCount);
+        Assert.False(vm.HasCompletedTodos);
+    }
+
+    [Fact]
+    public async Task WeekCompletedMessage_10OrMoreTodos_ShowsLegendaryMessage()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        for (int i = 0; i < 10; i++)
+            await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = $"Done{i}", UpdatedOn = now, CompletedAt = now });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Contains("🔥", vm.WeekCompletedMessage);
+        Assert.Contains("legendary", vm.WeekCompletedMessage);
+    }
+}
+
+// ─── DashboardViewModel: Beginner tier (5 progress notes) ────────────────────
+
+public class DashboardBeginnerTierTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_With5ProgressNotes_SetsBeginnerLabel()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Beginner goal", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+        for (int i = 0; i < 5; i++)
+            await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), GoalFk = goal.Guid, AccountFk = account.Guid, NextStepItems = $"Note {i}", UpdatedOn = ts + i });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Contains("Beginner", vm.OverallTierLabel);
+    }
+}
