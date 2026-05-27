@@ -4047,3 +4047,88 @@ public class DashboardQuickNoteAndTierTests : ViewModelTestBase
         Assert.Contains("🌟", vm.StreakDisplay);
     }
 }
+
+// ─── TodoListViewModel: WeekOverWeek diff < 0 and diff == 0 branches ─────────
+
+public class TodoListWeekOverWeekTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    private async Task SaveCompletedThisWeek(string accountGuid, int count)
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var thisWeek = DateTimeOffset.UtcNow.AddDays(-3).ToUnixTimeMilliseconds();
+        for (int i = 0; i < count; i++)
+            await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = accountGuid, Title = $"ThisWeek{i}", UpdatedOn = now, CompletedAt = thisWeek });
+    }
+
+    private async Task SaveCompletedLastWeek(string accountGuid, int count)
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var lastWeek = DateTimeOffset.UtcNow.AddDays(-10).ToUnixTimeMilliseconds();
+        for (int i = 0; i < count; i++)
+            await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = accountGuid, Title = $"LastWeek{i}", UpdatedOn = now, CompletedAt = lastWeek });
+    }
+
+    [Fact]
+    public async Task WeekOverWeek_FewerThisWeek_ShowsDeclineMessage()
+    {
+        var account = await CreateTestAccountAsync();
+        // 2 this week, 5 last week → diff = -3
+        await SaveCompletedThisWeek(account.Guid, 2);
+        await SaveCompletedLastWeek(account.Guid, 5);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasWeekOverWeekMessage);
+        Assert.Contains("📉", vm.WeekOverWeekMessage);
+        Assert.Contains("fewer", vm.WeekOverWeekMessage);
+    }
+
+    [Fact]
+    public async Task WeekOverWeek_SamePaceAsLastWeek_ShowsSamePaceMessage()
+    {
+        var account = await CreateTestAccountAsync();
+        // 3 this week, 3 last week → diff = 0
+        await SaveCompletedThisWeek(account.Guid, 3);
+        await SaveCompletedLastWeek(account.Guid, 3);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasWeekOverWeekMessage);
+        Assert.Contains("📊", vm.WeekOverWeekMessage);
+        Assert.Contains("Same pace", vm.WeekOverWeekMessage);
+    }
+
+    [Fact]
+    public async Task WeekOverWeek_NoLastWeekData_HidesWeekOverWeekMessage()
+    {
+        var account = await CreateTestAccountAsync();
+        // 2 this week, none last week → lastWeekCount == 0
+        await SaveCompletedThisWeek(account.Guid, 2);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        // When lastWeekCount == 0, WeekOverWeekMessage should be hidden
+        Assert.False(vm.HasWeekOverWeekMessage);
+    }
+
+    [Fact]
+    public async Task WeekCompletedMessage_3Todos_ShowsMomentumMessage()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        for (int i = 0; i < 3; i++)
+            await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = $"Done{i}", UpdatedOn = now, CompletedAt = now });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        // >= 3 but < 5 → "💪 keep it up!"
+        Assert.Contains("💪", vm.WeekCompletedMessage);
+    }
+}
