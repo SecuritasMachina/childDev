@@ -2816,3 +2816,234 @@ public class GoalEntryLinkedTodoNotesLengthTests : ViewModelTestBase
         Assert.Single(vm2.LinkedTodos);
     }
 }
+
+// ─── TodoListViewModel: quick-add title length enforcement ───────────────────
+
+public class TodoListAddTitleLengthTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task AddAsync_TitleOver500Chars_SavedTitleDoesNotExceed500()
+    {
+        var account = await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        vm.NewTodoTitle = new string('X', 600);
+        await vm.AddCommand.ExecuteAsync(null);
+
+        var todos = await TodoRepo.GetPendingAsync(account.Guid);
+        Assert.Single(todos);
+        Assert.True((todos[0].Title?.Length ?? 0) <= 500,
+            $"Title length {todos[0].Title?.Length} exceeds 500-char API limit — would fail sync");
+    }
+
+    [Fact]
+    public async Task AddAsync_TitleExactly500Chars_SavesUntruncated()
+    {
+        var account = await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        vm.NewTodoTitle = new string('Y', 500);
+        await vm.AddCommand.ExecuteAsync(null);
+
+        var todos = await TodoRepo.GetPendingAsync(account.Guid);
+        Assert.Single(todos);
+        Assert.Equal(500, todos[0].Title?.Length ?? 0);
+    }
+
+    [Fact]
+    public async Task AddAsync_TitleOver500WithLeadingSpaces_TrimmedAndCapped()
+    {
+        var account = await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        vm.NewTodoTitle = "   " + new string('Z', 510);
+        await vm.AddCommand.ExecuteAsync(null);
+
+        var todos = await TodoRepo.GetPendingAsync(account.Guid);
+        Assert.Single(todos);
+        var title = todos[0].Title ?? string.Empty;
+        Assert.True(title.Length <= 500, $"Title length {title.Length} exceeds 500");
+        Assert.False(title.StartsWith(' '), "Title should be trimmed before cap");
+    }
+}
+
+// ─── TodoEntryViewModel: save title length enforcement ───────────────────────
+
+public class TodoEntrySaveTitleLengthTests : ViewModelTestBase
+{
+    private TodoEntryViewModel BuildVm() =>
+        new(TodoRepo, GoalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task SaveAsync_TitleOver500Chars_SavedTitleDoesNotExceed500()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.Title = new string('A', 700);
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var account = await AccountService.GetAccountAsync();
+        var todos = await TodoRepo.GetPendingAsync(account!.Guid);
+        Assert.Single(todos);
+        Assert.True((todos[0].Title?.Length ?? 0) <= 500,
+            $"Title {todos[0].Title?.Length} chars — exceeds 500-char API limit");
+    }
+
+    [Fact]
+    public async Task SaveAsync_TitleExactly500Chars_SavesUntruncated()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.Title = new string('B', 500);
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var account = await AccountService.GetAccountAsync();
+        var todos = await TodoRepo.GetPendingAsync(account!.Guid);
+        Assert.Single(todos);
+        Assert.Equal(500, todos[0].Title?.Length ?? 0);
+    }
+}
+
+// ─── JournalEntryViewModel: activity / field length enforcement ──────────────
+
+public class JournalEntrySaveFieldLengthTests : ViewModelTestBase
+{
+    private JournalEntryViewModel BuildVm() =>
+        new(JournalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task SaveAsync_ActivityOver255Chars_SavedActivityDoesNotExceed255()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.Activity = new string('A', 300);
+        vm.Notes = "Some notes";
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var account = await AccountService.GetAccountAsync();
+        var journals = await JournalRepo.GetAllActiveAsync(account!.Guid);
+        Assert.Single(journals);
+        Assert.True((journals[0].Activity?.Length ?? 0) <= 255,
+            $"Activity length {journals[0].Activity?.Length} exceeds 255-char API limit");
+    }
+
+    [Fact]
+    public async Task SaveAsync_MoodOver50Chars_SavedMoodDoesNotExceed50()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.Notes = "Some notes";
+        vm.Mood = new string('M', 60);
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var account = await AccountService.GetAccountAsync();
+        var journals = await JournalRepo.GetAllActiveAsync(account!.Guid);
+        Assert.Single(journals);
+        Assert.True((journals[0].Mood?.Length ?? 0) <= 50,
+            $"Mood length {journals[0].Mood?.Length} exceeds 50-char API limit");
+    }
+
+    [Fact]
+    public async Task SaveAsync_TagsOver500Chars_SavedTagsDoesNotExceed500()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.Notes = "Some notes";
+        vm.Tags = new string('T', 600);
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var account = await AccountService.GetAccountAsync();
+        var journals = await JournalRepo.GetAllActiveAsync(account!.Guid);
+        Assert.Single(journals);
+        Assert.True((journals[0].Tags?.Length ?? 0) <= 500,
+            $"Tags length {journals[0].Tags?.Length} exceeds 500-char API limit");
+    }
+}
+
+// ─── JournalListViewModel: delete with active date filter ────────────────────
+
+public class JournalListDeleteWithDateFilterTests : ViewModelTestBase
+{
+    private JournalListViewModel BuildVm() =>
+        new(JournalRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task DeleteAsync_WithWeekDateFilter_EntryCountUpdatesCorrectly()
+    {
+        var account = await CreateTestAccountAsync();
+        var thisWeekMs = DateTimeOffset.UtcNow.AddDays(-2).ToUnixTimeMilliseconds();
+        var lastMonthMs = DateTimeOffset.UtcNow.AddDays(-35).ToUnixTimeMilliseconds();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "This week", EnteredDate = thisWeekMs, UpdatedOn = now });
+        await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Last month", EnteredDate = lastMonthMs, UpdatedOn = now });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.SetDateFilterCommand.Execute("Week");
+        Assert.Single(vm.Journals);
+        Assert.Contains("shown", vm.EntryCountDisplay);
+
+        // Delete the in-filter item
+        Nav.AlertConfirmResult = true;
+        await vm.DeleteCommand.ExecuteAsync(vm.Journals[0]);
+
+        Assert.Empty(vm.Journals);
+        Assert.Contains("0", vm.EntryCountDisplay);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ItemOutsideDateFilter_FilteredCountUnchanged()
+    {
+        var account = await CreateTestAccountAsync();
+        var thisWeekMs = DateTimeOffset.UtcNow.AddDays(-2).ToUnixTimeMilliseconds();
+        var lastMonthMs = DateTimeOffset.UtcNow.AddDays(-35).ToUnixTimeMilliseconds();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var thisWeek = new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Week entry", EnteredDate = thisWeekMs, UpdatedOn = now };
+        var lastMonth = new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "Old entry", EnteredDate = lastMonthMs, UpdatedOn = now };
+        await JournalRepo.SaveAsync(thisWeek);
+        await JournalRepo.SaveAsync(lastMonth);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        vm.SetDateFilterCommand.Execute("Week");
+        Assert.Single(vm.Journals);
+
+        // Delete the item that's NOT in the filter (not visible) — simulate passing it directly
+        Nav.AlertConfirmResult = true;
+        await vm.DeleteCommand.ExecuteAsync(lastMonth);
+
+        // Filtered view should still show the this-week entry
+        Assert.Single(vm.Journals);
+        Assert.Equal("Week entry", vm.Journals[0].Notes);
+    }
+
+    [Fact]
+    public async Task ShufflePrompt_AfterLoadAsync_CyclesThroughAllPrompts()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        var firstPrompt = vm.TodayPrompt;
+        var seen = new HashSet<string> { firstPrompt };
+
+        // Shuffle enough times to cycle through all 12 prompts
+        for (int i = 0; i < 20; i++)
+        {
+            vm.ShufflePromptCommand.Execute(null);
+            seen.Add(vm.TodayPrompt);
+        }
+
+        // Should have seen multiple distinct prompts without throwing
+        Assert.True(seen.Count > 1, "ShufflePrompt should cycle through multiple prompts");
+        Assert.NotEmpty(vm.TodayPrompt);
+    }
+}

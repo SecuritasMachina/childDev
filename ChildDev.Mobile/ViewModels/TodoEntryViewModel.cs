@@ -138,7 +138,8 @@ public partial class TodoEntryViewModel(
             ? new Todo { Guid = System.Guid.NewGuid().ToString(), AccountFk = account.Guid }
             : await repo.GetAsync(Guid) ?? new Todo { Guid = Guid, AccountFk = account.Guid };
 
-        todo.Title = Title.Trim();
+        var t = Title.Trim();
+        todo.Title = t.Length > 500 ? t[..500] : t;
         todo.Notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim();
         todo.DueDate = HasDueDate
             ? new DateTimeOffset(DateTime.SpecifyKind(DueDate, DateTimeKind.Local)).ToUnixTimeMilliseconds()

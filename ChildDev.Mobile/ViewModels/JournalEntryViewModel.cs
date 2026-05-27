@@ -107,10 +107,13 @@ public partial class JournalEntryViewModel(
 
         journal.EnteredDate = enteredMs;
         journal.Notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim();
-        journal.Activity = string.IsNullOrWhiteSpace(Activity) ? null : Activity.Trim();
-        journal.Mood = string.IsNullOrWhiteSpace(Mood) ? null : Mood.Trim();
+        var act = string.IsNullOrWhiteSpace(Activity) ? null : Activity.Trim();
+        journal.Activity = act is { Length: > 255 } ? act[..255] : act;
+        var mood = string.IsNullOrWhiteSpace(Mood) ? null : Mood.Trim();
+        journal.Mood = mood is { Length: > 50 } ? mood[..50] : mood;
         journal.EmotionReason = string.IsNullOrWhiteSpace(EmotionReason) ? null : EmotionReason.Trim();
-        journal.Tags = string.IsNullOrWhiteSpace(Tags) ? null : Tags.Trim();
+        var tags = string.IsNullOrWhiteSpace(Tags) ? null : Tags.Trim();
+        journal.Tags = tags is { Length: > 500 } ? tags[..500] : tags;
 
         await repo.SaveAsync(journal);
         analytics.Track(string.IsNullOrEmpty(Guid) ? "journal_create" : "journal_save");

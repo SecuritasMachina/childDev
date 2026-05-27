@@ -166,11 +166,12 @@ public partial class TodoListViewModel(
             _accountGuid = account.Guid;
         }
 
+        var trimmedTitle = NewTodoTitle.Trim();
         var todo = new Todo
         {
             Guid = System.Guid.NewGuid().ToString(),
             AccountFk = _accountGuid,
-            Title = NewTodoTitle.Trim(),
+            Title = trimmedTitle.Length > 500 ? trimmedTitle[..500] : trimmedTitle,
             UpdatedOn = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
         };
         await repo.SaveAsync(todo);
