@@ -106,7 +106,8 @@ public partial class JournalEntryViewModel(
             : await repo.GetAsync(Guid) ?? new Journal { Guid = Guid, AccountFk = account.Guid, EnteredDate = enteredMs };
 
         journal.EnteredDate = enteredMs;
-        journal.Notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim();
+        var notesTrimmed = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim();
+        journal.Notes = notesTrimmed is { Length: > 10_000 } ? notesTrimmed[..10_000] : notesTrimmed;
         var act = string.IsNullOrWhiteSpace(Activity) ? null : Activity.Trim();
         journal.Activity = act is { Length: > 255 } ? act[..255] : act;
         var mood = string.IsNullOrWhiteSpace(Mood) ? null : Mood.Trim();

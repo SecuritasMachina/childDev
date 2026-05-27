@@ -4919,6 +4919,97 @@ public class TodoEntryNotesLengthTests : ViewModelTestBase
     }
 }
 
+// ─── TodoListViewModel: deleting last completed todo auto-hides completed panel ─
+
+public class TodoListDeleteLastCompletedHidesCompletedTests : ViewModelTestBase
+{
+    private TodoListViewModel BuildVm() =>
+        new(TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task DeleteAsync_LastCompletedTodo_SetsShowCompletedTodosToFalse()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Solo completed", UpdatedOn = now, CompletedAt = now });
+
+        Nav.AlertConfirmResult = true;
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        // Expand completed section
+        vm.ToggleCompletedCommand.Execute(null);
+        Assert.True(vm.ShowCompletedTodos);
+        Assert.Equal(1, vm.CompletedTodoCount);
+
+        // Delete the only completed todo
+        await vm.DeleteCommand.ExecuteAsync(vm.CompletedTodos[0]);
+
+        Assert.Equal(0, vm.CompletedTodoCount);
+        Assert.False(vm.HasCompletedTodos);
+        Assert.False(vm.ShowCompletedTodos);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_OneOfTwoCompletedTodos_ShowCompletedTodosRemainsTrue()
+    {
+        var account = await CreateTestAccountAsync();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Done A", UpdatedOn = now, CompletedAt = now });
+        await TodoRepo.SaveAsync(new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Done B", UpdatedOn = now, CompletedAt = now });
+
+        Nav.AlertConfirmResult = true;
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        vm.ToggleCompletedCommand.Execute(null);
+        Assert.True(vm.ShowCompletedTodos);
+
+        await vm.DeleteCommand.ExecuteAsync(vm.CompletedTodos[0]);
+
+        Assert.Equal(1, vm.CompletedTodoCount);
+        Assert.True(vm.HasCompletedTodos);
+        Assert.True(vm.ShowCompletedTodos);
+    }
+}
+
+// ─── JournalEntryViewModel: Notes field 10,000 char limit ─────────────────────
+
+public class JournalEntryNotesLengthTests : ViewModelTestBase
+{
+    private JournalEntryViewModel BuildVm() =>
+        new(JournalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task SaveAsync_NotesOver10000Chars_IsTruncatedTo10000()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.Notes = new string('J', 10_100);
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var account = await AccountService.GetAccountAsync();
+        var journals = await JournalRepo.GetAllActiveAsync(account!.Guid);
+        Assert.Single(journals);
+        Assert.True((journals[0].Notes?.Length ?? 0) <= 10_000,
+            $"Notes length {journals[0].Notes?.Length} exceeds 10000-char API limit");
+    }
+
+    [Fact]
+    public async Task SaveAsync_NotesExactly10000Chars_IsNotTruncated()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        vm.Notes = new string('J', 10_000);
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var account = await AccountService.GetAccountAsync();
+        var journals = await JournalRepo.GetAllActiveAsync(account!.Guid);
+        Assert.Single(journals);
+        Assert.Equal(10_000, journals[0].Notes?.Length ?? 0);
+    }
+}
+
 // ─── JournalListViewModel: Week filter empty message ─────────────────────────
 
 public class JournalListWeekFilterEmptyMessageTests : ViewModelTestBase
