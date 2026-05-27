@@ -2117,6 +2117,115 @@ public class RemindersViewModelBranchTests : ViewModelTestBase
     }
 }
 
+// ─── TodoEntryViewModel: LoadAsync branches (DueDate, IsCompleted, goal line) ─
+
+public class TodoEntryLoadAsyncBranchTests : ViewModelTestBase
+{
+    private TodoEntryViewModel BuildVm() =>
+        new(TodoRepo, GoalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task LoadAsync_TodoWithDueDate_SetsHasDueDateTrue()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var tomorrow = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeMilliseconds();
+        var todo = new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Due task", DueDate = tomorrow, UpdatedOn = ts };
+        await TodoRepo.SaveAsync(todo);
+
+        var vm = BuildVm();
+        vm.Guid = todo.Guid;
+        await Task.Delay(200);
+
+        Assert.True(vm.HasDueDate);
+        Assert.Equal(DateTimeOffset.FromUnixTimeMilliseconds(tomorrow).LocalDateTime.Date, vm.DueDate.Date);
+    }
+
+    [Fact]
+    public async Task LoadAsync_CompletedTodo_IsCompletedTrue()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var todo = new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Done task", CompletedAt = ts, UpdatedOn = ts };
+        await TodoRepo.SaveAsync(todo);
+
+        var vm = BuildVm();
+        vm.Guid = todo.Guid;
+        await Task.Delay(200);
+
+        Assert.True(vm.IsCompleted);
+        Assert.True(vm.IsExisting);
+    }
+
+    [Fact]
+    public async Task LoadAsync_PendingTodo_IsCompletedFalseAndIsExistingTrue()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var todo = new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Pending task", UpdatedOn = ts };
+        await TodoRepo.SaveAsync(todo);
+
+        var vm = BuildVm();
+        vm.Guid = todo.Guid;
+        await Task.Delay(200);
+
+        Assert.False(vm.IsCompleted);
+        Assert.True(vm.IsExisting);
+        Assert.False(vm.HasDueDate);
+    }
+
+    [Fact]
+    public async Task LoadAsync_NotesWithGoalPrefixAndNewline_DetectsLinkedGoal()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Run a mile", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+        var todo = new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Train", Notes = "Goal: Run a mile\nExtra details here", UpdatedOn = ts };
+        await TodoRepo.SaveAsync(todo);
+
+        var vm = BuildVm();
+        vm.Guid = todo.Guid;
+        await Task.Delay(200);
+
+        Assert.NotNull(vm.LinkedGoal);
+        Assert.Equal("Run a mile", vm.LinkedGoal!.GoalText);
+    }
+
+    [Fact]
+    public async Task LoadAsync_NotesWithGoalPrefixNoNewline_DetectsLinkedGoal()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Read 10 books", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+        var todo = new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Read", Notes = "Goal: Read 10 books", UpdatedOn = ts };
+        await TodoRepo.SaveAsync(todo);
+
+        var vm = BuildVm();
+        vm.Guid = todo.Guid;
+        await Task.Delay(200);
+
+        Assert.NotNull(vm.LinkedGoal);
+        Assert.Equal("Read 10 books", vm.LinkedGoal!.GoalText);
+    }
+
+    [Fact]
+    public async Task LoadAsync_NotesWithoutGoalPrefix_LinkedGoalIsNull()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var todo = new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Plain task", Notes = "Just some notes", UpdatedOn = ts };
+        await TodoRepo.SaveAsync(todo);
+
+        var vm = BuildVm();
+        vm.Guid = todo.Guid;
+        await Task.Delay(200);
+
+        Assert.Null(vm.LinkedGoal);
+    }
+}
+
 public class GoalStepsSyncTests : ViewModelTestBase
 {
     [Fact]
