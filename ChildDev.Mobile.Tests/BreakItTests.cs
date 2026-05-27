@@ -2226,6 +2226,87 @@ public class TodoEntryLoadAsyncBranchTests : ViewModelTestBase
     }
 }
 
+// ─── GoalListViewModel: load ordering (pinned first, then no-progress) ───────
+
+public class GoalListOrderingTests : ViewModelTestBase
+{
+    private GoalListViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_PinnedGoal_AppearsBeforeUnpinnedGoals()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Unpinned A", EnteredDate = ts, UpdatedOn = ts, IsPinned = false });
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Pinned B", EnteredDate = ts + 1, UpdatedOn = ts + 1, IsPinned = true });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Equal(2, vm.Goals.Count);
+        Assert.Equal("Pinned B", vm.Goals[0].GoalText);
+    }
+
+    [Fact]
+    public async Task Load_GoalWithNoProgress_AppearsBeforeGoalWithRecentProgress()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goalWithProgress = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Has progress", EnteredDate = ts, UpdatedOn = ts };
+        var goalNoProgress = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "No progress", EnteredDate = ts + 1, UpdatedOn = ts + 1 };
+        await GoalRepo.SaveAsync(goalWithProgress);
+        await GoalRepo.SaveAsync(goalNoProgress);
+
+        await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goalWithProgress.Guid, NextStepItems = "Working on it", UpdatedOn = ts });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Equal(2, vm.Goals.Count);
+        Assert.Equal("No progress", vm.Goals[0].GoalText);
+    }
+
+    [Fact]
+    public async Task Load_NoAccount_GoalsStaysEmpty()
+    {
+        // No CreateTestAccountAsync → returns early
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Empty(vm.Goals);
+        Assert.False(vm.HasGoals);
+    }
+
+    [Fact]
+    public async Task Refresh_NoAccount_IsRefreshingFalseAfterReturn()
+    {
+        // No account → RefreshAsync sets IsRefreshing = false and returns
+        var vm = BuildVm();
+        await vm.RefreshCommand.ExecuteAsync(null);
+
+        Assert.False(vm.IsRefreshing);
+    }
+
+    [Fact]
+    public async Task Load_CompletedGoalAppearsAfterActiveGoals()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var activeGoal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Active", EnteredDate = ts, UpdatedOn = ts };
+        var completedGoal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Completed", EnteredDate = ts, UpdatedOn = ts, CompletionDate = ts };
+        await GoalRepo.SaveAsync(activeGoal);
+        await GoalRepo.SaveAsync(completedGoal);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Equal(2, vm.Goals.Count);
+        Assert.Equal("Active", vm.Goals[0].GoalText);
+        Assert.Equal("Completed", vm.Goals[1].GoalText);
+    }
+}
+
 public class GoalStepsSyncTests : ViewModelTestBase
 {
     [Fact]
