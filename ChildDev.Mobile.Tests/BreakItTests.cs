@@ -1937,6 +1937,111 @@ public class JournalListStreak14Tests : ViewModelTestBase
 
         Assert.Empty(vm.StreakDisplay);
     }
+
+    [Fact]
+    public async Task Load_Streak2Days_ShowsStarEmojiNotFire()
+    {
+        var account = await CreateTestAccountAsync();
+        for (int d = 0; d <= 1; d++)
+        {
+            var ts = DateTimeOffset.UtcNow.AddDays(-d).ToUnixTimeMilliseconds();
+            await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = $"Day {d}", EnteredDate = ts });
+        }
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Contains("⭐", vm.StreakDisplay);
+        Assert.Contains("2-day", vm.StreakDisplay);
+    }
+
+    [Fact]
+    public async Task Load_Streak7Days_ShowsFireEmoji()
+    {
+        var account = await CreateTestAccountAsync();
+        for (int d = 0; d <= 6; d++)
+        {
+            var ts = DateTimeOffset.UtcNow.AddDays(-d).ToUnixTimeMilliseconds();
+            await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = $"Day {d}", EnteredDate = ts });
+        }
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Contains("🔥", vm.StreakDisplay);
+        Assert.Contains("7-day", vm.StreakDisplay);
+    }
+
+    [Fact]
+    public async Task Load_Streak3DaysWithNoTodayEntry_ShowsStreakWarning()
+    {
+        var account = await CreateTestAccountAsync();
+        for (int d = 1; d <= 3; d++)
+        {
+            var ts = DateTimeOffset.UtcNow.AddDays(-d).ToUnixTimeMilliseconds();
+            await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = $"Day {d}", EnteredDate = ts });
+        }
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasStreakWarning);
+        Assert.Contains("🛡️", vm.StreakWarning);
+        Assert.Contains("3-day", vm.StreakWarning);
+    }
+
+    [Fact]
+    public async Task Load_Streak7DaysWithNoTodayEntry_ShowsUrgentWarning()
+    {
+        var account = await CreateTestAccountAsync();
+        for (int d = 1; d <= 7; d++)
+        {
+            var ts = DateTimeOffset.UtcNow.AddDays(-d).ToUnixTimeMilliseconds();
+            await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = $"Day {d}", EnteredDate = ts });
+        }
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.True(vm.HasStreakWarning);
+        Assert.Contains("⚠️", vm.StreakWarning);
+        Assert.Contains("7-day", vm.StreakWarning);
+    }
+
+    [Fact]
+    public async Task Load_Streak3DaysWithTodayEntry_NoStreakWarning()
+    {
+        var account = await CreateTestAccountAsync();
+        for (int d = 0; d <= 2; d++)
+        {
+            var ts = DateTimeOffset.UtcNow.AddDays(-d).ToUnixTimeMilliseconds();
+            await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = $"Day {d}", EnteredDate = ts });
+        }
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        // Today's entry exists — no warning needed even with 3-day streak
+        Assert.False(vm.HasStreakWarning);
+        Assert.Empty(vm.StreakWarning);
+    }
+
+    [Fact]
+    public async Task Load_Streak2Days_NoStreakWarning_BelowThreshold()
+    {
+        var account = await CreateTestAccountAsync();
+        for (int d = 1; d <= 2; d++)
+        {
+            var ts = DateTimeOffset.UtcNow.AddDays(-d).ToUnixTimeMilliseconds();
+            await JournalRepo.SaveAsync(new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = $"Day {d}", EnteredDate = ts });
+        }
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        // streak = 2, < 3 → no warning
+        Assert.False(vm.HasStreakWarning);
+    }
 }
 
 public class GoalStepsSyncTests : ViewModelTestBase
