@@ -801,6 +801,134 @@ public class TodoEntryDueDateTests : ViewModelTestBase
     }
 }
 
+// ─── GoalList: completed goals in entry count display ────────────────────────
+
+public class GoalListCompletedCountTests : ViewModelTestBase
+{
+    private GoalListViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task EntryCountDisplay_WithActiveAndCompletedGoals_ShowsBothCounts()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var g1 = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Active goal", EnteredDate = ts };
+        var g2 = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Another active", EnteredDate = ts };
+        await GoalRepo.SaveAsync(g1);
+        await GoalRepo.SaveAsync(g2);
+        await GoalRepo.CompleteAsync(g2.Guid);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Equal(2, vm.Goals.Count);
+        Assert.Contains("active", vm.EntryCountDisplay, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("completed", vm.EntryCountDisplay, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task HasGoals_WithNoGoals_IsFalse()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.False(vm.HasGoals);
+    }
+
+    [Fact]
+    public async Task HasGoals_AfterLoad_IsTrue()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        await GoalRepo.SaveAsync(new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Test", EnteredDate = ts });
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+        Assert.True(vm.HasGoals);
+    }
+}
+
+// ─── Dashboard: OverallTierLabel and OpenJournal navigation ──────────────────
+
+public class DashboardTierAndNavTests : ViewModelTestBase
+{
+    private DashboardViewModel BuildVm() =>
+        new(JournalRepo, GoalRepo, GoalProgressRepo, TodoRepo, AccountService, BuildOfflineSyncService(), Analytics, Nav);
+
+    [Fact]
+    public async Task Load_WithFiveProgressNotes_SetsBeginnerTierLabel()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Tier goal", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+        for (int i = 0; i < 5; i++)
+            await GoalProgressRepo.SaveAsync(new GoalProgress
+            {
+                Guid = Guid.NewGuid().ToString(), GoalFk = goal.Guid, AccountFk = account.Guid,
+                NextStepItems = $"Note {i}", UpdatedOn = ts + i
+            });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Contains("Beginner", vm.OverallTierLabel);
+    }
+
+    [Fact]
+    public async Task Load_With50ProgressNotes_SetsSkilledTierLabel()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Skilled goal", EnteredDate = ts };
+        await GoalRepo.SaveAsync(goal);
+        for (int i = 0; i < 50; i++)
+            await GoalProgressRepo.SaveAsync(new GoalProgress
+            {
+                Guid = Guid.NewGuid().ToString(), GoalFk = goal.Guid, AccountFk = account.Guid,
+                NextStepItems = $"Note {i}", UpdatedOn = ts + i
+            });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Contains("Skilled", vm.OverallTierLabel);
+    }
+
+    [Fact]
+    public async Task OpenJournal_WithRealJournal_Navigates()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var journal = new Journal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Notes = "My journal", EnteredDate = ts, UpdatedOn = ts };
+        await JournalRepo.SaveAsync(journal);
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        await vm.OpenJournalCommand.ExecuteAsync(vm.RecentJournals[0]);
+        Assert.Contains(Nav.NavigatedRoutes, r => r.Contains("journal/entry?guid="));
+    }
+
+    [Fact]
+    public async Task Load_WithRecentJournals_PopulatesRecentList()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        for (int i = 0; i < 4; i++)
+            await JournalRepo.SaveAsync(new Journal
+            {
+                Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid,
+                Notes = $"Journal {i}", EnteredDate = ts + i, UpdatedOn = ts + i
+            });
+
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        Assert.Equal(3, vm.RecentJournals.Count);
+    }
+}
+
 // ─── GoalList NeedsAttention: boundary and combined filters ──────────────────
 
 public class NeedsAttentionBoundaryTests : ViewModelTestBase
