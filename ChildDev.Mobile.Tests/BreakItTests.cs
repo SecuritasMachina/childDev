@@ -8187,8 +8187,7 @@ public class JournalEntrySetReminderEmptyNotesTests : ViewModelTestBase
 
         var pending = await ReminderSvc.GetPendingAsync(account.Guid);
         Assert.Single(pending);
-        Assert.Contains("…", pending[0].Title);
-        Assert.Contains("This is a very long journal note that exce", pending[0].Title);
+        Assert.Contains("This is a very long journal note that ex…", pending[0].Title);
     }
 }
 
