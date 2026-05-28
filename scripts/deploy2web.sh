@@ -66,7 +66,7 @@ fi
 # ── sync source (without APK — APK is uploaded separately below) ─────────────
 
 log_info "Syncing source to $SSH_HOST:$REMOTE_DIR ..."
-rsync -avz --delete --delete-excluded --progress --stats \
+rsync -avz --delete --progress --stats \
   --exclude='.git/' \
   --exclude='bin/' \
   --exclude='obj/' \
@@ -104,6 +104,12 @@ if [[ -f "$INDEX_LOCAL" ]]; then
     "$SSH_HOST:$REMOTE_DIR/downloads/index.html"
   log_info "Downloads index page uploaded → /opt/childdev/downloads/index.html"
 fi
+
+# ── restart downloads container to re-bind the volume mount ──────────────────
+# rsync --delete can recreate the downloads dir (new inode); the running nginx
+# container must be restarted so Docker re-establishes the bind mount.
+log_info "Restarting downloads container to refresh volume bind ..."
+ssh_run "docker restart childdev-downloads-1"
 
 # ── rebuild / hot-deploy ─────────────────────────────────────────────────────
 
