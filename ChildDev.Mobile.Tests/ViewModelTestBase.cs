@@ -67,6 +67,7 @@ public class FakeNavigationService : INavigationService
     public string? PromptResult { get; set; } = "Test note";
     public List<string> ActionSheetTitles { get; } = [];
     public string? ActionSheetResult { get; set; }
+    public Queue<string?> ActionSheetResultQueue { get; } = new();
 
     public Task GoToAsync(string route)
     {
@@ -95,7 +96,8 @@ public class FakeNavigationService : INavigationService
     public Task<string?> DisplayActionSheetAsync(string title, string cancel, string? destruction, params string[] buttons)
     {
         ActionSheetTitles.Add(title);
-        return Task.FromResult(ActionSheetResult);
+        var result = ActionSheetResultQueue.Count > 0 ? ActionSheetResultQueue.Dequeue() : ActionSheetResult;
+        return Task.FromResult(result);
     }
 }
 

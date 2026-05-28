@@ -8134,3 +8134,135 @@ public class DashboardOverallTierHighTests : ViewModelTestBase
         Assert.Contains("Legend", vm.OverallTierLabel);
     }
 }
+
+// ─── GoalEntryViewModel: CompleteLinkedTodoAsync null guard ──────────────────
+
+public class GoalEntryCompleteLinkedTodoNullTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task CompleteLinkedTodo_NullTodo_DoesNotThrow()
+    {
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+
+        var ex = await Record.ExceptionAsync(() => vm.CompleteLinkedTodoCommand.ExecuteAsync(null!));
+        Assert.Null(ex);
+    }
+}
+
+// ─── JournalEntryViewModel: SetReminderAsync empty notes uses "Journal entry" label ──
+
+public class JournalEntrySetReminderEmptyNotesTests : ViewModelTestBase
+{
+    private JournalEntryViewModel BuildVm() =>
+        new(JournalRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task SetReminder_EmptyNotes_UsesJournalEntryLabel()
+    {
+        var account = await CreateTestAccountAsync();
+        Nav.ActionSheetResult = "1 hour";
+
+        var vm = BuildVm();
+        // Notes left empty
+        await vm.SetReminderCommand.ExecuteAsync(null);
+
+        var pending = await ReminderSvc.GetPendingAsync(account.Guid);
+        Assert.Single(pending);
+        Assert.Contains("Journal entry", pending[0].Title);
+    }
+
+    [Fact]
+    public async Task SetReminder_LongNotes_TruncatesLabelAt40Chars()
+    {
+        var account = await CreateTestAccountAsync();
+        Nav.ActionSheetResult = "1 hour";
+
+        var vm = BuildVm();
+        vm.Notes = "This is a very long journal note that exceeds forty characters easily";
+        await vm.SetReminderCommand.ExecuteAsync(null);
+
+        var pending = await ReminderSvc.GetPendingAsync(account.Guid);
+        Assert.Single(pending);
+        Assert.Contains("…", pending[0].Title);
+        Assert.Contains("This is a very long journal note that exce", pending[0].Title);
+    }
+}
+
+// ─── GoalEntryViewModel: SetReminderAsync null guard (empty Guid) ────────────
+
+public class GoalEntrySetReminderGuardTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task SetReminder_EmptyGuid_ReturnsEarlyNoReminderScheduled()
+    {
+        var account = await CreateTestAccountAsync();
+        Nav.ActionSheetResult = "1 hour";
+
+        var vm = BuildVm();
+        // Guid is empty — guard fires
+        await vm.SetReminderCommand.ExecuteAsync(null);
+
+        var pending = await ReminderSvc.GetPendingAsync(account.Guid);
+        Assert.Empty(pending);
+    }
+
+    [Fact]
+    public async Task SetReminder_ValidGuidWithDuration_SchedulesReminder()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Learn piano", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+        Nav.ActionSheetResult = "1 hour";
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        await vm.SetReminderCommand.ExecuteAsync(null);
+
+        var pending = await ReminderSvc.GetPendingAsync(account.Guid);
+        Assert.Single(pending);
+        Assert.Equal("Goal", pending[0].Topic);
+        Assert.Contains("Learn piano", pending[0].Title);
+    }
+}
+
+// ─── GoalEntryViewModel: CompleteLinkedTodoAsync success — HasLinkedTodos reflects count ──
+
+public class GoalEntryCompleteLinkedTodoSuccessTests : ViewModelTestBase
+{
+    private GoalEntryViewModel BuildVm() =>
+        new(GoalRepo, GoalProgressRepo, TodoRepo, AccountService, Analytics, Nav, ReminderSvc);
+
+    [Fact]
+    public async Task CompleteLinkedTodo_LastTodo_HasLinkedTodosFalse()
+    {
+        var account = await CreateTestAccountAsync();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Run a marathon", EnteredDate = ts, UpdatedOn = ts };
+        await GoalRepo.SaveAsync(goal);
+
+        var todo = new Todo { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, Title = "Train 5k", Notes = $"Goal: Run a marathon", UpdatedOn = ts };
+        await TodoRepo.SaveAsync(todo);
+
+        var vm = BuildVm();
+        vm.Guid = goal.Guid;
+        await Task.Delay(200);
+
+        Assert.True(vm.HasLinkedTodos);
+        Assert.Single(vm.LinkedTodos);
+
+        await vm.CompleteLinkedTodoCommand.ExecuteAsync(vm.LinkedTodos[0]);
+
+        Assert.False(vm.HasLinkedTodos);
+        Assert.Empty(vm.LinkedTodos);
+    }
+}

@@ -1,0 +1,58 @@
+Summary
+  Generated on: 5/27/2026 - 5:18:24 AM
+  Coverage date: 5/27/2026 - 5:18:20 AM
+  Parser: Cobertura
+  Assemblies: 1
+  Classes: 36
+  Files: 30
+  Line coverage: 94.3%
+  Covered lines: 1533
+  Uncovered lines: 92
+  Coverable lines: 1625
+  Total lines: 2537
+  Branch coverage: 74.7% (444 of 594)
+  Covered branches: 444
+  Total branches: 594
+  Method coverage: 94.2% (244 of 259)
+  Full method coverage: 88.4% (229 of 259)
+  Covered methods: 244
+  Fully covered methods: 229
+  Total methods: 259
+
+LevelUp                                      94.3%
+  LevelUp.Data.GoalProgressRepository         100%
+  LevelUp.Data.GoalRepository                 100%
+  LevelUp.Data.JournalRepository              100%
+  LevelUp.Data.LocalDatabase                    0%
+  LevelUp.Data.ReminderRepository             100%
+  LevelUp.Data.TodoRepository                 100%
+  LevelUp.Models.Account                      100%
+  LevelUp.Models.Goal                         100%
+  LevelUp.Models.GoalProgress                 100%
+  LevelUp.Models.Journal                      100%
+  LevelUp.Models.Reminder                     100%
+  LevelUp.Models.SyncBase                     100%
+  LevelUp.Models.Todo                         100%
+  LevelUp.Services.AccountService             100%
+  LevelUp.Services.ConnectivityService          0%
+  LevelUp.Services.GoalProgressSyncDto        100%
+  LevelUp.Services.GoalSyncDto                100%
+  LevelUp.Services.JournalSyncDto             100%
+  LevelUp.Services.MauiNavigationService        0%
+  LevelUp.Services.MauiNotificationService      0%
+  LevelUp.Services.MobileAnalyticsService     100%
+  LevelUp.Services.ReminderService            100%
+  LevelUp.Services.SnoozeHelper               100%
+  LevelUp.Services.SyncRequestDto<T>          100%
+  LevelUp.Services.SyncResponseDto<T>         100%
+  LevelUp.Services.SyncService                100%
+  LevelUp.Services.TodoSyncDto                100%
+  LevelUp.TaskExtensions                      100%
+  LevelUp.ViewModels.GoalEntryViewModel      94.9%
+  LevelUp.ViewModels.GoalListViewModel       91.7%
+  LevelUp.ViewModels.JournalEntryViewModel     99%
+  LevelUp.ViewModels.JournalListViewModel    94.5%
+  LevelUp.ViewModels.RemindersViewModel       100%
+  LevelUp.ViewModels.SettingsViewModel       95.5%
+  LevelUp.ViewModels.TodoEntryViewModel      86.6%
+  LevelUp.ViewModels.TodoListViewModel       93.3%
