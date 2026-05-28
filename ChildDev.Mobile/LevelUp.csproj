@@ -71,8 +71,11 @@
 	</PropertyGroup>
 
 	<!-- Disable R8 for Debug Android builds to avoid JAR duplicate class conflicts from transitive deps -->
+	<!-- EmbedAssembliesIntoApk=true is required for sideload via `adb install`; without it, -->
+	<!-- Fast Deployment APKs crash on launch (SIGABRT: "No assemblies found") -->
 	<PropertyGroup Condition="'$(Configuration)' == 'Debug' AND '$(TargetFramework)' != 'net8.0'">
 		<AndroidLinkMode>None</AndroidLinkMode>
+		<EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
 	</PropertyGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
