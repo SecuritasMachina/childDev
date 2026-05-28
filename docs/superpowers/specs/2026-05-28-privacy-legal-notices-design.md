@@ -45,7 +45,7 @@ No new database tables. Contact form submissions are emailed to the operator; th
 ### Sections
 
 **1. Who We Are**
-Acknowledged Development Inc., `privacy@acknowledgeddev.com`, link to `/privacy/contact`, effective date.
+Acknowledged Development Inc., `privacy@securitasmachina.org`, link to `/privacy/contact`, effective date.
 
 **2. Who This App Is For**
 Account holders must be 13 or older. Parents and caregivers create accounts on behalf of children ages 5–18. Children use LevelUp under an adult account holder's authority. This is the COPPA "parent/guardian as account holder" model — no separate verifiable parental consent mechanism is required.
@@ -93,7 +93,7 @@ We do not knowingly collect personal information from children under 13 without 
 We will update the effective date for any changes. Material changes will be noted on this page.
 
 **10. Contact Us**
-`privacy@acknowledgeddev.com` · `/privacy/contact`
+`privacy@securitasmachina.org` · `/privacy/contact`
 
 ---
 
@@ -131,7 +131,7 @@ We may update these terms. Material changes will be noted with an updated effect
 These terms are governed by the laws of the State of California, United States.
 
 **10. Contact**
-`privacy@acknowledgeddev.com` · `/privacy/contact`
+`privacy@securitasmachina.org` · `/privacy/contact`
 
 ---
 
@@ -177,7 +177,7 @@ On valid submission:
 
 Reuses the existing `EmailService` (already registered, uses `CHILDDEV_SMTP_*` env vars). A new method `SendPrivacyRequestAsync(string requestType, string name, string email, string nickname, string message)` is added to `EmailService`. The `PrivacyContactService` injects `EmailService` and calls it on valid submission.
 
-The operator recipient address is read from env var `CHILDDEV_PRIVACY_EMAIL` (falls back to `privacy@acknowledgeddev.com` if unset). No new SMTP configuration — existing infrastructure is reused.
+The operator recipient address is read from env var `CHILDDEV_PRIVACY_EMAIL` (falls back to `privacy@securitasmachina.org` if unset). No new SMTP configuration — existing infrastructure is reused.
 
 If SMTP is not configured, the form logs the submission to the server log as a fallback (with warning).
 
