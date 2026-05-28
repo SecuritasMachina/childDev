@@ -4,10 +4,16 @@ public class MauiNavigationService : INavigationService
 {
     public Task GoToAsync(string route) =>
 #if ANDROID || IOS || MACCATALYST || WINDOWS
-        Shell.Current.GoToAsync(route);
+        Shell.Current.GoToAsync(AbsoluteRoute(route));
 #else
         Task.CompletedTask;
 #endif
+
+    // Registered sub-routes (journal/entry, goals/entry, etc.) require the "///" absolute
+    // prefix in MAUI Shell navigation. Tab routes ("//goals") and back-nav ("..") are passed
+    // through unchanged.
+    private static string AbsoluteRoute(string route) =>
+        route == ".." || route.StartsWith("//") ? route : "///" + route;
 
     public Task<bool> DisplayAlertAsync(string title, string message, string accept, string cancel) =>
 #if ANDROID || IOS || MACCATALYST || WINDOWS

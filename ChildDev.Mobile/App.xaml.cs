@@ -35,7 +35,7 @@ public partial class App : Application
         MainThread.BeginInvokeOnMainThread(async () =>
         {
             if (Shell.Current is not null)
-                await Shell.Current.GoToAsync("reminders");
+                await Shell.Current.GoToAsync("///reminders");
         });
     }
 #endif

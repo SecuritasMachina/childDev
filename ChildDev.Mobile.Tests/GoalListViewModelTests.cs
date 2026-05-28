@@ -122,6 +122,21 @@ public class GoalListViewModelTests : ViewModelTestBase
     }
 
     [Fact]
+    public async Task Add_NoExceptionThrown_WhenAddCommandExecuted()
+    {
+        // Regression: crashing with "Relative routing to shell elements is currently not
+        // supported" because Shell.GoToAsync was called with a plain route string instead
+        // of the required "///goals/entry" absolute form. Fix is in MauiNavigationService.
+        await CreateTestAccountAsync();
+        var vm = BuildVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        var ex = await Record.ExceptionAsync(() => vm.AddCommand.ExecuteAsync(null));
+        Assert.Null(ex);
+        Assert.Single(Nav.NavigatedRoutes, r => r.Contains("goals/entry"));
+    }
+
+    [Fact]
     public async Task Open_NavigatesToGoalEntryWithGuid()
     {
         var account = await CreateTestAccountAsync();

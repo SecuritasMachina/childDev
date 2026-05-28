@@ -6016,11 +6016,12 @@ public class GoalEntryProgressHistoryTests : ViewModelTestBase
         var goal = new Goal { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalText = "Blank steps goal", EnteredDate = ts, UpdatedOn = ts };
         await GoalRepo.SaveAsync(goal);
 
-        // First note (current, shown as NextStepItems) — has content
-        await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = "Active steps", UpdatedOn = ts + 3 });
-        // Subsequent notes with blank NextStepItems — should be filtered out of history
-        await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = "   ", UpdatedOn = ts + 2 });
-        await GoalProgressRepo.SaveAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = "", UpdatedOn = ts + 1 });
+        // Insert directly to preserve UpdatedOn ordering (SaveAsync overwrites UpdatedOn with UtcNow)
+        // First note (most recent, shown as NextStepItems) — has content
+        await Db.InsertOrReplaceAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = "Active steps", UpdatedOn = ts + 3 });
+        // Older notes with blank NextStepItems — should be filtered out of history
+        await Db.InsertOrReplaceAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = "   ", UpdatedOn = ts + 2 });
+        await Db.InsertOrReplaceAsync(new GoalProgress { Guid = Guid.NewGuid().ToString(), AccountFk = account.Guid, GoalFk = goal.Guid, NextStepItems = "", UpdatedOn = ts + 1 });
 
         var vm = BuildVm();
         vm.Guid = goal.Guid;
