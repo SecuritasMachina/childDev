@@ -58,6 +58,12 @@ rm -rf "$MOBILE_DIR/bin" "$MOBILE_DIR/obj"
 BUILD_TS="$(TZ='America/New_York' date +'%Y-%m-%d %I:%M %p ET')"
 sed -i "s|public const string BuildTimestamp = .*|public const string BuildTimestamp = \"$BUILD_TS\";|" \
   "$MOBILE_DIR/BuildInfo.cs"
+# Stamp the same timestamp onto the APK download page so users can see the build
+# date of the APK being served. Re-runnable: matches the span content each time.
+DL_INDEX="$ROOT_DIR/ChildDev.Api/wwwroot/downloads/index.html"
+[[ -f "$DL_INDEX" ]] && sed -i \
+  "s|<span id=\"build-ts\">[^<]*</span>|<span id=\"build-ts\">$BUILD_TS</span>|" \
+  "$DL_INDEX"
 log_info "Stamped build timestamp: $BUILD_TS"
 
 # ── build ────────────────────────────────────────────────────────────────────

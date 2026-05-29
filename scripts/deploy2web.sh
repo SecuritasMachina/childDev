@@ -18,6 +18,10 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SSH_KEY="/home/jaxtrx/.ssh/hostWinds_id_rsa"
 SSH_HOST="root@hwsrv-1313060.hostwindsdns.com"
 REMOTE_DIR="/opt/childdev"
+# APK lives outside REMOTE_DIR (the rsync/hot-deploy tree) so source syncs and
+# `docker cp` into the API container can never touch it. Both the API and nginx
+# download containers bind-mount this dir (see docker-compose.yml).
+DOWNLOADS_DIR="/opt/downloads"
 SECRETS_FILE="/home/jaxtrx/data/.secrets/childdev-prod.env"
 
 APK_LOCAL="$ROOT_DIR/ChildDev.Api/wwwroot/downloads/LevelUp.apk"
@@ -105,23 +109,23 @@ scp -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=30 \
   "$SSH_HOST:$REMOTE_DIR/.env"
 
 # ── APK upload ───────────────────────────────────────────────────────────────
-# The VPS docker-compose mounts /opt/childdev/downloads → /app/wwwroot/downloads
-# so the APK is served directly without a container rebuild.
+# Uploaded to $DOWNLOADS_DIR, which both containers bind-mount, so the APK is
+# served directly without a container rebuild.
 
 log_info "Uploading LevelUp.apk ($APK_BYTES bytes) ..."
-ssh_run "mkdir -p $REMOTE_DIR/downloads"
+ssh_run "mkdir -p $DOWNLOADS_DIR"
 scp -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=30 \
   "$APK_LOCAL" \
-  "$SSH_HOST:$REMOTE_DIR/downloads/LevelUp.apk"
-log_info "APK uploaded → /opt/childdev/downloads/LevelUp.apk"
+  "$SSH_HOST:$DOWNLOADS_DIR/LevelUp.apk"
+log_info "APK uploaded → $DOWNLOADS_DIR/LevelUp.apk"
 
 # Upload downloads index page (excluded from main rsync)
 INDEX_LOCAL="$ROOT_DIR/ChildDev.Api/wwwroot/downloads/index.html"
 if [[ -f "$INDEX_LOCAL" ]]; then
   scp -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=30 \
     "$INDEX_LOCAL" \
-    "$SSH_HOST:$REMOTE_DIR/downloads/index.html"
-  log_info "Downloads index page uploaded → /opt/childdev/downloads/index.html"
+    "$SSH_HOST:$DOWNLOADS_DIR/index.html"
+  log_info "Downloads index page uploaded → $DOWNLOADS_DIR/index.html"
 fi
 
 # ── restart downloads container to re-bind the volume mount ──────────────────
@@ -164,6 +168,12 @@ else
       -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
       "$PUBLISH_DIR/" \
       "$SSH_HOST:/tmp/childdev-hotdeploy/"
+    # The APK is excluded from the rsync above (it's uploaded separately via scp to
+    # the bind-mounted downloads dir). But --delete does NOT remove excluded files,
+    # so a stale APK from an earlier deploy lingers in this persistent staging dir —
+    # and the docker cp below would copy it back over the freshly-uploaded one. Drop
+    # it first so docker cp never carries an APK and the scp'd file stays authoritative.
+    ssh_run "rm -f /tmp/childdev-hotdeploy/wwwroot/downloads/LevelUp.apk"
     ssh_run "docker cp /tmp/childdev-hotdeploy/. $CONTAINER:/app/ && docker restart $CONTAINER"
   fi
 fi

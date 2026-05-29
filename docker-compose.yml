@@ -38,7 +38,7 @@ services:
         condition: service_healthy
     volumes:
       - childdev_dataprotection:/root/.aspnet/DataProtection-Keys
-      - /opt/childdev/downloads:/app/wwwroot/downloads
+      - /opt/downloads:/app/wwwroot/downloads
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
@@ -52,7 +52,7 @@ services:
   downloads:
     image: nginx:alpine
     volumes:
-      - /opt/childdev/downloads:/usr/share/nginx/html:ro
+      - /opt/downloads:/usr/share/nginx/html:ro
       - /opt/childdev/nginx-downloads.conf:/etc/nginx/conf.d/default.conf:ro
     restart: unless-stopped
     labels:
