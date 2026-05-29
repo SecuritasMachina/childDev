@@ -25,7 +25,11 @@ public partial class SetupViewModel(AccountService accountService) : ObservableO
     private string errorMessage = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CreateButtonText))]
+    [NotifyCanExecuteChangedFor(nameof(CreateAccountCommand))]
     private bool isCreating;
+
+    public string CreateButtonText => IsCreating ? "Setting up account..." : "Get Started";
 
     private bool CanCreate => !string.IsNullOrWhiteSpace(NickName)
         && Pin.Length >= 4

@@ -58,6 +58,7 @@ log_info "Building Android APK ..."
   -f net8.0-android \
   -c "$CONFIG" \
   /p:JavaSdkDirectory="$JAVA_HOME" \
+  /p:AndroidSdkDirectory="$ANDROID_SDK_ROOT" \
   "${EMBED_ARG[@]}" \
   --nologo
 

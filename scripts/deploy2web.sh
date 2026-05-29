@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
-# deploy2web.sh — deploy source + APK to the Hostwinds VPS (levelup.securitasmachina.org)
+# deploy2web.sh — build + deploy the APK and web app to the Hostwinds VPS
+#                 (levelup.securitasmachina.org)
+# By default this clean-builds the Android APK (via build-apk.sh) AND builds the
+# web app (dotnet publish on hot-deploy, or docker build on FORCE_REBUILD).
 # Usage:
-#   ./scripts/deploy2web.sh              # hot-deploy (default)
-#   FORCE_REBUILD=1 ./scripts/deploy2web.sh   # full image rebuild
+#   ./scripts/deploy2web.sh                      # build APK + web, hot-deploy (default)
+#   FORCE_REBUILD=1 ./scripts/deploy2web.sh      # full web image rebuild
+#   SKIP_APK_BUILD=1 ./scripts/deploy2web.sh     # reuse existing APK, don't rebuild it
+#   APK_BUILD_CONFIG=Debug ./scripts/deploy2web.sh   # build APK in Debug (default Release)
+#   SKIP_TESTS=1 ./scripts/deploy2web.sh         # skip the API test run
 set -euo pipefail
 IFS=$'\n\t'
 
@@ -19,6 +25,8 @@ APK_MIN_BYTES=$((1024 * 1024))   # 1 MB guard — a real APK is always larger
 
 FORCE_REBUILD="${FORCE_REBUILD:-0}"
 SKIP_TESTS="${SKIP_TESTS:-0}"
+SKIP_APK_BUILD="${SKIP_APK_BUILD:-0}"
+APK_BUILD_CONFIG="${APK_BUILD_CONFIG:-Release}"
 
 PROJECT_NAME="childdev"
 SERVICE_NAME="childdev-api"
@@ -39,9 +47,20 @@ if [[ ! -f "$SECRETS_FILE" ]]; then
   exit 1
 fi
 
+# ── build APK (default) ──────────────────────────────────────────────────────
+# Clean-builds the Android APK and stages it at $APK_LOCAL. Always rebuild by
+# default so a stale incremental APK can't be shipped; SKIP_APK_BUILD=1 reuses
+# whatever is already staged.
+if [[ "$SKIP_APK_BUILD" != "1" ]]; then
+  log_info "Building Android APK (CONFIG=$APK_BUILD_CONFIG) ..."
+  CONFIG="$APK_BUILD_CONFIG" "$SCRIPT_DIR/build-apk.sh"
+else
+  log_warn "SKIP_APK_BUILD=1 — reusing existing APK, not rebuilding."
+fi
+
 if [[ ! -f "$APK_LOCAL" ]]; then
   log_error "APK not found: $APK_LOCAL"
-  log_error "Build the Android APK first, then re-run this script."
+  log_error "Run scripts/build-apk.sh first, or unset SKIP_APK_BUILD."
   exit 1
 fi
 
