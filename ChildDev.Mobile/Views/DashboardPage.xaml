@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:models="clr-namespace:LevelUp.Models"
              xmlns:vm="clr-namespace:LevelUp.ViewModels"
+             xmlns:local="clr-namespace:LevelUp"
              x:Class="LevelUp.Views.DashboardPage"
              Title="Dashboard">
     <ContentPage.ToolbarItems>
@@ -310,6 +311,17 @@
                         FontSize="13"
                         HorizontalOptions="Start"
                         Margin="0,4,0,0" />
+
+                <!-- Build timestamp footer -->
+                <Label HorizontalOptions="Center" FontSize="10" TextColor="Gray"
+                       Opacity="0.6" Margin="0,8,0,4">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="Build: " />
+                            <Span Text="{x:Static local:BuildInfo.BuildTimestamp}" />
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
 
             </VerticalStackLayout>
         </VerticalStackLayout>

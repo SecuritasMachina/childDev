@@ -52,6 +52,14 @@ log_info "project: $PROJECT"
 log_info "Cleaning bin/ obj/ (avoids stale incremental output) ..."
 rm -rf "$MOBILE_DIR/bin" "$MOBILE_DIR/obj"
 
+# ── stamp build timestamp ──────────────────────────────────────────────────────
+# Keeps ChildDev.Mobile/BuildInfo.cs accurate so the in-app splash and Dashboard
+# footer show the real build time. Mirrors the API stamping in deploy2web.sh.
+BUILD_TS="$(TZ='America/New_York' date +'%Y-%m-%d %I:%M %p ET')"
+sed -i "s|public const string BuildTimestamp = .*|public const string BuildTimestamp = \"$BUILD_TS\";|" \
+  "$MOBILE_DIR/BuildInfo.cs"
+log_info "Stamped build timestamp: $BUILD_TS"
+
 # ── build ────────────────────────────────────────────────────────────────────
 log_info "Building Android APK ..."
 "$DOTNET" build "$PROJECT" \
