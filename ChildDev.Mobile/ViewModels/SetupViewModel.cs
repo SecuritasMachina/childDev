@@ -8,22 +8,29 @@ public partial class SetupViewModel(AccountService accountService) : ObservableO
 {
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CreateAccountCommand))]
+    [NotifyPropertyChangedFor(nameof(CanCreate))]
     private string nickName = string.Empty;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CreateAccountCommand))]
+    [NotifyPropertyChangedFor(nameof(CanCreate))]
     private string pin = string.Empty;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CreateAccountCommand))]
+    [NotifyPropertyChangedFor(nameof(CanCreate))]
     private string confirmPin = string.Empty;
 
     [ObservableProperty]
     private string errorMessage = string.Empty;
 
+    [ObservableProperty]
+    private bool isCreating;
+
     private bool CanCreate => !string.IsNullOrWhiteSpace(NickName)
         && Pin.Length >= 4
-        && ConfirmPin == Pin;
+        && ConfirmPin == Pin
+        && !IsCreating;
 
     [RelayCommand(CanExecute = nameof(CanCreate))]
     private async Task CreateAccountAsync()
@@ -34,6 +41,8 @@ public partial class SetupViewModel(AccountService accountService) : ObservableO
             return;
         }
 
+        IsCreating = true;
+        ErrorMessage = string.Empty;
         try
         {
             await accountService.CreateAccountAsync(NickName.Trim(), Pin);
@@ -42,6 +51,7 @@ public partial class SetupViewModel(AccountService accountService) : ObservableO
         catch
         {
             ErrorMessage = "Could not create account. Please try again.";
+            IsCreating = false;
         }
     }
 }

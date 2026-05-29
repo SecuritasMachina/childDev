@@ -80,7 +80,7 @@ public partial class TodoListViewModel(
         var value = FilterText;
         if (string.IsNullOrWhiteSpace(value))
         {
-            Todos = new ObservableCollection<Todo>(_allTodos);
+            UpdateInPlace(Todos, _allTodos);
             EmptyMessage = "All done!";
             UpdateOverdueCount(_allTodos);
         }
@@ -89,7 +89,7 @@ public partial class TodoListViewModel(
             var filtered = _allTodos.Where(t =>
                 (t.Title?.Contains(value, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (t.Notes?.Contains(value, StringComparison.OrdinalIgnoreCase) ?? false)).ToList();
-            Todos = new ObservableCollection<Todo>(filtered);
+            UpdateInPlace(Todos, filtered);
             EmptyMessage = $"No matches for \"{value}\"";
             var n = filtered.Count;
             EntryCountDisplay = $"{n} {(n == 1 ? "task" : "tasks")} matching";
@@ -112,11 +112,11 @@ public partial class TodoListViewModel(
             _accountGuid = account.Guid;
             var items = await repo.GetPendingAsync(_accountGuid);
             _allTodos = items;
-            Todos = new ObservableCollection<Todo>(items);
+            UpdateInPlace(Todos, items);
             var completed = await repo.GetCompletedAsync(_accountGuid);
             CompletedTodoCount = completed.Count;
             HasCompletedTodos = CompletedTodoCount > 0;
-            CompletedTodos = new ObservableCollection<Todo>(completed);
+            UpdateInPlace(CompletedTodos, completed);
             UpdateOverdueCount(items);
             UpdateWeekCompletedMessage(completed);
         }
@@ -141,7 +141,7 @@ public partial class TodoListViewModel(
             var completed = await repo.GetCompletedAsync(_accountGuid);
             CompletedTodoCount = completed.Count;
             HasCompletedTodos = CompletedTodoCount > 0;
-            CompletedTodos = new ObservableCollection<Todo>(completed);
+            UpdateInPlace(CompletedTodos, completed);
             UpdateWeekCompletedMessage(completed);
             StatusMessage = string.Empty;
         }
@@ -271,6 +271,26 @@ public partial class TodoListViewModel(
             WeekOverWeekMessage = string.Empty;
             HasWeekOverWeekMessage = false;
         }
+    }
+
+    // Replace collection contents in-place so CollectionView receives CollectionChanged
+    // events rather than a full ItemsSource rebind. CollectionView inside VerticalStackLayout
+    // fails to remeasure on Android when ItemsSource is replaced entirely. Updates must also
+    // be dispatched to the UI thread because LoadAsync/RefreshAsync/AddAsync continuations
+    // run on thread-pool threads after awaiting repository calls.
+    private static void UpdateInPlace(ObservableCollection<Todo> collection, IEnumerable<Todo> items)
+    {
+        var list = items.ToList();
+#if !NO_MAUI
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            collection.Clear();
+            foreach (var item in list) collection.Add(item);
+        });
+#else
+        collection.Clear();
+        foreach (var item in list) collection.Add(item);
+#endif
     }
 
     private void UpdateOverdueCount(IEnumerable<Todo> items)

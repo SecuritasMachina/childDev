@@ -8,11 +8,16 @@
         <Label Text="LevelUp" FontSize="28" FontAttributes="Bold" HorizontalOptions="Center" />
         <Label Text="Set up your account to get started." HorizontalOptions="Center" />
 
-        <Entry Placeholder="Your name" Text="{Binding NickName}" />
-        <Entry Placeholder="Password (4+ characters)" Text="{Binding Pin}" IsPassword="True" />
-        <Entry Placeholder="Confirm Password" Text="{Binding ConfirmPin}" IsPassword="True" />
+        <Entry Placeholder="Your name" Text="{Binding NickName}" Immediate="true" IsEnabled="{Binding IsCreating, Converter={StaticResource InvertedBoolConverter}}" />
+        <Entry Placeholder="Password (4+ characters)" Text="{Binding Pin}" IsPassword="True" Immediate="true" IsEnabled="{Binding IsCreating, Converter={StaticResource InvertedBoolConverter}}" />
+        <Entry Placeholder="Confirm Password" Text="{Binding ConfirmPin}" IsPassword="True" Immediate="true" IsEnabled="{Binding IsCreating, Converter={StaticResource InvertedBoolConverter}}" />
+
         <Label Text="{Binding ErrorMessage}" TextColor="Red" IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
 
-        <Button Text="Get Started" Command="{Binding CreateAccountCommand}" />
+        <ActivityIndicator IsRunning="{Binding IsCreating}" IsVisible="{Binding IsCreating}" Color="#512BD4" />
+
+        <Button Text="{Binding IsCreating, StringFormat='Setting up account...'}"
+                Command="{Binding CreateAccountCommand}"
+                IsEnabled="{Binding IsCreating, Converter={StaticResource InvertedBoolConverter}}" />
     </VerticalStackLayout>
 </ContentPage>

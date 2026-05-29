@@ -54,6 +54,24 @@ public class TodoViewModelTests : ViewModelTestBase
     }
 
     [Fact]
+    public async Task TodoList_Add_TodosCollectionSameInstanceAfterAdd()
+    {
+        // Regression: Todos was replaced with new ObservableCollection<Todo>() after each
+        // add, causing MAUI's CollectionView inside VerticalStackLayout to not re-render
+        // items on Android. Fix: UpdateInPlace() modifies collection in-place via Clear+Add.
+        var account = await CreateTestAccountAsync();
+        var vm = BuildListVm();
+        await vm.LoadCommand.ExecuteAsync(null);
+
+        var original = vm.Todos;
+        vm.NewTodoTitle = "Task that must appear";
+        await vm.AddCommand.ExecuteAsync(null);
+
+        Assert.Single(vm.Todos);
+        Assert.Same(original, vm.Todos); // same instance — collection was not replaced
+    }
+
+    [Fact]
     public async Task TodoList_Add_EmptyTitle_DoesNotSave()
     {
         await CreateTestAccountAsync();
