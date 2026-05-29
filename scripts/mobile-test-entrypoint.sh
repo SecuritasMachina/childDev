@@ -42,6 +42,9 @@ log "Unit test exit code: $UNIT_EXIT"
 
 # ── Phase 2: Build APK ───────────────────────────────────────────────────────
 log "=== PHASE 2: Build Android APK ==="
+# Clean bin/obj first — incremental MAUI/Android builds can silently keep stale C#,
+# which produces an APK that does not reflect recent source changes.
+as_test_user "rm -rf /src/ChildDev.Mobile/bin /src/ChildDev.Mobile/obj"
 as_test_user "dotnet build /src/ChildDev.Mobile/LevelUp.csproj \
     -f net8.0-android \
     -c Debug \
