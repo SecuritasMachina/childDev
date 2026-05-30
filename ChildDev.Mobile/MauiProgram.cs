@@ -25,7 +25,17 @@ public static class MauiProgram
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "childdev.db3");
 
-        var localDb = new LocalDatabase(dbPath);
+        IDbKeyProvider keyProvider = new SecureStorageDbKeyProvider();
+        builder.Services.AddSingleton<IDbKeyProvider>(keyProvider);
+
+        // Resolve the per-device key (SecureStorage is async; block briefly at startup).
+        var dbKey = keyProvider.GetKeyAsync().GetAwaiter().GetResult();
+
+        // Migrate a legacy plaintext DB into an encrypted one (preserves identity/credentials);
+        // falls back to a clean wipe only if migration fails outright.
+        DbMigrationGuard.EnsureEncrypted(dbPath, dbKey);
+
+        var localDb = new LocalDatabase(dbPath, dbKey);
         builder.Services.AddSingleton(localDb);
         builder.Services.AddSingleton(localDb.Connection);
         builder.Services.AddSingleton<AccountService>();

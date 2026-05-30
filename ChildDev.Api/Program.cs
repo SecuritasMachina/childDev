@@ -12,6 +12,11 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration["CHILDDEV_DB_CONNECTION"]
     ?? "Server=localhost;Database=childdev;User=childdev;Password=dev;";
 
+builder.Services.AddSingleton(sp =>
+    new EncryptionService(sp.GetRequiredService<IConfiguration>()["CHILDDEV_ENC_KEY"]
+        ?? throw new InvalidOperationException(
+            "CHILDDEV_ENC_KEY is not configured (base64 32-byte AES key; source ~/data/.secrets/levelUp.enckey).")));
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString),
         mySqlOptions => mySqlOptions.CommandTimeout(8)));
@@ -67,6 +72,7 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
 builder.Services.AddAuthorization();
 builder.Services.AddMudServices();
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+builder.Services.AddScoped<ICurrentAccountProvider, CurrentAccountProvider>();
 builder.Services.AddScoped<WebAnalyticsService>();
 builder.Services.AddScoped<WebReminderService>();
 builder.Services.AddSingleton<WebAuthTokenService>();
@@ -79,6 +85,8 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
+builder.Services.AddHostedService<EncryptionMigrationHostedService>();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {

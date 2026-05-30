@@ -7,10 +7,11 @@ public class LocalDatabase
 {
     private readonly SQLiteAsyncConnection _db;
 
-    public LocalDatabase(string dbPath)
+    public LocalDatabase(string dbPath, string key)
     {
         SQLitePCL.Batteries_V2.Init();
-        _db = new SQLiteAsyncConnection(dbPath);
+        var options = new SQLiteConnectionString(dbPath, storeDateTimeAsTicks: true, key: key);
+        _db = new SQLiteAsyncConnection(options);
     }
 
     public SQLiteAsyncConnection Connection => _db;

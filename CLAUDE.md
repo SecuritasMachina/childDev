@@ -34,3 +34,9 @@ When making improvements, always center the experience on goal visibility and pr
 - No secrets/env edits, no auth logic changes (API JWT), no payment code
 - No force-push, no destructive DB ops
 - Analytics required in all web UI pages (see global CLAUDE.md)
+
+## Encryption at Rest
+- Web: sensitive free-text columns (Goal.GoalText/MeasurableOutcome/Steps, Journal.Notes, GoalProgress.NextStepItems, Todo.Notes) are AES-GCM encrypted via an EF value converter (version tag `v1:`; legacy plaintext reads transparently). Tenant isolation is enforced by EF global query filters keyed to the current account (JWT claim, then web session).
+- Key: base64 32-byte `CHILDDEV_ENC_KEY`, sourced from `~/data/.secrets/levelUp.enckey` (gitignored, identical on dev + prod). The API **fails fast** at startup without it. Deploy must export it before `docker compose up`, e.g. `export CHILDDEV_ENC_KEY="$(cat ~/data/.secrets/levelUp.enckey)"`.
+- Phase 2 (bounded columns like EmotionReason/Title) needs a one-time `ALTER TABLE … MODIFY … LONGTEXT` (see the post-`EnsureCreated` raw-SQL block in `Program.cs`) before adding them to the converter — `EnsureCreated()` will not widen existing columns.
+- Mobile: local SQLite is fully encrypted with SQLCipher; per-device key in MAUI `SecureStorage`.

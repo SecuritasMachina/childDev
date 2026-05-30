@@ -28,7 +28,8 @@ public class DownloadEndpointTests : IAsyncLifetime
             {
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    ["CHILDDEV_JWT_SECRET"] = "test-secret-min-32-chars-placeholder"
+                    ["CHILDDEV_JWT_SECRET"] = "test-secret-min-32-chars-placeholder",
+                    ["CHILDDEV_ENC_KEY"] = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
                 });
             });
             builder.ConfigureServices(services =>

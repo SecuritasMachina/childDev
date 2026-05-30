@@ -21,6 +21,7 @@ public class ApiFactory : WebApplicationFactory<Program>
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["CHILDDEV_JWT_SECRET"] = TestJwtSecret,
+                ["CHILDDEV_ENC_KEY"] = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
                 // Keep tests hermetic — never forward telemetry to the real bizeyes service.
                 ["BizEyes:Enabled"] = "false"
             });
