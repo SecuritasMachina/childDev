@@ -15,7 +15,11 @@ public class BizEyesAnalyticsService(
     private string? _sessionToken;
     private readonly SemaphoreSlim _sessionLock = new(1, 1);
 
-    /// <summary>Track a custom event (button click, feature use, etc.).</summary>
+    /// <summary>
+    /// Track a custom event (button click, feature use, etc.).
+    /// Privacy: the free-text <c>context</c> is NOT forwarded (may carry goal/journal/todo
+    /// text); only the event name + a coarse "mobile" category are sent.
+    /// </summary>
     public void TrackEvent(string name, string? context = null) => FireAndForget(async () =>
     {
         var token = await EnsureSessionAsync();
@@ -24,7 +28,6 @@ public class BizEyesAnalyticsService(
             apiKey = BizEyesConfig.ApiKey,
             name,
             category = "mobile",
-            label = context,
             sessionToken = token,
             environment = BizEyesConfig.Environment
         });
@@ -43,13 +46,14 @@ public class BizEyesAnalyticsService(
         });
     });
 
-    /// <summary>Track an exception.</summary>
+    /// <summary>
+    /// Track an exception (type only). Privacy: message and stack trace are NOT forwarded —
+    /// they can contain file paths or user input. Only the type name is sent.
+    /// </summary>
     public void TrackException(Exception ex, bool isHandled) => FireAndForget(() => PostAsync("exception", new
     {
         apiKey = BizEyesConfig.ApiKey,
-        type = ex.GetType().Name,
-        message = ex.Message,
-        stackTrace = ex.StackTrace,
+        type = ex.GetType().FullName,
         severity = "Error",
         isHandled,
         environment = BizEyesConfig.Environment
@@ -69,7 +73,7 @@ public class BizEyesAnalyticsService(
             var resp = await Client().PostAsJsonAsync($"{BizEyesConfig.BaseUrl}/api/collect/session", new
             {
                 apiKey = BizEyesConfig.ApiKey,
-                userId,
+                userId = Hash(userId), // pseudonymous: don't expose the raw account guid
                 os = deviceInfo.Os,
                 device = deviceInfo.Device,
                 environment = BizEyesConfig.Environment
@@ -108,6 +112,14 @@ public class BizEyesAnalyticsService(
     {
         if (!BizEyesConfig.Enabled) return;
         _ = Task.Run(work);
+    }
+
+    /// <summary>Pseudonymous, stable, non-reversible id for a value (first 16 hex of SHA-256).</summary>
+    private static string? Hash(string? value)
+    {
+        if (string.IsNullOrEmpty(value)) return null;
+        var bytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value));
+        return Convert.ToHexString(bytes)[..16].ToLowerInvariant();
     }
 
     private record SessionResponse(string SessionToken);

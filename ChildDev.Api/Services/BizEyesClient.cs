@@ -35,8 +35,13 @@ public class BizEyesClient(
         return c;
     }
 
-    /// <summary>Track a custom event. Lazily creates a session for the user first.</summary>
-    public void TrackEvent(string name, string? accountGuid, string? category, string? context)
+    /// <summary>
+    /// Track a custom event. Lazily creates a session for the user first.
+    /// Privacy: the free-text <c>context</c> (e.g. todo titles, journal snippets, search
+    /// queries) is intentionally NOT forwarded — only the event name and the page/route as
+    /// category. The first-party MariaDB store still keeps full context.
+    /// </summary>
+    public void TrackEvent(string name, string? accountGuid, string? category)
         => FireAndForget(async () =>
         {
             var token = await EnsureSessionAsync(accountGuid);
@@ -45,7 +50,6 @@ public class BizEyesClient(
                 apiKey = _o.ApiKey,
                 name,
                 category,
-                label = context,
                 sessionToken = token,
                 environment = Environment
             });
@@ -66,14 +70,16 @@ public class BizEyesClient(
             });
         });
 
-    /// <summary>Track an exception. No session required.</summary>
+    /// <summary>
+    /// Track an exception (type only). No session required.
+    /// Privacy: the exception message and stack trace are NOT forwarded — they can contain
+    /// file paths, user input, or other system detail. Only the type name is sent.
+    /// </summary>
     public void TrackException(Exception ex, bool isHandled, string severity = "Error")
         => FireAndForget(() => PostAsync("exception", new
         {
             apiKey = _o.ApiKey,
-            type = ex.GetType().Name,
-            message = ex.Message,
-            stackTrace = ex.StackTrace,
+            type = ex.GetType().FullName,
             severity,
             isHandled,
             environment = Environment
@@ -89,7 +95,7 @@ public class BizEyesClient(
             var resp = await Client().PostAsJsonAsync($"{_o.BaseUrl}/api/collect/session", new
             {
                 apiKey = _o.ApiKey,
-                userId = accountGuid,
+                userId = Hash(accountGuid), // pseudonymous: don't expose the raw account guid
                 browser = "Web",
                 device = "Web",
                 environment = Environment
@@ -123,6 +129,14 @@ public class BizEyesClient(
     {
         if (!Enabled) return;
         _ = Task.Run(work);
+    }
+
+    /// <summary>Pseudonymous, stable, non-reversible id for a value (first 16 hex of SHA-256).</summary>
+    private static string? Hash(string? value)
+    {
+        if (string.IsNullOrEmpty(value)) return null;
+        var bytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value));
+        return Convert.ToHexString(bytes)[..16].ToLowerInvariant();
     }
 
     private record SessionResponse(string SessionToken);

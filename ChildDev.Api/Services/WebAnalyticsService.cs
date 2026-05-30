@@ -24,6 +24,6 @@ public class WebAnalyticsService(IDbContextFactory<AppDbContext> dbFactory, BizE
         if (eventName == "page_view")
             bizEyes.TrackPageView(page is null ? "/" : "/" + page, accountGuid, page);
         else
-            bizEyes.TrackEvent(eventName, accountGuid, page, context);
+            bizEyes.TrackEvent(eventName, accountGuid, page); // context withheld (may be free text)
     }
 }
