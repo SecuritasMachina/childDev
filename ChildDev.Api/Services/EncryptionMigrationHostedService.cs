@@ -63,7 +63,10 @@ public sealed class EncryptionMigrationHostedService(
             finally { await ctx.Database.CloseConnectionAsync(); }
 
             if (keys.Count == 0) continue;
-            touched += await ReencryptAsync(ctx, table, keys, ct);
+            // Batch to keep the IN-clause and transaction bounded on a large first run.
+            const int batchSize = 500;
+            for (var i = 0; i < keys.Count; i += batchSize)
+                touched += await ReencryptAsync(ctx, table, keys.GetRange(i, Math.Min(batchSize, keys.Count - i)), ct);
         }
         return touched;
     }

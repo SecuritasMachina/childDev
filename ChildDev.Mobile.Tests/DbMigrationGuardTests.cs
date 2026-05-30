@@ -95,4 +95,24 @@ public class DbMigrationGuardTests
         }
         finally { foreach (var f in new[]{path, path+"-wal", path+"-shm", path+".enc-migrate"}) if (File.Exists(f)) File.Delete(f); }
     }
+
+    [Fact]
+    public void EncryptedDbWithWrongKey_WipesGracefully_NotOpenedAsPlaintext()
+    {
+        // Simulates SecureStorage key rotation/loss: a valid encrypted DB that cannot be opened
+        // with the current key. It must NOT be misread as plaintext (no unkeyed open), must not
+        // throw, and falls back to a clean wipe (synced data is server-recoverable).
+        var path = Path.Combine(Path.GetTempPath(), $"rotated_{Guid.NewGuid():N}.db3");
+        var oldKey = "Z29vZGtleWdvb2RrZXlnb29ka2V5Z29vZGtleTEy";
+        try
+        {
+            using (var enc = new SQLiteConnection(new SQLiteConnectionString(path, storeDateTimeAsTicks: true, key: oldKey)))
+            { enc.CreateTable<Account>(); enc.Insert(new Account { Guid = "g", NickName = "n", PinHash = "h", CreatedOn = 1 }); }
+
+            var outcome = DbMigrationGuard.EnsureEncrypted(path, SqliteFixture.TestKey); // wrong (new) key
+            Assert.Equal(DbMigrationOutcome.Wiped, outcome);
+            Assert.False(File.Exists(path));
+        }
+        finally { foreach (var f in new[]{path, path+"-wal", path+"-shm", path+".enc-migrate"}) if (File.Exists(f)) File.Delete(f); }
+    }
 }

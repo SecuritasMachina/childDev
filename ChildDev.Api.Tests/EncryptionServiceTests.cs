@@ -26,6 +26,16 @@ public class EncryptionServiceTests
     }
 
     [Fact]
+    public void Decrypt_LegacyPlaintextStartingWithVersionPrefix_PassesThrough()
+    {
+        // A child could have typed text literally beginning with "v1:" before encryption existed.
+        // It is NOT our format, so it must pass through unchanged, never throw.
+        var svc = Svc();
+        Assert.Equal("v1: my plan", svc.Decrypt("v1: my plan"));
+        Assert.Equal("v1:hello", svc.Decrypt("v1:hello")); // 'hello' is valid base64 but too short to be a blob
+    }
+
+    [Fact]
     public void NullAndEmpty_PassThrough()
     {
         var svc = Svc();
@@ -46,8 +56,12 @@ public class EncryptionServiceTests
     public void Decrypt_Tampered_Throws()
     {
         var svc = Svc();
-        var ct = svc.Encrypt("secret");
-        var bad = ct[..^2] + (ct.EndsWith("A") ? "B" : "A");
+        var ct = svc.Encrypt("secret")!;
+        // Flip the first base64 payload char (just after the "v1:" prefix), preserving length and
+        // base64 validity, so the blob is structurally valid but the AES-GCM auth tag fails.
+        var chars = ct.ToCharArray();
+        chars[3] = chars[3] == 'A' ? 'B' : 'A';
+        var bad = new string(chars);
         Assert.ThrowsAny<Exception>(() => svc.Decrypt(bad));
     }
 

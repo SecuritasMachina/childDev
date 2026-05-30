@@ -21,22 +21,59 @@ public static class DbMigrationGuard
         if (!File.Exists(path))
             return DbMigrationOutcome.None;
 
-        // 2. Check if already encrypted by trying to open with the key.
-        if (TryProbeEncrypted(path, key))
+        // 2. Already encrypted with this key? Retry to absorb transient file locks so we never
+        //    misclassify a valid encrypted DB as needing migration/wipe.
+        if (TryProbeEncryptedWithRetry(path, key))
             return DbMigrationOutcome.AlreadyEncrypted;
 
-        // 3. Legacy plaintext (or unreadable) DB — attempt export migration.
+        // 3. Only treat the file as legacy plaintext — and open it UNKEYED for export — when its
+        //    bytes actually carry the plaintext SQLite header. This prevents wiping a genuine
+        //    encrypted DB that merely failed to open (e.g. SecureStorage key rotation, transient IO).
         var temp = path + ".enc-migrate";
+        if (IsPlaintextSqlite(path))
+        {
+            try
+            {
+                return AttemptExportMigration(path, key, temp);
+            }
+            catch
+            {
+                // Genuinely plaintext but export failed (corrupt source / disk) — wipe so the app starts fresh.
+                BestEffortDelete(path, path + "-wal", path + "-shm", temp, temp + "-wal", temp + "-shm");
+                return DbMigrationOutcome.Wiped;
+            }
+        }
+
+        // 4. File is neither openable with the key nor a plaintext SQLite DB: an encrypted DB whose
+        //    key is lost/rotated. Synced data is server-recoverable, so wipe is the only recovery —
+        //    but we reach here only after the keyed-probe retries failed, not on a single transient error.
+        BestEffortDelete(path, path + "-wal", path + "-shm", temp, temp + "-wal", temp + "-shm");
+        return DbMigrationOutcome.Wiped;
+    }
+
+    // Standard SQLite file header (first 16 bytes) — absent in SQLCipher-encrypted files (encrypted).
+    private static readonly byte[] SqliteMagic = System.Text.Encoding.ASCII.GetBytes("SQLite format 3\0");
+
+    private static bool IsPlaintextSqlite(string path)
+    {
         try
         {
-            return AttemptExportMigration(path, key, temp);
+            using var fs = File.OpenRead(path);
+            var header = new byte[16];
+            if (fs.Read(header, 0, 16) < 16) return false;
+            return header.AsSpan().SequenceEqual(SqliteMagic);
         }
-        catch
+        catch { return false; }
+    }
+
+    private static bool TryProbeEncryptedWithRetry(string path, string key)
+    {
+        for (var attempt = 0; attempt < 3; attempt++)
         {
-            // Wipe fallback — best-effort delete all related files.
-            BestEffortDelete(path, path + "-wal", path + "-shm", temp, temp + "-wal", temp + "-shm");
-            return DbMigrationOutcome.Wiped;
+            if (TryProbeEncrypted(path, key)) return true;
+            if (attempt < 2) Thread.Sleep(100);
         }
+        return false;
     }
 
     private static bool TryProbeEncrypted(string path, string key)

@@ -43,7 +43,16 @@ public sealed class EncryptionService
     {
         if (string.IsNullOrEmpty(stored)) return stored;
         if (!stored.StartsWith(Prefix, StringComparison.Ordinal)) return stored;
-        var blob = Convert.FromBase64String(stored.Substring(Prefix.Length));
+
+        // A legacy plaintext value can legitimately start with "v1:" (a child typed it).
+        // Distinguish our format (well-formed base64 of at least nonce+tag) from such plaintext:
+        // structural mismatch => treat as legacy plaintext (pass through). Only a structurally
+        // valid blob is handed to AES-GCM, where a genuine tamper/key-mismatch still throws.
+        byte[] blob;
+        try { blob = Convert.FromBase64String(stored.Substring(Prefix.Length)); }
+        catch (FormatException) { return stored; }
+        if (blob.Length < NonceSize + TagSize) return stored;
+
         var nonce = blob.AsSpan(0, NonceSize);
         var tag = blob.AsSpan(NonceSize, TagSize);
         var ct = blob.AsSpan(NonceSize + TagSize);
