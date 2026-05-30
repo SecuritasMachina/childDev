@@ -16,7 +16,7 @@ rsync -az --delete \
   --exclude='node_modules/' \
   --exclude='*.apk' \
   -e "ssh -o StrictHostKeyChecking=no -i $SSH_KEY" \
-  /mnt/8TB_HDD_DATA/shared/src/childDev/ "$SERVER:$REMOTE_DIR/"
+  /mnt/8TB_HDD_DATA/shared/src/levelUp/ "$SERVER:$REMOTE_DIR/"
 
 if [[ -n "$APK_SRC" ]]; then
   if [[ ! -f "$APK_SRC" ]]; then

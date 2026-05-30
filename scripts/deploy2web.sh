@@ -77,13 +77,56 @@ fi
 
 log_info "APK OK: $APK_LOCAL ($APK_BYTES bytes)"
 
-# ── tests ────────────────────────────────────────────────────────────────────
+# ── regression tests (gate) ──────────────────────────────────────────────────
+# Runs the API and mobile regression suites. On ANY failure the operator is
+# alerted and prompted whether to continue; the default — including a
+# non-interactive shell (no TTY / EOF) — is NO, which aborts the deploy.
+# SKIP_TESTS=1 bypasses the gate entirely (not recommended).
 
-if [[ "$SKIP_TESTS" != "1" ]]; then
-  log_info "Running API tests (including download endpoint) ..."
-  dotnet test "$ROOT_DIR/ChildDev.Api.Tests/ChildDev.Api.Tests.csproj" \
-    --no-restore -v minimal --logger "console;verbosity=normal"
-  log_info "All tests passed."
+# Each suite is run with failures captured (so `set -e` doesn't abort before the prompt).
+run_regression_tests() {
+  local rc=0
+
+  log_info "Running API regression tests (ChildDev.Api.Tests) ..."
+  if ! dotnet test "$ROOT_DIR/ChildDev.Api.Tests/ChildDev.Api.Tests.csproj" \
+        --no-restore -v minimal --logger "console;verbosity=normal"; then
+    log_error "API regression suite FAILED."
+    rc=1
+  fi
+
+  log_info "Running mobile regression tests (ChildDev.Mobile.Tests) ..."
+  if ! MSBuildEnableWorkloadResolver=false dotnet test \
+        "$ROOT_DIR/ChildDev.Mobile.Tests/ChildDev.Mobile.Tests.csproj" \
+        /p:SkipMauiTargets=true -v minimal --logger "console;verbosity=normal"; then
+    log_error "Mobile regression suite FAILED."
+    rc=1
+  fi
+
+  return $rc
+}
+
+if [[ "$SKIP_TESTS" == "1" ]]; then
+  log_warn "SKIP_TESTS=1 — skipping regression tests (NOT recommended)."
+elif run_regression_tests; then
+  log_info "All regression tests passed."
+else
+  log_error "=================================================================="
+  log_error "REGRESSION TESTS FAILED — see output above."
+  log_error "Deploying now would push code that does not pass its own tests."
+  log_error "=================================================================="
+  reply=""
+  if [[ -t 0 ]]; then
+    read -r -p "$(printf '[ERROR] Continue deploying despite FAILED tests? [y/N] ')" reply || reply=""
+  else
+    log_error "Non-interactive shell — cannot prompt; defaulting to NO."
+  fi
+  case "${reply,,}" in
+    y|yes)
+      log_warn "Operator override: proceeding with deploy despite FAILED regression tests." ;;
+    *)
+      log_error "Aborting deploy due to failed regression tests."
+      exit 1 ;;
+  esac
 fi
 
 # ── sync source (without APK — APK is uploaded separately below) ─────────────
