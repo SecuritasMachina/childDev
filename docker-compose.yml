@@ -37,6 +37,13 @@ services:
       # Provide on the host before `docker compose up`, e.g.:
       #   export CHILDDEV_ENC_KEY="$(cat ~/data/.secrets/levelUp.enckey)"
       CHILDDEV_ENC_KEY: ${CHILDDEV_ENC_KEY}
+      # EDCS config store (SOFT dependency) — supplies the web analytics key at startup.
+      # If unset/unreachable, analytics forwarding stays disabled; the app still runs.
+      # Client secret comes from ~/data/.secrets/childdev-edcs.env (gitignored).
+      Edcs__StsUrl: ${EDCS_STS_URL:-}
+      Edcs__AppConfigUrl: ${EDCS_APPCONFIG_URL:-}
+      Edcs__ClientId: ${EDCS_CLIENT_ID:-}
+      Edcs__ClientSecret: ${EDCS_CLIENT_SECRET:-}
     depends_on:
       mariadb:
         condition: service_healthy
