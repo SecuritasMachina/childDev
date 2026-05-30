@@ -14,10 +14,11 @@ public class EncryptedStringConverterTests
     {
         var svc = Svc();
         var conv = new EncryptedStringConverter(svc);
-        var toProvider = conv.ConvertToProvider.Compile();
-        var fromProvider = conv.ConvertFromProvider.Compile();
+        // ConvertToProvider/ConvertFromProvider are already-compiled Func<object?,object?>.
+        var toProvider = conv.ConvertToProvider;
+        var fromProvider = conv.ConvertFromProvider;
 
-        var stored = (string?)toProvider("note")!;
+        var stored = (string?)toProvider("note");
         Assert.StartsWith("v1:", stored);
         Assert.Equal("note", (string?)fromProvider(stored));
         Assert.Equal("legacy", (string?)fromProvider("legacy"));
