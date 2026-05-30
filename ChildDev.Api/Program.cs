@@ -49,6 +49,22 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
 builder.Services.AddProblemDetails();
 
 // External AnalyticsHub (bizeyes) telemetry forwarding.
+// The web API key is sourced from EDCS (config store) at startup, falling back to whatever is in
+// configuration ("BizEyes:ApiKey", normally empty). EDCS is a SOFT dependency: if it is
+// unconfigured/unreachable/forbidden/missing, the key stays empty and analytics forwarding simply
+// stays disabled (BizEyesClient requires a non-empty key) — startup never fails.
+var edcsOptions = new ChildDev.Api.Services.EdcsOptions();
+builder.Configuration.GetSection(ChildDev.Api.Services.EdcsOptions.SectionName).Bind(edcsOptions);
+using (var edcsHttp = new HttpClient { Timeout = TimeSpan.FromSeconds(5) })
+{
+    var edcsClient = new ChildDev.Api.Services.EdcsConfigClient(edcsHttp);
+    var bizEyesKey = await edcsClient.TryGetValueAsync(
+        edcsOptions, edcsOptions.AppId, "analytics.bizeyes.apikey",
+        warn: msg => Console.Error.WriteLine($"[startup] {msg}"));
+    if (!string.IsNullOrWhiteSpace(bizEyesKey))
+        builder.Configuration["BizEyes:ApiKey"] = bizEyesKey;
+}
+
 builder.Services.Configure<ChildDev.Api.Services.BizEyesOptions>(
     builder.Configuration.GetSection(ChildDev.Api.Services.BizEyesOptions.SectionName));
 builder.Services.AddHttpClient("bizeyes");
