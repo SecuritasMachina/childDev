@@ -15,7 +15,7 @@ Admin creds (human, in `edcs-admins` → `edcs:admin`): `~/data/.secrets/EDCS.cr
 
 ## Step 1 — Rotate the burned key in AnalyticsHub (DO THIS FIRST)
 
-The old web key `ah_VSr5Iaxw…` and mobile key `ah_4VJ7x7rj…` are both in committed git history
+The old web key (prefix `ah_VSr5…`) and mobile key (prefix `ah_4VJ7…`) are both in committed git history
 (GitHub `SecuritasMachina/childDev`), so both are compromised. In AnalyticsHub `/apps` (app id 4,
 "LevelUp"), rotate the web key. Keep the new value for Step 3. (Rotate the mobile key too; put its
 new value in the gitignored `ChildDev.Mobile/Services/BizEyesConfig.Secret.cs`.)
