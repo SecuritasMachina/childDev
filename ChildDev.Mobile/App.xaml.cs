@@ -13,17 +13,40 @@ public partial class App : Application
         InitializeComponent();
         MainPage = BuildSplashPage();
 
+        var bizEyes = services.GetService<Services.BizEyesAnalyticsService>();
+
         Task.Run(async () =>
         {
             await localDb.InitAsync();
             var account = await accountService.GetAccountAsync();
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                MainPage = account is null
-                    ? new NavigationPage(services.GetRequiredService<Views.SetupPage>())
-                    : new AppShell();
+                if (account is null)
+                {
+                    MainPage = new NavigationPage(services.GetRequiredService<Views.SetupPage>());
+                }
+                else
+                {
+                    var shell = new AppShell();
+                    // Forward screen views to AnalyticsHub (bizeyes) as page views.
+                    if (bizEyes is not null)
+                        shell.Navigated += (_, e) =>
+                            bizEyes.TrackScreenView(e.Current?.Location?.OriginalString ?? "/");
+                    MainPage = shell;
+                }
             });
         });
+
+        // Forward unhandled exceptions to AnalyticsHub (bizeyes).
+        if (bizEyes is not null)
+        {
+            AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            {
+                if (e.ExceptionObject is Exception ex) bizEyes.TrackException(ex, isHandled: false);
+            };
+            TaskScheduler.UnobservedTaskException += (_, e) =>
+                bizEyes.TrackException(e.Exception, isHandled: false);
+        }
 #if ANDROID || IOS || MACCATALYST || WINDOWS
         LocalNotificationCenter.Current.NotificationActionTapped += OnNotificationTapped;
 #endif

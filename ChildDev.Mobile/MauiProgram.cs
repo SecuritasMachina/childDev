@@ -35,12 +35,15 @@ public static class MauiProgram
         builder.Services.AddSingleton<TodoRepository>();
         builder.Services.AddSingleton<ConnectivityService>();
         builder.Services.AddSingleton<SyncService>();
+        builder.Services.AddSingleton<IDeviceMetadataProvider, DeviceMetadataProvider>();
+        builder.Services.AddSingleton<BizEyesAnalyticsService>();
         builder.Services.AddSingleton<MobileAnalyticsService>();
         builder.Services.AddSingleton<INavigationService, MauiNavigationService>();
         builder.Services.AddSingleton<LevelUp.Services.INotificationService, MauiNotificationService>();
         builder.Services.AddSingleton<ReminderRepository>();
         builder.Services.AddSingleton<ReminderService>();
         builder.Services.AddHttpClient("childdev");
+        builder.Services.AddHttpClient("bizeyes");
 
         // ViewModels (transient -- new instance per navigation)
         builder.Services.AddTransient<SetupViewModel>();

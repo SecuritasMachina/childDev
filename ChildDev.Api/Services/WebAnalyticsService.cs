@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ChildDev.Api.Services;
 
-public class WebAnalyticsService(IDbContextFactory<AppDbContext> dbFactory)
+public class WebAnalyticsService(IDbContextFactory<AppDbContext> dbFactory, BizEyesClient bizEyes)
 {
     public async Task TrackAsync(string eventName, string? accountGuid, string? page, string? context = null)
     {
@@ -18,5 +18,12 @@ public class WebAnalyticsService(IDbContextFactory<AppDbContext> dbFactory)
             Context = context
         });
         await db.SaveChangesAsync();
+
+        // Also forward to the external AnalyticsHub (bizeyes) dashboard. Fire-and-forget.
+        // Pages emit a "page_view" event with the page name; map those to bizeyes page views.
+        if (eventName == "page_view")
+            bizEyes.TrackPageView(page is null ? "/" : "/" + page, accountGuid, page);
+        else
+            bizEyes.TrackEvent(eventName, accountGuid, page, context);
     }
 }

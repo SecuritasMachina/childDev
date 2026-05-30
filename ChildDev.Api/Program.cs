@@ -42,6 +42,13 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
     });
 
 builder.Services.AddProblemDetails();
+
+// External AnalyticsHub (bizeyes) telemetry forwarding.
+builder.Services.Configure<ChildDev.Api.Services.BizEyesOptions>(
+    builder.Configuration.GetSection(ChildDev.Api.Services.BizEyesOptions.SectionName));
+builder.Services.AddHttpClient("bizeyes");
+builder.Services.AddSingleton<ChildDev.Api.Services.BizEyesClient>();
+builder.Services.AddExceptionHandler<ChildDev.Api.Services.BizEyesExceptionHandler>();
 builder.Services.AddResponseCompression(options => options.EnableForHttps = true);
 builder.Services.AddRequestTimeouts(options =>
     options.DefaultPolicy = new Microsoft.AspNetCore.Http.Timeouts.RequestTimeoutPolicy
@@ -80,6 +87,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 var app = builder.Build();
 
+app.UseExceptionHandler();
 app.UseResponseCompression();
 app.UseRequestTimeouts();
 var mimeProvider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
