@@ -45,3 +45,6 @@ letsencrypt/
 
 # Node modules (legacy Cordova project)
 childDev/node_modules/
+
+# Local build secret (AnalyticsHub mobile key) — never commit
+ChildDev.Mobile/Services/BizEyesConfig.Secret.cs
