@@ -33,6 +33,10 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       CHILDDEV_DB_CONNECTION: ${CHILDDEV_DB_CONNECTION}
       CHILDDEV_JWT_SECRET: ${CHILDDEV_JWT_SECRET}
+      # Base64 32-byte AES key for at-rest column encryption.
+      # Provide on the host before `docker compose up`, e.g.:
+      #   export CHILDDEV_ENC_KEY="$(cat ~/data/.secrets/levelUp.enckey)"
+      CHILDDEV_ENC_KEY: ${CHILDDEV_ENC_KEY}
     depends_on:
       mariadb:
         condition: service_healthy
