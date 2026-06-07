@@ -1,5 +1,7 @@
 using System.Text;
 using ChildDev.Api.Data;
+using Edcs.AppConfig.Client;
+using Microsoft.Extensions.Options;
 using MudBlazor.Services;
 using ChildDev.Api.Endpoints;
 using ChildDev.Api.Services;
@@ -53,14 +55,15 @@ builder.Services.AddProblemDetails();
 // configuration ("BizEyes:ApiKey", normally empty). EDCS is a SOFT dependency: if it is
 // unconfigured/unreachable/forbidden/missing, the key stays empty and analytics forwarding simply
 // stays disabled (BizEyesClient requires a non-empty key) — startup never fails.
-var edcsOptions = new ChildDev.Api.Services.EdcsOptions();
-builder.Configuration.GetSection(ChildDev.Api.Services.EdcsOptions.SectionName).Bind(edcsOptions);
+var edcsOptions = new EdcsOptions { AppId = "childdev" };
+builder.Configuration.GetSection("Edcs").Bind(edcsOptions);
 using (var edcsHttp = new HttpClient { Timeout = TimeSpan.FromSeconds(5) })
 {
-    var edcsClient = new ChildDev.Api.Services.EdcsConfigClient(edcsHttp);
-    var bizEyesKey = await edcsClient.TryGetValueAsync(
-        edcsOptions, edcsOptions.AppId, "analytics.bizeyes.apikey",
-        warn: msg => Console.Error.WriteLine($"[startup] {msg}"));
+    var opt = Options.Create(edcsOptions);
+    var factory = new SingleEdcsHttpClientFactory(edcsHttp);
+    var tokens = new EdcsTokenClient(factory, opt, Microsoft.Extensions.Logging.Abstractions.NullLogger<EdcsTokenClient>.Instance);
+    var edcsClient = new EdcsAppConfigClient(factory, tokens, opt, Microsoft.Extensions.Logging.Abstractions.NullLogger<EdcsAppConfigClient>.Instance);
+    var bizEyesKey = await edcsClient.TryGetValueAsync("analytics.bizeyes.apikey");
     if (!string.IsNullOrWhiteSpace(bizEyesKey))
         builder.Configuration["BizEyes:ApiKey"] = bizEyesKey;
 }
@@ -175,3 +178,10 @@ using (var scope = app.Services.CreateScope())
 app.Run();
 
 public partial class Program { }
+
+/// <summary>Minimal single-client factory so the shared EDCS client can be constructed during the
+/// pre-Build() BizEyes key resolution (no DI container yet).</summary>
+file sealed class SingleEdcsHttpClientFactory(HttpClient client) : IHttpClientFactory
+{
+    public HttpClient CreateClient(string name) => client;
+}
