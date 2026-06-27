@@ -38,6 +38,7 @@ RUN yes | sdkmanager --licenses > /dev/null 2>&1 || true \
     && sdkmanager \
         "platform-tools" \
         "platforms;android-34" \
+        "platforms;android-35" \
         "build-tools;34.0.0"
 
 # Non-root build user (UID 1000 == host jaxtrx → mounted /out is host-owned)

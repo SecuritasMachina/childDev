@@ -38,6 +38,7 @@ dotnet publish "$PROJECT" \
   /p:AndroidSigningStorePass=env:LEVELUP_KEYSTORE_PASS \
   /p:AndroidSigningKeyPass=env:LEVELUP_KEY_PASS \
   /p:AndroidPackageFormats=aab%3Bapk \
+  /p:AndroidTargetSdkVersion=35 \
   /p:AndroidCreatePackagePerAbi=false \
   --nologo
 
