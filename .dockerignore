@@ -27,3 +27,4 @@ Dockerfile.mobile-test
 # Secrets
 *.env
 .env*
+Dockerfile.mobile-release

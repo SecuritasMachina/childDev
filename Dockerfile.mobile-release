@@ -1,0 +1,73 @@
+# Dockerfile.mobile-release — reproducible SIGNED Android release build (AAB + APK).
+#
+# Mirrors Dockerfile.mobile-test's toolchain (JDK17 + .NET8 SDK + Android SDK +
+# maui-android workload) but its entrypoint produces a *release* build SIGNED with
+# the upload keystore. The keystore is NEVER baked into this image — it is mounted
+# read-only at runtime (-v ~/data/keystore:/keystore:ro) and its passwords come from
+# --env-file. Output AAB/APK are written to the mounted /out volume.
+FROM ubuntu:20.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+ENV ANDROID_HOME=/opt/android-sdk
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV PATH="${JAVA_HOME}/bin:${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH}"
+
+RUN apt-get update && apt-get install -y \
+    openjdk-17-jdk \
+    wget curl unzip gosu \
+    ca-certificates apt-transport-https \
+    && rm -rf /var/lib/apt/lists/*
+
+# .NET 8 SDK
+RUN wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O /tmp/ms.deb \
+    && dpkg -i /tmp/ms.deb \
+    && rm /tmp/ms.deb \
+    && apt-get update \
+    && apt-get install -y dotnet-sdk-8.0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Android command-line tools + SDK packages
+RUN mkdir -p ${ANDROID_SDK_ROOT}/cmdline-tools \
+    && wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/cmdtools.zip \
+    && unzip -q /tmp/cmdtools.zip -d /tmp/cmdtools \
+    && mv /tmp/cmdtools/cmdline-tools ${ANDROID_SDK_ROOT}/cmdline-tools/latest \
+    && rm -rf /tmp/cmdtools /tmp/cmdtools.zip
+
+RUN yes | sdkmanager --licenses > /dev/null 2>&1 || true \
+    && sdkmanager \
+        "platform-tools" \
+        "platforms;android-34" \
+        "build-tools;34.0.0"
+
+# Non-root build user (UID 1000 == host jaxtrx → mounted /out is host-owned)
+RUN groupadd -g 1000 builder \
+    && useradd -u 1000 -g 1000 -m -s /bin/bash builder \
+    && chown -R builder:builder ${ANDROID_SDK_ROOT}
+
+# MAUI Android workload
+RUN dotnet workload install maui-android --skip-sign-check
+
+WORKDIR /src
+COPY . .
+
+# The repo nuget.config points at a host-only Gitea feed (localhost:13080) that is
+# unreachable from inside the Docker build network (NU1301). The mobile project only
+# needs public nuget.org packages, so replace the config with a nuget.org-only one
+# for the in-image build. (This image builds ONLY the mobile app.)
+RUN printf '%s\n' \
+    '<?xml version="1.0" encoding="utf-8"?>' \
+    '<configuration>' \
+    '  <packageSources>' \
+    '    <clear />' \
+    '    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />' \
+    '  </packageSources>' \
+    '</configuration>' > /src/nuget.config
+
+RUN chown -R builder:builder /src
+
+# Warm the restore (release build re-restores if needed)
+RUN gosu builder dotnet restore ChildDev.Mobile/LevelUp.csproj
+
+RUN chmod +x /src/scripts/mobile-release-entrypoint.sh
+ENTRYPOINT ["/src/scripts/mobile-release-entrypoint.sh"]
