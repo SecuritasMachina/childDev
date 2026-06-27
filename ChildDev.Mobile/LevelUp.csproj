@@ -21,6 +21,10 @@
 		<ApplicationVersion>1</ApplicationVersion>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
+
+		<!-- Google Play requires new apps/updates to target API 35 (Android 15) since Aug 2025.
+		     compileSdk stays 34 (.NET 8 Android binding); only the declared targetSdk is raised. -->
+		<AndroidTargetSdkVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">35</AndroidTargetSdkVersion>
 	</PropertyGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' != 'net8.0'">
