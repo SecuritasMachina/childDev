@@ -1,11 +1,11 @@
 # Dockerfile.mobile-release — reproducible SIGNED Android release build (AAB + APK).
 #
-# Mirrors Dockerfile.mobile-test's toolchain (JDK17 + .NET8 SDK + Android SDK +
+# Mirrors Dockerfile.mobile-test's toolchain (JDK17 + .NET9 SDK + Android SDK +
 # maui-android workload) but its entrypoint produces a *release* build SIGNED with
 # the upload keystore. The keystore is NEVER baked into this image — it is mounted
 # read-only at runtime (-v ~/data/keystore:/keystore:ro) and its passwords come from
 # --env-file. Output AAB/APK are written to the mounted /out volume.
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV ANDROID_SDK_ROOT=/opt/android-sdk
@@ -19,12 +19,12 @@ RUN apt-get update && apt-get install -y \
     ca-certificates apt-transport-https \
     && rm -rf /var/lib/apt/lists/*
 
-# .NET 8 SDK
-RUN wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O /tmp/ms.deb \
+# .NET 9 SDK
+RUN wget -q https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O /tmp/ms.deb \
     && dpkg -i /tmp/ms.deb \
     && rm /tmp/ms.deb \
     && apt-get update \
-    && apt-get install -y dotnet-sdk-8.0 \
+    && apt-get install -y dotnet-sdk-9.0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Android command-line tools + SDK packages
@@ -39,7 +39,8 @@ RUN yes | sdkmanager --licenses > /dev/null 2>&1 || true \
         "platform-tools" \
         "platforms;android-34" \
         "platforms;android-35" \
-        "build-tools;34.0.0"
+        "build-tools;34.0.0" \
+        "build-tools;35.0.0"
 
 # Non-root build user (UID 1000 == host jaxtrx → mounted /out is host-owned)
 RUN groupadd -g 1000 builder \
