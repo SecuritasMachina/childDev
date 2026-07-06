@@ -25,19 +25,19 @@ public static class MauiProgram
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "childdev.db3");
 
-        IDbKeyProvider keyProvider = new SecureStorageDbKeyProvider();
-        builder.Services.AddSingleton<IDbKeyProvider>(keyProvider);
+        builder.Services.AddSingleton<IDbKeyProvider, SecureStorageDbKeyProvider>();
 
-        // Resolve the per-device key (SecureStorage is async; block briefly at startup).
-        var dbKey = keyProvider.GetKeyAsync().GetAwaiter().GetResult();
-
-        // Migrate a legacy plaintext DB into an encrypted one (preserves identity/credentials);
-        // falls back to a clean wipe only if migration fails outright.
-        DbMigrationGuard.EnsureEncrypted(dbPath, dbKey);
-
-        var localDb = new LocalDatabase(dbPath, dbKey);
-        builder.Services.AddSingleton(localDb);
-        builder.Services.AddSingleton(localDb.Connection);
+        // The per-device key lives in SecureStorage (Android Keystore/Tink-backed). Fetching it,
+        // migrating a legacy plaintext DB, and opening the SQLCipher connection are ALL deferred into
+        // LocalDatabase.InitAsync() (run off the UI thread in App's startup task). Doing any of this
+        // synchronously here would block the UI thread on SecureStorage and hang the app on the splash
+        // screen (Google Play rejection, .NET 9). So register lazily and never touch the key at startup.
+        builder.Services.AddSingleton(sp =>
+            new LocalDatabase(dbPath, sp.GetRequiredService<IDbKeyProvider>()));
+        // The connection is created during InitAsync; repositories/AccountService (resolved only after
+        // the splash) get the already-open connection here without blocking.
+        builder.Services.AddSingleton(sp =>
+            sp.GetRequiredService<LocalDatabase>().Connection);
         builder.Services.AddSingleton<AccountService>();
         builder.Services.AddSingleton<JournalRepository>();
         builder.Services.AddSingleton<GoalRepository>();
