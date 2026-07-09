@@ -8,14 +8,14 @@
         <Label Text="LevelUp" FontSize="28" FontAttributes="Bold" HorizontalOptions="Center" />
         <Label Text="Set up your account to get started." HorizontalOptions="Center" />
 
-        <Entry Placeholder="Your name" Text="{Binding NickName}" IsEnabled="{Binding IsCreating, Converter={StaticResource InverseBoolConverter}}" />
-        <Entry Placeholder="Password (4+ characters)" Text="{Binding Pin}" IsPassword="True" IsEnabled="{Binding IsCreating, Converter={StaticResource InverseBoolConverter}}" />
-        <Entry Placeholder="Confirm Password" Text="{Binding ConfirmPin}" IsPassword="True" IsEnabled="{Binding IsCreating, Converter={StaticResource InverseBoolConverter}}" />
+        <Entry AutomationId="SetupNameEntry" Placeholder="Your name" Text="{Binding NickName}" IsEnabled="{Binding IsCreating, Converter={StaticResource InverseBoolConverter}}" />
+        <Entry AutomationId="SetupPinEntry" Placeholder="Password (4+ characters)" Text="{Binding Pin}" IsPassword="True" IsEnabled="{Binding IsCreating, Converter={StaticResource InverseBoolConverter}}" />
+        <Entry AutomationId="SetupConfirmPinEntry" Placeholder="Confirm Password" Text="{Binding ConfirmPin}" IsPassword="True" IsEnabled="{Binding IsCreating, Converter={StaticResource InverseBoolConverter}}" />
 
         <Label Text="{Binding ErrorMessage}" TextColor="Red" IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
 
         <ActivityIndicator IsRunning="{Binding IsCreating}" IsVisible="{Binding IsCreating}" Color="#512BD4" />
 
-        <Button Text="{Binding CreateButtonText}" Command="{Binding CreateAccountCommand}" />
+        <Button AutomationId="SetupGetStartedButton" Text="{Binding CreateButtonText}" Command="{Binding CreateAccountCommand}" />
     </VerticalStackLayout>
 </ContentPage>

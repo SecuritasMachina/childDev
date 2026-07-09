@@ -304,7 +304,8 @@
                 </Border>
 
                 <!-- Reminders shortcut -->
-                <Button Text="🔔 View Reminders"
+                <Button AutomationId="DashboardViewRemindersButton"
+                        Text="🔔 View Reminders"
                         Command="{Binding OpenRemindersCommand}"
                         BackgroundColor="Transparent"
                         TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Primary}}"

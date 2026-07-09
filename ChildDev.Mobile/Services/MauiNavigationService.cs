@@ -9,11 +9,24 @@ public class MauiNavigationService : INavigationService
         Task.CompletedTask;
 #endif
 
-    // Registered sub-routes (journal/entry, goals/entry, etc.) require the "///" absolute
-    // prefix in MAUI Shell navigation. Tab routes ("//goals") and back-nav ("..") are passed
-    // through unchanged.
-    private static string AbsoluteRoute(string route) =>
-        route == ".." || route.StartsWith("//") ? route : "///" + route;
+    // Tab routes ("//goals") and back-nav ("..") pass through unchanged.
+    //
+    // Sub-routes whose first segment is a TabBar route (journal/entry, goals/entry, todos/entry)
+    // resolve with the "///" absolute prefix because the tab page sits beneath them on the stack.
+    //
+    // Standalone global routes with NO tab beneath them (reminders, settings) must NOT use the
+    // absolute prefix: absolute routing to a global route that would be the only page on the stack
+    // throws ("Global routes currently cannot be the only page on the stack") and hard-crashes the
+    // app (Google Play "crashes after opening"). Navigate to them RELATIVELY instead, which pushes
+    // the page onto the current tab's navigation stack (back-nav via "..").
+    public static string AbsoluteRoute(string route)
+    {
+        if (route == ".." || route.StartsWith("//"))
+            return route;
+        if (route.Contains('/'))
+            return "///" + route;
+        return route;
+    }
 
     public Task<bool> DisplayAlertAsync(string title, string message, string accept, string cancel) =>
 #if ANDROID || IOS || MACCATALYST || WINDOWS

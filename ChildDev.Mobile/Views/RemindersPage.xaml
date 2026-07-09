@@ -12,11 +12,13 @@
         <!-- Add general reminder -->
         <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
             <Entry Grid.Column="0"
+                   AutomationId="ReminderTitleEntry"
                    Placeholder="New reminder title..."
                    Text="{Binding NewReminderTitle}"
                    ReturnCommand="{Binding AddGeneralCommand}"
                    VerticalOptions="Center"/>
             <Button Grid.Column="1"
+                    AutomationId="ReminderAddButton"
                     Text="+ Add"
                     Command="{Binding AddGeneralCommand}"
                     Margin="8,0,0,0"/>

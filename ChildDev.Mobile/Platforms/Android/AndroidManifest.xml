@@ -5,4 +5,9 @@
 	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true"></application>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.INTERNET" />
+	<!-- Reminders post local notifications. Android 13+ (API 33) requires this permission to be
+	     declared before MAUI/Plugin.LocalNotification can even request it at runtime; without it the
+	     permission check THROWS and crashes when a reminder is scheduled. Exact-alarm permissions are
+	     deliberately NOT declared (Play-policy-restricted) — reminders schedule with inexact timing. -->
+	<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>
