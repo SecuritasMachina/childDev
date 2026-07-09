@@ -200,8 +200,10 @@ public partial class App : Application
     {
         MainThread.BeginInvokeOnMainThread(async () =>
         {
+            // Relative route (no "///"): "reminders" is a standalone global route with no tab beneath
+            // it, so absolute routing to it throws and crashes. Push it onto the current stack instead.
             if (Shell.Current is not null)
-                await Shell.Current.GoToAsync("///reminders");
+                await Shell.Current.GoToAsync("reminders");
         });
     }
 #endif
