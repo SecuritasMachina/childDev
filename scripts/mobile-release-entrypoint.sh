@@ -10,7 +10,7 @@
 set -euo pipefail
 
 PROJECT="/src/ChildDev.Mobile/LevelUp.csproj"
-OUT_DIR="/src/ChildDev.Mobile/bin/Release/net9.0-android"
+OUT_DIR="/src/ChildDev.Mobile/bin/Release/net9.0-android36.0"
 KEYSTORE="/keystore/levelup-release.keystore"
 APP_ID="levelup.securitasmachina.org"
 DEST="/out"
@@ -28,7 +28,7 @@ rm -rf /src/ChildDev.Mobile/bin /src/ChildDev.Mobile/obj
 
 log "Publishing SIGNED release (AAB + APK) ..."
 dotnet publish "$PROJECT" \
-  -f net9.0-android \
+  -f net9.0-android36.0 \
   -c Release \
   /p:JavaSdkDirectory="$JAVA_HOME" \
   /p:AndroidSdkDirectory="$ANDROID_SDK_ROOT" \
@@ -38,7 +38,7 @@ dotnet publish "$PROJECT" \
   /p:AndroidSigningStorePass=env:LEVELUP_KEYSTORE_PASS \
   /p:AndroidSigningKeyPass=env:LEVELUP_KEY_PASS \
   /p:AndroidPackageFormats=aab%3Bapk \
-  /p:AndroidTargetSdkVersion=35 \
+  /p:AndroidTargetSdkVersion=36 \
   /p:AndroidCreatePackagePerAbi=false \
   --nologo
 
