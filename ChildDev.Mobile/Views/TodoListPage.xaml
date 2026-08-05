@@ -5,7 +5,7 @@
              xmlns:models="clr-namespace:LevelUp.Models"
              x:Class="LevelUp.Views.TodoListPage"
              Title="Todos">
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*">
         <Label Grid.Row="0" Text="{Binding StatusMessage}" TextColor="Red"
                FontSize="13" Padding="16,8"
                IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}" />
@@ -37,107 +37,107 @@
         </Grid>
         <SearchBar Grid.Row="4" Placeholder="Filter tasks..." Text="{Binding FilterText}" Margin="8,0,8,4" />
 
-        <ScrollView Grid.Row="5">
-            <VerticalStackLayout>
-                <RefreshView Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
-                    <CollectionView ItemsSource="{Binding Todos}">
-                        <CollectionView.EmptyView>
-                            <Label Text="{Binding EmptyMessage}" FontSize="18" TextColor="Gray"
-                                   HorizontalOptions="Center" VerticalOptions="Center" Padding="32" />
-                        </CollectionView.EmptyView>
-                        <CollectionView.Footer>
-                            <Label Text="{Binding EntryCountDisplay}" FontSize="11" TextColor="Gray"
-                                   HorizontalOptions="Center" Padding="0,8,0,4"
-                                   IsVisible="{Binding EntryCountDisplay, Converter={StaticResource StringToBoolConverter}}" />
-                        </CollectionView.Footer>
-                        <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="models:Todo">
-                                <SwipeView>
-                                    <SwipeView.LeftItems>
-                                        <SwipeItems>
-                                            <SwipeItem Text="Done" BackgroundColor="Green"
-                                                       Command="{Binding Source={RelativeSource AncestorType={x:Type vm:TodoListViewModel}}, Path=CompleteCommand}"
-                                                       CommandParameter="{Binding .}" />
-                                        </SwipeItems>
-                                    </SwipeView.LeftItems>
-                                    <SwipeView.RightItems>
-                                        <SwipeItems>
-                                            <SwipeItem Text="Delete" BackgroundColor="Red"
-                                                       Command="{Binding Source={RelativeSource AncestorType={x:Type vm:TodoListViewModel}}, Path=DeleteCommand}"
-                                                       CommandParameter="{Binding .}" />
-                                        </SwipeItems>
-                                    </SwipeView.RightItems>
-                                    <Grid Padding="16,12">
-                                        <Grid.GestureRecognizers>
-                                            <TapGestureRecognizer
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:TodoListViewModel}}, Path=OpenCommand}"
-                                                CommandParameter="{Binding .}" />
-                                        </Grid.GestureRecognizers>
-                                        <Grid ColumnDefinitions="*,Auto">
-                                            <VerticalStackLayout>
-                                                <Label Text="{Binding Title}" />
-                                                <Label Text="{Binding Notes}" FontSize="12" TextColor="Gray"
-                                                       LineBreakMode="TailTruncation" MaxLines="1"
-                                                       IsVisible="{Binding Notes, Converter={StaticResource StringToBoolConverter}}" />
-                                            </VerticalStackLayout>
-                                            <Label Grid.Column="1"
-                                                   Text="{Binding DueDate, Converter={StaticResource DueDateLabelConverter}}"
-                                                   TextColor="{Binding DueDate, Converter={StaticResource DueDateColorConverter}}"
-                                                   FontSize="11" VerticalOptions="Center"
-                                                   IsVisible="{Binding DueDate, Converter={StaticResource NotNullConverter}}" />
+        <!-- The list must live DIRECTLY in a star-sized grid row: a CollectionView inside a
+             ScrollView/VerticalStackLayout measures to zero height on Android and renders
+             nothing (items AND EmptyView). The completed section rides in the Footer so the
+             whole thing scrolls as one, via BindableLayout, which measures fine in a stack. -->
+        <RefreshView Grid.Row="5" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
+            <CollectionView ItemsSource="{Binding Todos}">
+                <CollectionView.EmptyView>
+                    <Label Text="{Binding EmptyMessage}" FontSize="18" TextColor="Gray"
+                           HorizontalOptions="Center" VerticalOptions="Center" Padding="32" />
+                </CollectionView.EmptyView>
+                <CollectionView.Footer>
+                    <VerticalStackLayout>
+                        <Label Text="{Binding EntryCountDisplay}" FontSize="11" TextColor="Gray"
+                               HorizontalOptions="Center" Padding="0,8,0,4"
+                               IsVisible="{Binding EntryCountDisplay, Converter={StaticResource StringToBoolConverter}}" />
+
+                        <!-- Completed todos section -->
+                        <Grid IsVisible="{Binding HasCompletedTodos}" Margin="0,8,0,0">
+                            <Button Text="{Binding CompletedTodoCount, StringFormat='▸ {0} completed'}"
+                                    Command="{Binding ToggleCompletedCommand}"
+                                    BackgroundColor="Transparent" TextColor="Gray"
+                                    FontSize="13" HorizontalOptions="Start" Padding="16,4"
+                                    IsVisible="{Binding ShowCompletedTodos, Converter={StaticResource InverseBoolConverter}}" />
+                            <Button Text="{Binding CompletedTodoCount, StringFormat='▾ {0} completed'}"
+                                    Command="{Binding ToggleCompletedCommand}"
+                                    BackgroundColor="Transparent" TextColor="Gray"
+                                    FontSize="13" HorizontalOptions="Start" Padding="16,4"
+                                    IsVisible="{Binding ShowCompletedTodos}" />
+                        </Grid>
+
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding CompletedTodos}"
+                                             IsVisible="{Binding ShowCompletedTodos}"
+                                             Margin="0,0,0,16">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:Todo">
+                                    <SwipeView>
+                                        <SwipeView.LeftItems>
+                                            <SwipeItems>
+                                                <SwipeItem Text="Undo" BackgroundColor="#888"
+                                                           Command="{Binding Source={RelativeSource AncestorType={x:Type vm:TodoListViewModel}}, Path=UncompleteCommand}"
+                                                           CommandParameter="{Binding .}" />
+                                            </SwipeItems>
+                                        </SwipeView.LeftItems>
+                                        <SwipeView.RightItems>
+                                            <SwipeItems>
+                                                <SwipeItem Text="Delete" BackgroundColor="Red"
+                                                           Command="{Binding Source={RelativeSource AncestorType={x:Type vm:TodoListViewModel}}, Path=DeleteCommand}"
+                                                           CommandParameter="{Binding .}" />
+                                            </SwipeItems>
+                                        </SwipeView.RightItems>
+                                        <Grid Padding="16,10" BackgroundColor="#F5F5F5">
+                                            <Label Text="{Binding Title}" TextColor="Gray"
+                                                   TextDecorations="Strikethrough" FontSize="14" />
                                         </Grid>
-                                    </Grid>
-                                </SwipeView>
-                            </DataTemplate>
-                        </CollectionView.ItemTemplate>
-                    </CollectionView>
-                </RefreshView>
-
-                <!-- Completed todos section -->
-                <Grid IsVisible="{Binding HasCompletedTodos}" Margin="0,8,0,0">
-                    <Button Text="{Binding CompletedTodoCount, StringFormat='▸ {0} completed'}"
-                            Command="{Binding ToggleCompletedCommand}"
-                            BackgroundColor="Transparent" TextColor="Gray"
-                            FontSize="13" HorizontalOptions="Start" Padding="16,4"
-                            IsVisible="{Binding ShowCompletedTodos, Converter={StaticResource InverseBoolConverter}}" />
-                    <Button Text="{Binding CompletedTodoCount, StringFormat='▾ {0} completed'}"
-                            Command="{Binding ToggleCompletedCommand}"
-                            BackgroundColor="Transparent" TextColor="Gray"
-                            FontSize="13" HorizontalOptions="Start" Padding="16,4"
-                            IsVisible="{Binding ShowCompletedTodos}" />
-                </Grid>
-
-                <CollectionView ItemsSource="{Binding CompletedTodos}"
-                                IsVisible="{Binding ShowCompletedTodos}"
-                                Margin="0,0,0,16">
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="models:Todo">
-                            <SwipeView>
-                                <SwipeView.LeftItems>
-                                    <SwipeItems>
-                                        <SwipeItem Text="Undo" BackgroundColor="#888"
-                                                   Command="{Binding Source={RelativeSource AncestorType={x:Type vm:TodoListViewModel}}, Path=UncompleteCommand}"
-                                                   CommandParameter="{Binding .}" />
-                                    </SwipeItems>
-                                </SwipeView.LeftItems>
-                                <SwipeView.RightItems>
-                                    <SwipeItems>
-                                        <SwipeItem Text="Delete" BackgroundColor="Red"
-                                                   Command="{Binding Source={RelativeSource AncestorType={x:Type vm:TodoListViewModel}}, Path=DeleteCommand}"
-                                                   CommandParameter="{Binding .}" />
-                                    </SwipeItems>
-                                </SwipeView.RightItems>
-                                <Grid Padding="16,10" BackgroundColor="#F5F5F5">
-                                    <Label Text="{Binding Title}" TextColor="Gray"
-                                           TextDecorations="Strikethrough" FontSize="14" />
+                                    </SwipeView>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </CollectionView.Footer>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Todo">
+                        <SwipeView>
+                            <SwipeView.LeftItems>
+                                <SwipeItems>
+                                    <SwipeItem Text="Done" BackgroundColor="Green"
+                                               Command="{Binding Source={RelativeSource AncestorType={x:Type vm:TodoListViewModel}}, Path=CompleteCommand}"
+                                               CommandParameter="{Binding .}" />
+                                </SwipeItems>
+                            </SwipeView.LeftItems>
+                            <SwipeView.RightItems>
+                                <SwipeItems>
+                                    <SwipeItem Text="Delete" BackgroundColor="Red"
+                                               Command="{Binding Source={RelativeSource AncestorType={x:Type vm:TodoListViewModel}}, Path=DeleteCommand}"
+                                               CommandParameter="{Binding .}" />
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+                            <Grid Padding="16,12">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:TodoListViewModel}}, Path=OpenCommand}"
+                                        CommandParameter="{Binding .}" />
+                                </Grid.GestureRecognizers>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <VerticalStackLayout>
+                                        <Label Text="{Binding Title}" />
+                                        <Label Text="{Binding Notes}" FontSize="12" TextColor="Gray"
+                                               LineBreakMode="TailTruncation" MaxLines="1"
+                                               IsVisible="{Binding Notes, Converter={StaticResource StringToBoolConverter}}" />
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="1"
+                                           Text="{Binding DueDate, Converter={StaticResource DueDateLabelConverter}}"
+                                           TextColor="{Binding DueDate, Converter={StaticResource DueDateColorConverter}}"
+                                           FontSize="11" VerticalOptions="Center"
+                                           IsVisible="{Binding DueDate, Converter={StaticResource NotNullConverter}}" />
                                 </Grid>
-                            </SwipeView>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-            </VerticalStackLayout>
-        </ScrollView>
-
-        <Label Grid.Row="6" IsVisible="False" />
+                            </Grid>
+                        </SwipeView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
     </Grid>
 </ContentPage>

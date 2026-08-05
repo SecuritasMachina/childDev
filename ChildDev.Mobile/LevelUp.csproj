@@ -27,6 +27,12 @@
 		<AndroidTargetSdkVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">36</AndroidTargetSdkVersion>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<!-- Build-time stamp read by BuildInfo.BuildTimestamp. Relies on the build host tz being
+		     America/New_York (the release Dockerfile sets TZ accordingly). -->
+		<AssemblyMetadata Include="BuildTimestamp" Value="$([System.DateTime]::Now.ToString('yyyy-MM-dd HH:mm')) ET" />
+	</ItemGroup>
+
 	<ItemGroup Condition="'$(TargetFramework)' != 'net9.0'">
 		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />

@@ -13,9 +13,11 @@ ENV ANDROID_HOME=/opt/android-sdk
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 ENV PATH="${JAVA_HOME}/bin:${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH}"
 
+# TZ makes the MSBuild BuildTimestamp stamp (labelled "ET") truthful in this container.
+ENV TZ=America/New_York
 RUN apt-get update && apt-get install -y \
     openjdk-17-jdk \
-    wget curl unzip gosu \
+    wget curl unzip gosu tzdata \
     ca-certificates apt-transport-https \
     && rm -rf /var/lib/apt/lists/*
 
