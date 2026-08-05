@@ -1,8 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-	<!-- Google Play requires targetSdk >= 35 (Android 15). minSdk stays 21. -->
-	<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="35" />
-	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true"></application>
+	<!-- Google Play requires targetSdk >= 36 (Android 16) for updates after Aug 31 2026. minSdk stays 21.
+	     This uses-sdk pin is authoritative over the csproj AndroidTargetSdkVersion — keep both in step. -->
+	<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36" />
+	<!-- Predictive back becomes DEFAULT-ON at targetSdk 36: Android 16 devices stop calling
+	     onBackPressed / dispatching KEYCODE_BACK, but MAUI 9's back handling still depends on
+	     onBackPressed (dotnet/maui#24752; migrated to OnBackPressedCallback only in MAUI 10).
+	     Without this opt-out the back button/gesture backgrounds the app instead of popping
+	     Shell pages. Remove when the app moves to .NET 10 / MAUI 10. -->
+	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true" android:enableOnBackInvokedCallback="false"></application>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.INTERNET" />
 	<!-- Reminders post local notifications. Android 13+ (API 33) requires this permission to be

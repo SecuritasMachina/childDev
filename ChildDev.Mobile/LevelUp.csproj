@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks Condition="'$(SkipMauiTargets)' != 'true'">net9.0-android;net9.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(SkipMauiTargets)' != 'true'">net9.0-android36.0;net9.0</TargetFrameworks>
 		<TargetFrameworks Condition="'$(SkipMauiTargets)' == 'true'">net9.0</TargetFrameworks>
 		<OutputType Condition="'$(TargetFramework)' != 'net9.0'">Exe</OutputType>
 		<RootNamespace>LevelUp</RootNamespace>
@@ -17,14 +17,14 @@
 		<ApplicationId>levelup.securitasmachina.org</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0.3</ApplicationDisplayVersion>
-		<ApplicationVersion>4</ApplicationVersion>
+		<ApplicationDisplayVersion>1.0.4</ApplicationDisplayVersion>
+		<ApplicationVersion>5</ApplicationVersion>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
 
-		<!-- Google Play requires new apps/updates to target API 35 (Android 15) since Aug 2025.
-		     Under .NET 9 the Android binding compiles against API 35 natively. -->
-		<AndroidTargetSdkVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">35</AndroidTargetSdkVersion>
+		<!-- Google Play requires updates to target API 36 (Android 16) by Aug 31 2026. The
+		     net9.0-android36.0 TFM uses the .NET 9 band's backported API-36 bindings. -->
+		<AndroidTargetSdkVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">36</AndroidTargetSdkVersion>
 	</PropertyGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' != 'net9.0'">
