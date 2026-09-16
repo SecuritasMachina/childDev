@@ -3,7 +3,8 @@
 # Mirrors Dockerfile.mobile-test's toolchain (JDK17 + .NET9 SDK + Android SDK +
 # maui-android workload) but its entrypoint produces a *release* build SIGNED with
 # the upload keystore. The keystore is NEVER baked into this image — it is mounted
-# read-only at runtime (-v ~/data/keystore:/keystore:ro) and its passwords come from
+# read-only at runtime (-v ~/data/signingKeys/levelup-release.keystore:/keystore/levelup-release.keystore:ro;
+# ~/data/keystore/ holds symlinks that dangle in a container) and its passwords come from
 # --env-file. Output AAB/APK are written to the mounted /out volume.
 FROM ubuntu:22.04
 
